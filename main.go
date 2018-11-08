@@ -21,9 +21,9 @@ func init() {
 }
 
 func main() {
-	workspace := getOption("workspace")
-	if workspace == "" {
-		log.WithFields(log.Fields{"workspace": workspace}).Fatal("workspace option not set")
+	dir := getOption("dir")
+	if dir == "" {
+		log.WithFields(log.Fields{"dir": dir}).Fatal("dir option not set")
 		return
 	}
 	currBranch := getOption("repoHead")
@@ -37,7 +37,7 @@ func main() {
 		return
 	}
 
-	cmd := git.Commander{Workspace: workspace, Head: currBranch}
+	cmd := git.Commander{Workspace: dir, Head: currBranch}
 	endpoint := getOption("cloneEndpoint")
 	if endpoint != "" {
 		err := cmd.Clone(endpoint)
@@ -54,7 +54,7 @@ func main() {
 
 
 	baseUri := getOption("baseUri")
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: getOption("apiKey"), BaseUri: baseUri})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: getOption("accessToken"), BaseUri: baseUri})
 
 	b := &branch{Branch: currBranch, IsDefault: getOption("defaultBranch") == currBranch, PushTime: pushTime, Head: headSha}
 	b, err = b.findReferences(cmd, ldApi)
@@ -209,19 +209,19 @@ type option struct {
 
 func initOptions() {
 	options := []option{
-		option{"apiKey", "", "LaunchDarkly personal access token with write-level access."},
+		option{"accessToken", "", "LaunchDarkly personal access token with write-level access."},
 		option{"projKey", "", "LaunchDarkly project key."},
 		option{"baseUri", "", "LaunchDarkly base URI."},
 		option{"exclude", "", "Exclude any files with code references that match this regex pattern"},
 		option{"contextLines", "-1", "The number of context lines. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference."},
 		option{"repoName", "", "Git repo name. Will be displayed in LaunchDarkly."},
 		option{"repoOwner", "", "Git repo owner/org."},
-		option{"workspace", "", "Path to git repo."},
-		option{"cloneEndpoint", "", "If provided, will clone the repo from this endpoint to the provided workspace. If authentication is required, this endpoint should be authenticated. Example: https://username:password@github.com/username/repository.git"},
+		option{"dir", "", "Path to git repo."},
+		option{"cloneEndpoint", "", "If provided, will clone the repo from this endpoint to the provided dir. If authentication is required, this endpoint should be authenticated. Supports the https protocol for git cloning. Example: https://username:password@github.com/username/repository.git"},
 		option{"repoHead", "master", "The HEAD or ref to retrieve code references from."},
 		option{"defaultBranch", "master", "The git default branch. The LaunchDarkly UI will default to this branch."},
-		option{"pushTime", "", ""},
-		option{"logLevel", "WARN", ""},
+		option{"pushTime", "", "The time the push was initiated formatted as a unix millis timestamp"},
+		option{"logLevel", "WARN", "PANIC|FATAL|ERROR|WARN|INFO|DEBUG|TRACE	"},
 	}
 	for _, o := range options {
 		flag.String(o.name, o.defaultValue, o.usage)

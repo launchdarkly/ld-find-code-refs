@@ -75,7 +75,7 @@ func (c Commander) logDebug(msg string, fields *log.Fields) {
 	if fields == nil {
 		fields = &log.Fields{}
 	}
-	(*fields)["workspace"] = c.Workspace
+	(*fields)["dir"] = c.Workspace
 	(*fields)["branch"] = c.Head
 	log.WithFields(log.Fields{"workspace": c.Workspace, "branch": c.Head}).Debug(msg)
 }
@@ -84,7 +84,7 @@ func (c Commander) logError(msg string, err error, fields *log.Fields) {
 	if fields == nil {
 		fields = &log.Fields{}
 	}
-	(*fields)["workspace"] = c.Workspace
+	(*fields)["dir"] = c.Workspace
 	(*fields)["branch"] = c.Head
 	(*fields)["error"] = err.Error()
 	log.WithFields(*fields).Error(msg)
