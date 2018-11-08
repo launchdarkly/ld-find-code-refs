@@ -4,6 +4,7 @@ import (
 	"context"
 
 	ldapi "github.com/launchdarkly/api-client-go"
+	log "github.com/sirupsen/logrus"
 )
 
 type ApiClient struct {
@@ -29,8 +30,8 @@ func InitApiClient(options ApiOptions) ApiClient {
 	}
 }
 
-func (service ApiClient) FlagKeyList(ctx context.Context, projectKey string) ([]string, error) {
-	ctx = context.WithValue(ctx, ldapi.ContextAPIKey, ldapi.APIKey{Key: service.apiKey})
+func (service ApiClient) GetFlagKeyList(projectKey string) ([]string, error) {
+	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: service.apiKey})
 	flags, _, err := service.client.FeatureFlagsApi.GetFeatureFlags(ctx, projectKey, nil)
 	if err != nil {
 		return nil, err
@@ -40,4 +41,9 @@ func (service ApiClient) FlagKeyList(ctx context.Context, projectKey string) ([]
 		flagKeys = append(flagKeys, flag.Key)
 	}
 	return flagKeys, nil
+}
+
+func (service ApiClient) PutCodeReferenceBranch([]byte) error {
+	log.Debug("STUBBED PutCodeReferenceBranch")
+	return nil
 }
