@@ -4,7 +4,7 @@ import (
 	"context"
 
 	ldapi "github.com/launchdarkly/api-client-go"
-	log "github.com/sirupsen/logrus"
+	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
 )
 
 type ApiClient struct {
@@ -43,7 +43,11 @@ func (service ApiClient) GetFlagKeyList(projectKey string) ([]string, error) {
 	return flagKeys, nil
 }
 
-func (service ApiClient) PutCodeReferenceBranch([]byte) error {
-	log.Debug("STUBBED PutCodeReferenceBranch")
+func (service ApiClient) PutCodeReferenceBranch(post []byte) error {
+	print := string(post)
+	if len(post) > 1000 {
+		print = print[:1000]
+	}
+	log.Debug("STUBBED PutCodeReferenceBranch", log.Field("post", string(print)))
 	return nil
 }

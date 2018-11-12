@@ -12,8 +12,16 @@ import (
 type Commander struct {
 	Workspace string
 	Head      string
+	RepoName  string
 }
 
+/*
+grepRegex splits resulting grep lines into groups
+Group 1: File path.
+Group 2: Seperator. A colon indicates a match, a hyphen indicates a context lines
+Group 3: Line number
+Group 4: Line contents
+*/
 var grepRegex, _ = regexp.Compile("(.+)(:|-)([0-9]+)[:-](.+)")
 
 func (c Commander) RevParse() (string, error) {
@@ -24,12 +32,12 @@ func (c Commander) RevParse() (string, error) {
 	if err != nil {
 		c.logError("Failed to parse latest commit", err, nil)
 	}
-	return strings.Replace(string(out), "\n", "", -1), err
+	return strings.TrimSpace(string(out)), err
 }
 
 func (c Commander) Clone(endpoint string) error {
 	c.logDebug("Cloning repo", nil)
-	cmd := exec.Command("git", "clone", "--single-branch", "--branch", c.Head, endpoint, c.Workspace)
+	cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", "--branch", c.Head, endpoint, c.Workspace)
 	err := cmd.Run()
 	if err != nil {
 		c.logError("Failed to clone repo", err, nil)
@@ -48,24 +56,37 @@ func (c Commander) Checkout() error {
 	return err
 }
 
-func (c Commander) Grep(flags []string, ctxLines int) ([][]string, error) {
-	c.logDebug("Grepping for flag keys", &log.Fields{"numFlags": len(flags), "contestLines": ctxLines})
-	sh := exec.Command("git")
-	sh.Args = make([]string, 0, 2*len(flags)+4)
-	sh.Args = append(sh.Args, "git", "grep", "-nF")
+func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]string, error) {
+	var sb strings.Builder
+	// not using git grep until we figure out why it takes so long when running on github actions containers
+	// sb.WriteString(fmt.Sprintf("cd %s && git grep -nF", c.Workspace))
+	// if ctxLines > 0 {
+	// 	sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
+	// }
+	// for _, f := range flags {
+	// 	sb.WriteString(fmt.Sprintf(" -e %s", f))
+	// }
 
+	sb.WriteString(fmt.Sprintf("ag --nogroup"))
 	if ctxLines > 0 {
-		sh.Args = append(sh.Args, fmt.Sprintf("-C%d", ctxLines))
+		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
 	}
-
-	for _, f := range flags {
-		sh.Args = append(sh.Args, "-e", f)
+	if exclude != "" {
+		sb.WriteString(fmt.Sprintf(" --ignore %s", exclude))
 	}
+	escapedFlags := []string{}
+	for _, v := range flags {
+		escapedFlags = append(escapedFlags, regexp.QuoteMeta(v))
+	}
+	sb.WriteString(" '" + strings.Join(escapedFlags, "|") + "' " + c.Workspace)
 
+	cmd := sb.String()
+	sh := exec.Command("sh", "-c", cmd)
+	log.WithFields(log.Fields{"numFlags": len(escapedFlags), "contextLines": ctxLines, "cmd": cmd}).Debug("Grepping for flag keys")
 	sh.Dir = c.Workspace
 	out, err := sh.Output()
 	if err != nil {
-		c.logError("Error grepping for flag keys", err, &log.Fields{"numFlags": len(flags), "contextLines": ctxLines})
+		c.logError("Error grepping for flag keys", err, &log.Fields{"numFlags": len(escapedFlags), "contextLines": ctxLines})
 	}
 	ret := grepRegex.FindAllStringSubmatch(string(out), -1)
 	return ret, err
