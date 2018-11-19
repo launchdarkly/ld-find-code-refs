@@ -13,7 +13,7 @@ type Option interface {
 
 type StringOption string
 type IntOption string
-type Uint64Option string
+type Int64Option string
 
 func (o StringOption) name() string {
 	return string(o)
@@ -21,7 +21,7 @@ func (o StringOption) name() string {
 func (o IntOption) name() string {
 	return string(o)
 }
-func (o Uint64Option) name() string {
+func (o Int64Option) name() string {
 	return string(o)
 }
 
@@ -40,8 +40,8 @@ func (o IntOption) maximumError(max int) error {
 	return nil
 }
 
-func (o Uint64Option) Value() uint64 {
-	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(uint64)
+func (o Int64Option) Value() int64 {
+	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(int64)
 }
 
 const (
@@ -53,7 +53,7 @@ const (
 	Dir           = StringOption("dir")
 	Exclude       = StringOption("exclude")
 	ProjKey       = StringOption("projKey")
-	PushTime      = Uint64Option("pushTime")
+	PushTime      = Int64Option("pushTime")
 	RepoHead      = StringOption("repoHead")
 	RepoName      = StringOption("repoName")
 	RepoOwner     = StringOption("repoOwner")
@@ -86,7 +86,7 @@ var options = optionMap{
 	Dir:           option{"", "Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required.", false},
 	Exclude:       option{"", "Exclude any files with code references that match this regex pattern", false},
 	ProjKey:       option{"", "LaunchDarkly project key.", true},
-	PushTime:      option{uint64(0), "The time the push was initiated formatted as a unix millis timestamp.", true},
+	PushTime:      option{int64(0), "The time the push was initiated formatted as a unix millis timestamp.", true},
 	RepoHead:      option{"master", "The HEAD or ref to retrieve code references from.", false},
 	RepoName:      option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
 	RepoOwner:     option{"", "Git repo owner/org.", false},
@@ -108,7 +108,7 @@ func Init() (err error, errCb func()) {
 		if o != nil && o.required {
 			val := f.Value.(flag.Getter).Get()
 			switch v := val.(type) {
-			case uint64:
+			case int64:
 				if v == 0 {
 					opt = f.Name
 				}
@@ -142,8 +142,8 @@ func Populate() {
 	for n, o := range options {
 		name := n.name()
 		switch v := o.defaultValue.(type) {
-		case uint64:
-			flag.Uint64(name, v, o.usage)
+		case int64:
+			flag.Int64(name, v, o.usage)
 		case int:
 			flag.Int(name, v, o.usage)
 		case string:

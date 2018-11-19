@@ -1,10 +1,11 @@
 package parse
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,17 +50,13 @@ func Parse() {
 		fatal("Unable to retrieve flag keys", err)
 	}
 
-	b := &branch{Branch: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), Head: headSha}
+	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), Head: headSha}
 	b, err = b.findReferences(cmd, flags)
 	if err != nil {
 		fatal("Error searching for flag key references", err)
 	}
 
-	branchBytes, err := json.Marshal(b)
-	if err != nil {
-		fatal("Error marshalling branch to json", err)
-	}
-	err = ldApi.PutCodeReferenceBranch(branchBytes)
+	err = ldApi.PutCodeReferenceBranch(b.MakeBranchRep(), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
 	if err != nil {
 		fatal("Error sending code references to LaunchDarkly", err)
 	}
@@ -76,20 +73,98 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
+// TODO: add links
 type branch struct {
-	Branch     string      `json:"branch"`
-	Head       string      `json:"head"`
-	IsDefault  bool        `json:"isDefault"`
-	PushTime   uint64      `json:"pushTime"`
-	SyncTime   uint64      `json:"syncTime"`
-	References []reference `json:"references,omitempty"`
+	Name       string
+	Head       string
+	IsDefault  bool
+	PushTime   int64
+	SyncTime   int64
+	References references
+}
+
+func (b *branch) MakeBranchRep() ld.BranchRep {
+	return ld.BranchRep{Name: b.Name, Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.MakeReferenceReps()}
 }
 
 type reference struct {
-	Path     string   `json:"path"`
-	Line     string   `json:"line"`
-	Context  string   `json:"context,omitempty"`
-	FlagKeys []string `json:"flagKeys,omitempty"`
+	Path     string
+	LineNum  int
+	Context  string
+	FlagKeys []string
+}
+
+type references []reference
+type referencePathMap map[string]references
+
+func (r references) Len() int {
+	return len(r)
+}
+
+func (r references) Less(i, j int) bool {
+	return r[i].LineNum < r[j].LineNum
+}
+
+func (r references) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+
+func (r references) MakeReferenceReps() []ld.ReferenceRep {
+	pathMap := referencePathMap{}
+	for _, ref := range r {
+		if pathMap[ref.Path] == nil {
+			pathMap[ref.Path] = []reference{}
+		}
+		pathMap[ref.Path] = append(pathMap[ref.Path], ref)
+	}
+
+	reps := []ld.ReferenceRep{}
+	for k, refs := range pathMap {
+		if len(refs) > 0 {
+			reps = append(reps, ld.ReferenceRep{Path: k, Hunks: refs.MakeHunkReps()})
+		}
+	}
+
+	return reps
+}
+
+// MakeHunkReps coallesces single-line references into hunks per flag-key
+func (r references) MakeHunkReps() []ld.HunkRep {
+	fmt.Println("MAKING HUNKS FOR", r)
+	sort.Sort(r)
+	hunks := []ld.HunkRep{}
+	var nextHunkBuilder strings.Builder
+	currLine := r[0]
+	for i, v := range r {
+		fmt.Println("ITERATING OVER R", v.LineNum, v.Context)
+		if i != 0 {
+			if r[i-1].LineNum != r[i].LineNum-1 {
+				lineNum := currLine.LineNum
+				for _, flagKey := range v.FlagKeys {
+					fmt.Println("appending to hunk", lineNum, flagKey)
+					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
+				}
+				if len(v.FlagKeys) == 0 {
+					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String()})
+				}
+				nextHunkBuilder.Reset()
+				currLine = v
+			} else {
+				nextHunkBuilder.WriteString("\n")
+			}
+		}
+		nextHunkBuilder.WriteString(v.Context + "\n")
+	}
+
+	for _, flagKey := range currLine.FlagKeys {
+		fmt.Println("appending to hunk", currLine.LineNum, flagKey)
+		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
+	}
+	if len(currLine.FlagKeys) == 0 {
+		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String()})
+	}
+	fmt.Println(hunks)
+	return hunks
 }
 
 func (b *branch) findReferences(cmd git.Commander, flags []string) (*branch, error) {
@@ -117,8 +192,11 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string) []referen
 		contextContainsFlagKey := r[2] == ":"
 		lineNumber := r[3]
 		context := r[4]
-
-		ref := reference{Path: path, Line: lineNumber}
+		lineNum, err := strconv.Atoi(lineNumber)
+		if err != nil {
+			fatal("encountered an error generating flag references", err)
+		}
+		ref := reference{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
 			ref.FlagKeys = findReferencedFlags(context, flags)
 		}
@@ -141,8 +219,8 @@ func findReferencedFlags(ref string, flags []string) []string {
 	return ret
 }
 
-func makeTimestamp() uint64 {
-	return uint64(time.Now().UnixNano()) / uint64(time.Millisecond)
+func makeTimestamp() int64 {
+	return int64(time.Now().UnixNano()) / int64(time.Millisecond)
 }
 
 func fatal(msg string, err error) {

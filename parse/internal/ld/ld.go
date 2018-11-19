@@ -1,15 +1,20 @@
 package ld
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 
 	ldapi "github.com/launchdarkly/api-client-go"
-	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
 )
 
 type ApiClient struct {
-	client *ldapi.APIClient
-	apiKey string
+	client  *ldapi.APIClient
+	options ApiOptions
 }
 
 type ApiOptions struct {
@@ -26,12 +31,12 @@ func InitApiClient(options ApiOptions) ApiClient {
 			BasePath:  options.BaseUri + "/api/v2",
 			UserAgent: "github-actor",
 		}),
-		apiKey: options.ApiKey,
+		options: options,
 	}
 }
 
 func (service ApiClient) GetFlagKeyList(projectKey string) ([]string, error) {
-	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: service.apiKey})
+	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: service.options.ApiKey})
 	flags, _, err := service.client.FeatureFlagsApi.GetFeatureFlags(ctx, projectKey, nil)
 	if err != nil {
 		return nil, err
@@ -43,11 +48,55 @@ func (service ApiClient) GetFlagKeyList(projectKey string) ([]string, error) {
 	return flagKeys, nil
 }
 
-func (service ApiClient) PutCodeReferenceBranch(post []byte) error {
-	print := string(post)
-	if len(post) > 1000 {
-		print = print[:1000]
+func (service ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) error {
+	branchBytes, err := json.Marshal(branch)
+	if err != nil {
+		return err
 	}
-	log.Debug("STUBBED PutCodeReferenceBranch", log.Field("post", string(print)))
-	return nil
+	putUrl := fmt.Sprintf("%s/api/v2/code-refs/repositories/%s/%s/%s/branches/%s", service.options.BaseUri, repo.Type, repo.Owner, repo.Name, url.PathEscape(branch.Name))
+	if repo.Type == "custom" {
+		putUrl = fmt.Sprintf("%s/api/v2/code-refs/repositories/custom/%s/branches/%s", service.options.BaseUri, repo.Name, url.PathEscape(branch.Name))
+	}
+	// TODO: retries
+	req, err := http.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", service.options.ApiKey)
+	req.Header.Add("Content-Type", "application/json")
+	client := http.Client{}
+	response, err := client.Do(req)
+	fmt.Println(response.StatusCode)
+	defer response.Body.Close()
+	fmt.Println(string(branchBytes))
+	body, err := ioutil.ReadAll(response.Body)
+	fmt.Println(string(body))
+	return err
+}
+
+type RepoParams struct {
+	Type  string
+	Owner string
+	Name  string
+}
+
+type BranchRep struct {
+	Name       string         `json:"name"`
+	Head       string         `json:"head"`
+	PushTime   int64          `json:"pushTime"`
+	SyncTime   int64          `json:"syncTime"`
+	IsDefault  bool           `json:"isDefault"`
+	References []ReferenceRep `json:"references,omitempty"`
+}
+
+type ReferenceRep struct {
+	Path  string    `json:"path"`
+	Hunks []HunkRep `json:"hunks"`
+}
+
+type HunkRep struct {
+	Offset  int    `json:"offset"`
+	Lines   string `json:"lines,omitempty"`
+	ProjKey string `json:"projKey"`
+	FlagKey string `json:"flagKey"`
 }
