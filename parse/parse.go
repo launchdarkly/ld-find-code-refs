@@ -153,7 +153,7 @@ func (r references) MakeHunkReps() []ld.HunkRep {
 				nextHunkBuilder.WriteString("\n")
 			}
 		}
-		nextHunkBuilder.WriteString(v.Context + "\n")
+		nextHunkBuilder.WriteString(v.Context)
 	}
 
 	for _, flagKey := range currLine.FlagKeys {

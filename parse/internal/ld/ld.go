@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -65,12 +64,8 @@ func (service ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParam
 	req.Header.Add("Authorization", service.options.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
 	client := http.Client{}
-	response, err := client.Do(req)
-	fmt.Println(response.StatusCode)
-	defer response.Body.Close()
-	fmt.Println(string(branchBytes))
-	body, err := ioutil.ReadAll(response.Body)
-	fmt.Println(string(body))
+	_, err := client.Do(req)
+
 	return err
 }
 
