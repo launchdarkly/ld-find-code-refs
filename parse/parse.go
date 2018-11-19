@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -130,18 +129,15 @@ func (r references) MakeReferenceReps() []ld.ReferenceRep {
 
 // MakeHunkReps coallesces single-line references into hunks per flag-key
 func (r references) MakeHunkReps() []ld.HunkRep {
-	fmt.Println("MAKING HUNKS FOR", r)
 	sort.Sort(r)
 	hunks := []ld.HunkRep{}
 	var nextHunkBuilder strings.Builder
 	currLine := r[0]
 	for i, v := range r {
-		fmt.Println("ITERATING OVER R", v.LineNum, v.Context)
 		if i != 0 {
 			if r[i-1].LineNum != r[i].LineNum-1 {
 				lineNum := currLine.LineNum
 				for _, flagKey := range v.FlagKeys {
-					fmt.Println("appending to hunk", lineNum, flagKey)
 					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
 				}
 				if len(v.FlagKeys) == 0 {
@@ -157,13 +153,11 @@ func (r references) MakeHunkReps() []ld.HunkRep {
 	}
 
 	for _, flagKey := range currLine.FlagKeys {
-		fmt.Println("appending to hunk", currLine.LineNum, flagKey)
 		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
 	}
 	if len(currLine.FlagKeys) == 0 {
 		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String()})
 	}
-	fmt.Println(hunks)
 	return hunks
 }
 

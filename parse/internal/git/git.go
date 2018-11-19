@@ -88,7 +88,12 @@ func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]strin
 	if err != nil {
 		c.logError("Error grepping for flag keys", err, &log.Fields{"numFlags": len(escapedFlags), "contextLines": ctxLines})
 	}
-	ret := grepRegex.FindAllStringSubmatch(string(out), -1)
+	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
+	if err != nil {
+		// TODO: handle this error
+		return nil, err
+	}
+	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(string(out), -1)
 	return ret, err
 }
 
