@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/launchdarkly/git-flag-parser/parse/internal/log"
 )
 
 type Commander struct {
@@ -82,11 +82,11 @@ func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]strin
 
 	cmd := sb.String()
 	sh := exec.Command("sh", "-c", cmd)
-	log.WithFields(log.Fields{"numFlags": len(escapedFlags), "contextLines": ctxLines, "cmd": cmd}).Debug("Grepping for flag keys")
+	c.logDebug("Grepping for flag keys", map[string]interface{}{"numFlags": len(escapedFlags), "contextLines": ctxLines, "cmd": cmd})
 	sh.Dir = c.Workspace
 	out, err := sh.Output()
 	if err != nil {
-		c.logError("Error grepping for flag keys", err, &log.Fields{"numFlags": len(escapedFlags), "contextLines": ctxLines})
+		c.logError("Error grepping for flag keys", err, map[string]interface{}{"numFlags": len(escapedFlags), "contextLines": ctxLines})
 	}
 	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
 	if err != nil {
@@ -97,21 +97,14 @@ func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]strin
 	return ret, err
 }
 
-func (c Commander) logDebug(msg string, fields *log.Fields) {
-	if fields == nil {
-		fields = &log.Fields{}
-	}
-	(*fields)["dir"] = c.Workspace
-	(*fields)["branch"] = c.Head
-	log.WithFields(log.Fields{"workspace": c.Workspace, "branch": c.Head}).Debug(msg)
+func (c Commander) logDebug(msg string, fields map[string]interface{}) {
+	fields["dir"] = c.Workspace
+	fields["branch"] = c.Head
+	log.Debug(msg, fields)
 }
 
-func (c Commander) logError(msg string, err error, fields *log.Fields) {
-	if fields == nil {
-		fields = &log.Fields{}
-	}
-	(*fields)["dir"] = c.Workspace
-	(*fields)["branch"] = c.Head
-	(*fields)["error"] = err.Error()
-	log.WithFields(*fields).Error(msg)
+func (c Commander) logError(msg string, err error, fields map[string]interface{}) {
+	fields["dir"] = c.Workspace
+	fields["branch"] = c.Head
+	log.Error(msg, err, fields)
 }
