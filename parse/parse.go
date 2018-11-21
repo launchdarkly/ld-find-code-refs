@@ -83,7 +83,7 @@ type branch struct {
 }
 
 func (b *branch) MakeBranchRep() ld.BranchRep {
-	return ld.BranchRep{Name: b.Name, Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.MakeReferenceReps()}
+	return ld.BranchRep{Name: strings.TrimPrefix(b.Name, "refs/heads/"), Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.MakeReferenceReps()}
 }
 
 type reference struct {
@@ -133,30 +133,27 @@ func (r references) MakeHunkReps() []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 	var nextHunkBuilder strings.Builder
 	currLine := r[0]
+	nextHunkFlagKeys := []string{}
 	for i, v := range r {
 		if i != 0 {
 			if r[i-1].LineNum != r[i].LineNum-1 {
 				lineNum := currLine.LineNum
-				for _, flagKey := range v.FlagKeys {
+				for _, flagKey := range nextHunkFlagKeys {
 					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
 				}
-				if len(v.FlagKeys) == 0 {
-					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String()})
-				}
+				nextHunkFlagKeys = []string{}
 				nextHunkBuilder.Reset()
 				currLine = v
 			} else {
 				nextHunkBuilder.WriteString("\n")
 			}
 		}
+		nextHunkFlagKeys = append(nextHunkFlagKeys, v.FlagKeys...)
 		nextHunkBuilder.WriteString(v.Context)
 	}
 
-	for _, flagKey := range currLine.FlagKeys {
+	for _, flagKey := range nextHunkFlagKeys {
 		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
-	}
-	if len(currLine.FlagKeys) == 0 {
-		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String()})
 	}
 	return hunks
 }
