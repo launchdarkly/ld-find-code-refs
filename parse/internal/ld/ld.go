@@ -64,10 +64,8 @@ func (service ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParam
 	req.Header.Add("Authorization", service.options.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
 	client := http.Client{}
-	res, err := client.Do(req)
-	//TODO: remove these prints
-	fmt.Println(putUrl)
-	fmt.Println(res.StatusCode)
+	_, err = client.Do(req)
+
 	return err
 }
 

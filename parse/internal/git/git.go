@@ -98,12 +98,18 @@ func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]strin
 }
 
 func (c Commander) logDebug(msg string, fields map[string]interface{}) {
+	if fields == nil {
+		fields = map[string]interface{}{}
+	}
 	fields["dir"] = c.Workspace
 	fields["branch"] = c.Head
 	log.Debug(msg, fields)
 }
 
 func (c Commander) logError(msg string, err error, fields map[string]interface{}) {
+	if fields == nil {
+		fields = map[string]interface{}{}
+	}
 	fields["dir"] = c.Workspace
 	fields["branch"] = c.Head
 	log.Error(msg, err, fields)
