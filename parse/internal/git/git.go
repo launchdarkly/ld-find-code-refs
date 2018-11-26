@@ -32,7 +32,7 @@ func (c Commander) RevParse() (string, error) {
 	if err != nil {
 		c.logError("Failed to parse latest commit", err, nil)
 	}
-	return strings.TrimSpace(string(out)), err
+	return strings.TrimSpace(string(out)), nil
 }
 
 func (c Commander) Clone(endpoint string) error {
@@ -56,7 +56,7 @@ func (c Commander) Checkout() error {
 	return err
 }
 
-func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]string, error) {
+func (c Commander) Grep(flags []string, ctxLines int) ([][]string, error) {
 	var sb strings.Builder
 	// not using git grep until we figure out why it takes so long when running on github actions containers
 	// sb.WriteString(fmt.Sprintf("cd %s && git grep -nF", c.Workspace))
@@ -71,9 +71,7 @@ func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]strin
 	if ctxLines > 0 {
 		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
 	}
-	if exclude != "" {
-		sb.WriteString(fmt.Sprintf(" --ignore %s", exclude))
-	}
+
 	escapedFlags := []string{}
 	for _, v := range flags {
 		escapedFlags = append(escapedFlags, regexp.QuoteMeta(v))
@@ -86,11 +84,14 @@ func (c Commander) Grep(flags []string, ctxLines int, exclude string) ([][]strin
 	sh.Dir = c.Workspace
 	out, err := sh.Output()
 	if err != nil {
+		if err.Error() == "exit status 1" {
+			return [][]string{}, nil
+		}
 		c.logError("Error grepping for flag keys", err, map[string]interface{}{"numFlags": len(escapedFlags), "contextLines": ctxLines})
+		return nil, err
 	}
 	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
 	if err != nil {
-		// TODO: handle this error
 		return nil, err
 	}
 	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(string(out), -1)

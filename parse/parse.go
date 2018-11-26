@@ -167,7 +167,7 @@ func (b *branch) findReferences(cmd git.Commander, flags []string) (*branch, err
 		return b, err
 	}
 
-	grepResult, err := cmd.Grep(flags, o.ContextLines.Value(), o.Exclude.Value())
+	grepResult, err := cmd.Grep(flags, o.ContextLines.Value())
 	if err != nil {
 		return b, err
 	}
@@ -194,7 +194,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string) []referen
 		if contextContainsFlagKey {
 			ref.FlagKeys = findReferencedFlags(context, flags)
 		}
-		if ctxLines > 0 {
+		if ctxLines >= 0 {
 			ref.Context = context
 		}
 		references = append(references, ref)
