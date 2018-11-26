@@ -3,6 +3,7 @@ package parse
 import (
 	"io/ioutil"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,34 +43,36 @@ func Parse() {
 	if err != nil {
 		fatal("Unable to parse current commit sha", err)
 	}
-
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value()})
+	projKey := o.ProjKey.Value()
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
 	flags, err := getFlags(ldApi)
 	if err != nil {
 		fatal("Unable to retrieve flag keys", err)
 	}
 	if len(flags) == 0 {
-		log.Info("No flag keys found for selected project, exiting early", log.Field("projKey", o.ProjKey.Value()))
+		log.Info("No flag keys found for selected project, exiting early", log.Field("projKey", projKey))
 		os.Exit(0)
 	}
+	ctxLines := o.ContextLines.Value()
 	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), Head: headSha}
-	b, err = b.findReferences(cmd, flags)
+	// exclude option has already been validated as valid regex
+	exclude, _ := regexp.Compile(o.Exclude.Value())
+	b, err = b.findReferences(cmd, flags, ctxLines, *exclude)
 	if err != nil {
 		fatal("Error searching for flag key references", err)
 	}
 
-	err = ldApi.PutCodeReferenceBranch(b.MakeBranchRep(), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
+	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
 	if err != nil {
 		fatal("Error sending code references to LaunchDarkly", err)
 	}
 }
 
 func getFlags(ldApi ld.ApiClient) ([]string, error) {
-	projKey := o.ProjKey.Value()
-	log.Debug("Requesting flag list from LaunchDarkly", log.Field("projKey", projKey))
-	flags, err := ldApi.GetFlagKeyList(projKey)
+	log.Debug("Requesting flag list from LaunchDarkly", log.Field("projKey", ldApi.Options.ProjKey))
+	flags, err := ldApi.GetFlagKeyList()
 	if err != nil {
-		log.Error("Error retrieving flag list from LaunchDarkly", err, log.Field("projKey", projKey))
+		log.Error("Error retrieving flag list from LaunchDarkly", err, log.Field("projKey", ldApi.Options.ProjKey))
 		return nil, err
 	}
 	return flags, nil
@@ -85,8 +88,8 @@ type branch struct {
 	References references
 }
 
-func (b *branch) MakeBranchRep() ld.BranchRep {
-	return ld.BranchRep{Name: b.Name, Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.MakeReferenceReps()}
+func (b *branch) makeBranchRep() ld.BranchRep {
+	return ld.BranchRep{Name: b.Name, Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.makeReferenceReps()}
 }
 
 type reference struct {
@@ -111,7 +114,7 @@ func (r references) Swap(i, j int) {
 	r[i], r[j] = r[j], r[i]
 }
 
-func (r references) MakeReferenceReps() []ld.ReferenceRep {
+func (r references) makeReferenceReps() []ld.ReferenceRep {
 	pathMap := referencePathMap{}
 	for _, ref := range r {
 		if pathMap[ref.Path] == nil {
@@ -123,7 +126,7 @@ func (r references) MakeReferenceReps() []ld.ReferenceRep {
 	reps := []ld.ReferenceRep{}
 	for k, refs := range pathMap {
 		if len(refs) > 0 {
-			reps = append(reps, ld.ReferenceRep{Path: k, Hunks: refs.MakeHunkReps()})
+			reps = append(reps, ld.ReferenceRep{Path: k, Hunks: refs.makeHunkReps()})
 		}
 	}
 
@@ -131,7 +134,7 @@ func (r references) MakeReferenceReps() []ld.ReferenceRep {
 }
 
 // MakeHunkReps coallesces single-line references into hunks per flag-key
-func (r references) MakeHunkReps() []ld.HunkRep {
+func (r references) makeHunkReps() []ld.HunkRep {
 	sort.Sort(r)
 	hunks := []ld.HunkRep{}
 	var nextHunkBuilder strings.Builder
@@ -164,28 +167,30 @@ func (r references) MakeHunkReps() []ld.HunkRep {
 	return hunks
 }
 
-func (b *branch) findReferences(cmd git.Commander, flags []string) (*branch, error) {
+func (b *branch) findReferences(cmd git.Commander, flags []string, ctxLines int, exclude regexp.Regexp) (*branch, error) {
 	err := cmd.Checkout()
 	if err != nil {
 		return b, err
 	}
 
-	grepResult, err := cmd.Grep(flags, o.ContextLines.Value())
+	grepResult, err := cmd.Grep(flags, ctxLines)
 	if err != nil {
 		return b, err
 	}
 
 	b.SyncTime = makeTimestamp()
-	b.References = generateReferencesFromGrep(flags, grepResult)
+	b.References = generateReferencesFromGrep(flags, grepResult, ctxLines, exclude)
 	return b, nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string) []reference {
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude regexp.Regexp) []reference {
 	references := []reference{}
-	ctxLines := o.ContextLines.Value()
 
 	for _, r := range grepResult {
 		path := r[1]
+		if exclude.MatchString(path) {
+			continue
+		}
 		contextContainsFlagKey := r[2] == ":"
 		lineNumber := r[3]
 		context := r[4]

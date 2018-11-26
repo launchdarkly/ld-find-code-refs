@@ -3,6 +3,7 @@ package parse
 import (
 	"flag"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -84,13 +85,13 @@ var options = optionMap{
 	ContextLines:  option{-1, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
 	DefaultBranch: option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
 	Dir:           option{"", "Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required.", false},
-	Exclude:       option{"", "Exclude any files with code references that match this regex pattern", false},
+	Exclude:       option{"", "Exclude any files or directories that match this regular expression pattern", false},
 	ProjKey:       option{"", "LaunchDarkly project key.", true},
 	PushTime:      option{int64(0), "The time the push was initiated formatted as a unix millis timestamp.", true},
 	RepoHead:      option{"master", "The HEAD or ref to retrieve code references from.", false},
 	RepoName:      option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
 	RepoOwner:     option{"", "Git repo owner/org.", false},
-	RepoType:      option{"custom", "github|custom", false},
+	RepoType:      option{"custom", "github|bitbucket|custom", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -129,9 +130,12 @@ func Init() (err error, errCb func()) {
 	}
 	repoType := strings.ToLower(RepoType.Value())
 	if repoType != "custom" && repoType != "github" {
-		return fmt.Errorf("Repo type must be \"custom\" or \"github\""), flag.PrintDefaults
+		return fmt.Errorf("Repo type must be \"custom\", \"bitbucket\", or \"github\""), flag.PrintDefaults
 	}
-
+	_, err = regexp.Compile(Exclude.Value())
+	if err != nil {
+		return fmt.Errorf("Exclude must be a valid regular expression: %+v", err), flag.PrintDefaults
+	}
 	return nil, flag.PrintDefaults
 }
 

@@ -13,11 +13,12 @@ import (
 
 type ApiClient struct {
 	client  *ldapi.APIClient
-	options ApiOptions
+	Options ApiOptions
 }
 
 type ApiOptions struct {
 	ApiKey  string
+	ProjKey string
 	BaseUri string
 }
 
@@ -30,13 +31,13 @@ func InitApiClient(options ApiOptions) ApiClient {
 			BasePath:  options.BaseUri + "/api/v2",
 			UserAgent: "github-actor",
 		}),
-		options: options,
+		Options: options,
 	}
 }
 
-func (service ApiClient) GetFlagKeyList(projectKey string) ([]string, error) {
-	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: service.options.ApiKey})
-	flags, _, err := service.client.FeatureFlagsApi.GetFeatureFlags(ctx, projectKey, nil)
+func (service ApiClient) GetFlagKeyList() ([]string, error) {
+	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: service.Options.ApiKey})
+	flags, _, err := service.client.FeatureFlagsApi.GetFeatureFlags(ctx, service.Options.ProjKey, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,16 +53,16 @@ func (service ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParam
 	if err != nil {
 		return err
 	}
-	putUrl := fmt.Sprintf("%s/api/v2/code-refs/repositories/%s/%s/%s/branches/%s", service.options.BaseUri, repo.Type, repo.Owner, repo.Name, url.PathEscape(branch.Name))
+	putUrl := fmt.Sprintf("%s/api/v2/code-refs/repositories/%s/%s/%s/branches/%s", service.Options.BaseUri, repo.Type, repo.Owner, repo.Name, url.PathEscape(branch.Name))
 	if repo.Type == "custom" {
-		putUrl = fmt.Sprintf("%s/api/v2/code-refs/repositories/custom/%s/branches/%s", service.options.BaseUri, repo.Name, url.PathEscape(branch.Name))
+		putUrl = fmt.Sprintf("%s/api/v2/code-refs/repositories/custom/%s/branches/%s", service.Options.BaseUri, repo.Name, url.PathEscape(branch.Name))
 	}
 	// TODO: retries
 	req, err := http.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", service.options.ApiKey)
+	req.Header.Add("Authorization", service.Options.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
 	client := http.Client{}
 	_, err = client.Do(req)
