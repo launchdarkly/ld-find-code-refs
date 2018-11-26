@@ -24,6 +24,10 @@ func Debug(msg string, fields map[string]interface{}) {
 	logger.WithFields(logger.Fields(fields)).Debug(msg)
 }
 
+func Info(msg string, fields map[string]interface{}) {
+	logger.WithFields(logger.Fields(fields)).Info(msg)
+}
+
 func Field(key string, val interface{}) map[string]interface{} {
 	return map[string]interface{}{key: val}
 }

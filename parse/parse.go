@@ -48,7 +48,10 @@ func Parse() {
 	if err != nil {
 		fatal("Unable to retrieve flag keys", err)
 	}
-
+	if len(flags) == 0 {
+		log.Info("No flag keys found for selected project, exiting early", log.Field("projKey", o.ProjKey.Value()))
+		os.Exit(0)
+	}
 	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), Head: headSha}
 	b, err = b.findReferences(cmd, flags)
 	if err != nil {
