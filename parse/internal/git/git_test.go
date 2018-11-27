@@ -20,10 +20,9 @@ const (
 
 func TestCommander_RevParse(t *testing.T) {
 	tests := []struct {
-		name    string
-		head    string
-		want    string
-		wantErr bool
+		name string
+		head string
+		want string
 	}{
 		{
 			name: "succeeds on branch head",
@@ -36,9 +35,8 @@ func TestCommander_RevParse(t *testing.T) {
 			want: sha,
 		},
 		{
-			name:    "fails on invalid head",
-			head:    "not-a-head",
-			wantErr: true,
+			name: "fails on invalid head",
+			head: "",
 		},
 	}
 	for _, tt := range tests {
@@ -49,10 +47,6 @@ func TestCommander_RevParse(t *testing.T) {
 				RepoName:  repoName,
 			}
 			got, err := c.RevParse()
-			if tt.wantErr {
-				require.Error(t, err)
-				return
-			}
 			require.NoError(t, err)
 			assert.Equal(t, got, tt.want)
 		})
