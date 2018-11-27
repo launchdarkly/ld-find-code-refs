@@ -42,6 +42,7 @@ func TestMain(m *testing.M) {
 		fmt.Println(output)
 		tempSha = strings.TrimSpace(output[len(output)-2])
 		sha = strings.TrimSpace(output[len(output)-3])
+		fmt.Println(sha, tempSha)
 		exitVal = m.Run()
 	}
 
