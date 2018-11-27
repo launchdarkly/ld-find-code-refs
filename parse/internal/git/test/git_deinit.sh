@@ -1,2 +1,2 @@
 #!/bin/sh
-rm -rf /tmp/test-flags-repo
+#rm -rf /tmp/test-flags-repo
