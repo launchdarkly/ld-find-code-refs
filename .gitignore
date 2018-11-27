@@ -2,3 +2,4 @@ out
 .vscode
 git-flag-parser
 github-actions
+bin

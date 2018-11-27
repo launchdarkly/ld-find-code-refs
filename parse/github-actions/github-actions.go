@@ -42,7 +42,11 @@ func main() {
 	}
 	o.Populate()
 	for k, v := range options {
-		flag.Set(k, v)
+		err := flag.Set(k, v)
+		if err != nil {
+			fmt.Printf("Error setting option: %s", k)
+			os.Exit(1)
+		}
 	}
 	fmt.Printf("Starting repo parsing program with options:\n %+v\n", options)
 	parse.Parse()
