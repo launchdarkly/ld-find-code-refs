@@ -7,53 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestParse(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			Parse()
-// 		})
-// 	}
-// }
-
-// func Test_references_makeReferenceReps(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 		r    references
-// 		want []ld.ReferenceRep
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := tt.r.makeReferenceReps(); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("references.makeReferenceReps() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
-
-// func Test_references_makeHunkReps(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 		r    references
-// 		want []ld.HunkRep
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := tt.r.makeHunkReps(); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("references.makeHunkReps() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
-
 func Test_generateReferencesFromGrep(t *testing.T) {
 	tests := []struct {
 		name       string
