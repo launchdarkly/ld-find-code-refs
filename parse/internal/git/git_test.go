@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	workspace = ""
-	repoName  = "test-flags-repo"
-	sha       = "ce110109a6eee2a653dc7a311d6d4b9c93555010"
+	noWorkspace = ""
+	repoName    = "test-flags-repo"
+	sha         = "ce110109a6eee2a653dc7a311d6d4b9c93555010"
 )
 
 func TestCommander_RevParse(t *testing.T) {
@@ -42,13 +42,13 @@ func TestCommander_RevParse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commander{
-				Workspace: repoName,
+				Workspace: filepath.Dir(caller) + "/" + repoName,
 				Head:      tt.head,
 				RepoName:  repoName,
 			}
 			got, err := c.RevParse()
 			require.NoError(t, err)
-			assert.Equal(t, got, tt.want)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -77,7 +77,7 @@ func TestCommander_Clone(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			fmt.Println(tt.endpoint)
 			c := Commander{
-				Workspace: workspace,
+				Workspace: noWorkspace,
 				RepoName:  repoName,
 				Head:      tt.head,
 			}
@@ -130,7 +130,7 @@ func TestCommander_Checkout(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commander{
-				Workspace: repoName,
+				Workspace: filepath.Dir(caller) + "/" + repoName,
 				Head:      tt.head,
 				RepoName:  repoName,
 			}
