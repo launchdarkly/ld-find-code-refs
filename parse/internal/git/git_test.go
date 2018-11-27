@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,8 +17,33 @@ import (
 const (
 	noWorkspace = ""
 	repoName    = "test-flags-repo"
-	sha         = "ce110109a6eee2a653dc7a311d6d4b9c93555010"
 )
+
+var (
+	sha             = ""
+	tempSha         = ""
+	_, caller, _, _ = runtime.Caller(0)
+	repoPath        = filepath.Dir(caller) + "/" + repoName
+)
+
+func TestMain(m *testing.M) {
+	initCmd := exec.Command("./git_init.sh")
+	initCmd.Dir = repoPath
+	out, err := initCmd.Output()
+	if err != nil {
+		fmt.Printf("Error initializing test git repo: %+v\n", err)
+		os.Exit(1)
+	}
+	output := strings.Split(string(out), "\n")
+	if len(output) > 3 {
+		// grab the last 2 text line of the git init script, which contains the current revision for the test repo's master and temp branches
+		tempSha = strings.TrimSpace(output[len(output)-2])
+		sha = strings.TrimSpace(output[len(output)-3])
+		os.Exit(m.Run())
+	}
+	fmt.Printf("Error initializing test git repo: %v\n", string(out))
+	os.Exit(1)
+}
 
 func TestCommander_RevParse(t *testing.T) {
 	tests := []struct {
@@ -42,7 +69,7 @@ func TestCommander_RevParse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commander{
-				Workspace: filepath.Dir(caller) + "/" + repoName,
+				Workspace: repoPath,
 				Head:      tt.head,
 				RepoName:  repoName,
 			}
@@ -52,8 +79,6 @@ func TestCommander_RevParse(t *testing.T) {
 		})
 	}
 }
-
-var _, caller, _, _ = runtime.Caller(0)
 
 func TestCommander_Clone(t *testing.T) {
 	tests := []struct {
@@ -65,7 +90,7 @@ func TestCommander_Clone(t *testing.T) {
 		{
 			name:     "succeeds on valid repo",
 			head:     "master",
-			endpoint: "file://" + filepath.Dir(caller) + "/" + repoName,
+			endpoint: "file://" + repoPath,
 		},
 		{
 			name:     "fails on invalid endpoint",
@@ -75,7 +100,6 @@ func TestCommander_Clone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fmt.Println(tt.endpoint)
 			c := Commander{
 				Workspace: noWorkspace,
 				RepoName:  repoName,
@@ -119,7 +143,7 @@ func TestCommander_Checkout(t *testing.T) {
 		{
 			name: "succeeds on checkout",
 			head: "temp",
-			want: "892f88313d2bb23108e0099d3f5a231bce2740b1",
+			want: tempSha,
 		},
 		{
 			name:    "fails on non-existant branch",
@@ -130,7 +154,7 @@ func TestCommander_Checkout(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commander{
-				Workspace: filepath.Dir(caller) + "/" + repoName,
+				Workspace: repoPath,
 				Head:      tt.head,
 				RepoName:  repoName,
 			}
@@ -158,25 +182,25 @@ func TestCommander_Grep(t *testing.T) {
 			name:     "succeeds",
 			flags:    []string{"someFlag"},
 			ctxLines: 0,
-			wantLen:  4,
+			wantLen:  5,
 		},
 		{
 			name:     "succeeds with 1 context line",
 			flags:    []string{"someFlag"},
 			ctxLines: 1,
-			wantLen:  7,
+			wantLen:  10,
 		},
 		{
 			name:     "succeeds with 2 context lines",
 			flags:    []string{"someFlag"},
 			ctxLines: 2,
-			wantLen:  10,
+			wantLen:  14,
 		},
 		{
 			name:     "succeeds with multiple flags",
 			flags:    []string{"someFlag", "anotherFlag"},
 			ctxLines: 0,
-			wantLen:  5,
+			wantLen:  6,
 		},
 		{
 			name:     "succeeds with escaped flag",
@@ -188,13 +212,13 @@ func TestCommander_Grep(t *testing.T) {
 			name:     "succeeds with ctxLines < 0",
 			flags:    []string{"someFlag"},
 			ctxLines: -1,
-			wantLen:  4,
+			wantLen:  5,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commander{
-				Workspace: filepath.Dir(caller) + "/" + repoName,
+				Workspace: repoPath,
 				Head:      "master",
 				RepoName:  repoName,
 			}
