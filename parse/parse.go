@@ -55,9 +55,10 @@ func Parse() {
 	}
 	ctxLines := o.ContextLines.Value()
 	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), Head: headSha}
-	// exclude option has already been validated as valid regex
+
+	// exclude option has already been validated as regex
 	exclude, _ := regexp.Compile(o.Exclude.Value())
-	b, err = b.findReferences(cmd, flags, ctxLines, *exclude)
+	b, err = b.findReferences(cmd, flags, ctxLines, exclude)
 	if err != nil {
 		fatal("Error searching for flag key references", err)
 	}
@@ -129,7 +130,6 @@ func (r references) makeReferenceReps() []ld.ReferenceRep {
 			reps = append(reps, ld.ReferenceRep{Path: k, Hunks: refs.makeHunkReps()})
 		}
 	}
-
 	return reps
 }
 
@@ -167,7 +167,7 @@ func (r references) makeHunkReps() []ld.HunkRep {
 	return hunks
 }
 
-func (b *branch) findReferences(cmd git.Commander, flags []string, ctxLines int, exclude regexp.Regexp) (*branch, error) {
+func (b *branch) findReferences(cmd git.Commander, flags []string, ctxLines int, exclude *regexp.Regexp) (*branch, error) {
 	err := cmd.Checkout()
 	if err != nil {
 		return b, err
@@ -183,12 +183,12 @@ func (b *branch) findReferences(cmd git.Commander, flags []string, ctxLines int,
 	return b, nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude regexp.Regexp) []reference {
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []reference {
 	references := []reference{}
 
 	for _, r := range grepResult {
 		path := r[1]
-		if exclude.MatchString(path) {
+		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
 			continue
 		}
 		contextContainsFlagKey := r[2] == ":"
