@@ -39,10 +39,8 @@ func TestMain(m *testing.M) {
 	output := strings.Split(string(out), "\n")
 	if len(output) > 3 {
 		// grab the last 2 text line of the git init script, which contains the current revision for the test repo's master and temp branches
-		fmt.Println(output)
 		tempSha = strings.TrimSpace(output[len(output)-2])
 		sha = strings.TrimSpace(output[len(output)-3])
-		fmt.Println(sha, tempSha)
 		exitVal = m.Run()
 	}
 
@@ -111,7 +109,6 @@ func TestCommander_Clone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fmt.Println(tt.endpoint)
 			c := Commander{
 				Workspace: noWorkspace,
 				RepoName:  repoName,
