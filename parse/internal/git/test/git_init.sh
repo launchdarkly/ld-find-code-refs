@@ -1,4 +1,6 @@
 #!/bin/sh
+cp -r ./test-flags-repo /tmp
+cd /tmp/test-flags-repo
 git init
 git add .
 git commit -m "init"

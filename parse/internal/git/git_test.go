@@ -23,26 +23,36 @@ var (
 	sha             = ""
 	tempSha         = ""
 	_, caller, _, _ = runtime.Caller(0)
-	repoPath        = filepath.Dir(caller) + "/" + repoName
+	testPath        = filepath.Dir(caller) + "/test"
+	repoPath        = "/tmp/" + repoName
 )
 
 func TestMain(m *testing.M) {
 	initCmd := exec.Command("./git_init.sh")
-	initCmd.Dir = repoPath
+	initCmd.Dir = testPath
 	out, err := initCmd.Output()
+	exitVal := 1
 	if err != nil {
 		fmt.Printf("Error initializing test git repo: %+v\n", err)
-		os.Exit(1)
 	}
+
 	output := strings.Split(string(out), "\n")
 	if len(output) > 3 {
 		// grab the last 2 text line of the git init script, which contains the current revision for the test repo's master and temp branches
+		fmt.Println(output)
 		tempSha = strings.TrimSpace(output[len(output)-2])
 		sha = strings.TrimSpace(output[len(output)-3])
-		os.Exit(m.Run())
+		exitVal = m.Run()
 	}
-	fmt.Printf("Error initializing test git repo: %v\n", string(out))
-	os.Exit(1)
+
+	deinitCmd := exec.Command("./git_deinit.sh")
+	deinitCmd.Dir = testPath
+	_, err = deinitCmd.Output()
+	if err != nil {
+		fmt.Printf("Failed to cleanup test git repo after running tests: %+v\n", err)
+		exitVal = 1
+	}
+	os.Exit(exitVal)
 }
 
 func TestCommander_RevParse(t *testing.T) {
@@ -100,6 +110,7 @@ func TestCommander_Clone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			fmt.Println(tt.endpoint)
 			c := Commander{
 				Workspace: noWorkspace,
 				RepoName:  repoName,
@@ -117,7 +128,7 @@ func TestCommander_Clone(t *testing.T) {
 			require.NoError(t, err)
 
 			localCmd := Commander{
-				Workspace: repoName,
+				Workspace: repoPath,
 				Head:      "master",
 				RepoName:  repoName,
 			}
