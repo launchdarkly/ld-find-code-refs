@@ -1,0 +1,18 @@
+someFlag
+-
+
+-
+someFlag
+-
+
+--
+--
+someFlag
+--
+--
+
+anotherFlag
+
+someFlag anotherFlag
+
+escaped.flag
