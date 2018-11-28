@@ -17,12 +17,12 @@ func main() {
 	fmt.Println("Setting GitHub action env vars")
 	ghRepo := strings.Split(os.Getenv("GITHUB_REPOSITORY"), "/")
 	if len(ghRepo) < 2 {
-		fmt.Printf("Invalid GitHub repository name set: '%s'\n", os.Getenv("GITHUB_REPOSITORY"))
+		fmt.Fprintf(os.Stderr, "Invalid GitHub repository name set: '%s'\n", os.Getenv("GITHUB_REPOSITORY"))
 		os.Exit(1)
 	}
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
-		fmt.Printf("Error parsing GitHub event payload: %+v at '%s'\n", err, os.Getenv("GITHUB_EVENT_PATH"))
+		fmt.Fprintf(os.Stderr, "Error parsing GitHub event payload: %+v at '%s'\n", err, os.Getenv("GITHUB_EVENT_PATH"))
 		os.Exit(1)
 	}
 
@@ -44,11 +44,11 @@ func main() {
 	for k, v := range options {
 		err := flag.Set(k, v)
 		if err != nil {
-			fmt.Printf("Error setting option: %s", k)
+			fmt.Fprintf(os.Stderr, "Error setting option: %s", k)
 			os.Exit(1)
 		}
 	}
-	fmt.Printf("Starting repo parsing program with options:\n %+v\n", options)
+	fmt.Fprintf(os.Stderr, "Starting repo parsing program with options:\n %+v\n", options)
 	parse.Parse()
 }
 

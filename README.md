@@ -9,7 +9,7 @@ Command line program for generating flag code references. Possible command line 
 - cloneEndpoint string
       If provided, will clone the repo from this endpoint to the provided dir. If authentication is required, this endpoint should be authenticated. Supports the https protocol for git cloning. Example: https://username:password@github.com/username/repository.git
 - contextLines int
-      The number of context lines to send to LaunchDarkly. If< 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. (default -1)
+      The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. (default -1)
 - defaultBranch string
       The git default branch. The LaunchDarkly UI will default to this branch. (default "master")
 - dir string

@@ -54,14 +54,15 @@ func Parse() {
 		os.Exit(0)
 	}
 	ctxLines := o.ContextLines.Value()
-	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), Head: headSha}
+	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), SyncTime: makeTimestamp(), Head: headSha}
 
 	// exclude option has already been validated as regex
 	exclude, _ := regexp.Compile(o.Exclude.Value())
-	b, err = b.findReferences(cmd, flags, ctxLines, exclude)
+	refs, err := b.findReferences(cmd, flags, ctxLines, exclude)
 	if err != nil {
 		fatal("Error searching for flag key references", err)
 	}
+	b.References = refs
 
 	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
 	if err != nil {
@@ -96,7 +97,7 @@ func (b *branch) makeBranchRep() ld.BranchRep {
 type reference struct {
 	Path     string
 	LineNum  int
-	Context  string
+	LineText string
 	FlagKeys []string
 }
 
@@ -155,7 +156,7 @@ func (r references) makeHunkReps() []ld.HunkRep {
 				nextHunkBuilder.WriteString("\n")
 			}
 		}
-		nextHunkBuilder.WriteString(v.Context)
+		nextHunkBuilder.WriteString(v.LineText)
 	}
 
 	for _, flagKey := range currLine.FlagKeys {
@@ -167,20 +168,18 @@ func (r references) makeHunkReps() []ld.HunkRep {
 	return hunks
 }
 
-func (b *branch) findReferences(cmd git.Commander, flags []string, ctxLines int, exclude *regexp.Regexp) (*branch, error) {
+func (b *branch) findReferences(cmd git.Commander, flags []string, ctxLines int, exclude *regexp.Regexp) (references, error) {
 	err := cmd.Checkout()
 	if err != nil {
-		return b, err
+		return references{}, err
 	}
 
 	grepResult, err := cmd.Grep(flags, ctxLines)
 	if err != nil {
-		return b, err
+		return references{}, err
 	}
 
-	b.SyncTime = makeTimestamp()
-	b.References = generateReferencesFromGrep(flags, grepResult, ctxLines, exclude)
-	return b, nil
+	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
 }
 
 func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []reference {
@@ -193,17 +192,17 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		}
 		contextContainsFlagKey := r[2] == ":"
 		lineNumber := r[3]
-		context := r[4]
+		lineText := r[4]
 		lineNum, err := strconv.Atoi(lineNumber)
 		if err != nil {
 			fatal("encountered an error generating flag references", err)
 		}
 		ref := reference{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
-			ref.FlagKeys = findReferencedFlags(context, flags)
+			ref.FlagKeys = findReferencedFlags(lineText, flags)
 		}
 		if ctxLines >= 0 {
-			ref.Context = context
+			ref.LineText = lineText
 		}
 		references = append(references, ref)
 	}

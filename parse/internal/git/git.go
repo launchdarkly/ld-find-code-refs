@@ -58,14 +58,6 @@ func (c Commander) Checkout() error {
 
 func (c Commander) Grep(flags []string, ctxLines int) ([][]string, error) {
 	var sb strings.Builder
-	// not using git grep until we figure out why it takes so long when running on github actions containers
-	// sb.WriteString(fmt.Sprintf("cd %s && git grep -nF", c.Workspace))
-	// if ctxLines > 0 {
-	// 	sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
-	// }
-	// for _, f := range flags {
-	// 	sb.WriteString(fmt.Sprintf(" -e %s", f))
-	// }
 
 	sb.WriteString(fmt.Sprintf("ag --nogroup"))
 	if ctxLines > 0 {

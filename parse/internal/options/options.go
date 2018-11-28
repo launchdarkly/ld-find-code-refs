@@ -129,7 +129,7 @@ func Init() (err error, errCb func()) {
 		return err, flag.PrintDefaults
 	}
 	repoType := strings.ToLower(RepoType.Value())
-	if repoType != "custom" && repoType != "github" {
+	if repoType != "custom" && repoType != "github" || repoType != "bitbucket" {
 		return fmt.Errorf("Repo type must be \"custom\", \"bitbucket\", or \"github\""), flag.PrintDefaults
 	}
 	_, err = regexp.Compile(Exclude.Value())
