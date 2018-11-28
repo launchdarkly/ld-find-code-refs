@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-func TestCommander_RevParse(t *testing.T) {
+func TestGit_RevParse(t *testing.T) {
 	tests := []struct {
 		name string
 		head string
@@ -77,7 +77,7 @@ func TestCommander_RevParse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Commander{
+			c := Git{
 				Workspace: repoPath,
 				Head:      tt.head,
 				RepoName:  repoName,
@@ -89,7 +89,7 @@ func TestCommander_RevParse(t *testing.T) {
 	}
 }
 
-func TestCommander_Clone(t *testing.T) {
+func TestGit_Clone(t *testing.T) {
 	tests := []struct {
 		name     string
 		head     string
@@ -109,7 +109,7 @@ func TestCommander_Clone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Commander{
+			c := Git{
 				Workspace: noWorkspace,
 				RepoName:  repoName,
 				Head:      tt.head,
@@ -125,7 +125,7 @@ func TestCommander_Clone(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			localCmd := Commander{
+			localCmd := Git{
 				Workspace: repoPath,
 				Head:      "master",
 				RepoName:  repoName,
@@ -137,7 +137,7 @@ func TestCommander_Clone(t *testing.T) {
 	}
 }
 
-func TestCommander_Checkout(t *testing.T) {
+func TestGit_Checkout(t *testing.T) {
 	tests := []struct {
 		name    string
 		head    string
@@ -162,7 +162,7 @@ func TestCommander_Checkout(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Commander{
+			c := Git{
 				Workspace: repoPath,
 				Head:      tt.head,
 				RepoName:  repoName,
@@ -179,7 +179,7 @@ func TestCommander_Checkout(t *testing.T) {
 	}
 }
 
-func TestCommander_Grep(t *testing.T) {
+func TestGit_Grep(t *testing.T) {
 	tests := []struct {
 		name     string
 		flags    []string
@@ -226,7 +226,7 @@ func TestCommander_Grep(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Commander{
+			c := Git{
 				Workspace: repoPath,
 				Head:      "master",
 				RepoName:  repoName,
