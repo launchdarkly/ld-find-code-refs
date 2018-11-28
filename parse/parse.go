@@ -25,7 +25,7 @@ func Parse() {
 
 	currBranch := o.RepoHead.Value()
 
-	cmd := git.Commander{Workspace: o.Dir.Value(), Head: currBranch, RepoName: o.RepoName.Value()}
+	cmd := git.Git{Workspace: o.Dir.Value(), Head: currBranch, RepoName: o.RepoName.Value()}
 	endpoint := o.CloneEndpoint.Value()
 	if endpoint != "" {
 		dir, err := ioutil.TempDir("", cmd.RepoName)
@@ -168,7 +168,7 @@ func (r references) makeHunkReps() []ld.HunkRep {
 	return hunks
 }
 
-func (b *branch) findReferences(cmd git.Commander, flags []string, ctxLines int, exclude *regexp.Regexp) (references, error) {
+func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (references, error) {
 	err := cmd.Checkout()
 	if err != nil {
 		return references{}, err
