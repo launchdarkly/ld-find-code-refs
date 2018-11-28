@@ -24,7 +24,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			},
 			ctxLines: 0,
 			want: []reference{
-				{Path: "flags.txt", LineNum: 12, Context: "someFlag", FlagKeys: []string{"someFlag"}},
+				{Path: "flags.txt", LineNum: 12, LineText: "someFlag", FlagKeys: []string{"someFlag"}},
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			exclude:  ".*",
 		},
 		{
-			name:  "succeeds with no context lines",
+			name:  "succeeds with no LineText lines",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
 				{"", "flags.txt", ":", "12", "someFlag"},
@@ -57,12 +57,12 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			},
 			ctxLines: 0,
 			want: []reference{
-				{Path: "flags.txt", LineNum: 12, Context: "someFlag", FlagKeys: []string{"someFlag"}},
-				{Path: "path/flags.txt", LineNum: 12, Context: "someFlag anotherFlag", FlagKeys: []string{"someFlag", "anotherFlag"}},
+				{Path: "flags.txt", LineNum: 12, LineText: "someFlag", FlagKeys: []string{"someFlag"}},
+				{Path: "path/flags.txt", LineNum: 12, LineText: "someFlag anotherFlag", FlagKeys: []string{"someFlag", "anotherFlag"}},
 			},
 		},
 		{
-			name:  "succeeds with extra context lines",
+			name:  "succeeds with extra LineText lines",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
 				{"", "flags.txt", "-", "11", "not a flag key line"},
@@ -71,9 +71,9 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			},
 			ctxLines: 1,
 			want: []reference{
-				{Path: "flags.txt", LineNum: 11, Context: "not a flag key line"},
-				{Path: "flags.txt", LineNum: 12, Context: "someFlag", FlagKeys: []string{"someFlag"}},
-				{Path: "flags.txt", LineNum: 13, Context: "not a flag key line"},
+				{Path: "flags.txt", LineNum: 11, LineText: "not a flag key line"},
+				{Path: "flags.txt", LineNum: 12, LineText: "someFlag", FlagKeys: []string{"someFlag"}},
+				{Path: "flags.txt", LineNum: 13, LineText: "not a flag key line"},
 			},
 		},
 	}
