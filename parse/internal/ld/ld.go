@@ -9,6 +9,8 @@ import (
 	"net/url"
 
 	ldapi "github.com/launchdarkly/api-client-go"
+
+	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
 )
 
 type ApiClient struct {
@@ -57,6 +59,7 @@ func (service ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParam
 	if repo.Type == "custom" {
 		putUrl = fmt.Sprintf("%s/api/v2/code-refs/repositories/custom/%s/branches/%s", service.Options.BaseUri, repo.Name, url.PathEscape(branch.Name))
 	}
+	log.Debug("Sending code references", log.Field("url", putUrl))
 	// TODO: retries
 	req, err := http.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
@@ -65,8 +68,8 @@ func (service ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParam
 	req.Header.Add("Authorization", service.Options.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
 	client := http.Client{}
-	_, err = client.Do(req)
-
+	res, err := client.Do(req)
+	log.Debug("LaunchDarkly PUT branches endpoint responded with status "+res.Status, log.Field("url", putUrl))
 	return err
 }
 
