@@ -91,7 +91,7 @@ type branch struct {
 }
 
 func (b *branch) makeBranchRep() ld.BranchRep {
-	return ld.BranchRep{Name: b.Name, Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.makeReferenceReps()}
+	return ld.BranchRep{Name: strings.TrimPrefix(b.Name, "refs/heads/"), Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.makeReferenceReps()}
 }
 
 type reference struct {
