@@ -37,7 +37,7 @@ func main() {
 		"exclude":       os.Getenv("LD_EXCLUDE"),
 		"contextLines":  os.Getenv("LD_CONTEXT_LINES"),
 		"baseUri":       os.Getenv("LD_BASE_URI"),
-		"pushTime":      strconv.FormatInt(event.Repo.PushedAt, 10),
+		"pushTime":      strconv.FormatInt(event.Repo.PushedAt, 10) * 1000, // seconds to milliseconds
 		"defaultBranch": event.Repo.DefaultBranch,
 	}
 	o.Populate()
