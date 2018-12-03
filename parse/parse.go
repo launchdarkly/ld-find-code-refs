@@ -116,7 +116,7 @@ func (r references) Swap(i, j int) {
 	r[i], r[j] = r[j], r[i]
 }
 
-func (r references) makeReferenceReps() []ld.ReferenceRep {
+func (r references) makeReferenceReps() []ld.ReferenceHunksRep {
 	pathMap := referencePathMap{}
 	for _, ref := range r {
 		if pathMap[ref.Path] == nil {
@@ -125,10 +125,10 @@ func (r references) makeReferenceReps() []ld.ReferenceRep {
 		pathMap[ref.Path] = append(pathMap[ref.Path], ref)
 	}
 
-	reps := []ld.ReferenceRep{}
+	reps := []ld.ReferenceHunksRep{}
 	for k, refs := range pathMap {
 		if len(refs) > 0 {
-			reps = append(reps, ld.ReferenceRep{Path: k, Hunks: refs.makeHunkReps()})
+			reps = append(reps, ld.ReferenceHunksRep{Path: k, Hunks: refs.makeHunkReps()})
 		}
 	}
 	return reps
