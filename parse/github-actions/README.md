@@ -27,6 +27,7 @@ The flag parser can be used with [GitHub actions](https://github.com/features/ac
 ## Workflow configuration
 
 The `github-actions-flag-parser` may be configured with additional environmental variables to enable more functionality.
+
 | Variable | Description | Default | Required |
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|----------|
 | LD_ACCESS_TOKEN | A LaunchDarkly personal access token with admin-level access. Should be supplied as a GitHub secret. | n/a | yes |
