@@ -7,7 +7,7 @@ The flag parser can be used with [GitHub Actions](https://github.com/features/ac
 1. GitHub Actions is currently in open beta. If you haven't signed up already, you may sign up [here](https://github.com/features/actions/signup/).
 2. Create a [LaunchDarkly personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with admin-level access. Store this newly created access token as a secret titled `LD_ACCESS_TOKEN` in your GitHub repository: https://developer.github.com/actions/creating-workflows/storing-secrets/. ![GitHub Actions secret configuration](./images/secret-configuration.png) <!-- TODO: Custom role information -->
 
-3. Create a new workflow in your selected Github repository. If you don't already have a workflow file, you'll need to create a new file titled `main.workflow` in the `.github` directory of your repository. The workflow should run on the `push` event, and contain an action which uses `docker://launchdarkly/github-actions-flag-parser` it's action provider. The `LD_ACCESS_TOKEN` configured in the previous step should be included as a secret, as well as a new environment variable containg your LaunchDarkly project key. Here's an example of a minimal workflow file configuration:
+3. Create a new workflow in your selected Github repository. If you don't already have a workflow file, you'll need to create a new file titled `main.workflow` in the `.github` directory of your repository. The workflow should run on the `push` event, and contain an action which uses `docker://launchdarkly/github-actions-flag-parser` its action provider. The `LD_ACCESS_TOKEN` configured in the previous step should be included as a secret, as well as a new environment variable containg your LaunchDarkly project key. Here's an example of a minimal workflow file configuration:
   ```
   workflow "Find flag references" {
     on = "push"
@@ -24,7 +24,7 @@ The flag parser can be used with [GitHub Actions](https://github.com/features/ac
   }
   ```
 
-4. Once your workflow has been created, the best way to confirm that it's executing is to create a new pull request with the workflow file, and verify that the newly created action is succeeding. A failing action is indicative of an invalid configuration.
+4. Once your workflow has been created, the best way to confirm that the workflow executing is to create a new pull request with the workflow file, and verify that the newly created action is succeeding. A failing action is indicative of an invalid configuration.
 
 ![GitHub Action execution](./images/action-running.png)
 ![Github Action succeeded](./images/action-succeeded.png)
