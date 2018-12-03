@@ -24,6 +24,11 @@ The flag parser can be used with [GitHub actions](https://github.com/features/ac
   }
   ```
 
+4. Once your workflow has been created, the best way to confirm that it's executing is to create a new pull request with the workflow file, and verify that the newly created action is succeeding. A failing action is indicative of an invalid configuration.
+
+![GitHub action execution](./images/action-running.png)
+![Github action succeeded](./images/action-succeeded.png)
+
 ## Workflow configuration
 
 The `github-actions-flag-parser` may be configured with additional environmental variables to enable more functionality.
@@ -33,7 +38,7 @@ The `github-actions-flag-parser` may be configured with additional environmental
 | LD_ACCESS_TOKEN | A LaunchDarkly personal access token with admin-level access. Should be supplied as a GitHub secret. | n/a | yes |
 | LD_PROJ_KEY | A LaunchDarkly project key. The flag parser will search this project for code references in this project. | n/a | yes |
 | LD_EXCLUDE | A regular expression defining the files and directories which the flag parser should exclude. | "" | no |
-| LD_CONTEXT_LINES | The number of context lines above and below a code reference for the flag parser to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | -1 | no |
+| LD_CONTEXT_LINES | The number of context lines above and below a code reference for the flag parser to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | "-1" | no |
 | LD_BASE_URI | Set the base URL of the LaunchDarkly server for this configuration. | "https://app.launchdarkly.com" | no |
 
 Here's an example of a workflow configured to exclude the `vendor` directory and send 1 line of context above and below each code reference for each flag in the "default" project:
@@ -49,7 +54,7 @@ Here's an example of a workflow configured to exclude the `vendor` directory and
     env = {
       LD_PROJ_KEY = "default"
       LD_EXCLUDE = "vendor/.*"
-      LD_CONTEXT_LINES = 1
+      LD_CONTEXT_LINES = "1"
     }
     uses = "docker://launchdarkly/github-actions-flag-parser:latest"
   }
