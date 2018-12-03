@@ -17,6 +17,7 @@ This repository provides solutions for configurating [LaunchDarkly code referenc
 ## Execution via CLI
 <!-- TODO: Link to latest binary / dockerfile when released -->
 The command line program may be run manually, and executed in an environment of your choosing. The following options are available to the program:
+
 | Option | Description | Default | Required |
 |---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|------------------------------------|
 | accessToken | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with admin-level access. | n/a | yes |
