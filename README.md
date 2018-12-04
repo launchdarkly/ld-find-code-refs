@@ -2,7 +2,7 @@
 
 Command line program for generating flag code references.
 
-This repository provides solutions for configurating [LaunchDarkly code references](https://docs.launchdarkly.com) <!-- TODO: Real docs link --> with various git providers and CI systems, as well as the ability to automate code reference discovery on your own infrastructure using the parser's command line interface.
+This repository provides solutions for configuring [LaunchDarkly code references](https://docs.launchdarkly.com) <!-- TODO: Real docs link --> with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
 
 ## Configuration options
 | System | Status |
