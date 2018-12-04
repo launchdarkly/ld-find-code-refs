@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -64,7 +63,7 @@ func Parse() {
 	}
 	b.References = refs
 
-	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
+	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
 	if err != nil {
 		fatal("Error sending code references to LaunchDarkly", err)
 	}
@@ -87,113 +86,130 @@ type branch struct {
 	IsDefault  bool
 	PushTime   int64
 	SyncTime   int64
-	References references
+	References grepResultLines
 }
 
-func (b *branch) makeBranchRep() ld.BranchRep {
+func (b *branch) makeBranchRep(projKey string) ld.BranchRep {
 	return ld.BranchRep{
 		Name:       strings.TrimPrefix(b.Name, "refs/heads/"),
 		Head:       b.Head,
 		PushTime:   b.PushTime,
 		SyncTime:   b.SyncTime,
 		IsDefault:  b.IsDefault,
-		References: b.References.makeReferenceReps(),
+		References: b.References.makeReferenceHunksReps(projKey),
 	}
 }
 
-type reference struct {
+type grepResultLine struct {
 	Path     string
 	LineNum  int
 	LineText string
 	FlagKeys []string
 }
 
-type references []reference
-type referencePathMap map[string]references
+type grepResultLines []grepResultLine
 
-func (r references) Len() int {
-	return len(r)
+type flagReferenceMap map[string][]*grepResultLine
+
+type fileGrepResults struct {
+	flagReferenceMap    flagReferenceMap
+	fileGrepResultLines []grepResultLine
 }
 
-func (r references) Less(i, j int) bool {
-	return r[i].LineNum < r[j].LineNum
+type grepResultPathMap map[string]*fileGrepResults
+
+func (fgr fileGrepResults) areEmpty() bool {
+	return len(fgr.fileGrepResultLines) == 0
 }
 
-func (r references) Swap(i, j int) {
-	r[i], r[j] = r[j], r[i]
-}
-
-func (r references) makeReferenceReps() []ld.ReferenceHunksRep {
-	pathMap := referencePathMap{}
-	for _, ref := range r {
-		if pathMap[ref.Path] == nil {
-			pathMap[ref.Path] = []reference{}
-		}
-		pathMap[ref.Path] = append(pathMap[ref.Path], ref)
-	}
+func (g grepResultLines) makeReferenceHunksReps(projKey string) []ld.ReferenceHunksRep {
+	pathMap := g.groupIntoPathMap()
 
 	reps := []ld.ReferenceHunksRep{}
-	for k, refs := range pathMap {
-		if len(refs) > 0 {
-			reps = append(reps, ld.ReferenceHunksRep{Path: k, Hunks: refs.makeHunkReps()})
+	for path, grepResults := range pathMap {
+		if !grepResults.areEmpty() {
+			reps = append(reps, ld.ReferenceHunksRep{Path: path, Hunks: grepResults.makeHunkReps(projKey)})
 		}
 	}
 	return reps
 }
 
-// MakeHunkReps coallesces single-line references into hunks per flag-key
-func (r references) makeHunkReps() []ld.HunkRep {
-	sort.Sort(r)
-	hunks := []ld.HunkRep{}
-	var nextHunkBuilder strings.Builder
-	currLine := r[0]
-	for i, v := range r {
-		if i != 0 {
-			if r[i-1].LineNum != r[i].LineNum-1 {
-				lineNum := currLine.LineNum
-				for _, flagKey := range v.FlagKeys {
-					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String(),
-						ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
-				}
-				if len(v.FlagKeys) == 0 {
-					hunks = append(hunks, ld.HunkRep{Offset: lineNum,
-						Lines: nextHunkBuilder.String()})
-				}
-				nextHunkBuilder.Reset()
-				currLine = v
-			} else {
-				nextHunkBuilder.WriteString("\n")
-			}
-		}
-		nextHunkBuilder.WriteString(v.LineText)
+func (frm flagReferenceMap) addFlagReference(key string, ref *grepResultLine) {
+	if frm[key] == nil {
+		frm[key] = []*grepResultLine{ref}
+	} else {
+		frm[key] = append(frm[key], ref)
 	}
-
-	for _, flagKey := range currLine.FlagKeys {
-		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum,
-			Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
-	}
-	if len(currLine.FlagKeys) == 0 {
-		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String()})
-	}
-	return hunks
 }
 
-func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (references, error) {
+func (pathMap grepResultPathMap) getOrInitResultsForPath(path string) *fileGrepResults {
+	_, ok := pathMap[path]
+
+	if !ok {
+		pathMap[path] = &fileGrepResults{
+			flagReferenceMap:    flagReferenceMap{},
+			fileGrepResultLines: []grepResultLine{},
+		}
+	}
+
+	return pathMap[path]
+}
+
+func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) {
+	fgr.fileGrepResultLines = append(fgr.fileGrepResultLines, grepResult)
+}
+
+func (fgr *fileGrepResults) addFlagReference(key string, ref *grepResultLine) {
+	_, ok := fgr.flagReferenceMap[key]
+
+	if ok {
+		fgr.flagReferenceMap[key] = append(fgr.flagReferenceMap[key], ref)
+	} else {
+		fgr.flagReferenceMap[key] = []*grepResultLine{ref}
+	}
+}
+
+func (g grepResultLines) groupIntoPathMap() grepResultPathMap {
+	pathMap := grepResultPathMap{}
+
+	for _, grepResult := range g {
+		rescopedGrepResult := grepResult
+
+		resultsForPath := pathMap.getOrInitResultsForPath(rescopedGrepResult.Path)
+
+		resultsForPath.addGrepResult(rescopedGrepResult)
+
+		if len(grepResult.FlagKeys) > 0 {
+			for _, flagKey := range grepResult.FlagKeys {
+				resultsForPath.addFlagReference(flagKey, &rescopedGrepResult)
+			}
+		}
+	}
+
+	return pathMap
+}
+
+// MakeHunkReps coallesces single-line references into hunks per flag-key
+func (r fileGrepResults) makeHunkReps(projKey string) []ld.HunkRep {
+	return []ld.HunkRep{}
+}
+
+func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
 	err := cmd.Checkout()
 	if err != nil {
-		return references{}, err
+		return grepResultLines{}, err
 	}
 
 	grepResult, err := cmd.Grep(flags, ctxLines)
 	if err != nil {
-		return references{}, err
+		return grepResultLines{}, err
 	}
 
 	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []reference {
-	references := []reference{}
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
+	references := []grepResultLine{}
 
 	for _, r := range grepResult {
 		path := r[1]
@@ -207,7 +223,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		if err != nil {
 			fatal("encountered an error generating flag references", err)
 		}
-		ref := reference{Path: path, LineNum: lineNum}
+		ref := grepResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
 			ref.FlagKeys = findReferencedFlags(lineText, flags)
 		}
