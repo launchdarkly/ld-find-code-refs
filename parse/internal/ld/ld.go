@@ -37,9 +37,9 @@ func InitApiClient(options ApiOptions) ApiClient {
 	}
 }
 
-func (service ApiClient) GetFlagKeyList() ([]string, error) {
-	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: service.Options.ApiKey})
-	flags, _, err := service.client.FeatureFlagsApi.GetFeatureFlags(ctx, service.Options.ProjKey, nil)
+func (c ApiClient) GetFlagKeyList() ([]string, error) {
+	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
+	flags, _, err := c.client.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -50,33 +50,58 @@ func (service ApiClient) GetFlagKeyList() ([]string, error) {
 	return flagKeys, nil
 }
 
-func (service ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) error {
+func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
+	// Custom repos don't allow owners, so swallow the owner if configured for a custom repo.
+	if repo.Type == "custom" {
+		repo.Owner = ""
+	}
+	repoBytes, err := json.Marshal(repo)
+	if err != nil {
+		return err
+	}
+	postUrl := fmt.Sprintf("%s/api/v2/code-refs/repositories", c.Options.BaseUri)
+	log.Debug("Attempting to create code reference repository", log.Field("url", postUrl))
+	// TODO: retries
+	req, err := http.NewRequest("POST", postUrl, bytes.NewBuffer(repoBytes))
+	if err != nil {
+		return err
+	}
+	res, err := c.do(req)
+	log.Debug("LaunchDarkly POST repository endpoint responded with status "+res.Status, log.Field("url", postUrl))
+	return err
+}
+
+func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) error {
 	branchBytes, err := json.Marshal(branch)
 	if err != nil {
 		return err
 	}
-	putUrl := fmt.Sprintf("%s/api/v2/code-refs/repositories/%s/%s/%s/branches/%s", service.Options.BaseUri, repo.Type, repo.Owner, repo.Name, url.PathEscape(branch.Name))
+	putUrl := fmt.Sprintf("%s/api/v2/code-refs/repositories/%s/%s/%s/branches/%s", c.Options.BaseUri, repo.Type, repo.Owner, repo.Name, url.PathEscape(branch.Name))
 	if repo.Type == "custom" {
-		putUrl = fmt.Sprintf("%s/api/v2/code-refs/repositories/custom/%s/branches/%s", service.Options.BaseUri, repo.Name, url.PathEscape(branch.Name))
+		putUrl = fmt.Sprintf("%s/api/v2/code-refs/repositories/custom/%s/branches/%s", c.Options.BaseUri, repo.Name, url.PathEscape(branch.Name))
 	}
 	log.Debug("Sending code references", log.Field("url", putUrl))
-	// TODO: retries
 	req, err := http.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", service.Options.ApiKey)
-	req.Header.Add("Content-Type", "application/json")
-	client := http.Client{}
-	res, err := client.Do(req)
+	res, err := c.do(req)
 	log.Debug("LaunchDarkly PUT branches endpoint responded with status "+res.Status, log.Field("url", putUrl))
 	return err
 }
 
+func (c ApiClient) do(req *http.Request) (*http.Response, error) {
+	req.Header.Add("Authorization", c.Options.ApiKey)
+	req.Header.Add("Content-Type", "application/json")
+	// TODO: Use a client with timeouts and retries
+	client := http.Client{}
+	return client.Do(req)
+}
+
 type RepoParams struct {
-	Type  string
-	Owner string
-	Name  string
+	Type  string `json:"type"`
+	Owner string `json:"owner"`
+	Name  string `json:"name"`
 }
 
 type BranchRep struct {
