@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"container/list"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -109,17 +110,17 @@ type grepResultLine struct {
 
 type grepResultLines []grepResultLine
 
-type flagReferenceMap map[string][]*grepResultLine
+type flagReferenceMap map[string][]*list.Element
 
 type fileGrepResults struct {
 	flagReferenceMap    flagReferenceMap
-	fileGrepResultLines []grepResultLine
+	fileGrepResultLines *list.List
 }
 
 type grepResultPathMap map[string]*fileGrepResults
 
 func (fgr fileGrepResults) areEmpty() bool {
-	return len(fgr.fileGrepResultLines) == 0
+	return fgr.fileGrepResultLines.Len() == 0
 }
 
 func (g grepResultLines) makeReferenceHunksReps(projKey string) []ld.ReferenceHunksRep {
@@ -134,9 +135,9 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string) []ld.ReferenceHu
 	return reps
 }
 
-func (frm flagReferenceMap) addFlagReference(key string, ref *grepResultLine) {
+func (frm flagReferenceMap) addFlagReference(key string, ref *list.Element) {
 	if frm[key] == nil {
-		frm[key] = []*grepResultLine{ref}
+		frm[key] = []*list.Element{ref}
 	} else {
 		frm[key] = append(frm[key], ref)
 	}
@@ -148,27 +149,28 @@ func (pathMap grepResultPathMap) getOrInitResultsForPath(path string) *fileGrepR
 	if !ok {
 		pathMap[path] = &fileGrepResults{
 			flagReferenceMap:    flagReferenceMap{},
-			fileGrepResultLines: []grepResultLine{},
+			fileGrepResultLines: list.New(),
 		}
 	}
 
 	return pathMap[path]
 }
 
-func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) {
-	fgr.fileGrepResultLines = append(fgr.fileGrepResultLines, grepResult)
+func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Element {
+	return fgr.fileGrepResultLines.PushBack(grepResult)
 }
 
-func (fgr *fileGrepResults) addFlagReference(key string, ref *grepResultLine) {
+func (fgr *fileGrepResults) addFlagReference(key string, ref *list.Element) {
 	_, ok := fgr.flagReferenceMap[key]
 
 	if ok {
 		fgr.flagReferenceMap[key] = append(fgr.flagReferenceMap[key], ref)
 	} else {
-		fgr.flagReferenceMap[key] = []*grepResultLine{ref}
+		fgr.flagReferenceMap[key] = []*list.Element{ref}
 	}
 }
 
+// TODO: assert that lines are sorted
 func (g grepResultLines) groupIntoPathMap() grepResultPathMap {
 	pathMap := grepResultPathMap{}
 
@@ -177,11 +179,11 @@ func (g grepResultLines) groupIntoPathMap() grepResultPathMap {
 
 		resultsForPath := pathMap.getOrInitResultsForPath(rescopedGrepResult.Path)
 
-		resultsForPath.addGrepResult(rescopedGrepResult)
+		elem := resultsForPath.addGrepResult(rescopedGrepResult)
 
 		if len(grepResult.FlagKeys) > 0 {
 			for _, flagKey := range grepResult.FlagKeys {
-				resultsForPath.addFlagReference(flagKey, &rescopedGrepResult)
+				resultsForPath.addFlagReference(flagKey, elem)
 			}
 		}
 	}
@@ -191,6 +193,14 @@ func (g grepResultLines) groupIntoPathMap() grepResultPathMap {
 
 // MakeHunkReps coallesces single-line references into hunks per flag-key
 func (r fileGrepResults) makeHunkReps(projKey string) []ld.HunkRep {
+	// hunks := []ld.hunkRep{}
+
+	// var hunkBuilder strings.Builder
+
+	// for flag, flagReferences := range r.flagReferenceMap {
+
+	// }
+
 	return []ld.HunkRep{}
 }
 

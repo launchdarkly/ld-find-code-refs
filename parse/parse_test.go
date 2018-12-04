@@ -528,146 +528,61 @@ func Test_groupIntoPathMap(t *testing.T) {
 		LineText: "flag-1",
 		FlagKeys: []string{"flag-1"},
 	}
+
 	grepResultPathALine2 := grepResultLine{
 		Path:     "a",
 		LineNum:  2,
 		LineText: "flag-2",
 		FlagKeys: []string{"flag-2"},
 	}
-	grepResultPathALine3 := grepResultLine{
-		Path:     "a",
-		LineNum:  3,
-		LineText: "context",
-		FlagKeys: []string{},
-	}
+
 	grepResultPathBLine1 := grepResultLine{
 		Path:     "b",
 		LineNum:  1,
-		LineText: "flag-1",
-		FlagKeys: []string{"flag-1"},
+		LineText: "flag-3",
+		FlagKeys: []string{"flag-3"},
 	}
 	grepResultPathBLine2 := grepResultLine{
 		Path:     "b",
 		LineNum:  2,
 		LineText: "flag-2",
-		FlagKeys: []string{"flag-2"},
-	}
-	grepResultPathBLine3 := grepResultLine{
-		Path:     "b",
-		LineNum:  3,
-		LineText: "context",
-		FlagKeys: []string{},
-	}
-	tests := []struct {
-		name        string
-		grepResults grepResultLines
-		want        grepResultPathMap
-	}{
-		{
-			name:        "no grep results",
-			grepResults: grepResultLines{},
-			want:        grepResultPathMap{},
-		},
-		{
-			name: "one file, one flag reference, no context",
-			grepResults: grepResultLines{
-				grepResultPathALine1,
-			},
-			want: grepResultPathMap{
-				"a": &fileGrepResults{
-					flagReferenceMap: flagReferenceMap{
-						"flag-1": []*grepResultLine{&grepResultPathALine1},
-					},
-					fileGrepResultLines: []grepResultLine{
-						grepResultPathALine1,
-					},
-				},
-			},
-		},
-		{
-			name: "one file, multiple flags",
-			grepResults: grepResultLines{
-				grepResultPathALine1,
-				grepResultPathALine2,
-			},
-			want: grepResultPathMap{
-				"a": &fileGrepResults{
-					flagReferenceMap: flagReferenceMap{
-						"flag-1": []*grepResultLine{&grepResultPathALine1},
-						"flag-2": []*grepResultLine{&grepResultPathALine2},
-					},
-					fileGrepResultLines: []grepResultLine{
-						grepResultPathALine1,
-						grepResultPathALine2,
-					},
-				},
-			},
-		},
-		{
-			name: "one file, multiple flags and context",
-			grepResults: grepResultLines{
-				grepResultPathALine1,
-				grepResultPathALine2,
-				grepResultPathALine3,
-			},
-			want: grepResultPathMap{
-				"a": &fileGrepResults{
-					flagReferenceMap: flagReferenceMap{
-						"flag-1": []*grepResultLine{&grepResultPathALine1},
-						"flag-2": []*grepResultLine{&grepResultPathALine2},
-					},
-					fileGrepResultLines: []grepResultLine{
-						grepResultPathALine1,
-						grepResultPathALine2,
-						grepResultPathALine3,
-					},
-				},
-			},
-		},
-		{
-			name: "multiple files, multiple flags and context",
-			grepResults: grepResultLines{
-				grepResultPathALine1,
-				grepResultPathALine2,
-				grepResultPathALine3,
-				grepResultPathBLine1,
-				grepResultPathBLine2,
-				grepResultPathBLine3,
-			},
-			want: grepResultPathMap{
-				"a": &fileGrepResults{
-					flagReferenceMap: flagReferenceMap{
-						"flag-1": []*grepResultLine{&grepResultPathALine1},
-						"flag-2": []*grepResultLine{&grepResultPathALine2},
-					},
-					fileGrepResultLines: []grepResultLine{
-						grepResultPathALine1,
-						grepResultPathALine2,
-						grepResultPathALine3,
-					},
-				},
-				"b": &fileGrepResults{
-					flagReferenceMap: flagReferenceMap{
-						"flag-1": []*grepResultLine{&grepResultPathBLine1},
-						"flag-2": []*grepResultLine{&grepResultPathBLine2},
-					},
-					fileGrepResultLines: []grepResultLine{
-						grepResultPathBLine1,
-						grepResultPathBLine2,
-						grepResultPathBLine3,
-					},
-				},
-			},
-		},
+		FlagKeys: []string{"flag-4"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := tt.grepResults.groupIntoPathMap()
-
-			require.Equal(t, tt.want, got)
-		})
-
+	lines := grepResultLines{
+		grepResultPathALine1,
+		grepResultPathALine2,
+		grepResultPathBLine1,
+		grepResultPathBLine2,
 	}
 
+	pathMap := lines.groupIntoPathMap()
+
+	aRefs, ok := pathMap["a"]
+	require.True(t, ok)
+
+	aRefMap := aRefs.flagReferenceMap
+	require.Equal(t, len(aRefMap), 2)
+
+	require.Contains(t, aRefMap, "flag-1")
+	require.Contains(t, aRefMap, "flag-2")
+
+	aLines := aRefs.fileGrepResultLines
+	require.Equal(t, aLines.Len(), 2)
+	require.Equal(t, aLines.Front().Value, grepResultPathALine1)
+	require.Equal(t, aLines.Back().Value, grepResultPathALine2)
+
+	bRefs, ok := pathMap["b"]
+	require.True(t, ok)
+
+	bRefMap := bRefs.flagReferenceMap
+	require.Equal(t, len(aRefMap), 2)
+
+	require.Contains(t, bRefMap, "flag-3")
+	require.Contains(t, bRefMap, "flag-4")
+
+	bLines := bRefs.fileGrepResultLines
+	require.Equal(t, bLines.Len(), 2)
+	require.Equal(t, bLines.Front().Value, grepResultPathBLine1)
+	require.Equal(t, bLines.Back().Value, grepResultPathBLine2)
 }
