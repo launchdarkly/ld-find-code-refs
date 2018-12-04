@@ -2,6 +2,7 @@ package parse
 
 import (
 	"regexp"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -179,7 +180,7 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 					Hunks: []ld.HunkRep{
 						ld.HunkRep{
 							Offset:  5,
-							Lines:   "context -1\nflag-1\ncontext +1",
+							Lines:   "context -1\nflag-1\ncontext +1\n",
 							ProjKey: projKey,
 							FlagKey: "flag-1",
 						},
@@ -205,24 +206,24 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 			},
 			want: []ld.ReferenceHunksRep{
 				ld.ReferenceHunksRep{
-					Path: "a/c/d",
-					Hunks: []ld.HunkRep{
-						ld.HunkRep{
-							Offset:  10,
-							Lines:   "flag-2",
-							ProjKey: projKey,
-							FlagKey: "flag-2",
-						},
-					},
-				},
-				ld.ReferenceHunksRep{
 					Path: "a/b",
 					Hunks: []ld.HunkRep{
 						ld.HunkRep{
 							Offset:  1,
-							Lines:   "flag-1",
+							Lines:   "flag-1\n",
 							ProjKey: projKey,
 							FlagKey: "flag-1",
+						},
+					},
+				},
+				ld.ReferenceHunksRep{
+					Path: "a/c/d",
+					Hunks: []ld.HunkRep{
+						ld.HunkRep{
+							Offset:  10,
+							Lines:   "flag-2\n",
+							ProjKey: projKey,
+							FlagKey: "flag-2",
 						},
 					},
 				},
@@ -232,28 +233,26 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.refs.makeReferenceHunksReps(projKey)
+			got := tt.refs.makeReferenceHunksReps(projKey, 1)
 
 			require.Equal(t, tt.want, got)
 		})
 	}
 }
 
+// TODO: test empty case?
 func Test_makeHunkReps(t *testing.T) {
 	projKey := "test"
 
 	tests := []struct {
-		name string
-		refs grepResultLines
-		want []ld.ReferenceHunksRep
+		name     string
+		ctxLines int
+		refs     grepResultLines
+		want     []ld.HunkRep
 	}{
 		{
-			name: "no references",
-			refs: grepResultLines{},
-			want: []ld.ReferenceHunksRep{},
-		},
-		{
-			name: "single reference with context lines",
+			name:     "single reference with context lines",
+			ctxLines: 1,
 			refs: grepResultLines{
 				grepResultLine{
 					Path:     "a/b",
@@ -274,22 +273,18 @@ func Test_makeHunkReps(t *testing.T) {
 					FlagKeys: []string{},
 				},
 			},
-			want: []ld.ReferenceHunksRep{
-				ld.ReferenceHunksRep{
-					Path: "a/b",
-					Hunks: []ld.HunkRep{
-						ld.HunkRep{
-							Offset:  5,
-							Lines:   "context -1\nflag-1\ncontext +1",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
-						},
-					},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  5,
+					Lines:   "context -1\nflag-1\ncontext +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
 				},
 			},
 		},
 		{
-			name: "multiple references, single flag, one hunk",
+			name:     "multiple references, single flag, one hunk",
+			ctxLines: 1,
 			refs: grepResultLines{
 				grepResultLine{
 					Path:     "a/b",
@@ -313,7 +308,7 @@ func Test_makeHunkReps(t *testing.T) {
 					Path:     "a/b",
 					LineNum:  8,
 					LineText: "flag-1",
-					FlagKeys: []string{},
+					FlagKeys: []string{"flag-1"},
 				},
 				grepResultLine{
 					Path:     "a/b",
@@ -322,22 +317,18 @@ func Test_makeHunkReps(t *testing.T) {
 					FlagKeys: []string{},
 				},
 			},
-			want: []ld.ReferenceHunksRep{
-				ld.ReferenceHunksRep{
-					Path: "a/b",
-					Hunks: []ld.HunkRep{
-						ld.HunkRep{
-							Offset:  5,
-							Lines:   "context -1\nflag-1\ncontext inner\nflag-1\ncontext +1",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
-						},
-					},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  5,
+					Lines:   "context -1\nflag-1\ncontext inner\nflag-1\ncontext +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
 				},
 			},
 		},
 		{
-			name: "multiple references, single flag, multiple hunks",
+			name:     "multiple references, single flag, multiple hunks",
+			ctxLines: 1,
 			refs: grepResultLines{
 				grepResultLine{
 					Path:     "a/b",
@@ -367,7 +358,7 @@ func Test_makeHunkReps(t *testing.T) {
 					Path:     "a/b",
 					LineNum:  10,
 					LineText: "b flag-1",
-					FlagKeys: []string{},
+					FlagKeys: []string{"flag-1"},
 				},
 				grepResultLine{
 					Path:     "a/b",
@@ -376,28 +367,24 @@ func Test_makeHunkReps(t *testing.T) {
 					FlagKeys: []string{},
 				},
 			},
-			want: []ld.ReferenceHunksRep{
-				ld.ReferenceHunksRep{
-					Path: "a/b",
-					Hunks: []ld.HunkRep{
-						ld.HunkRep{
-							Offset:  5,
-							Lines:   "a context -1\na flag-1\na context +1",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
-						},
-						ld.HunkRep{
-							Offset:  9,
-							Lines:   "b context -1\nb flag-1\nb context +1",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
-						},
-					},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  5,
+					Lines:   "a context -1\na flag-1\na context +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+				ld.HunkRep{
+					Offset:  9,
+					Lines:   "b context -1\nb flag-1\nb context +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
 				},
 			},
 		},
 		{
-			name: "multiple consecutive references, multiple flags, multiple hunks",
+			name:     "multiple consecutive references, multiple flags, multiple hunks",
+			ctxLines: 1,
 			refs: grepResultLines{
 				grepResultLine{
 					Path:     "a/b",
@@ -430,28 +417,24 @@ func Test_makeHunkReps(t *testing.T) {
 					FlagKeys: []string{},
 				},
 			},
-			want: []ld.ReferenceHunksRep{
-				ld.ReferenceHunksRep{
-					Path: "a/b",
-					Hunks: []ld.HunkRep{
-						ld.HunkRep{
-							Offset:  5,
-							Lines:   "context -1\nflag-1\ncontext inner",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
-						},
-						ld.HunkRep{
-							Offset:  7,
-							Lines:   "flag-1\nflag-2\ncontext +1",
-							ProjKey: projKey,
-							FlagKey: "flag-2",
-						},
-					},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  5,
+					Lines:   "context -1\nflag-1\ncontext inner\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+				ld.HunkRep{
+					Offset:  7,
+					Lines:   "context inner\nflag-2\ncontext +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-2",
 				},
 			},
 		},
 		{
-			name: "multiple consecutive (non overlapping) references, multiple flags, multiple hunks",
+			name:     "multiple consecutive (non overlapping) references, multiple flags, multiple hunks",
+			ctxLines: 1,
 			refs: grepResultLines{
 				grepResultLine{
 					Path:     "a/b",
@@ -490,23 +473,18 @@ func Test_makeHunkReps(t *testing.T) {
 					FlagKeys: []string{},
 				},
 			},
-			want: []ld.ReferenceHunksRep{
-				ld.ReferenceHunksRep{
-					Path: "a/b",
-					Hunks: []ld.HunkRep{
-						ld.HunkRep{
-							Offset:  5,
-							Lines:   "a context -1\na flag-1\na context +1",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
-						},
-						ld.HunkRep{
-							Offset:  7,
-							Lines:   "b context -1\nb flag-1\nb context +1",
-							ProjKey: projKey,
-							FlagKey: "flag-2",
-						},
-					},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  5,
+					Lines:   "a context -1\na flag-1\na context +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+				ld.HunkRep{
+					Offset:  8,
+					Lines:   "b context -1\nb flag-2\nb context +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-2",
 				},
 			},
 		},
@@ -514,7 +492,16 @@ func Test_makeHunkReps(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.refs.makeReferenceHunksReps(projKey)
+			groupedResults := tt.refs.groupIntoPathMap()
+
+			fileGrepResults, ok := groupedResults["a/b"]
+
+			require.True(t, ok)
+
+			got := fileGrepResults.makeHunkReps(projKey, tt.ctxLines)
+
+			// TODO: resume here
+			sortedHunks = sort.Sort(got)
 
 			require.Equal(t, tt.want, got)
 		})
