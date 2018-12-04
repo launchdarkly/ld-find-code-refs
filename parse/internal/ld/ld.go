@@ -61,7 +61,6 @@ func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
 	}
 	postUrl := fmt.Sprintf("%s/api/v2/code-refs/repositories", c.Options.BaseUri)
 	log.Debug("Attempting to create code reference repository", log.Field("url", postUrl))
-	// TODO: retries
 	req, err := http.NewRequest("POST", postUrl, bytes.NewBuffer(repoBytes))
 	if err != nil {
 		return err
