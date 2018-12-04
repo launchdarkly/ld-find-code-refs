@@ -39,7 +39,7 @@ The `github-actions-flag-parser` may be configured with additional environment v
 | LD_PROJ_KEY | A LaunchDarkly project key. The flag parser will search this project for code references in this project. | n/a | yes |
 | LD_EXCLUDE | A regular expression defining the files and directories which the flag parser should exclude. | "" | no |
 | LD_CONTEXT_LINES | The number of context lines above and below a code reference for the flag parser to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | "-1" | no |
-| LD_BASE_URI | Set the base URL of the LaunchDarkly server for this configuration. | "https://app.launchdarkly.com" | no |
+| LD_BASE_URI | Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly. | "https://app.launchdarkly.com" | no |
 
 Here's an example of a workflow configured to exclude the `vendor` directory and send 1 line of context above and below each code reference for each flag in the "default" project:
   ```
