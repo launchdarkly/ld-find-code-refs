@@ -16,6 +16,37 @@ import (
 	o "github.com/launchdarkly/git-flag-parser/parse/internal/options"
 )
 
+// TODO: add links
+type branch struct {
+	Name       string
+	Head       string
+	IsDefault  bool
+	PushTime   int64
+	SyncTime   int64
+	References grepResultLines
+}
+type grepResultLine struct {
+	Path     string
+	LineNum  int
+	LineText string
+	FlagKeys []string
+}
+
+type grepResultLines []grepResultLine
+
+// map of flag keys to slices of lines those flags occur on
+type flagReferenceMap map[string][]*list.Element
+
+// this struct contains a linked list of all the grep result lines
+// for a single file, and a map of flag keys to slices of lines where
+// those flags occur.
+type fileGrepResults struct {
+	fileGrepResultLines *list.List
+	flagReferenceMap    flagReferenceMap
+}
+
+type grepResultPathMap map[string]*fileGrepResults
+
 func Parse() {
 	err, cb := o.Init()
 	if err != nil {
@@ -81,14 +112,56 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-// TODO: add links
-type branch struct {
-	Name       string
-	Head       string
-	IsDefault  bool
-	PushTime   int64
-	SyncTime   int64
-	References grepResultLines
+func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
+	err := cmd.Checkout()
+	if err != nil {
+		return grepResultLines{}, err
+	}
+
+	grepResult, err := cmd.Grep(flags, ctxLines)
+	if err != nil {
+		return grepResultLines{}, err
+	}
+
+	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
+}
+
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
+	references := []grepResultLine{}
+
+	for _, r := range grepResult {
+		path := r[1]
+		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
+			continue
+		}
+		contextContainsFlagKey := r[2] == ":"
+		lineNumber := r[3]
+		lineText := r[4]
+		lineNum, err := strconv.Atoi(lineNumber)
+		if err != nil {
+			fatal("encountered an error generating flag references", err)
+		}
+		ref := grepResultLine{Path: path, LineNum: lineNum}
+		if contextContainsFlagKey {
+			ref.FlagKeys = findReferencedFlags(lineText, flags)
+		}
+		if ctxLines >= 0 {
+			ref.LineText = lineText
+		}
+		references = append(references, ref)
+	}
+
+	return references
+}
+
+func findReferencedFlags(ref string, flags []string) []string {
+	ret := []string{}
+	for _, flag := range flags {
+		if strings.Contains(ref, flag) {
+			ret = append(ret, flag)
+		}
+	}
+	return ret
 }
 
 func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
@@ -102,46 +175,37 @@ func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
 	}
 }
 
-type grepResultLine struct {
-	Path     string
-	LineNum  int
-	LineText string
-	FlagKeys []string
-}
-
-type grepResultLines []grepResultLine
-
-type flagReferenceMap map[string][]*list.Element
-
-type fileGrepResults struct {
-	flagReferenceMap    flagReferenceMap
-	fileGrepResultLines *list.List
-}
-
-type grepResultPathMap map[string]*fileGrepResults
-
-func (fgr fileGrepResults) areEmpty() bool {
-	return fgr.fileGrepResultLines.Len() == 0
-}
-
 func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []ld.ReferenceHunksRep {
-	pathMap := g.groupIntoPathMap()
-
 	reps := []ld.ReferenceHunksRep{}
+
+	pathMap := g.aggregateByPath()
+
 	for path, grepResults := range pathMap {
-		if !grepResults.areEmpty() {
-			reps = append(reps, ld.ReferenceHunksRep{Path: path, Hunks: grepResults.makeHunkReps(projKey, ctxLines)})
-		}
+		hunks := grepResults.makeHunkReps(projKey, ctxLines)
+		reps = append(reps, ld.ReferenceHunksRep{Path: path, Hunks: hunks})
 	}
 	return reps
 }
 
-func (frm flagReferenceMap) addFlagReference(key string, ref *list.Element) {
-	if frm[key] == nil {
-		frm[key] = []*list.Element{ref}
-	} else {
-		frm[key] = append(frm[key], ref)
+// TODO: assert that lines are sorted
+func (g grepResultLines) aggregateByPath() grepResultPathMap {
+	pathMap := grepResultPathMap{}
+
+	for _, grepResult := range g {
+		rescopedGrepResult := grepResult
+
+		resultsForPath := pathMap.getOrInitResultsForPath(rescopedGrepResult.Path)
+
+		elem := resultsForPath.addGrepResult(rescopedGrepResult)
+
+		if len(grepResult.FlagKeys) > 0 {
+			for _, flagKey := range grepResult.FlagKeys {
+				resultsForPath.addFlagReference(flagKey, elem)
+			}
+		}
 	}
+
+	return pathMap
 }
 
 func (pathMap grepResultPathMap) getOrInitResultsForPath(path string) *fileGrepResults {
@@ -171,48 +235,19 @@ func (fgr *fileGrepResults) addFlagReference(key string, ref *list.Element) {
 	}
 }
 
-// TODO: assert that lines are sorted
-func (g grepResultLines) groupIntoPathMap() grepResultPathMap {
-	pathMap := grepResultPathMap{}
-
-	for _, grepResult := range g {
-		rescopedGrepResult := grepResult
-
-		resultsForPath := pathMap.getOrInitResultsForPath(rescopedGrepResult.Path)
-
-		elem := resultsForPath.addGrepResult(rescopedGrepResult)
-
-		if len(grepResult.FlagKeys) > 0 {
-			for _, flagKey := range grepResult.FlagKeys {
-				resultsForPath.addFlagReference(flagKey, elem)
-			}
-		}
-	}
-
-	return pathMap
-}
-
 func (r fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 
 	for flag, flagReferences := range r.flagReferenceMap {
-		hunks = append(hunks, buildHunksForFlag(projKey, flag, flagReferences, r.fileGrepResultLines, ctxLines)...)
+		flagHunks := buildHunksForFlag(projKey, flag, flagReferences, r.fileGrepResultLines, ctxLines)
+		hunks = append(hunks, flagHunks...)
 	}
 
 	return hunks
 }
 
-func initHunk(projKey, flagKey string) *ld.HunkRep {
-	return &ld.HunkRep{
-		ProjKey: projKey,
-		FlagKey: flagKey,
-	}
-}
-
 // TODO: handle negative ctxLines
 func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
-	fmt.Println(flag, flagReferences, fileLines, ctxLines)
-
 	hunks := []*ld.HunkRep{}
 
 	var previousHunk *ld.HunkRep
@@ -286,7 +321,6 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 
 			// append this hunk to our list
 			hunks = append(hunks, currentHunk)
-
 		}
 
 		// Reset
@@ -302,56 +336,11 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 	return returnHunks
 }
 
-func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
-	err := cmd.Checkout()
-	if err != nil {
-		return grepResultLines{}, err
+func initHunk(projKey, flagKey string) *ld.HunkRep {
+	return &ld.HunkRep{
+		ProjKey: projKey,
+		FlagKey: flagKey,
 	}
-
-	grepResult, err := cmd.Grep(flags, ctxLines)
-	if err != nil {
-		return grepResultLines{}, err
-	}
-
-	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
-}
-
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
-	references := []grepResultLine{}
-
-	for _, r := range grepResult {
-		path := r[1]
-		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
-			continue
-		}
-		contextContainsFlagKey := r[2] == ":"
-		lineNumber := r[3]
-		lineText := r[4]
-		lineNum, err := strconv.Atoi(lineNumber)
-		if err != nil {
-			fatal("encountered an error generating flag references", err)
-		}
-		ref := grepResultLine{Path: path, LineNum: lineNum}
-		if contextContainsFlagKey {
-			ref.FlagKeys = findReferencedFlags(lineText, flags)
-		}
-		if ctxLines >= 0 {
-			ref.LineText = lineText
-		}
-		references = append(references, ref)
-	}
-
-	return references
-}
-
-func findReferencedFlags(ref string, flags []string) []string {
-	ret := []string{}
-	for _, flag := range flags {
-		if strings.Contains(ref, flag) {
-			ret = append(ret, flag)
-		}
-	}
-	return ret
 }
 
 func makeTimestamp() int64 {

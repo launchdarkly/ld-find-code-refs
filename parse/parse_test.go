@@ -507,7 +507,7 @@ func Test_makeHunkReps(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			groupedResults := tt.refs.groupIntoPathMap()
+			groupedResults := tt.refs.aggregateByPath()
 
 			fileGrepResults, ok := groupedResults["a/b"]
 
@@ -557,7 +557,7 @@ func Test_groupIntoPathMap(t *testing.T) {
 		grepResultPathBLine2,
 	}
 
-	pathMap := lines.groupIntoPathMap()
+	pathMap := lines.aggregateByPath()
 
 	aRefs, ok := pathMap["a"]
 	require.True(t, ok)
