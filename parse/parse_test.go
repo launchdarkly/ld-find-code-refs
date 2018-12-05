@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"testing"
@@ -12,12 +13,7 @@ import (
 
 // Since our hunking algorithm uses some maps, resulting slice orders are not deterministic
 // We use these sorters to make sure the results are always in a deterministic order.
-type byPath []ld.ReferenceHunksRep
 type byOffset []ld.HunkRep
-
-func (r byPath) Len() int           { return len(r) }
-func (r byPath) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
-func (r byPath) Less(i, j int) bool { return r[i].Path < r[j].Path }
 
 func (h byOffset) Len() int           { return len(h) }
 func (h byOffset) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
@@ -247,8 +243,6 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.refs.makeReferenceHunksReps(projKey, 1)
-
-			sort.Sort(byPath(got))
 
 			require.Equal(t, tt.want, got)
 		})
@@ -609,9 +603,9 @@ func Test_makeHunkReps(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			groupedResults := tt.refs.aggregateByPath()
 
-			fileGrepResults, ok := groupedResults["a/b"]
+			require.Equal(t, len(groupedResults), 1)
 
-			require.True(t, ok)
+			fileGrepResults := groupedResults[0]
 
 			got := fileGrepResults.makeHunkReps(projKey, tt.ctxLines)
 
@@ -657,10 +651,12 @@ func Test_groupIntoPathMap(t *testing.T) {
 		grepResultPathBLine2,
 	}
 
-	pathMap := lines.aggregateByPath()
+	linesByPath := lines.aggregateByPath()
 
-	aRefs, ok := pathMap["a"]
-	require.True(t, ok)
+	fmt.Println(linesByPath)
+
+	aRefs := linesByPath[0]
+	require.Equal(t, aRefs.path, "a")
 
 	aRefMap := aRefs.flagReferenceMap
 	require.Equal(t, len(aRefMap), 2)
@@ -673,8 +669,8 @@ func Test_groupIntoPathMap(t *testing.T) {
 	require.Equal(t, aLines.Front().Value, grepResultPathALine1)
 	require.Equal(t, aLines.Back().Value, grepResultPathALine2)
 
-	bRefs, ok := pathMap["b"]
-	require.True(t, ok)
+	bRefs := linesByPath[1]
+	require.Equal(t, bRefs.path, "b")
 
 	bRefMap := bRefs.flagReferenceMap
 	require.Equal(t, len(aRefMap), 2)

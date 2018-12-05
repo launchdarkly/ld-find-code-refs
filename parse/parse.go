@@ -16,15 +16,6 @@ import (
 	o "github.com/launchdarkly/git-flag-parser/parse/internal/options"
 )
 
-// TODO: add links
-type branch struct {
-	Name       string
-	Head       string
-	IsDefault  bool
-	PushTime   int64
-	SyncTime   int64
-	References grepResultLines
-}
 type grepResultLine struct {
 	Path     string
 	LineNum  int
@@ -41,11 +32,20 @@ type flagReferenceMap map[string][]*list.Element
 // for a single file, and a map of flag keys to slices of lines where
 // those flags occur.
 type fileGrepResults struct {
+	path                string
 	fileGrepResultLines *list.List
 	flagReferenceMap    flagReferenceMap
 }
 
-type grepResultPathMap map[string]*fileGrepResults
+// TODO: add links
+type branch struct {
+	Name        string
+	Head        string
+	IsDefault   bool
+	PushTime    int64
+	SyncTime    int64
+	GrepResults grepResultLines
+}
 
 func Parse() {
 	err, cb := o.Init()
@@ -94,7 +94,7 @@ func Parse() {
 	if err != nil {
 		fatal("Error searching for flag key references", err)
 	}
-	b.References = refs
+	b.GrepResults = refs
 
 	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
 	if err != nil {
@@ -171,53 +171,61 @@ func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
 		PushTime:   b.PushTime,
 		SyncTime:   b.SyncTime,
 		IsDefault:  b.IsDefault,
-		References: b.References.makeReferenceHunksReps(projKey, ctxLines),
+		References: b.GrepResults.makeReferenceHunksReps(projKey, ctxLines),
 	}
 }
 
 func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []ld.ReferenceHunksRep {
 	reps := []ld.ReferenceHunksRep{}
 
-	pathMap := g.aggregateByPath()
+	aggregatedGrepResults := g.aggregateByPath()
 
-	for path, grepResults := range pathMap {
-		hunks := grepResults.makeHunkReps(projKey, ctxLines)
-		reps = append(reps, ld.ReferenceHunksRep{Path: path, Hunks: hunks})
+	for _, fileGrepResults := range aggregatedGrepResults {
+		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
+		reps = append(reps, ld.ReferenceHunksRep{Path: fileGrepResults.path, Hunks: hunks})
 	}
 	return reps
 }
 
-func (g grepResultLines) aggregateByPath() grepResultPathMap {
-	pathMap := grepResultPathMap{}
+func (g grepResultLines) aggregateByPath() []fileGrepResults {
+	allFileResults := []fileGrepResults{}
+
+	if len(g) == 0 {
+		return allFileResults
+	}
+
+	// initialize first file
+	currentFileResults := fileGrepResults{
+		path:                g[0].Path,
+		flagReferenceMap:    flagReferenceMap{},
+		fileGrepResultLines: list.New(),
+	}
 
 	for _, grepResult := range g {
-		rescopedGrepResult := grepResult
+		// If we reach a grep result with a new path, append the old one to our list and start a new one
+		if grepResult.Path != currentFileResults.path {
+			allFileResults = append(allFileResults, currentFileResults)
 
-		resultsForPath := pathMap.getOrInitResultsForPath(rescopedGrepResult.Path)
+			currentFileResults = fileGrepResults{
+				path:                grepResult.Path,
+				flagReferenceMap:    flagReferenceMap{},
+				fileGrepResultLines: list.New(),
+			}
+		}
 
-		elem := resultsForPath.addGrepResult(rescopedGrepResult)
+		elem := currentFileResults.addGrepResult(grepResult)
 
 		if len(grepResult.FlagKeys) > 0 {
 			for _, flagKey := range grepResult.FlagKeys {
-				resultsForPath.addFlagReference(flagKey, elem)
+				currentFileResults.addFlagReference(flagKey, elem)
 			}
 		}
 	}
 
-	return pathMap
-}
+	// append last file
+	allFileResults = append(allFileResults, currentFileResults)
 
-func (pathMap grepResultPathMap) getOrInitResultsForPath(path string) *fileGrepResults {
-	_, ok := pathMap[path]
-
-	if !ok {
-		pathMap[path] = &fileGrepResults{
-			flagReferenceMap:    flagReferenceMap{},
-			fileGrepResultLines: list.New(),
-		}
-	}
-
-	return pathMap[path]
+	return allFileResults
 }
 
 func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Element {
@@ -254,7 +262,6 @@ func (r fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep
 	return hunks
 }
 
-// TODO: handle negative ctxLines
 func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
 	hunks := []*ld.HunkRep{}
 
