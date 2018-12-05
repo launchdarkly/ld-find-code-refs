@@ -18,7 +18,7 @@ import (
 func Parse() {
 	err, cb := o.Init()
 	if err != nil {
-		log.Fatal("Unable to validate command line options", err)
+		log.Error("Unable to validate command line options", err, nil)
 		cb()
 		os.Exit(1)
 	}
