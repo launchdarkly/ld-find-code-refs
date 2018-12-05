@@ -33,10 +33,9 @@ type flagReferenceMap map[string][]*list.Element
 type fileGrepResults struct {
 	path                string
 	fileGrepResultLines *list.List
-	flagReferenceMap    flagReferenceMap
+	flagReferenceMap
 }
 
-// TODO: add links
 type branch struct {
 	Name        string
 	Head        string
@@ -235,7 +234,7 @@ func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Eleme
 		// should always return search results sorted by line number. We sanity check
 		// that lines are sorted _just in case_ since the downstream hunking algorithm
 		// only works on sorted lines.
-		panic("grep results returned out of order")
+		log.Fatal("grep results returned out of order", nil)
 	}
 
 	return fgr.fileGrepResultLines.PushBack(grepResult)
@@ -251,11 +250,11 @@ func (fgr *fileGrepResults) addFlagReference(key string, ref *list.Element) {
 	}
 }
 
-func (r fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep {
+func (fgr fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 
-	for flag, flagReferences := range r.flagReferenceMap {
-		flagHunks := buildHunksForFlag(projKey, flag, flagReferences, r.fileGrepResultLines, ctxLines)
+	for flagKey, flagReferences := range fgr.flagReferenceMap {
+		flagHunks := buildHunksForFlag(projKey, flagKey, flagReferences, fgr.fileGrepResultLines, ctxLines)
 		hunks = append(hunks, flagHunks...)
 	}
 
@@ -263,10 +262,10 @@ func (r fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep
 }
 
 func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
-	hunks := []*ld.HunkRep{}
+	hunks := []ld.HunkRep{}
 
 	var previousHunk *ld.HunkRep
-	var currentHunk *ld.HunkRep
+	var currentHunk ld.HunkRep
 
 	lastSeenLineNum := -1
 
@@ -319,34 +318,20 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 		}
 
 		if appendToPreviousHunk {
-			// append to the previous hunk
 			previousHunk.Lines = hunkStringBuilder.String()
+			appendToPreviousHunk = false
 		} else {
-			// store a pointer to this hunk in case the next flag reference has to expand it
-			previousHunk = currentHunk
-
-			// dump the stringBuilder lines into the hunk
 			currentHunk.Lines = hunkStringBuilder.String()
-
-			// append this hunk to our list
 			hunks = append(hunks, currentHunk)
+			previousHunk = &hunks[len(hunks)-1]
 		}
-
-		// Reset
-		appendToPreviousHunk = false
 	}
 
-	// Convert slice of pointers to slice of values
-	returnHunks := []ld.HunkRep{}
-	for _, hunkPtr := range hunks {
-		returnHunks = append(returnHunks, *hunkPtr)
-	}
-
-	return returnHunks
+	return hunks
 }
 
-func initHunk(projKey, flagKey string) *ld.HunkRep {
-	return &ld.HunkRep{
+func initHunk(projKey, flagKey string) ld.HunkRep {
+	return ld.HunkRep{
 		ProjKey: projKey,
 		FlagKey: flagKey,
 	}
