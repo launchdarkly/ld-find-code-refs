@@ -187,7 +187,6 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 	return reps
 }
 
-// TODO: assert that lines are sorted
 func (g grepResultLines) aggregateByPath() grepResultPathMap {
 	pathMap := grepResultPathMap{}
 
@@ -222,6 +221,15 @@ func (pathMap grepResultPathMap) getOrInitResultsForPath(path string) *fileGrepR
 }
 
 func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Element {
+	prev := fgr.fileGrepResultLines.Back()
+	if prev != nil && prev.Value.(grepResultLine).LineNum > grepResult.LineNum {
+		// This should never happen, as `ag` (and any other grep program we might use
+		// should always return search results sorted by line number. We sanity check
+		// that lines are sorted _just in case_ since the downstream hunking algorithm
+		// only works on sorted lines.
+		panic("grep results returned out of order")
+	}
+
 	return fgr.fileGrepResultLines.PushBack(grepResult)
 }
 
