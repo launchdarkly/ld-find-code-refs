@@ -10,6 +10,19 @@ import (
 	"github.com/launchdarkly/git-flag-parser/parse/internal/ld"
 )
 
+// Since our hunking algorithm uses some maps, resulting slice orders are not deterministic
+// We use these sorters to make sure the results are always in a deterministic order.
+type byPath []ld.ReferenceHunksRep
+type byOffset []ld.HunkRep
+
+func (r byPath) Len() int           { return len(r) }
+func (r byPath) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
+func (r byPath) Less(i, j int) bool { return r[i].Path < r[j].Path }
+
+func (h byOffset) Len() int           { return len(h) }
+func (h byOffset) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+func (h byOffset) Less(i, j int) bool { return h[i].Offset < h[j].Offset }
+
 func Test_generateReferencesFromGrep(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -234,6 +247,8 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.refs.makeReferenceHunksReps(projKey, 1)
+
+			sort.Sort(byPath(got))
 
 			require.Equal(t, tt.want, got)
 		})
@@ -500,8 +515,7 @@ func Test_makeHunkReps(t *testing.T) {
 
 			got := fileGrepResults.makeHunkReps(projKey, tt.ctxLines)
 
-			// TODO: resume here
-			sortedHunks = sort.Sort(got)
+			sort.Sort(byOffset(got))
 
 			require.Equal(t, tt.want, got)
 		})
