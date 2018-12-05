@@ -248,7 +248,6 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 	}
 }
 
-// TODO: test empty case?
 func Test_makeHunkReps(t *testing.T) {
 	projKey := "test"
 
