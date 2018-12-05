@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"testing"
@@ -652,8 +651,6 @@ func Test_groupIntoPathMap(t *testing.T) {
 	}
 
 	linesByPath := lines.aggregateByPath()
-
-	fmt.Println(linesByPath)
 
 	aRefs := linesByPath[0]
 	require.Equal(t, aRefs.path, "a")

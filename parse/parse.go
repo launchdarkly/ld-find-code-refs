@@ -2,7 +2,6 @@ package parse
 
 import (
 	"container/list"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -187,6 +186,7 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 	return reps
 }
 
+// Assumes invariant: grepResultLines will already be sorted by path.
 func (g grepResultLines) aggregateByPath() []fileGrepResults {
 	allFileResults := []fileGrepResults{}
 
@@ -275,10 +275,8 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 	appendToPreviousHunk := false
 
 	for _, ref := range flagReferences {
-
 		// Each ref is either the start of a new hunk or a continuation of the previous hunk.
 		// NOTE: its possible that this flag reference is totally contained in the previous hunk
-
 		ptr := ref
 
 		// Attempt to seek to the start of the new hunk.
@@ -286,22 +284,18 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 			// If we seek to a nil pointer, we're at the start of the file and can go no further.
 			if ptr.Prev() != nil {
 				ptr = ptr.Prev()
-			} else {
-				fmt.Println("seeked to start of file")
 			}
 
 			// If we seek earlier than the end of the last hunk, this reference overlaps at least
 			// partially with the last hunk and we should (possibly) expand the previous hunk rather than
 			// starting a new hunk.
 			if ptr.Value.(grepResultLine).LineNum <= lastSeenLineNum {
-				fmt.Println("We've hit prev hunk, going into merge mode")
 				appendToPreviousHunk = true
 			}
 		}
 
 		// If we are starting a new hunk, initialize it
 		if !appendToPreviousHunk {
-			fmt.Println("Initializing new hunk...")
 			currentHunk = initHunk(projKey, flag)
 			currentHunk.Offset = ptr.Value.(grepResultLine).LineNum
 			hunkStringBuilder.Reset()
