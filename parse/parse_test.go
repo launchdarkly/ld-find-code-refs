@@ -503,6 +503,106 @@ func Test_makeHunkReps(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "multiple references, single flag, 0 context, multiple hunks",
+			ctxLines: 0,
+			refs: grepResultLines{
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  5,
+					LineText: "context -1",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  6,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  7,
+					LineText: "context inner",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  8,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  9,
+					LineText: "context +1",
+					FlagKeys: []string{},
+				},
+			},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  6,
+					Lines:   "flag-1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+				ld.HunkRep{
+					Offset:  8,
+					Lines:   "flag-1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+			},
+		},
+		{
+			name:     "multiple references, single flag, negative context, multiple hunks",
+			ctxLines: -1,
+			refs: grepResultLines{
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  5,
+					LineText: "context -1",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  6,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  7,
+					LineText: "context inner",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  8,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  9,
+					LineText: "context +1",
+					FlagKeys: []string{},
+				},
+			},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  6,
+					Lines:   "",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+				ld.HunkRep{
+					Offset:  8,
+					Lines:   "",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
