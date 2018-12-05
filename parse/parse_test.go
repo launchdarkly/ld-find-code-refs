@@ -334,6 +334,50 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 		},
 		{
+			name:     "multiple references, multiple context lines, single flag, one hunk",
+			ctxLines: 2,
+			refs: grepResultLines{
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  5,
+					LineText: "context -1",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  6,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  7,
+					LineText: "context inner",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  8,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  9,
+					LineText: "context +1",
+					FlagKeys: []string{},
+				},
+			},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  5,
+					Lines:   "context -1\nflag-1\ncontext inner\nflag-1\ncontext +1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+			},
+		},
+		{
 			name:     "multiple references, single flag, multiple hunks",
 			ctxLines: 1,
 			refs: grepResultLines{

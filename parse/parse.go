@@ -305,12 +305,12 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 		//     If so: write that line to the hunkStringBuilder
 		//     Record that line as the last seen line.
 		for i := 0; i < ctxLines*2+1; i++ {
-			if ptr.Value.(grepResultLine).LineNum > lastSeenLineNum {
+			ptrLineNum := ptr.Value.(grepResultLine).LineNum
+			if ptrLineNum > lastSeenLineNum {
 				lineText := ptr.Value.(grepResultLine).LineText
 				hunkStringBuilder.WriteString(lineText + "\n")
+				lastSeenLineNum = ptrLineNum
 			}
-
-			lastSeenLineNum = ptr.Value.(grepResultLine).LineNum
 
 			if ptr.Next() != nil {
 				ptr = ptr.Next()
