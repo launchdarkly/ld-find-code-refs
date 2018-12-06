@@ -22,7 +22,7 @@ Group 2: Seperator. A colon indicates a match, a hyphen indicates a context line
 Group 3: Line number
 Group 4: Line contents
 */
-var grepRegex, _ = regexp.Compile("(.+)(:|-)([0-9]+)[:-](.+)")
+var grepRegex, _ = regexp.Compile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
 func (g Git) RevParse() (string, error) {
 	g.logDebug("Parsing latest commit", nil)
