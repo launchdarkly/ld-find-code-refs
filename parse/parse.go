@@ -75,6 +75,13 @@ func Parse() {
 	}
 	projKey := o.ProjKey.Value()
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
+	repoParams := ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()}
+
+	err = ldApi.PostCodeReferenceRepository(repoParams)
+	if err != nil {
+		fatal("Unable to create repository connection to LaunchDarkly", err)
+	}
+
 	flags, err := getFlags(ldApi)
 	if err != nil {
 		fatal("Unable to retrieve flag keys", err)
@@ -83,6 +90,7 @@ func Parse() {
 		log.Info("No flag keys found for selected project, exiting early", log.Field("projKey", projKey))
 		os.Exit(0)
 	}
+
 	ctxLines := o.ContextLines.Value()
 	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), SyncTime: makeTimestamp(), Head: headSha}
 
@@ -94,7 +102,8 @@ func Parse() {
 	}
 	b.GrepResults = refs
 
-	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
+	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), repoParams)
+
 	if err != nil {
 		fatal("Error sending code references to LaunchDarkly", err)
 	}
