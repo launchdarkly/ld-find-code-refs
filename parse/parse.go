@@ -1,10 +1,10 @@
 package parse
 
 import (
+	"container/list"
 	"io/ioutil"
 	"os"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +14,36 @@ import (
 	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
 	o "github.com/launchdarkly/git-flag-parser/parse/internal/options"
 )
+
+type grepResultLine struct {
+	Path     string
+	LineNum  int
+	LineText string
+	FlagKeys []string
+}
+
+type grepResultLines []grepResultLine
+
+// map of flag keys to slices of lines those flags occur on
+type flagReferenceMap map[string][]*list.Element
+
+// this struct contains a linked list of all the grep result lines
+// for a single file, and a map of flag keys to slices of lines where
+// those flags occur.
+type fileGrepResults struct {
+	path                string
+	fileGrepResultLines *list.List
+	flagReferenceMap
+}
+
+type branch struct {
+	Name        string
+	Head        string
+	IsDefault   bool
+	PushTime    int64
+	SyncTime    int64
+	GrepResults grepResultLines
+}
 
 func Parse() {
 	err, cb := o.Init()
@@ -62,9 +92,9 @@ func Parse() {
 	if err != nil {
 		fatal("Error searching for flag key references", err)
 	}
-	b.References = refs
+	b.GrepResults = refs
 
-	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
+	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Owner: o.RepoOwner.Value()})
 	if err != nil {
 		fatal("Error sending code references to LaunchDarkly", err)
 	}
@@ -80,110 +110,22 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-// TODO: add links
-type branch struct {
-	Name       string
-	Head       string
-	IsDefault  bool
-	PushTime   int64
-	SyncTime   int64
-	References references
-}
-
-func (b *branch) makeBranchRep() ld.BranchRep {
-	return ld.BranchRep{Name: strings.TrimPrefix(b.Name, "refs/heads/"), Head: b.Head, PushTime: b.PushTime, SyncTime: b.SyncTime, IsDefault: b.IsDefault, References: b.References.makeReferenceReps()}
-}
-
-type reference struct {
-	Path     string
-	LineNum  int
-	LineText string
-	FlagKeys []string
-}
-
-type references []reference
-type referencePathMap map[string]references
-
-func (r references) Len() int {
-	return len(r)
-}
-
-func (r references) Less(i, j int) bool {
-	return r[i].LineNum < r[j].LineNum
-}
-
-func (r references) Swap(i, j int) {
-	r[i], r[j] = r[j], r[i]
-}
-
-func (r references) makeReferenceReps() []ld.ReferenceRep {
-	pathMap := referencePathMap{}
-	for _, ref := range r {
-		if pathMap[ref.Path] == nil {
-			pathMap[ref.Path] = []reference{}
-		}
-		pathMap[ref.Path] = append(pathMap[ref.Path], ref)
-	}
-
-	reps := []ld.ReferenceRep{}
-	for k, refs := range pathMap {
-		if len(refs) > 0 {
-			reps = append(reps, ld.ReferenceRep{Path: k, Hunks: refs.makeHunkReps()})
-		}
-	}
-	return reps
-}
-
-// MakeHunkReps coallesces single-line references into hunks per flag-key
-func (r references) makeHunkReps() []ld.HunkRep {
-	sort.Sort(r)
-	hunks := []ld.HunkRep{}
-	var nextHunkBuilder strings.Builder
-	currLine := r[0]
-	for i, v := range r {
-		if i != 0 {
-			if r[i-1].LineNum != r[i].LineNum-1 {
-				lineNum := currLine.LineNum
-				for _, flagKey := range v.FlagKeys {
-					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
-				}
-				if len(v.FlagKeys) == 0 {
-					hunks = append(hunks, ld.HunkRep{Offset: lineNum, Lines: nextHunkBuilder.String()})
-				}
-				nextHunkBuilder.Reset()
-				currLine = v
-			} else {
-				nextHunkBuilder.WriteString("\n")
-			}
-		}
-		nextHunkBuilder.WriteString(v.LineText)
-	}
-
-	for _, flagKey := range currLine.FlagKeys {
-		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String(), ProjKey: o.ProjKey.Value(), FlagKey: flagKey})
-	}
-	if len(currLine.FlagKeys) == 0 {
-		hunks = append(hunks, ld.HunkRep{Offset: currLine.LineNum, Lines: nextHunkBuilder.String()})
-	}
-	return hunks
-}
-
-func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (references, error) {
+func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
 	err := cmd.Checkout()
 	if err != nil {
-		return references{}, err
+		return grepResultLines{}, err
 	}
 
 	grepResult, err := cmd.Grep(flags, ctxLines)
 	if err != nil {
-		return references{}, err
+		return grepResultLines{}, err
 	}
 
 	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []reference {
-	references := []reference{}
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
+	references := []grepResultLine{}
 
 	for _, r := range grepResult {
 		path := r[1]
@@ -197,7 +139,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		if err != nil {
 			fatal("encountered an error generating flag references", err)
 		}
-		ref := reference{Path: path, LineNum: lineNum}
+		ref := grepResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
 			ref.FlagKeys = findReferencedFlags(lineText, flags)
 		}
@@ -218,6 +160,181 @@ func findReferencedFlags(ref string, flags []string) []string {
 		}
 	}
 	return ret
+}
+
+func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
+	return ld.BranchRep{
+		Name:       strings.TrimPrefix(b.Name, "refs/heads/"),
+		Head:       b.Head,
+		PushTime:   b.PushTime,
+		SyncTime:   b.SyncTime,
+		IsDefault:  b.IsDefault,
+		References: b.GrepResults.makeReferenceHunksReps(projKey, ctxLines),
+	}
+}
+
+func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []ld.ReferenceHunksRep {
+	reps := []ld.ReferenceHunksRep{}
+
+	aggregatedGrepResults := g.aggregateByPath()
+
+	for _, fileGrepResults := range aggregatedGrepResults {
+		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
+		reps = append(reps, ld.ReferenceHunksRep{Path: fileGrepResults.path, Hunks: hunks})
+	}
+	return reps
+}
+
+// Assumes invariant: grepResultLines will already be sorted by path.
+func (g grepResultLines) aggregateByPath() []fileGrepResults {
+	allFileResults := []fileGrepResults{}
+
+	if len(g) == 0 {
+		return allFileResults
+	}
+
+	// initialize first file
+	currentFileResults := fileGrepResults{
+		path:                g[0].Path,
+		flagReferenceMap:    flagReferenceMap{},
+		fileGrepResultLines: list.New(),
+	}
+
+	for _, grepResult := range g {
+		// If we reach a grep result with a new path, append the old one to our list and start a new one
+		if grepResult.Path != currentFileResults.path {
+			allFileResults = append(allFileResults, currentFileResults)
+
+			currentFileResults = fileGrepResults{
+				path:                grepResult.Path,
+				flagReferenceMap:    flagReferenceMap{},
+				fileGrepResultLines: list.New(),
+			}
+		}
+
+		elem := currentFileResults.addGrepResult(grepResult)
+
+		if len(grepResult.FlagKeys) > 0 {
+			for _, flagKey := range grepResult.FlagKeys {
+				currentFileResults.addFlagReference(flagKey, elem)
+			}
+		}
+	}
+
+	// append last file
+	allFileResults = append(allFileResults, currentFileResults)
+
+	return allFileResults
+}
+
+func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Element {
+	prev := fgr.fileGrepResultLines.Back()
+	if prev != nil && prev.Value.(grepResultLine).LineNum > grepResult.LineNum {
+		// This should never happen, as `ag` (and any other grep program we might use
+		// should always return search results sorted by line number. We sanity check
+		// that lines are sorted _just in case_ since the downstream hunking algorithm
+		// only works on sorted lines.
+		log.Fatal("grep results returned out of order", nil)
+	}
+
+	return fgr.fileGrepResultLines.PushBack(grepResult)
+}
+
+func (fgr *fileGrepResults) addFlagReference(key string, ref *list.Element) {
+	_, ok := fgr.flagReferenceMap[key]
+
+	if ok {
+		fgr.flagReferenceMap[key] = append(fgr.flagReferenceMap[key], ref)
+	} else {
+		fgr.flagReferenceMap[key] = []*list.Element{ref}
+	}
+}
+
+func (fgr fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep {
+	hunks := []ld.HunkRep{}
+
+	for flagKey, flagReferences := range fgr.flagReferenceMap {
+		flagHunks := buildHunksForFlag(projKey, flagKey, flagReferences, fgr.fileGrepResultLines, ctxLines)
+		hunks = append(hunks, flagHunks...)
+	}
+
+	return hunks
+}
+
+func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
+	hunks := []ld.HunkRep{}
+
+	var previousHunk *ld.HunkRep
+	var currentHunk ld.HunkRep
+
+	lastSeenLineNum := -1
+
+	var hunkStringBuilder strings.Builder
+
+	appendToPreviousHunk := false
+
+	for _, ref := range flagReferences {
+		// Each ref is either the start of a new hunk or a continuation of the previous hunk.
+		// NOTE: its possible that this flag reference is totally contained in the previous hunk
+		ptr := ref
+
+		// Attempt to seek to the start of the new hunk.
+		for i := 0; i < ctxLines; i++ {
+			// If we seek to a nil pointer, we're at the start of the file and can go no further.
+			if ptr.Prev() != nil {
+				ptr = ptr.Prev()
+			}
+
+			// If we seek earlier than the end of the last hunk, this reference overlaps at least
+			// partially with the last hunk and we should (possibly) expand the previous hunk rather than
+			// starting a new hunk.
+			if ptr.Value.(grepResultLine).LineNum <= lastSeenLineNum {
+				appendToPreviousHunk = true
+			}
+		}
+
+		// If we are starting a new hunk, initialize it
+		if !appendToPreviousHunk {
+			currentHunk = initHunk(projKey, flag)
+			currentHunk.Offset = ptr.Value.(grepResultLine).LineNum
+			hunkStringBuilder.Reset()
+		}
+
+		// From the current position, seek forward line by line
+		//   For each line, check if we have seeked past the end of the last hunk
+		//     If so: write that line to the hunkStringBuilder
+		//     Record that line as the last seen line.
+		for i := 0; i < ctxLines*2+1; i++ {
+			ptrLineNum := ptr.Value.(grepResultLine).LineNum
+			if ptrLineNum > lastSeenLineNum {
+				lineText := ptr.Value.(grepResultLine).LineText
+				hunkStringBuilder.WriteString(lineText + "\n")
+				lastSeenLineNum = ptrLineNum
+			}
+
+			if ptr.Next() != nil {
+				ptr = ptr.Next()
+			}
+		}
+
+		if appendToPreviousHunk {
+			previousHunk.Lines = hunkStringBuilder.String()
+			appendToPreviousHunk = false
+		} else {
+			currentHunk.Lines = hunkStringBuilder.String()
+			hunks = append(hunks, currentHunk)
+			previousHunk = &hunks[len(hunks)-1]
+		}
+	}
+
+	return hunks
+}
+
+func initHunk(projKey, flagKey string) ld.HunkRep {
+	return ld.HunkRep{
+		ProjKey: projKey,
+		FlagKey: flagKey,
+	}
 }
 
 func makeTimestamp() int64 {
