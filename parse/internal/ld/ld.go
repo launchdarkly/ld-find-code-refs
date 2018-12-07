@@ -33,6 +33,11 @@ const (
 	reposPath = v2ApiPath + "/code-refs/repositories"
 )
 
+var (
+	RepositoryPostErr = fmt.Errorf("error creating repository")
+	BranchPutErr      = fmt.Errorf("error updating branch")
+)
+
 func InitApiClient(options ApiOptions) ApiClient {
 	transport := httpcontrol.Transport{
 		RequestTimeout: 3 * time.Second,
@@ -91,10 +96,10 @@ func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
 
 	log.Debug("LaunchDarkly POST repository endpoint responded with status "+res.Status, log.Field("url", postUrl))
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
-		return fmt.Errorf("error creating repository")
+		return RepositoryPostErr
 	}
 
-	return err
+	return nil
 }
 
 func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) error {
@@ -119,7 +124,7 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) err
 	log.Debug("LaunchDarkly PUT branches endpoint responded with status "+res.Status, log.Field("url", putUrl))
 
 	if res.StatusCode != 200 {
-		return fmt.Errorf("error creating branches")
+		return BranchPutErr
 	}
 
 	return nil
