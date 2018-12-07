@@ -10,6 +10,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:fec88e30e88bd6e12e5d3f052b5313843670534a15708119b9e79ae8f8141e59"
+  name = "github.com/facebookgo/httpcontrol"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ccde4420e1fee9af5da365cb76075b95683f39a6"
+
+[[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
@@ -121,6 +129,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/facebookgo/httpcontrol",
     "github.com/launchdarkly/api-client-go",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
