@@ -42,5 +42,5 @@
   unused-packages = true
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/facebookgo/httpcontrol"
+  name = "github.com/hashicorp/go-retryablehttp"
+  version = "0.5.0"

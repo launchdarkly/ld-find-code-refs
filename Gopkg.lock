@@ -10,20 +10,28 @@
   version = "v1.1.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:fec88e30e88bd6e12e5d3f052b5313843670534a15708119b9e79ae8f8141e59"
-  name = "github.com/facebookgo/httpcontrol"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ccde4420e1fee9af5da365cb76075b95683f39a6"
-
-[[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
   version = "v1.2.0"
+
+[[projects]]
+  digest = "1:f47d6109c2034cb16bd62b220e18afd5aa9d5a1630fe5d937ad96a4fb7cbb277"
+  name = "github.com/hashicorp/go-cleanhttp"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e8ab9daed8d1ddd2d3c4efba338fe2eeae2e4f18"
+  version = "v0.5.0"
+
+[[projects]]
+  digest = "1:4112546e6964796e1c92a9ffdea8fd7ae81ffbf81eda4f946f50937e178f53da"
+  name = "github.com/hashicorp/go-retryablehttp"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4502c0ecdaf0b50d857611af23831260f99be6bf"
+  version = "v0.5.0"
 
 [[projects]]
   digest = "1:0a69a1c0db3591fcefb47f115b224592c8dfa4368b7ba9fae509d5e16cdc95c8"
@@ -129,7 +137,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/facebookgo/httpcontrol",
+    "github.com/hashicorp/go-retryablehttp",
     "github.com/launchdarkly/api-client-go",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
