@@ -8,20 +8,24 @@ import (
 	"net/http"
 	"net/url"
 
+	h "github.com/hashicorp/go-retryablehttp"
+
 	ldapi "github.com/launchdarkly/api-client-go"
 
 	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
 )
 
 type ApiClient struct {
-	client  *ldapi.APIClient
-	Options ApiOptions
+	ldClient   *ldapi.APIClient
+	httpClient *h.Client
+	Options    ApiOptions
 }
 
 type ApiOptions struct {
-	ApiKey  string
-	ProjKey string
-	BaseUri string
+	ApiKey   string
+	ProjKey  string
+	BaseUri  string
+	RetryMax *int
 }
 
 const (
@@ -29,22 +33,32 @@ const (
 	reposPath = v2ApiPath + "/code-refs/repositories"
 )
 
+var (
+	RepositoryPostErr = fmt.Errorf("error creating repository")
+	BranchPutErr      = fmt.Errorf("error updating branch")
+)
+
 func InitApiClient(options ApiOptions) ApiClient {
 	if options.BaseUri == "" {
 		options.BaseUri = "https://app.launchdarkly.com"
 	}
+	client := h.NewClient()
+	if options.RetryMax != nil && *options.RetryMax >= 0 {
+		client.RetryMax = *options.RetryMax
+	}
 	return ApiClient{
-		client: ldapi.NewAPIClient(&ldapi.Configuration{
+		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{
 			BasePath:  options.BaseUri + v2ApiPath,
 			UserAgent: "github-actor",
 		}),
-		Options: options,
+		httpClient: client,
+		Options:    options,
 	}
 }
 
 func (c ApiClient) GetFlagKeyList() ([]string, error) {
 	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
-	flags, _, err := c.client.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, nil)
+	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -65,15 +79,23 @@ func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
 	if err != nil {
 		return err
 	}
-	postUrl := fmt.Sprintf("%s/%s", c.Options.BaseUri, reposPath)
+	postUrl := fmt.Sprintf("%s%s", c.Options.BaseUri, reposPath)
 	log.Debug("Attempting to create code reference repository", log.Field("url", postUrl))
-	req, err := http.NewRequest("POST", postUrl, bytes.NewBuffer(repoBytes))
+	req, err := h.NewRequest("POST", postUrl, bytes.NewBuffer(repoBytes))
 	if err != nil {
 		return err
 	}
 	res, err := c.do(req)
+	if err != nil {
+		return RepositoryPostErr
+	}
+
 	log.Debug("LaunchDarkly POST repository endpoint responded with status "+res.Status, log.Field("url", postUrl))
-	return err
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
+		return RepositoryPostErr
+	}
+
+	return nil
 }
 
 func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) error {
@@ -86,21 +108,28 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) err
 		putUrl = fmt.Sprintf("%s%s/custom/%s/branches/%s", c.Options.BaseUri, reposPath, repo.Name, url.PathEscape(branch.Name))
 	}
 	log.Debug("Sending code references", log.Field("url", putUrl))
-	req, err := http.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
+	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
 	}
 	res, err := c.do(req)
+	if err != nil {
+		return BranchPutErr
+	}
+
 	log.Debug("LaunchDarkly PUT branches endpoint responded with status "+res.Status, log.Field("url", putUrl))
-	return err
+
+	if res.StatusCode != 200 {
+		return BranchPutErr
+	}
+
+	return nil
 }
 
-func (c ApiClient) do(req *http.Request) (*http.Response, error) {
+func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Add("Authorization", c.Options.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
-	// TODO: Use a client with timeouts and retries
-	client := http.Client{}
-	return client.Do(req)
+	return c.httpClient.Do(req)
 }
 
 type RepoParams struct {

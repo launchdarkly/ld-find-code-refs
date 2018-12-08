@@ -40,3 +40,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/hashicorp/go-retryablehttp"
+  version = "0.5.0"
