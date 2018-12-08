@@ -639,6 +639,113 @@ func Test_makeHunkReps(t *testing.T) {
 				},
 			},
 		},
+		{
+			// This case verifies an edge case we found where the hunking algorithm
+			// would walk past the end of the context for a given flag under certain circumstances.
+			// This would happen when the actual flag reference happened at the beginning of the file (so
+			// the algorithm couldn't walk ctxLines times backwards. it would naively walk ctxLines*2+1
+			// times forwards, which would walk past the correct end of the hunk and into the next hunk
+			name:     "multiple references, first reference at start of file",
+			ctxLines: 1,
+			refs: grepResultLines{
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  1,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  2,
+					LineText: "context+1",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  3,
+					LineText: "context+3",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  10,
+					LineText: "context-1",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  11,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  12,
+					LineText: "context+1",
+					FlagKeys: []string{},
+				},
+			},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  1,
+					Lines:   "flag-1\ncontext+1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+				ld.HunkRep{
+					Offset:  10,
+					Lines:   "context-1\nflag-1\ncontext+1\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+			},
+		},
+		{
+			// This is another test case guarding against the bug described in the
+			// previous test case
+			name:     "multiple references, first reference at start of file",
+			ctxLines: 2,
+			refs: grepResultLines{
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  1,
+					LineText: "context-1",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  2,
+					LineText: "flag-1",
+					FlagKeys: []string{"flag-1"},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  3,
+					LineText: "context+1",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  4,
+					LineText: "context+2",
+					FlagKeys: []string{},
+				},
+				grepResultLine{
+					Path:     "a/b",
+					LineNum:  10,
+					LineText: "context+alot+shouldn'tbeinhunk",
+					FlagKeys: []string{},
+				},
+			},
+			want: []ld.HunkRep{
+				ld.HunkRep{
+					Offset:  1,
+					Lines:   "context-1\nflag-1\ncontext+1\ncontext+2\n",
+					ProjKey: projKey,
+					FlagKey: "flag-1",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -287,11 +287,14 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 		// NOTE: its possible that this flag reference is totally contained in the previous hunk
 		ptr := ref
 
+		numCtxLinesBeforeFlagRef := 0
+
 		// Attempt to seek to the start of the new hunk.
 		for i := 0; i < ctxLines; i++ {
 			// If we seek to a nil pointer, we're at the start of the file and can go no further.
 			if ptr.Prev() != nil {
 				ptr = ptr.Prev()
+				numCtxLinesBeforeFlagRef++
 			}
 
 			// If we seek earlier than the end of the last hunk, this reference overlaps at least
@@ -309,11 +312,13 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 			hunkStringBuilder.Reset()
 		}
 
-		// From the current position, seek forward line by line
+		// From the current position (at the theoretical start of the hunk) seek forward line by line X times,
+		// where X = (numCtxLinesBeforeFlagRef + 1 + ctxLines). Note that if the flag reference occurs close to the
+		// start of the file, numCtxLines may be smaller than ctxLines.
 		//   For each line, check if we have seeked past the end of the last hunk
 		//     If so: write that line to the hunkStringBuilder
 		//     Record that line as the last seen line.
-		for i := 0; i < ctxLines*2+1; i++ {
+		for i := 0; i < numCtxLinesBeforeFlagRef+1+ctxLines; i++ {
 			ptrLineNum := ptr.Value.(grepResultLine).LineNum
 			if ptrLineNum > lastSeenLineNum {
 				lineText := ptr.Value.(grepResultLine).LineText
