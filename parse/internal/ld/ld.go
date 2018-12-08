@@ -22,9 +22,10 @@ type ApiClient struct {
 }
 
 type ApiOptions struct {
-	ApiKey  string
-	ProjKey string
-	BaseUri string
+	ApiKey   string
+	ProjKey  string
+	BaseUri  string
+	RetryMax *int
 }
 
 const (
@@ -41,13 +42,16 @@ func InitApiClient(options ApiOptions) ApiClient {
 	if options.BaseUri == "" {
 		options.BaseUri = "https://app.launchdarkly.com"
 	}
-
+	client := h.NewClient()
+	if options.RetryMax != nil && *options.RetryMax >= 0 {
+		client.RetryMax = *options.RetryMax
+	}
 	return ApiClient{
 		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{
 			BasePath:  options.BaseUri + v2ApiPath,
 			UserAgent: "github-actor",
 		}),
-		httpClient: h.NewClient(),
+		httpClient: client,
 		Options:    options,
 	}
 }
@@ -83,7 +87,7 @@ func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
 	}
 	res, err := c.do(req)
 	if err != nil {
-		return err
+		return RepositoryPostErr
 	}
 
 	log.Debug("LaunchDarkly POST repository endpoint responded with status "+res.Status, log.Field("url", postUrl))
@@ -110,7 +114,7 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) err
 	}
 	res, err := c.do(req)
 	if err != nil {
-		return err
+		return BranchPutErr
 	}
 
 	log.Debug("LaunchDarkly PUT branches endpoint responded with status "+res.Status, log.Field("url", putUrl))

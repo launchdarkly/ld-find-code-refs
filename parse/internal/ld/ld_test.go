@@ -25,7 +25,8 @@ func TestPostCodeReferenceRepository(t *testing.T) {
 			}))
 			defer testServer.Close()
 
-			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL})
+			retryMax := 0
+			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL, RetryMax: &retryMax})
 			err := client.PostCodeReferenceRepository(RepoParams{Type: "custom", Name: "test"})
 			require.Equal(t, tt.expectedErr, err)
 		})
@@ -49,7 +50,8 @@ func TestPutCodeReferenceBranch(t *testing.T) {
 			}))
 			defer testServer.Close()
 
-			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL})
+			retryMax := 0
+			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL, RetryMax: &retryMax})
 			err := client.PutCodeReferenceBranch(BranchRep{}, RepoParams{Type: "custom", Name: "test"})
 			require.Equal(t, tt.expectedErr, err)
 		})
