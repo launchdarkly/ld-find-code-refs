@@ -28,7 +28,6 @@ func main() {
 
 	options := map[string]string{
 		"repoType":      "github",
-		"repoOwner":     ghRepo[0],
 		"repoName":      ghRepo[1],
 		"repoHead":      os.Getenv("GITHUB_REF"),
 		"dir":           os.Getenv("GITHUB_WORKSPACE"),
