@@ -27,7 +27,7 @@ func TestPostCodeReferenceRepository(t *testing.T) {
 
 			retryMax := 0
 			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL, RetryMax: &retryMax})
-			err := client.PostCodeReferenceRepository("test")
+			err := client.PostCodeReferenceRepository(RepoParams{Type: "custom", Name: "test"})
 			require.Equal(t, tt.expectedErr, err)
 		})
 	}
