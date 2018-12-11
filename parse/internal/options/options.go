@@ -57,7 +57,6 @@ const (
 	PushTime      = Int64Option("pushTime")
 	RepoHead      = StringOption("repoHead")
 	RepoName      = StringOption("repoName")
-	RepoOwner     = StringOption("repoOwner")
 	RepoType      = StringOption("repoType")
 )
 
@@ -90,7 +89,6 @@ var options = optionMap{
 	PushTime:      option{int64(0), "The time the push was initiated formatted as a unix millis timestamp.", true},
 	RepoHead:      option{"master", "The HEAD or ref to retrieve code references from.", false},
 	RepoName:      option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
-	RepoOwner:     option{"", "Git repo owner/org.", false},
 	RepoType:      option{"custom", "github|bitbucket|custom", false},
 }
 

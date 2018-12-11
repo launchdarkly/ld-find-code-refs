@@ -24,7 +24,5 @@ Command line program for generating flag code references. Possible command line 
       The HEAD or ref to retrieve code references from. (default "master")
 - repoName string
       Git repo name. Will be displayed in LaunchDarkly.
-- repoOwner string
-      Git repo owner/org.
 - repoType string
       github|bitbucket|custom (default "custom")

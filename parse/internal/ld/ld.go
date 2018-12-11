@@ -70,11 +70,6 @@ func (c ApiClient) GetFlagKeyList() ([]string, error) {
 }
 
 func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
-	// Custom repos don't allow owners, so swallow the owner if configured for a custom repo.
-	if repo.Type == "custom" && repo.Owner != "" {
-		log.Info("Ignoring repoOwner because repoType is 'custom'", nil)
-		repo.Owner = ""
-	}
 	repoBytes, err := json.Marshal(repo)
 	if err != nil {
 		return err
@@ -98,15 +93,12 @@ func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
 	return nil
 }
 
-func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repo RepoParams) error {
+func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) error {
 	branchBytes, err := json.Marshal(branch)
 	if err != nil {
 		return err
 	}
-	putUrl := fmt.Sprintf("%s%s/%s/%s/%s/branches/%s", c.Options.BaseUri, reposPath, repo.Type, repo.Owner, repo.Name, url.PathEscape(branch.Name))
-	if repo.Type == "custom" {
-		putUrl = fmt.Sprintf("%s%s/custom/%s/branches/%s", c.Options.BaseUri, reposPath, repo.Name, url.PathEscape(branch.Name))
-	}
+	putUrl := fmt.Sprintf("%s%s/%s/branches/%s", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branch.Name))
 	log.Debug("Sending code references", log.Field("url", putUrl))
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
@@ -133,9 +125,8 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 }
 
 type RepoParams struct {
-	Type  string `json:"type"`
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	Type string `json:"type"`
+	Name string `json:"name"`
 }
 
 type BranchRep struct {
