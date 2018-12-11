@@ -31,5 +31,4 @@ The command line program may be run manually, and executed in an environment of 
 | `pushTime` | The time the `git push` was initiated, formatted as a unix millis timestamp. Used by the LaunchDarkly API to correctly order updates. |  | yes |
 | `repoHead` | The HEAD or ref to retrieve code references from. Should be provided if the `git push` was initiated on a non-master branch. | "master" | no |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly |  | yes |
-| `repoOwner` | Git repo owner. Used to uniquely identify non-custom repositories. |  | only if `repoType` is not custom. |
 | `repoType` | The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom | "custom" | no |

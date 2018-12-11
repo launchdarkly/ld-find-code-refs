@@ -197,13 +197,13 @@ func TestGit_Grep(t *testing.T) {
 			name:     "succeeds with 1 context line",
 			flags:    []string{"someFlag"},
 			ctxLines: 1,
-			wantLen:  10,
+			wantLen:  12,
 		},
 		{
 			name:     "succeeds with 2 context lines",
 			flags:    []string{"someFlag"},
 			ctxLines: 2,
-			wantLen:  14,
+			wantLen:  18,
 		},
 		{
 			name:     "succeeds with multiple flags",
