@@ -75,7 +75,7 @@ func Parse() {
 	}
 	projKey := o.ProjKey.Value()
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
-	repoParams := ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value()}
+	repoParams := ld.RepoParams{Type: o.RepoType.Value(), Name: o.RepoName.Value(), Url: o.RepoUrl.Value()}
 
 	err = ldApi.PostCodeReferenceRepository(repoParams)
 	if err != nil {

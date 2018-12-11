@@ -31,13 +31,9 @@ func main() {
 		"repoName":      ghRepo[1],
 		"repoHead":      os.Getenv("GITHUB_REF"),
 		"dir":           os.Getenv("GITHUB_WORKSPACE"),
-		"accessToken":   os.Getenv("LD_ACCESS_TOKEN"),
-		"projKey":       os.Getenv("LD_PROJ_KEY"),
-		"exclude":       os.Getenv("LD_EXCLUDE"),
-		"contextLines":  os.Getenv("LD_CONTEXT_LINES"),
-		"baseUri":       os.Getenv("LD_BASE_URI"),
 		"pushTime":      strconv.FormatInt(event.Repo.PushedAt*1000, 10), // seconds to milliseconds
 		"defaultBranch": event.Repo.DefaultBranch,
+		"repoUrl":       event.Repo.Url,
 	}
 	ldOptions, err := getLDOptionsFromEnv()
 	if err != nil {
@@ -64,7 +60,7 @@ type Event struct {
 }
 
 type Repo struct {
-	Url           string `json:"url"`
+	Url           string `json:"html_url"`
 	DefaultBranch string `json:"default_branch"`
 	PushedAt      int64  `json:"pushed_at"`
 }

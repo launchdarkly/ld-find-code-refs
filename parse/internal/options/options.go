@@ -3,6 +3,7 @@ package options
 import (
 	"flag"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -58,6 +59,7 @@ const (
 	RepoHead      = StringOption("repoHead")
 	RepoName      = StringOption("repoName")
 	RepoType      = StringOption("repoType")
+	RepoUrl       = StringOption("repoUrl")
 )
 
 type option struct {
@@ -90,6 +92,7 @@ var options = optionMap{
 	RepoHead:      option{"master", "The HEAD or ref to retrieve code references from.", false},
 	RepoName:      option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
 	RepoType:      option{"custom", "github|bitbucket|custom", false},
+	RepoUrl:       option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -120,7 +123,7 @@ func Init() (err error, errCb func()) {
 	})
 
 	if opt != "" {
-		return fmt.Errorf("Required option %s not set", opt), flag.PrintDefaults
+		return fmt.Errorf("required option %s not set", opt), flag.PrintDefaults
 	}
 	err = ContextLines.maximumError(5)
 	if err != nil {
@@ -128,11 +131,15 @@ func Init() (err error, errCb func()) {
 	}
 	repoType := strings.ToLower(RepoType.Value())
 	if repoType != "custom" && repoType != "github" && repoType != "bitbucket" {
-		return fmt.Errorf("Repo type must be \"custom\", \"bitbucket\", or \"github\""), flag.PrintDefaults
+		return fmt.Errorf("repo type must be \"custom\", \"bitbucket\", or \"github\""), flag.PrintDefaults
 	}
 	_, err = regexp.Compile(Exclude.Value())
 	if err != nil {
-		return fmt.Errorf("Exclude must be a valid regular expression: %+v", err), flag.PrintDefaults
+		return fmt.Errorf("exclude must be a valid regular expression: %+v", err), flag.PrintDefaults
+	}
+	_, err = url.Parse(RepoUrl.Value())
+	if err != nil {
+		return fmt.Errorf("error parsing repo url: %+v", err), flag.PrintDefaults
 	}
 	return nil, flag.PrintDefaults
 }
