@@ -1,5 +1,4 @@
 out
 .vscode
 git-flag-parser
-github-actions
-bin
+parse/github-actions/github-actions
