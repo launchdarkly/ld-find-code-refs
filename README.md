@@ -32,3 +32,4 @@ The command line program may be run manually, and executed in an environment of 
 | `repoHead` | The HEAD or ref to retrieve code references from. Should be provided if the `git push` was initiated on a non-master branch. | "master" | no |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly |  | yes |
 | `repoType` | The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom | "custom" | no |
+| `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. | "" | no |
