@@ -79,7 +79,7 @@ func Parse() {
 		Type:              o.RepoType.Value(),
 		Name:              o.RepoName.Value(),
 		Url:               o.RepoUrl.Value(),
-		BranchUrlTemplate: o.BranchUrlTemplate.Value(),
+		CommitUrlTemplate: o.CommitUrlTemplate.Value(),
 		HunkUrlTemplate:   o.HunkUrlTemplate.Value(),
 	}
 

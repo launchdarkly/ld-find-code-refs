@@ -128,7 +128,7 @@ type RepoParams struct {
 	Type              string `json:"type"`
 	Name              string `json:"name"`
 	Url               string `json:"sourceLink"`
-	BranchUrlTemplate string `json:"branchUrlTemplate"`
+	CommitUrlTemplate string `json:"commitUrlTemplate"`
 	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
 }
 

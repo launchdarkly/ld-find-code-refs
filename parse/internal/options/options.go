@@ -60,7 +60,7 @@ const (
 	RepoName          = StringOption("repoName")
 	RepoType          = StringOption("repoType")
 	RepoUrl           = StringOption("repoUrl")
-	BranchUrlTemplate = StringOption("branchUrlTemplate")
+	CommitUrlTemplate = StringOption("commitUrlTemplate")
 	HunkUrlTemplate   = StringOption("hunkUrlTemplate")
 )
 
@@ -95,8 +95,8 @@ var options = optionMap{
 	RepoName:          option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
 	RepoType:          option{"custom", "github|bitbucket|custom", false},
 	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
-	BranchUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per branch. Example: 'https://github.com/launchdarkly/git-flag-parser/tree/${branchName}'. Allowed template variables: branchName, sha. If branchUrlTemplate is not provided, but repoUrl is provided, LaunchDarkly will automatically generates links for github and bitbucket repo types.", false},
-	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: 'https://github.com/launchdarkly/git-flag-parser/blob/${sha}/${filePath}#L${lineNumber}'. Allowed template variables: sha, filePath, lineNumber. If hunkUrlTemplate is not provided, but repoUrl is provided, LaunchDarkly will automatically generate links for github and bitbucket repo types.", false},
+	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: 'https://github.com/launchdarkly/git-flag-parser/tree/${branchName}'. Allowed template variables: branchName, sha. If commitUrlTemplate is not provided, but repoUrl is provided, LaunchDarkly will automatically generate links for the selected repo type.", false},
+	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: 'https://github.com/launchdarkly/git-flag-parser/blob/${sha}/${filePath}#L${lineNumber}'. Allowed template variables: sha, filePath, lineNumber. If hunkUrlTemplate is not provided, but repoUrl is provided, LaunchDarkly will automatically generate links for the selected repo type.", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
