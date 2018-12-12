@@ -125,9 +125,11 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 }
 
 type RepoParams struct {
-	Type string `json:"type"`
-	Name string `json:"name"`
-	Url  string `json:"sourceLink"`
+	Type              string `json:"type"`
+	Name              string `json:"name"`
+	Url               string `json:"sourceLink"`
+	BranchUrlTemplate string `json:"branchUrlTemplate"`
+	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
 }
 
 type BranchRep struct {
