@@ -87,7 +87,12 @@ jobs:
           name: Publish
           command: |
             docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-            curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --release-notes <(make echo-release-notes)
+            cd parse/github-actions 
+            GOOS=linux GOARCH=amd64 go build -o github-actions-flag-parser
+            pwd
+            ls 
+            docker build -t ldactions/git-flag-parser-gh-actions:latest .
+            docker push ldactions/git-flag-parser-gh-actions:latest
 
 
 workflows:
