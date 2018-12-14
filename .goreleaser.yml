@@ -21,12 +21,12 @@ release:
   # If set to true, will mark the release as not ready for production.
   prerelease: auto
 
-dockers:
-  - image_templates:
-    -  ldactions/git-flag-parser-gh-action:latest
-    -  ldactions/git-flag-parser-gh-action:{{ .Tag }}
-    goos: linux
-    goarch: amd64
-    dockerfile: parse/github-actions/Dockerfile
-    extra_files:
-    - parse/github-actions/github-actions-flag-parser
+# dockers:
+#   - image_templates:
+#     -  ldactions/git-flag-parser-gh-action:latest
+#     -  ldactions/git-flag-parser-gh-action:{{ .Tag }}
+#     goos: linux
+#     goarch: amd64
+#     dockerfile: parse/github-actions/Dockerfile
+#     extra_files:
+#     - parse/github-actions/github-actions-flag-parser
