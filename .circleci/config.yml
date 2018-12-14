@@ -91,7 +91,8 @@ jobs:
             GOOS=linux GOARCH=amd64 go build -o github-actions-flag-parser
             pwd
             ls 
-            docker build -t ldactions/git-flag-parser-gh-actions:latest .
+            docker build -t ldactions/git-flag-parser-gh-actions .
+            docker tag ldactions/git-flag-parser-gh-actions ldactions/git-flag-parser-gh-actions:circleci
             docker push ldactions/git-flag-parser-gh-actions:circleci
 
 
