@@ -1,4 +1,4 @@
-FROM alpine
+FROM iron/go
 RUN apk add --no-cache git
 RUN apk add --no-cache the_silver_searcher
 COPY github-actions-flag-parser /github-actions-flag-parser
