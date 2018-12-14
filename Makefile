@@ -22,7 +22,6 @@ echo-release-notes:
 
 publish-docker: compile-github-actions-binary
 	test $(TAG) || (echo "Please provide tag"; exit 1)
-	docker login
 	docker build -t ldactions/git-flag-parser-gh-action:$(TAG) parse/github-actions
 	docker tag ldactions/git-flag-parser-gh-action:$(TAG) ldactions/git-flag-parser-gh-action:latest
 	docker push ldactions/git-flag-parser-gh-action:$(TAG)
