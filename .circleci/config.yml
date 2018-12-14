@@ -67,8 +67,43 @@ jobs:
 
     <<: *build_steps
 
+  test-publish:
+    docker:
+      - image: circleci/golang:1.11
+    working_directory: /go/src/github.com/launchdarkly/git-flag-parser
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --skip-publish --skip-validate --release-notes <(make echo-release-notes)
+
+  publish:
+    docker:
+      - image: circleci/golang:1.11
+    working_directory: /go/src/github.com/launchdarkly/git-flag-parser
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Publish
+          command: |
+            docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+            curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --release-notes <(make echo-release-notes)
+
+
 workflows:
   version: 2
   test:
     jobs:
-      - go-test
+      - go-test:
+          filters:
+            tags:
+              only: /.*/
+      - test-publish
+      - publish:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - go-test

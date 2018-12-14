@@ -36,3 +36,14 @@ The command line program may be run manually, and executed in an environment of 
 | `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/git-flag-parser` | "" | no |
 | `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/git-flag-parser/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types. | "" | no |
 | `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/git-flag-parser/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types. | "" | no |
+
+## Testing
+
+Set up your development environment by installing Go and running `make init` to install the linter. To lint and run tests, run `make test`.
+
+## Releasing
+
+This project uses [goreleaser](https://goreleaser.com/) to generate github releases and push docker images. Releases are automated via CircleCI. To generate a new release, simply tag the commit you want to release and push the tag. If the tag ends in -rc(\d+), the github release will be marked as "Pre-release." If you'd like to see how release notes are generated, see the .circleci/config.yml publish job.
+**Note:** Pre-releases still get the docker `latest` tag.
+
+Make sure you update the changelog before generating a release.
