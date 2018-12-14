@@ -3,6 +3,7 @@ package options
 import (
 	"flag"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -46,18 +47,21 @@ func (o Int64Option) Value() int64 {
 }
 
 const (
-	AccessToken   = StringOption("accessToken")
-	BaseUri       = StringOption("baseUri")
-	CloneEndpoint = StringOption("cloneEndpoint")
-	ContextLines  = IntOption("contextLines")
-	DefaultBranch = StringOption("defaultBranch")
-	Dir           = StringOption("dir")
-	Exclude       = StringOption("exclude")
-	ProjKey       = StringOption("projKey")
-	PushTime      = Int64Option("pushTime")
-	RepoHead      = StringOption("repoHead")
-	RepoName      = StringOption("repoName")
-	RepoType      = StringOption("repoType")
+	AccessToken       = StringOption("accessToken")
+	BaseUri           = StringOption("baseUri")
+	CloneEndpoint     = StringOption("cloneEndpoint")
+	ContextLines      = IntOption("contextLines")
+	DefaultBranch     = StringOption("defaultBranch")
+	Dir               = StringOption("dir")
+	Exclude           = StringOption("exclude")
+	ProjKey           = StringOption("projKey")
+	PushTime          = Int64Option("pushTime")
+	RepoHead          = StringOption("repoHead")
+	RepoName          = StringOption("repoName")
+	RepoType          = StringOption("repoType")
+	RepoUrl           = StringOption("repoUrl")
+	CommitUrlTemplate = StringOption("commitUrlTemplate")
+	HunkUrlTemplate   = StringOption("hunkUrlTemplate")
 )
 
 type option struct {
@@ -78,18 +82,21 @@ func (m optionMap) find(name string) *option {
 }
 
 var options = optionMap{
-	AccessToken:   option{"", "LaunchDarkly personal access token with write-level access.", true},
-	BaseUri:       option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
-	CloneEndpoint: option{"", "If provided, will clone the repo from this endpoint. If authentication is required, this endpoint should be authenticated. Supports the https protocol for git cloning. Example: https://username:password@github.com/username/repository.git", false},
-	ContextLines:  option{-1, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
-	DefaultBranch: option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
-	Dir:           option{"", "Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required.", false},
-	Exclude:       option{"", "Exclude any files or directories that match this regular expression pattern", false},
-	ProjKey:       option{"", "LaunchDarkly project key.", true},
-	PushTime:      option{int64(0), "The time the push was initiated formatted as a unix millis timestamp.", true},
-	RepoHead:      option{"master", "The HEAD or ref to retrieve code references from.", false},
-	RepoName:      option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
-	RepoType:      option{"custom", "github|bitbucket|custom", false},
+	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
+	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
+	CloneEndpoint:     option{"", "If provided, will clone the repo from this endpoint. If authentication is required, this endpoint should be authenticated. Supports the https protocol for git cloning. Example: https://username:password@github.com/username/repository.git", false},
+	ContextLines:      option{-1, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
+	DefaultBranch:     option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
+	Dir:               option{"", "Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required.", false},
+	Exclude:           option{"", "Exclude any files or directories that match this regular expression pattern", false},
+	ProjKey:           option{"", "LaunchDarkly project key.", true},
+	PushTime:          option{int64(0), "The time the push was initiated formatted as a unix millis timestamp.", true},
+	RepoHead:          option{"master", "The HEAD or ref to retrieve code references from.", false},
+	RepoName:          option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
+	RepoType:          option{"custom", "github|bitbucket|custom", false},
+	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
+	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: 'https://github.com/launchdarkly/git-flag-parser/tree/${branchName}'. Allowed template variables: branchName, sha. If commitUrlTemplate is not provided, but repoUrl is provided, LaunchDarkly will automatically generate links for the selected repo type.", false},
+	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: 'https://github.com/launchdarkly/git-flag-parser/blob/${sha}/${filePath}#L${lineNumber}'. Allowed template variables: sha, filePath, lineNumber. If hunkUrlTemplate is not provided, but repoUrl is provided, LaunchDarkly will automatically generate links for the selected repo type.", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -120,7 +127,7 @@ func Init() (err error, errCb func()) {
 	})
 
 	if opt != "" {
-		return fmt.Errorf("Required option %s not set", opt), flag.PrintDefaults
+		return fmt.Errorf("required option %s not set", opt), flag.PrintDefaults
 	}
 	err = ContextLines.maximumError(5)
 	if err != nil {
@@ -128,11 +135,15 @@ func Init() (err error, errCb func()) {
 	}
 	repoType := strings.ToLower(RepoType.Value())
 	if repoType != "custom" && repoType != "github" && repoType != "bitbucket" {
-		return fmt.Errorf("Repo type must be \"custom\", \"bitbucket\", or \"github\""), flag.PrintDefaults
+		return fmt.Errorf("repo type must be \"custom\", \"bitbucket\", or \"github\""), flag.PrintDefaults
 	}
 	_, err = regexp.Compile(Exclude.Value())
 	if err != nil {
-		return fmt.Errorf("Exclude must be a valid regular expression: %+v", err), flag.PrintDefaults
+		return fmt.Errorf("exclude must be a valid regular expression: %+v", err), flag.PrintDefaults
+	}
+	_, err = url.Parse(RepoUrl.Value())
+	if err != nil {
+		return fmt.Errorf("error parsing repo url: %+v", err), flag.PrintDefaults
 	}
 	return nil, flag.PrintDefaults
 }
