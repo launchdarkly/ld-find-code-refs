@@ -83,16 +83,10 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Publish
-          command: |
-            docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-            cd parse/github-actions 
-            GOOS=linux GOARCH=amd64 go build -o github-actions-flag-parser
-            pwd
-            ls 
-            docker build -t ldactions/git-flag-parser-gh-action:circleci .
-            docker push ldactions/git-flag-parser-gh-action:circleci
+      - run: docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+      - run: cd parse/github-actions && GOOS=linux GOARCH=amd64 go build -o github-actions-flag-parser
+      - run: cd parse/github-actions && docker build -t ldactions/git-flag-parser-gh-action:circleci .
+      - run: cd parse/github-actions && docker push ldactions/git-flag-parser-gh-action:circleci
 
 
 workflows:
