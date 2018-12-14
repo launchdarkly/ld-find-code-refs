@@ -12,7 +12,7 @@ lint:
 	./bin/golangci-lint run ./...
 
 compile-github-actions-binary:
-	cd parse/github-actions && GOOS=linux GOARCH=amd64 go build -o out/github-actions-flag-parser
+	cd parse/github-actions && GOARCH=amd64 go build -o out/github-actions-flag-parser
 
 # Get the lines added to the most recent changelog update (minus the first 2 lines)
 RELEASE_NOTES=<(GIT_EXTERNAL_DIFF='bash -c "diff --unchanged-line-format=\"\" $$2 $$5" || true' git log --ext-diff -1 --pretty= -p CHANGELOG.md)
