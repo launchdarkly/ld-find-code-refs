@@ -29,4 +29,4 @@ dockers:
     goarch: amd64
     dockerfile: parse/github-actions/Dockerfile
     extra_files:
-    - parse/github-actions/out/github-actions-flag-parser
+    - parse/github-actions/github-actions-flag-parser
