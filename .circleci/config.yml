@@ -92,7 +92,7 @@ jobs:
             pwd
             ls 
             docker build -t ldactions/git-flag-parser-gh-actions:latest .
-            docker push ldactions/git-flag-parser-gh-actions:latest
+            docker push ldactions/git-flag-parser-gh-actions:circleci
 
 
 workflows:
