@@ -84,7 +84,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-      - run: make publish-docker TAG=$CIRCLE_TAG
+      - run: make publish-docker TAG=circleci
 
 
 workflows:
