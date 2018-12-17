@@ -1,6 +1,6 @@
 out/
 .vscode
 git-flag-parser
-parse/github-actions/github-actions
+parse/github-actions/github-actions-flag-parser
 /dist/
 /bin/

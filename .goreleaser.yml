@@ -1,7 +1,3 @@
-before:
-  hooks:
-  - make compile-github-actions-binary
-
 builds:
   -
     binary: git-flag-parser
