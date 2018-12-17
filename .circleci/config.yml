@@ -83,11 +83,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Publish
-          command: |
-            docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-            curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --release-notes <(make echo-release-notes)
+      - run: curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --release-notes <(make echo-release-notes)
 
 
 workflows:
