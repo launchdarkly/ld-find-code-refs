@@ -34,7 +34,7 @@ executors:
       LD_DEFAULT_BRANCH: << parameters.default_branch >>
     docker:
       # TODO: use gh release tarball when git-flag-parser is released
-      - image: atrakh/git-flag-parser:latest
+      - image: ldactions/git-flag-parser:latest
 commands:
   find-flags:
     parameters:
