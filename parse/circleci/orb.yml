@@ -50,7 +50,22 @@ commands:
           command: mkdir ~/.ssh/ && echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
       - run:
           name: Find flag references
-          command: /git-flag-parser -accessToken=${LD_ACCESS_TOKEN} -projKey=${LD_PROJ_KEY} -exclude=${LD_EXCLUDE} -contextLines=${LD_CONTEXT_LINES} -baseUri=${LD_BASE_URI} -repoType=${LD_REPO_TYPE} -repoUrl=${LD_REPO_URL} -repoName=${CIRCLE_PROJECT_REPONAME} -repoHead=${CIRCLE_BRANCH} -cloneEndpoint=${CIRCLE_REPOSITORY_URL} -pushTime=$(date +%s) -defaultBranch=${LD_DEFAULT_BRANCH} -commitUrlTemplate=${LD_COMMIT_URL_TEMPLATE} -hunkUrlTemplate=${LD_HUNK_URL_TEMPLATE}
+          command: |
+            /git-flag-parser \
+              -accessToken=${LD_ACCESS_TOKEN} \
+              -projKey=${LD_PROJ_KEY} \
+              -exclude=${LD_EXCLUDE} \
+              -contextLines=${LD_CONTEXT_LINES} \
+              -baseUri=${LD_BASE_URI} \
+              -repoType=${LD_REPO_TYPE} \
+              -repoUrl=${LD_REPO_URL} \
+              -repoName=${CIRCLE_PROJECT_REPONAME} \
+              -repoHead=${CIRCLE_BRANCH} \
+              -cloneEndpoint=${CIRCLE_REPOSITORY_URL} \
+              -pushTime=$(date +%s) \
+              -defaultBranch=${LD_DEFAULT_BRANCH} \
+              -commitUrlTemplate=${LD_COMMIT_URL_TEMPLATE} \
+              -hunkUrlTemplate=${LD_HUNK_URL_TEMPLATE}
 jobs:
   find-code-references:
     parameters:
