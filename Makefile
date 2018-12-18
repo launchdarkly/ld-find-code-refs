@@ -38,15 +38,13 @@ publish-github-actions-docker: compile-github-actions-binary
 	$(call publish_docker,$(TAG),git-flag-parser-gh-action,github-actions)
 
 validate-circle-orb:
-	test $(NAMESPACE) || (echo "Please provide namespace"; exit 1) # Remove once we always publish to launchdarkly namespace
 	test $(TAG) || (echo "Please provide tag"; exit 1)
 	circleci orb validate parse/circleci/orb.yml || (echo "Unable to validate orb"; exit 1)
 
 publish-dev-circle-orb: validate-circle-orb
-	# TODO: rename orb name (cr) to something more user-friendly
-	circleci orb publish parse/circleci/orb.yml $(NAMESPACE)/cr@dev:$(TAG)
+	circleci orb publish parse/circleci/orb.yml launchdarkly/git-flag-parser@dev:$(TAG)
 
 publish-release-circle-orb: validate-circle-orb
-	circleci orb publish parse/circleci/orb.yml $(NAMESPACE)/cr@$(TAG)
+	circleci orb publish parse/circleci/orb.yml launchdarkly/git-flag-parser@$(TAG)
 
 .PHONY: init test lint compile-github-actions-binary compile-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-dev-circle-orb publish-release-circle-orb
