@@ -9,6 +9,8 @@ The git flag parser will need ssh clone access to your git repo via a repo-speci
 
 ![SSH fingerprint location](./images/ssh-fingerprint.png)
 
+Here's an example minimal configuration, using LaunchDarkly's Orb:
+
 ```
 version: 2.1
 
