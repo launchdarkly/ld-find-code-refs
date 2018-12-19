@@ -1,0 +1,27 @@
+# CircleCI
+
+The flag parser can be used with CircleCI via a reusable [CircleCI orb](https://circleci.com/docs/2.0/orb-intro/) to automate population of code references in LaunchDarkly. CircleCI orbs require a Circle workflow version of 2.1 or greater. If you're using an earlier version, consider manually using the flag parser [binary or docker image](https://github.com/launchdarkly/git-flag-parser/tree/master/README.md#execution-via-cli) to create your own workflow job.
+
+# Setup
+
+The git flag parser will need ssh clone access to your git repo via a repo-specific SSH key. If your CircleCI project is connected to a Git repo, you can connect an SSH key (or use an existing one) in your CircleCI project settings, under Permissions > Checkout SSH Keys.
+
+![SSH fingerprint location](./images/ssh-fingerprint.png)
+
+```
+version: 2.1
+
+orbs:
+  launchdarkly: launchdarkly/git-flag-parser@dev:0.0.1
+
+workflows:
+  main:
+    jobs:
+      - launchdarkly/find-code-references:
+          ssh_fingerprint: "YOUR_CIRCLE_SSH_FINGERPRINT"
+          proj_key: default # your LaunchDarkly project key
+          repo_type: github # can be 'github', 'bitbucket', or 'custom'
+          repo_url: https://github.com/launchdarkly/SupportService # used to generate links to your repository in the LaunchDarkly webapp
+```
+
+Documentation for all configuration options may be found here: https://circleci.com/orbs/registry/orb/launchdarkly/git-flag-parser
