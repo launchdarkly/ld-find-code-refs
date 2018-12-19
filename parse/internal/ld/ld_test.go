@@ -48,7 +48,7 @@ func TestGetCodeReferenceRepository(t *testing.T) {
 			testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 				res.WriteHeader(tt.responseStatus)
 				_, err := res.Write([]byte(tt.responseBody))
-				require.NoError(err)
+				require.NoError(t, err)
 			}))
 			defer testServer.Close()
 
