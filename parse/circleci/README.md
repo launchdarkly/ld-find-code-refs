@@ -11,7 +11,7 @@ The git flag parser will need ssh clone access to your git repo via a repo-speci
 
 Here's an example minimal configuration, using LaunchDarkly's Orb:
 
-```
+```yaml
 version: 2.1
 
 orbs:

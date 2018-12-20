@@ -2,5 +2,6 @@ out/
 .vscode
 git-flag-parser
 parse/github-actions/github-actions-flag-parser
+parse/bitbucket-pipelines/bitbucket-pipelines-flag-parser
 /dist/
 /bin/
