@@ -6,7 +6,7 @@ The flag parser can be used with [GitHub Actions](https://github.com/features/ac
 
 1. GitHub Actions is currently in open beta. If you haven't signed up already, you may sign up [here](https://github.com/features/actions/signup/).
 2. Create a [LaunchDarkly personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-references` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource. Store this newly created access token as a secret titled `LD_ACCESS_TOKEN` in your GitHub repository: https://developer.github.com/actions/creating-workflows/storing-secrets/. ![GitHub Actions secret configuration](./images/secret-configuration.png)
-3. Create a new workflow in your selected Github repository. If you don't already have a workflow file, you'll need to create a new file titled `main.workflow` in the `.github` directory of your repository. The workflow should run on the `push` event, and contain an action which uses `docker://ldactions/github-actions-flag-parser` as its action provider. The `LD_ACCESS_TOKEN` configured in the previous step should be included as a secret, as well as a new environment variable containing your LaunchDarkly project key. Here's an example of a minimal workflow file configuration:
+3. Create a new workflow in your selected Github repository. If you don't already have a workflow file, you'll need to create a new file titled `main.workflow` in the `.github` directory of your repository. The workflow should run on the `push` event, and contain an action which uses `docker://ldactions/git-flag-parser-gh-action:latest` as its action provider. The `LD_ACCESS_TOKEN` configured in the previous step should be included as a secret, as well as a new environment variable containing your LaunchDarkly project key. Here's an example of a minimal workflow file configuration:
 
   ```
   workflow "Find flag references" {
@@ -20,7 +20,7 @@ The flag parser can be used with [GitHub Actions](https://github.com/features/ac
     env = {
       LD_PROJ_KEY = "default"
     }
-    uses = "docker://ldactions/github-actions-flag-parser:latest"
+    uses = "docker://ldactions/git-flag-parser-gh-action:latest"
   }
   ```
 
@@ -57,6 +57,6 @@ Here's an example of a workflow configured to exclude the `vendor` directory and
       LD_EXCLUDE = "vendor/.*"
       LD_CONTEXT_LINES = "1"
     }
-    uses = "docker://ldactions/github-actions-flag-parser:latest"
+    uses = "docker://ldactions/git-flag-parser-gh-action:latest"
   }
   ```
