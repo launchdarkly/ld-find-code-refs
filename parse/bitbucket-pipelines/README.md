@@ -1,6 +1,6 @@
 # Bitbucket Pipelines
 
-The flag parser can be used with [Bitbucket Pipelines]](https://bitbucket.org/product/features/pipelines) to automate population of code references in LaunchDarkly.
+The flag parser can be used with [Bitbucket Pipelines](https://bitbucket.org/product/features/pipelines) to automate population of code references in LaunchDarkly.
 
 ## Initial setup
 
