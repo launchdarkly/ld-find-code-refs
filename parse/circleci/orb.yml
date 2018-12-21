@@ -37,7 +37,8 @@ executors:
 commands:
   find-flags:
     steps:
-      - checkout
+      - checkout:
+          path: /repo
       - run:
           name: Find flag references
           command: |
@@ -51,11 +52,12 @@ commands:
               -repoUrl=${LD_REPO_URL} \
               -repoName=${CIRCLE_PROJECT_REPONAME} \
               -repoHead=${CIRCLE_BRANCH} \
-              -dir=${CIRCLE_WORKING_DIRECTORY} \
               -pushTime=$(date +%s) \
               -defaultBranch=${LD_DEFAULT_BRANCH} \
               -commitUrlTemplate=${LD_COMMIT_URL_TEMPLATE} \
-              -hunkUrlTemplate=${LD_HUNK_URL_TEMPLATE}
+              -hunkUrlTemplate=${LD_HUNK_URL_TEMPLATE} \
+              -dir=/repo
+
 jobs:
   find-code-references:
     parameters:
