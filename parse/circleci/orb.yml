@@ -41,7 +41,7 @@ commands:
       - run:
           name: Find flag references
           command: |
-            /git-flag-parser \
+            git-flag-parser \
               -accessToken=${LD_ACCESS_TOKEN} \
               -projKey=${LD_PROJ_KEY} \
               -exclude=${LD_EXCLUDE} \

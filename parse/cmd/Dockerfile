@@ -5,4 +5,4 @@ RUN apk add --no-cache git
 RUN apk add --no-cache the_silver_searcher
 RUN apk add --no-cache openssh
 
-COPY out/git-flag-parser /git-flag-parser
+COPY out/git-flag-parser /usr/local/bin/git-flag-parser
