@@ -2,22 +2,23 @@
 
 Command line program for generating flag code references.
 
-This repository provides solutions for configuring [LaunchDarkly code references](https://docs.launchdarkly.com) <!-- TODO: Real docs link --> with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
+This repository provides solutions for configuring [LaunchDarkly code references](hhttps://docs.launchdarkly.com/v2.0/docs/git-code-references) with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
 
 ## Configuration options
 
 | System | Status |
 |---------------------|---------------------------------------------------------------------------------------------------------|
 | GitHub Actions | [Supported](https://github.com/launchdarkly/git-flag-parser/tree/master/parse/github-actions/README.md) |
+| CircleCI Orbs | [Supported](https://github.com/launchdarkly/git-flag-parser/tree/master/parse/circleci/README.md) |
 | BitBucket Pipelines | Planned |
-| CircleCI Workflows | Planned |
 | AWS Lambda jobs | Planned |
 | Manually via CLI | [Supported](https://github.com/launchdarkly/git-flag-parser/tree/master/README.md#execution-via-cli) |
 
 ## Execution via CLI
 
-<!-- TODO: Link to latest binary / dockerfile when released -->
-The command line program may be run manually, and executed in an environment of your choosing. The following options are available to the program:
+The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/git-flag-parser/releases/latest). Additionally, a docker image containing the git flag parser is available on the docker registry as [`ldactions/git-flag-parser`](https://hub.docker.com/r/ldactions/git-flag-parser)
+
+The following options are available to the program:
 
 | Option | Description | Default | Required |
 |---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------|------------------------------------|

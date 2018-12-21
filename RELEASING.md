@@ -8,4 +8,10 @@ Make sure you update the changelog before generating a release.
 
 ## Docker Hub
 
-To push a new image version to Docker hub, run `make publish-docker TAG=$VERSION`, where `$VERSION` is the version you want to release. This will compile the github-actions binary, build a new image with your version tagged, also point latest at that tag and push both latest and $VERSION to docker hub.
+To push a new image version to Docker hub, run `make publish-cli-docker TAG=$VERSION` or `make publish-github-actions-docker TAG=$VERSION`, where `$VERSION` is the version you want to release. This will compile the git-flag-parser binary for either the base command line parser or the github actions specialized parser, build a new image with your version tagged, and also point latest at that tag and push both latest and $VERSION to docker hub.
+
+## CircleCI Orb Registry
+
+To publish the CircleCI Orb to the Orb registry, you'll need the [CircleCI CLI](https://circleci.com/docs/2.0/local-cli/) installed, and will need to run `circleci setup` and authenticate with a circle token that has github owner status.
+
+Run `make publish-dev-circle-orb TAG=$VERSION` or `make-publish-release-circle-orb TAG=$VERSION` to publish the orb to the orb registry, where `$VERSION` is the version you want to release. Running `publish-dev-circle-orb` will publish a development-tagged (e.g. `dev:0.0.1`) orb, which can be overwritten, and `publish-release-circle-orb` will publish a release version of the orb, which is immutable. Both dev and release orbs are open to the public, but development orbs are not visible in the list of registered orbs on Circle's [website](https://circleci.com/orbs/registry/?showAll=true).
