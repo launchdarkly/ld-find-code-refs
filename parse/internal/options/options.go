@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"net/url"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -163,4 +165,28 @@ func Populate() {
 			flag.String(name, v, o.usage)
 		}
 	}
+}
+
+func GetLDOptionsFromEnv() (map[string]string, error) {
+	ldOptions := map[string]string{
+		"accessToken":  os.Getenv("LD_ACCESS_TOKEN"),
+		"projKey":      os.Getenv("LD_PROJ_KEY"),
+		"exclude":      os.Getenv("LD_EXCLUDE"),
+		"contextLines": os.Getenv("LD_CONTEXT_LINES"),
+		"baseUri":      os.Getenv("LD_BASE_URI"),
+	}
+	_, err := regexp.Compile(ldOptions["exclude"])
+	if err != nil {
+		return ldOptions, fmt.Errorf("couldn't parse LD_EXCLUDE as regex: %+v", err)
+	}
+
+	if ldOptions["contextLines"] == "" {
+		ldOptions["contextLines"] = "-1"
+	}
+	_, err = strconv.ParseInt(ldOptions["contextLines"], 10, 32)
+	if err != nil {
+		return ldOptions, fmt.Errorf("coudln't parse LD_CONTEXT_LINES as an integer: %+v", err)
+	}
+
+	return ldOptions, nil
 }

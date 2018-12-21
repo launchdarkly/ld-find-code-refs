@@ -7,7 +7,7 @@ Create a [LaunchDarkly personal access token](https://docs.launchdarkly.com/docs
 
 Here's an example minimal configuration, using LaunchDarkly's Orb:
 
-```
+```yaml
 version: 2.1
 
 orbs:

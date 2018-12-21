@@ -10,7 +10,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 |---------------------|---------------------------------------------------------------------------------------------------------|
 | GitHub Actions | [Supported](https://github.com/launchdarkly/git-flag-parser/tree/master/parse/github-actions/README.md) |
 | CircleCI Orbs | [Supported](https://github.com/launchdarkly/git-flag-parser/tree/master/parse/circleci/README.md) |
-| BitBucket Pipelines | Planned |
+| BitBucket Pipelines | [Supported](https://github.com/launchdarkly/git-flag-parser/tree/master/parse/bitbucket-pipelines/README.md)
 | AWS Lambda jobs | Planned |
 | Manually via CLI | [Supported](https://github.com/launchdarkly/git-flag-parser/tree/master/README.md#execution-via-cli) |
 
