@@ -8,7 +8,7 @@ Make sure you update the changelog before generating a release.
 
 ## Docker Hub
 
-To push a new image version to Docker hub, run `make publish-cli-docker TAG=$VERSION` or `make publish-github-actions-docker TAG=$VERSION`, where `$VERSION` is the version you want to release. This will compile the github-actions binary for either the command line parser or the github actions parser, build a new image with your version tagged, and also point latest at that tag and push both latest and $VERSION to docker hub.
+To push a new image version to Docker hub, run `make publish-cli-docker TAG=$VERSION` or `make publish-github-actions-docker TAG=$VERSION`, where `$VERSION` is the version you want to release. This will compile the git-flag-parser binary for either the base command line parser or the github actions specialized parser, build a new image with your version tagged, and also point latest at that tag and push both latest and $VERSION to docker hub.
 
 ## CircleCI Orb Registry
 
