@@ -50,6 +50,14 @@
   revision = "fe4f1d017b6e2aab9dad2b17d65b8989d608220c"
 
 [[projects]]
+  branch = "master"
+  digest = "1:b828692d2153f698aaab752f9eca6fd4d1f9660dc325d478a94e093e75655ba6"
+  name = "github.com/launchdarkly/json-patch"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "dd68d883319f077782e0f04f87fe74a38f870386"
+
+[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -139,8 +147,8 @@
   input-imports = [
     "github.com/hashicorp/go-retryablehttp",
     "github.com/launchdarkly/api-client-go",
+    "github.com/launchdarkly/json-patch",
     "github.com/sirupsen/logrus",
-    "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
   ]
   solver-name = "gps-cdcl"

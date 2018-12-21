@@ -5,14 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	h "github.com/hashicorp/go-retryablehttp"
 
 	ldapi "github.com/launchdarkly/api-client-go"
 
 	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
+	jsonpatch "github.com/launchdarkly/json-patch"
 )
 
 type ApiClient struct {
@@ -34,8 +37,10 @@ const (
 )
 
 var (
-	RepositoryPostErr = fmt.Errorf("error creating repository")
-	BranchPutErr      = fmt.Errorf("error updating branch")
+	RepositoryPostErr     = fmt.Errorf("error creating repository")
+	RepositoryPatchErr    = fmt.Errorf("error updating repository")
+	RepositoryDisabledErr = fmt.Errorf("repository is disabled")
+	BranchPutErr          = fmt.Errorf("error updating branch")
 )
 
 func InitApiClient(options ApiOptions) ApiClient {
@@ -69,14 +74,72 @@ func (c ApiClient) GetFlagKeyList() ([]string, error) {
 	return flagKeys, nil
 }
 
-func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
+func (c ApiClient) repoUrl() string {
+	return fmt.Sprintf("%s%s", c.Options.BaseUri, reposPath)
+}
+
+func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) error {
+	originalBytes, err := json.Marshal(currentRepo)
+	if err != nil {
+		return err
+	}
+	newBytes, err := json.Marshal(repo)
+	if err != nil {
+		return err
+	}
+
+	patch, err := jsonpatch.CreateMergePatch(originalBytes, newBytes)
+	if err != nil {
+		return err
+	}
+
+	req, err := h.NewRequest("PATCH", fmt.Sprintf("%s/%s", c.repoUrl(), repo.Name), bytes.NewBuffer(patch))
+	if err != nil {
+		return err
+	}
+	res, err := c.do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return RepositoryPatchErr
+	}
+	return nil
+}
+
+func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
+	req, err := h.NewRequest("GET", fmt.Sprintf("%s/%s", c.repoUrl(), name), nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.do(req)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode == http.StatusOK {
+		resBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+		var repo RepoRep
+		err = json.Unmarshal(resBytes, &repo)
+		if err != nil {
+			return nil, err
+		}
+		return &repo, err
+	}
+
+	return nil, RepositoryPatchErr
+}
+
+func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 	repoBytes, err := json.Marshal(repo)
 	if err != nil {
 		return err
 	}
-	postUrl := fmt.Sprintf("%s%s", c.Options.BaseUri, reposPath)
-	log.Debug("Attempting to create code reference repository", log.Field("url", postUrl))
-	req, err := h.NewRequest("POST", postUrl, bytes.NewBuffer(repoBytes))
+
+	req, err := h.NewRequest("POST", c.repoUrl(), bytes.NewBuffer(repoBytes))
 	if err != nil {
 		return err
 	}
@@ -85,12 +148,36 @@ func (c ApiClient) PostCodeReferenceRepository(repo RepoParams) error {
 		return RepositoryPostErr
 	}
 
-	log.Debug("LaunchDarkly POST repository endpoint responded with status "+res.Status, log.Field("url", postUrl))
 	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
 		return RepositoryPostErr
 	}
 
 	return nil
+}
+
+func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
+	currentRepo, err := c.getCodeReferenceRepository(repo.Name)
+	if err != nil {
+		return err
+	}
+	if currentRepo != nil {
+		if !currentRepo.Enabled {
+			return RepositoryDisabledErr
+		}
+		currentRepoParams := RepoParams{
+			Name:              currentRepo.Name,
+			Type:              currentRepo.Type,
+			Url:               currentRepo.Url,
+			CommitUrlTemplate: currentRepo.CommitUrlTemplate,
+			HunkUrlTemplate:   currentRepo.HunkUrlTemplate,
+		}
+		if !reflect.DeepEqual(currentRepoParams, repo) {
+			return c.patchCodeReferenceRepository(currentRepoParams, repo)
+		}
+		return nil
+	}
+
+	return c.postCodeReferenceRepository(repo)
 }
 
 func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) error {
@@ -132,6 +219,14 @@ type RepoParams struct {
 	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
 }
 
+type RepoRep struct {
+	Type              string `json:"type"`
+	Name              string `json:"name"`
+	Url               string `json:"sourceLink"`
+	CommitUrlTemplate string `json:"commitUrlTemplate"`
+	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
+	Enabled           bool   `json:"enabled,omitempty"`
+}
 type BranchRep struct {
 	Name       string              `json:"name"`
 	Head       string              `json:"head"`

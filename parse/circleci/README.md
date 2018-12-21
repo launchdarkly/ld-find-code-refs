@@ -5,10 +5,6 @@ The flag parser can be used with CircleCI via a reusable [CircleCI orb](https://
 # Setup
 Create a [LaunchDarkly personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-references` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource. Store this newly created access token as an [environment variable](https://circleci.com/docs/2.0/env-vars/#setting-an-environment-variable-in-a-project) titled `LD_ACCESS_TOKEN` in your CircleCI project settings.
 
-The git flag parser will need ssh clone access to your git repo via a repo-specific SSH key. If your CircleCI project is connected to a Git repo, you can connect an SSH key (or use an existing one) in your CircleCI project settings, under Permissions > Checkout SSH Keys.
-
-![SSH fingerprint location](./images/ssh-fingerprint.png)
-
 Here's an example minimal configuration, using LaunchDarkly's Orb:
 
 ```yaml
@@ -21,7 +17,6 @@ workflows:
   main:
     jobs:
       - launchdarkly/find-code-references:
-          ssh_fingerprint: "YOUR_CIRCLE_SSH_FINGERPRINT"
           proj_key: default # your LaunchDarkly project key
           repo_type: github # can be 'github', 'bitbucket', or 'custom'
           repo_url: https://github.com/launchdarkly/SupportService # used to generate links to your repository in the LaunchDarkly webapp
