@@ -83,9 +83,9 @@ func Parse() {
 		HunkUrlTemplate:   o.HunkUrlTemplate.Value(),
 	}
 
-	err = ldApi.PostCodeReferenceRepository(repoParams)
+	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 	if err != nil {
-		fatal("Unable to create repository connection to LaunchDarkly", err)
+		fatal("Unable to connect repository to LaunchDarkly", err)
 	}
 
 	flags, err := getFlags(ldApi)
