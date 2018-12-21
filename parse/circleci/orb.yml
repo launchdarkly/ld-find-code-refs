@@ -33,21 +33,11 @@ executors:
       LD_HUNK_URL_TEMPLATE: << parameters.hunk_url_template >>
       LD_DEFAULT_BRANCH: << parameters.default_branch >>
     docker:
-      # TODO: use gh release tarball when git-flag-parser is released
-      - image: ldactions/git-flag-parser:latest
+      - image: ldactions/git-flag-parser:0.0.1
 commands:
   find-flags:
-    parameters:
-      ssh_fingerprint:
-        description: Git repo ssh fingerprint
-        type: string
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - << parameters.ssh_fingerprint >>
-      - run:
-          name: Disable ssh fingerprint checking
-          command: mkdir ~/.ssh/ && echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - checkout
       - run:
           name: Find flag references
           command: |
@@ -61,7 +51,7 @@ commands:
               -repoUrl=${LD_REPO_URL} \
               -repoName=${CIRCLE_PROJECT_REPONAME} \
               -repoHead=${CIRCLE_BRANCH} \
-              -cloneEndpoint=${CIRCLE_REPOSITORY_URL} \
+              -dir=${CIRCLE_WORKING_DIRECTORY} \
               -pushTime=$(date +%s) \
               -defaultBranch=${LD_DEFAULT_BRANCH} \
               -commitUrlTemplate=${LD_COMMIT_URL_TEMPLATE} \
@@ -69,9 +59,6 @@ commands:
 jobs:
   find-code-references:
     parameters:
-      ssh_fingerprint:
-        description: Git repo ssh fingerprint
-        type: string
       proj_key:
         description: LaunchDarkly project key
         type: string
@@ -119,5 +106,4 @@ jobs:
       commit_url_template: << parmaeters.commit_url_template >>
       hunk_url_template: << parameters.hunk_url_template >>
     steps:
-      - find-flags:
-          ssh_fingerprint: << parameters.ssh_fingerprint >>
+      - find-flags
