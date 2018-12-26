@@ -242,8 +242,8 @@ type ReferenceHunksRep struct {
 }
 
 type HunkRep struct {
-	Offset  int    `json:"offset"`
-	Lines   string `json:"lines,omitempty"`
-	ProjKey string `json:"projKey"`
-	FlagKey string `json:"flagKey"`
+	StartingLineNumber int    `json:"startingLineNumber"`
+	Lines              string `json:"lines,omitempty"`
+	ProjKey            string `json:"projKey"`
+	FlagKey            string `json:"flagKey"`
 }

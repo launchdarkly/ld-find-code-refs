@@ -320,7 +320,7 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 		// If we are starting a new hunk, initialize it
 		if !appendToPreviousHunk {
 			currentHunk = initHunk(projKey, flag)
-			currentHunk.Offset = ptr.Value.(grepResultLine).LineNum
+			currentHunk.StartingLineNumber = ptr.Value.(grepResultLine).LineNum
 			hunkStringBuilder.Reset()
 		}
 
