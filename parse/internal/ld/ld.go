@@ -228,12 +228,12 @@ type RepoRep struct {
 	Enabled           bool   `json:"enabled,omitempty"`
 }
 type BranchRep struct {
-	Name       string              `json:"name"`
-	Head       string              `json:"head"`
-	PushTime   int64               `json:"pushTime"`
-	SyncTime   int64               `json:"syncTime"`
-	IsDefault  bool                `json:"isDefault"`
-	References []ReferenceHunksRep `json:"references,omitempty"`
+	Name             string              `json:"name"`
+	Head             string              `json:"head"`
+	UpdateSequenceId int64               `json:"updateSequenceId"`
+	SyncTime         int64               `json:"syncTime"`
+	IsDefault        bool                `json:"isDefault"`
+	References       []ReferenceHunksRep `json:"references,omitempty"`
 }
 
 type ReferenceHunksRep struct {

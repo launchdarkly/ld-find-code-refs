@@ -37,12 +37,12 @@ type fileGrepResults struct {
 }
 
 type branch struct {
-	Name        string
-	Head        string
-	IsDefault   bool
-	PushTime    int64
-	SyncTime    int64
-	GrepResults grepResultLines
+	Name             string
+	Head             string
+	IsDefault        bool
+	UpdateSequenceId int64
+	SyncTime         int64
+	GrepResults      grepResultLines
 }
 
 func Parse() {
@@ -98,7 +98,13 @@ func Parse() {
 	}
 
 	ctxLines := o.ContextLines.Value()
-	b := &branch{Name: currBranch, IsDefault: o.DefaultBranch.Value() == currBranch, PushTime: o.PushTime.Value(), SyncTime: makeTimestamp(), Head: headSha}
+	b := &branch{
+		Name:             currBranch,
+		IsDefault:        o.DefaultBranch.Value() == currBranch,
+		UpdateSequenceId: o.UpdateSequenceId.Value(),
+		SyncTime:         makeTimestamp(),
+		Head:             headSha,
+	}
 
 	// exclude option has already been validated as regex
 	exclude, _ := regexp.Compile(o.Exclude.Value())
@@ -179,12 +185,12 @@ func findReferencedFlags(ref string, flags []string) []string {
 
 func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
 	return ld.BranchRep{
-		Name:       strings.TrimPrefix(b.Name, "refs/heads/"),
-		Head:       b.Head,
-		PushTime:   b.PushTime,
-		SyncTime:   b.SyncTime,
-		IsDefault:  b.IsDefault,
-		References: b.GrepResults.makeReferenceHunksReps(projKey, ctxLines),
+		Name:             strings.TrimPrefix(b.Name, "refs/heads/"),
+		Head:             b.Head,
+		UpdateSequenceId: b.UpdateSequenceId,
+		SyncTime:         b.SyncTime,
+		IsDefault:        b.IsDefault,
+		References:       b.GrepResults.makeReferenceHunksReps(projKey, ctxLines),
 	}
 }
 

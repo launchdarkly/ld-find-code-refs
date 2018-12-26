@@ -30,7 +30,7 @@ The following options are available to the program:
 | `dir` | Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required. |  | only if `cloneEndpoint` is not set |
 | `exclude` | A regular expression defining the files and directories which the flag parser should exclude. |  | no |
 | `projKey` | A LaunchDarkly project key. |  | yes |
-| `pushTime` | The time the `git push` was initiated, formatted as a unix millis timestamp. Used by the LaunchDarkly API to correctly order updates. |  | yes |
+| `updateSequenceId` | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag parser. Examples: the time a `git push` was initiated, CI build number, the current time. |  | yes |
 | `repoHead` | The HEAD or ref to retrieve code references from. Should be provided if the `git push` was initiated on a non-master branch. | "master" | no |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly |  | yes |
 | `repoType` | The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom | "custom" | no |

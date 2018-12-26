@@ -26,13 +26,13 @@ func main() {
 	}
 
 	options := map[string]string{
-		"repoType":      "github",
-		"repoName":      ghRepo[1],
-		"repoHead":      os.Getenv("GITHUB_REF"),
-		"dir":           os.Getenv("GITHUB_WORKSPACE"),
-		"pushTime":      strconv.FormatInt(event.Repo.PushedAt*1000, 10), // seconds to milliseconds
-		"defaultBranch": event.Repo.DefaultBranch,
-		"repoUrl":       event.Repo.Url,
+		"repoType":         "github",
+		"repoName":         ghRepo[1],
+		"repoHead":         os.Getenv("GITHUB_REF"),
+		"dir":              os.Getenv("GITHUB_WORKSPACE"),
+		"updateSequenceId": strconv.FormatInt(event.Repo.PushedAt*1000, 10), // seconds to milliseconds
+		"defaultBranch":    event.Repo.DefaultBranch,
+		"repoUrl":          event.Repo.Url,
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
 	if err != nil {
