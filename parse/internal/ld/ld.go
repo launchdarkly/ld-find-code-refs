@@ -39,6 +39,7 @@ const (
 var (
 	RepositoryPostErr     = fmt.Errorf("error creating repository")
 	RepositoryPatchErr    = fmt.Errorf("error updating repository")
+	RepositoryNotFoundErr = fmt.Errorf("repository not found")
 	RepositoryDisabledErr = fmt.Errorf("repository is disabled")
 	BranchPutErr          = fmt.Errorf("error updating branch")
 )
@@ -130,7 +131,7 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 		return &repo, err
 	}
 
-	return nil, RepositoryPatchErr
+	return nil, RepositoryNotFoundErr
 }
 
 func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
@@ -157,7 +158,7 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 
 func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 	currentRepo, err := c.getCodeReferenceRepository(repo.Name)
-	if err != nil {
+	if err != nil && err != RepositoryNotFoundErr {
 		return err
 	}
 	if currentRepo != nil {
