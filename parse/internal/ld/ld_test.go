@@ -41,7 +41,7 @@ func TestGetCodeReferenceRepository(t *testing.T) {
 		expectedErr    error
 	}{
 		{"succeeds", 200, `{"name":"test","type":"custom","sourceLink":"https://example.org"}`, nil},
-		{"fails on not found", 404, ``, RepositoryPatchErr},
+		{"fails on not found", 404, ``, RepositoryNotFoundErr},
 	}
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
