@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/launchdarkly/git-flag-parser/parse"
 	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
@@ -16,12 +14,12 @@ func main() {
 	log.Info("Setting Bitbucket action env vars", nil)
 
 	options := map[string]string{
-		"repoType": "bitbucket",
-		"repoName": os.Getenv("BITBUCKET_REPO_SLUG"),
-		"repoHead": os.Getenv("BITBUCKET_BRANCH"),
-		"dir":      os.Getenv("BITBUCKET_CLONE_DIR"),
-		"repoUrl":  os.Getenv("BITBUCKED_GIT_HTTP_ORIGIN"),
-		"pushTime": strconv.FormatInt(time.Now().Unix()*1000, 10), // seconds to milliseconds
+		"repoType":         "bitbucket",
+		"repoName":         os.Getenv("BITBUCKET_REPO_SLUG"),
+		"repoHead":         os.Getenv("BITBUCKET_BRANCH"),
+		"dir":              os.Getenv("BITBUCKET_CLONE_DIR"),
+		"repoUrl":          os.Getenv("BITBUCKET_GIT_HTTP_ORIGIN"),
+		"updateSequenceId": os.Getenv("BITBUCKET_BUILD_NUMBER"),
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
 	if err != nil {

@@ -12,11 +12,13 @@ import (
 
 // Since our hunking algorithm uses some maps, resulting slice orders are not deterministic
 // We use these sorters to make sure the results are always in a deterministic order.
-type byOffset []ld.HunkRep
+type byStartingLineNumber []ld.HunkRep
 
-func (h byOffset) Len() int           { return len(h) }
-func (h byOffset) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h byOffset) Less(i, j int) bool { return h[i].Offset < h[j].Offset }
+func (h byStartingLineNumber) Len() int      { return len(h) }
+func (h byStartingLineNumber) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
+func (h byStartingLineNumber) Less(i, j int) bool {
+	return h[i].StartingLineNumber < h[j].StartingLineNumber
+}
 
 func Test_generateReferencesFromGrep(t *testing.T) {
 	tests := []struct {
@@ -187,10 +189,10 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 					Path: "a/b",
 					Hunks: []ld.HunkRep{
 						ld.HunkRep{
-							Offset:  5,
-							Lines:   "context -1\nflag-1\ncontext +1\n",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
+							StartingLineNumber: 5,
+							Lines:              "context -1\nflag-1\ncontext +1\n",
+							ProjKey:            projKey,
+							FlagKey:            "flag-1",
 						},
 					},
 				},
@@ -217,10 +219,10 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 					Path: "a/b",
 					Hunks: []ld.HunkRep{
 						ld.HunkRep{
-							Offset:  1,
-							Lines:   "flag-1\n",
-							ProjKey: projKey,
-							FlagKey: "flag-1",
+							StartingLineNumber: 1,
+							Lines:              "flag-1\n",
+							ProjKey:            projKey,
+							FlagKey:            "flag-1",
 						},
 					},
 				},
@@ -228,10 +230,10 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 					Path: "a/c/d",
 					Hunks: []ld.HunkRep{
 						ld.HunkRep{
-							Offset:  10,
-							Lines:   "flag-2\n",
-							ProjKey: projKey,
-							FlagKey: "flag-2",
+							StartingLineNumber: 10,
+							Lines:              "flag-2\n",
+							ProjKey:            projKey,
+							FlagKey:            "flag-2",
 						},
 					},
 				},
@@ -282,10 +284,10 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  5,
-					Lines:   "context -1\nflag-1\ncontext +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 5,
+					Lines:              "context -1\nflag-1\ncontext +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -326,10 +328,10 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  5,
-					Lines:   "context -1\nflag-1\ncontext inner\nflag-1\ncontext +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 5,
+					Lines:              "context -1\nflag-1\ncontext inner\nflag-1\ncontext +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -370,10 +372,10 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  5,
-					Lines:   "context -1\nflag-1\ncontext inner\nflag-1\ncontext +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 5,
+					Lines:              "context -1\nflag-1\ncontext inner\nflag-1\ncontext +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -420,16 +422,16 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  5,
-					Lines:   "a context -1\na flag-1\na context +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 5,
+					Lines:              "a context -1\na flag-1\na context +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 				ld.HunkRep{
-					Offset:  9,
-					Lines:   "b context -1\nb flag-1\nb context +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 9,
+					Lines:              "b context -1\nb flag-1\nb context +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -470,16 +472,16 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  5,
-					Lines:   "context -1\nflag-1\ncontext inner\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 5,
+					Lines:              "context -1\nflag-1\ncontext inner\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 				ld.HunkRep{
-					Offset:  7,
-					Lines:   "context inner\nflag-2\ncontext +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-2",
+					StartingLineNumber: 7,
+					Lines:              "context inner\nflag-2\ncontext +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-2",
 				},
 			},
 		},
@@ -526,16 +528,16 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  5,
-					Lines:   "a context -1\na flag-1\na context +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 5,
+					Lines:              "a context -1\na flag-1\na context +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 				ld.HunkRep{
-					Offset:  8,
-					Lines:   "b context -1\nb flag-2\nb context +1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-2",
+					StartingLineNumber: 8,
+					Lines:              "b context -1\nb flag-2\nb context +1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-2",
 				},
 			},
 		},
@@ -576,16 +578,16 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  6,
-					Lines:   "flag-1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 6,
+					Lines:              "flag-1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 				ld.HunkRep{
-					Offset:  8,
-					Lines:   "flag-1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 8,
+					Lines:              "flag-1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -626,16 +628,16 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  6,
-					Lines:   "",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 6,
+					Lines:              "",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 				ld.HunkRep{
-					Offset:  8,
-					Lines:   "",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 8,
+					Lines:              "",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -687,16 +689,16 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  1,
-					Lines:   "flag-1\ncontext+1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 1,
+					Lines:              "flag-1\ncontext+1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 				ld.HunkRep{
-					Offset:  10,
-					Lines:   "context-1\nflag-1\ncontext+1\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 10,
+					Lines:              "context-1\nflag-1\ncontext+1\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -739,10 +741,10 @@ func Test_makeHunkReps(t *testing.T) {
 			},
 			want: []ld.HunkRep{
 				ld.HunkRep{
-					Offset:  1,
-					Lines:   "context-1\nflag-1\ncontext+1\ncontext+2\n",
-					ProjKey: projKey,
-					FlagKey: "flag-1",
+					StartingLineNumber: 1,
+					Lines:              "context-1\nflag-1\ncontext+1\ncontext+2\n",
+					ProjKey:            projKey,
+					FlagKey:            "flag-1",
 				},
 			},
 		},
@@ -758,7 +760,7 @@ func Test_makeHunkReps(t *testing.T) {
 
 			got := fileGrepResults.makeHunkReps(projKey, tt.ctxLines)
 
-			sort.Sort(byOffset(got))
+			sort.Sort(byStartingLineNumber(got))
 
 			require.Equal(t, tt.want, got)
 		})

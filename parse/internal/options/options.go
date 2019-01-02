@@ -57,7 +57,7 @@ const (
 	Dir               = StringOption("dir")
 	Exclude           = StringOption("exclude")
 	ProjKey           = StringOption("projKey")
-	PushTime          = Int64Option("pushTime")
+	UpdateSequenceId  = Int64Option("updateSequenceId")
 	RepoHead          = StringOption("repoHead")
 	RepoName          = StringOption("repoName")
 	RepoType          = StringOption("repoType")
@@ -92,7 +92,7 @@ var options = optionMap{
 	Dir:               option{"", "Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required.", false},
 	Exclude:           option{"", "Exclude any files or directories that match this regular expression pattern", false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
-	PushTime:          option{int64(0), "The time the push was initiated formatted as a unix millis timestamp.", true},
+	UpdateSequenceId:  option{int64(0), "An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag parser. Examples: the time a `git push` was initiated, CI build number, the current time", true},
 	RepoHead:          option{"master", "The HEAD or ref to retrieve code references from.", false},
 	RepoName:          option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
 	RepoType:          option{"custom", "github|bitbucket|custom", false},
