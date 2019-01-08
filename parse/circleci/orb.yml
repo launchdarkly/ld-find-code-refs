@@ -33,7 +33,7 @@ executors:
       LD_HUNK_URL_TEMPLATE: << parameters.hunk_url_template >>
       LD_DEFAULT_BRANCH: << parameters.default_branch >>
     docker:
-      - image: ldactions/git-flag-parser:v0.1.0
+      - image: ldactions/git-flag-parser:0.1.0
 commands:
   find-flags:
     steps:
