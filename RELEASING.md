@@ -1,5 +1,8 @@
 # Releasing
 
+## Versioning
+This project adheres to [Semantic Versioning](http://semver.org). Release version tags should be in the form `MAJOR.MINOR.PATCH`, with no leading v.
+
 ## Github Releases
 
 This project uses [goreleaser](https://goreleaser.com/) to generate github releases. Releases are automated via CircleCI. To generate a new release, simply tag the commit you want to release and push the tag. If the tag ends in -rc(.+), the github release will be marked as "Pre-release." If you'd like to see how release notes are generated, see the .circleci/config.yml publish job.
