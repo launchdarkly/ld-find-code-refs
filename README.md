@@ -1,5 +1,7 @@
 # git-flag-parser
 
+*Note:* [Code references](https://docs.launchdarkly.com/v2.0/docs/git-code-references) is currently a beta LaunchDarkly feature. If you'd like to join the beta, please email beta@launchdarkly.com.
+
 Command line program for generating flag code references.
 
 This repository provides solutions for configuring [LaunchDarkly code references](hhttps://docs.launchdarkly.com/v2.0/docs/git-code-references) with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
