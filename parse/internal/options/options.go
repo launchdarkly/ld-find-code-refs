@@ -92,7 +92,7 @@ var options = optionMap{
 	Dir:               option{"", "Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required.", false},
 	Exclude:           option{"", "Exclude any files or directories that match this regular expression pattern", false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
-	UpdateSequenceId:  option{int64(0), "An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag parser. Examples: the time a `git push` was initiated, CI build number, the current time", true},
+	UpdateSequenceId:  option{int64(-1), "An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag parser. If not provided (or set to a number < 0), data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current time.", false},
 	RepoHead:          option{"master", "The HEAD or ref to retrieve code references from.", false},
 	RepoName:          option{"", "Git repo name. Will be displayed in LaunchDarkly.", true},
 	RepoType:          option{"custom", "github|bitbucket|custom", false},

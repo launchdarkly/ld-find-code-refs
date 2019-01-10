@@ -234,7 +234,7 @@ type RepoRep struct {
 type BranchRep struct {
 	Name             string              `json:"name"`
 	Head             string              `json:"head"`
-	UpdateSequenceId int64               `json:"updateSequenceId"`
+	UpdateSequenceId *int64              `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
 	IsDefault        bool                `json:"isDefault"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
