@@ -53,4 +53,6 @@ publish-dev-circle-orb: validate-circle-orb
 publish-release-circle-orb: validate-circle-orb
 	circleci orb publish parse/circleci/orb.yml launchdarkly/git-flag-parser@$(TAG)
 
-.PHONY: init test lint compile-github-actions-binary compile-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb
+publish-all: publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-release-circle-orb
+
+.PHONY: init test lint compile-github-actions-binary compile-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all
