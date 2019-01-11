@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly git-flag-parser will be documented in th
 
 ## [0.1.1] - 2019-01-10
 ### Changed
-- `updateSequenceId` is now an optional parameter. If not provided (or set to a number < 0), data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`.
+- `updateSequenceId` is now an optional parameter. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`.
 
 ## [0.1.0] - 2019-01-02
 ### Changed
