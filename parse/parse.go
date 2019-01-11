@@ -108,10 +108,15 @@ func Parse() {
 	}
 
 	ctxLines := o.ContextLines.Value()
+	var updateId *int64
+	if o.UpdateSequenceId.Value() >= 0 {
+		updateIdOption := o.UpdateSequenceId.Value()
+		updateId = &updateIdOption
+	}
 	b := &branch{
 		Name:             currBranch,
 		IsDefault:        o.DefaultBranch.Value() == currBranch,
-		UpdateSequenceId: o.UpdateSequenceId.Value(),
+		UpdateSequenceId: updateId,
 		SyncTime:         makeTimestamp(),
 		Head:             headSha,
 	}
