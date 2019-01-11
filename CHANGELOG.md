@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly git-flag-parser will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [0.1.1] - 2019-01-10
+### Changed
+- `updateSequenceId` is now an optional parameter. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`.
+
 ## [0.1.0] - 2019-01-02
 ### Changed
 - `pushTime` CLI arg renamed to `updateSequenceId`. Its type has been changed from timestamp to integer.
