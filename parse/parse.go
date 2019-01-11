@@ -2,6 +2,7 @@ package parse
 
 import (
 	"container/list"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -14,6 +15,8 @@ import (
 	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
 	o "github.com/launchdarkly/git-flag-parser/parse/internal/options"
 )
+
+const minFlagKeyLen = 3
 
 type grepResultLine struct {
 	Path     string
@@ -97,23 +100,25 @@ func Parse() {
 		os.Exit(0)
 	}
 
-	ctxLines := o.ContextLines.Value()
-	var updateId *int64
-	if o.UpdateSequenceId.Value() >= 0 {
-		updateIdOption := o.UpdateSequenceId.Value()
-		updateId = &updateIdOption
+	filteredFlags := filterShortFlagKeys(flags)
+	if len(filteredFlags) == 0 {
+		msg := fmt.Sprintf("No flag keys larger than the min. flag key length of %v were found, exiting early", minFlagKeyLen)
+		log.Info(msg, log.Field("projKey", projKey))
+		os.Exit(0)
 	}
+
+	ctxLines := o.ContextLines.Value()
 	b := &branch{
 		Name:             currBranch,
 		IsDefault:        o.DefaultBranch.Value() == currBranch,
-		UpdateSequenceId: updateId,
+		UpdateSequenceId: o.UpdateSequenceId.Value(),
 		SyncTime:         makeTimestamp(),
 		Head:             headSha,
 	}
 
 	// exclude option has already been validated as regex
 	exclude, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := b.findReferences(cmd, flags, ctxLines, exclude)
+	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, exclude)
 	if err != nil {
 		fatal("Error searching for flag key references", err)
 	}
@@ -124,6 +129,21 @@ func Parse() {
 	if err != nil {
 		fatal("Error sending code references to LaunchDarkly", err)
 	}
+}
+
+// Very short flag keys lead to many false positives when searching in code,
+// so we filter them out.
+func filterShortFlagKeys(flags []string) []string {
+	filteredFlags := []string{}
+
+	for _, flag := range flags {
+		if len(flag) >= minFlagKeyLen {
+			filteredFlags = append(filteredFlags, flag)
+		}
+
+	}
+
+	return filteredFlags
 }
 
 func getFlags(ldApi ld.ApiClient) ([]string, error) {

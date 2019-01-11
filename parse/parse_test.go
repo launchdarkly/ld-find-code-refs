@@ -832,3 +832,40 @@ func Test_groupIntoPathMap(t *testing.T) {
 	require.Equal(t, bLines.Front().Value, grepResultPathBLine1)
 	require.Equal(t, bLines.Back().Value, grepResultPathBLine2)
 }
+
+func Test_filterShortFlags(t *testing.T) {
+	// Note: these specs assume minFlagKeyLen is 3
+	tests := []struct {
+		name  string
+		flags []string
+		want  []string
+	}{
+		{
+			name:  "Empty input/output",
+			flags: []string{},
+			want:  []string{},
+		},
+		{
+			name:  "all flags are too short",
+			flags: []string{"a", "b"},
+			want:  []string{},
+		},
+		{
+			name:  "some flags are too short",
+			flags: []string{"abcdefg", "b", "ab", "abc"},
+			want:  []string{"abcdefg", "abc"},
+		},
+		{
+			name:  "no flags are too short",
+			flags: []string{"catsarecool", "dogsarecool"},
+			want:  []string{"catsarecool", "dogsarecool"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := filterShortFlagKeys(tt.flags)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
