@@ -85,7 +85,7 @@ func (m optionMap) find(name string) *option {
 
 const (
 	noUpdateSequenceId = int64(-1)
-	noContextLines     = int64(-1)
+	noContextLines     = -1
 )
 
 var options = optionMap{
