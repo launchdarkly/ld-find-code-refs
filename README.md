@@ -40,7 +40,3 @@ The following options are available to the program:
 | `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/git-flag-parser` | "" | no |
 | `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/git-flag-parser/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types. | "" | no |
 | `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/git-flag-parser/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types. | "" | no |
-
-## Testing
-
-Set up your development environment by installing Go and running `make init` to install the linter. To lint and run tests, run `make test`.
