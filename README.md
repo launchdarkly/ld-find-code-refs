@@ -12,7 +12,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 |---------------------|---------------------------------------------------------------------------------------------------------|
 | GitHub Actions | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions) |
 | CircleCI Orbs | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs) |
-| BitBucket Pipelines | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipelines-1)
+| BitBucket Pipelines | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipelines-coderefs)
 | Manually via CLI | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli) |
 | AWS Lambda jobs | Planned |
 
