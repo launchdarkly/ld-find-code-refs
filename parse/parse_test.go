@@ -3,6 +3,7 @@ package parse
 import (
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -865,6 +866,46 @@ func Test_filterShortFlags(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := filterShortFlagKeys(tt.flags)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_truncateLine(t *testing.T) {
+	longLine := strings.Repeat("a", maxLineCharCount)
+
+	veryLongLine := strings.Repeat("a", maxLineCharCount+1)
+
+	tests := []struct {
+		name string
+		line string
+		want string
+	}{
+		{
+			name: "empty line",
+			line: "",
+			want: "",
+		},
+		{
+			name: "line shorter than max length",
+			line: "abc efg",
+			want: "abc efg",
+		},
+		{
+			name: "long line",
+			line: longLine,
+			want: longLine,
+		},
+		{
+			name: "very long line",
+			line: veryLongLine,
+			want: veryLongLine[0:maxLineCharCount] + "…",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := truncateLine(tt.line)
 			require.Equal(t, tt.want, got)
 		})
 	}
