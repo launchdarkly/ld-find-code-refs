@@ -49,9 +49,9 @@ func (o Int64Option) Value() int64 {
 }
 
 const (
-	AccessToken       = StringOption("accessToken")
-	BaseUri           = StringOption("baseUri")
-	CloneEndpoint     = StringOption("cloneEndpoint")
+	AccessToken = StringOption("accessToken")
+	BaseUri     = StringOption("baseUri")
+	// CloneEndpoint     = StringOption("cloneEndpoint")
 	ContextLines      = IntOption("contextLines")
 	DefaultBranch     = StringOption("defaultBranch")
 	Dir               = StringOption("dir")
@@ -89,12 +89,12 @@ const (
 )
 
 var options = optionMap{
-	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
-	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
-	CloneEndpoint:     option{"", "If provided, will clone the repo from this endpoint. If authentication is required, this endpoint should be authenticated. Supports the https protocol for git cloning. Example: https://username:password@github.com/username/repository.git", false},
+	AccessToken: option{"", "LaunchDarkly personal access token with write-level access.", true},
+	BaseUri:     option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
+	// CloneEndpoint:     option{"", "If provided, will clone the repo from this endpoint. If authentication is required, this endpoint should be authenticated. Supports the https protocol for git cloning. Example: https://username:password@github.com/username/repository.git", false},
 	ContextLines:      option{noContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
 	DefaultBranch:     option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
-	Dir:               option{"", "Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required.", false},
+	Dir:               option{"", "Path to existing checkout of the git repo.", false},
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag parser should exclude. Partial matches are allowed. Examples: "vendor/", "vendor/*`, false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
 	UpdateSequenceId:  option{noUpdateSequenceId, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag parser. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},

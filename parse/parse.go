@@ -3,7 +3,6 @@ package parse
 import (
 	"container/list"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -60,19 +59,22 @@ func Parse() {
 	currBranch := o.RepoHead.Value()
 
 	cmd := git.Git{Workspace: o.Dir.Value(), Head: currBranch, RepoName: o.RepoName.Value()}
-	endpoint := o.CloneEndpoint.Value()
-	if endpoint != "" {
-		dir, err := ioutil.TempDir("", cmd.RepoName)
-		if err != nil {
-			fatal("Failed to create temp directory for repo clone", err)
-		}
-		defer os.RemoveAll(dir)
-		cmd.Workspace = dir
-		err = cmd.Clone(endpoint)
-		if err != nil {
-			fatal("Unable to clone repo", err)
-		}
-	}
+
+	// TODO: Reintroduce this codepath if we decide the flag parser should be able to clone repos
+	// endpoint := o.CloneEndpoint.Value()
+	// if endpoint != "" {
+	// 	dir, err := ioutil.TempDir("", cmd.RepoName)
+	// 	if err != nil {
+	// 		fatal("Failed to create temp directory for repo clone", err)
+	// 	}
+	// 	defer os.RemoveAll(dir)
+	// 	cmd.Workspace = dir
+	// 	err = cmd.Clone(endpoint)
+	// 	if err != nil {
+	// 		fatal("Unable to clone repo", err)
+	// 	}
+	// }
+
 	headSha, err := cmd.RevParse()
 	if err != nil {
 		fatal("Unable to parse current commit sha", err)

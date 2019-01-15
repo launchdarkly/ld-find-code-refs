@@ -51,7 +51,6 @@ Here's an example shell invocation of the git-flag-parser for one of LaunchDarkl
 | Option | Description | Default |
 |-|-|-|
 | `baseUri` | Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly. | `https://app.launchdarkly.com` |
-| `cloneEndpoint` | If provided, will clone the repo from this endpoint to the provided `dir`. If authentication is required, this endpoint should be authenticated. Supports the https protocol for git cloning. Example: `https://username:password@github.com/username/repository.git` | n/a |
 | `contextLines` | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | -1 |
 | `defaultBranch` | The git default branch. The LaunchDarkly UI will default to display code references for this branch. | "master" |
 | `exclude` | A regular expression (PCRE) defining the files and directories which the flag parser should exclude. Partial matches are allowed. Examples: `vendor/`, `vendor/.*` | "" |
