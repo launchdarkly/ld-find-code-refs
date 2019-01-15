@@ -5,6 +5,7 @@ All notable changes to the LaunchDarkly git-flag-parser will be documented in th
 ### Changed
 - `updateSequenceId` is now an optional parameter. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`.
 - Flags with keys shorter than 3 characters are no longer supported.
+- lines are truncated after 500 characters.
 
 ## [0.1.0] - 2019-01-02
 ### Changed
