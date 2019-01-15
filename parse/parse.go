@@ -404,13 +404,15 @@ func fatal(msg string, err error) {
 }
 
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.
+// NOTE: We may end up truncating a valid flag key reference. We accept this risk
+//       and will handle hunks missing flag key references on the frontend.
 func truncateLine(line string) string {
 	// len(line) returns number of bytes, not num. characters, but it's a close enough
 	// approximation for our purposes
 	if len(line) > maxLineCharCount {
 		// convert to rune slice so that we don't truncate multibyte unicode characters
 		runes := []rune(line)
-		return string(runes[0:maxLineCharCount])
+		return string(runes[0:maxLineCharCount]) + "…"
 	} else {
 		return line
 	}

@@ -899,7 +899,7 @@ func Test_truncateLine(t *testing.T) {
 		{
 			name: "very long line",
 			line: veryLongLine,
-			want: veryLongLine[0:maxLineCharCount],
+			want: veryLongLine[0:maxLineCharCount] + "…",
 		},
 	}
 
