@@ -17,6 +17,7 @@ import (
 )
 
 const minFlagKeyLen = 3
+const maxFileCount = 1000
 const maxLineCharCount = 500
 
 type grepResultLine struct {
@@ -229,6 +230,12 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 	reps := []ld.ReferenceHunksRep{}
 
 	aggregatedGrepResults := g.aggregateByPath()
+
+	if len(aggregatedGrepResults) > maxFileCount {
+		log.Info("number of files containing code references exceeded limit",
+			log.Field("number of matched files", len(aggregatedGrepResult)), log.Field("file limit", maxFileCount))
+		aggregatedGrepResults = aggregatedGrepResults[0:maxFileCount]
+	}
 
 	for _, fileGrepResults := range aggregatedGrepResults {
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
