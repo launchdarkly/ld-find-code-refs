@@ -98,7 +98,7 @@ var options = optionMap{
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag parser should exclude. Partial matches are allowed. Examples: "vendor/", "vendor/*`, false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
 	UpdateSequenceId:  option{noUpdateSequenceId, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag parser. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
-	RepoHead:          option{"master", "he branch to scan for code references. Should be provided if the `git push` was initiated on a non-master branch.", false},
+	RepoHead:          option{"master", "The branch to scan for code references. Should be provided if the `git push` was initiated on a non-master branch.", false},
 	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Both a repo name and the repo name with an organization identifier are valid. Examples: "linux", "torvalds/linux."`, true},
 	RepoType:          option{"custom", "The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|custom.", false},
 	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
