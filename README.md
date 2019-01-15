@@ -32,7 +32,7 @@ A number of command-line arguments are available to the parser, some optional, a
 | Option | Description |
 |-|-|
 | `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-references` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
-| `dir` | Path to existing checkout of the git repo. If a cloneEndpoint is provided, this option is not required. |
+| `dir` | **Absolute** path to existing checkout of the git repo. Relative paths are not currently supported. |
 | `projKey` | A LaunchDarkly project key. |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly |
 
@@ -41,7 +41,7 @@ Here's an example shell invocation of the git-flag-parser for one of LaunchDarkl
 ```shell
 ./git-flag-parser \
   -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
-  -dir="path/to/git/repo" \
+  -dir="/path/to/git/repo" \
   -repoName="my-repository" \
   -projKey="default"
 ```
@@ -65,7 +65,7 @@ Here's an example shell invocation of the git-flag-parser for one of LaunchDarkl
 ```shell
 ./git-flag-parser \
   -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
-  -dir="path/to/git/repo" \
+  -dir="/path/to/git/repo" \
   -repoName="SupportService" \
   -projKey="default" \
   -baseUri="https://app.launchdarkly.com" \
