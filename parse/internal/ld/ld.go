@@ -38,12 +38,13 @@ const (
 )
 
 var (
-	RepositoryPostErr     = fmt.Errorf("error creating repository")
-	RepositoryPatchErr    = fmt.Errorf("error updating repository")
-	RepositoryGetErr      = fmt.Errorf("error retrieving repository")
-	RepositoryNotFoundErr = fmt.Errorf("repository not found")
-	RepositoryDisabledErr = fmt.Errorf("repository is disabled")
-	BranchPutErr          = fmt.Errorf("error updating branch")
+	NotFoundErr                       = fmt.Errorf("not found")
+	ConflictErr                       = fmt.Errorf("conflict")
+	EntityTooLargeErr                 = fmt.Errorf("entity too large")
+	UnauthorizedErr                   = fmt.Errorf("unauthorized, check your LaunchDarkly access token")
+	UnknownErr                        = fmt.Errorf("an unknown error occured")
+	RepositoryDisabledErr             = fmt.Errorf("repository is disabled")
+	BranchUpdateSequenceIdConflictErr = fmt.Errorf("existing updateSequenceId is newer")
 )
 
 func InitApiClient(options ApiOptions) ApiClient {
@@ -87,6 +88,7 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 	if err != nil {
 		return err
 	}
+
 	newBytes, err := json.Marshal(repo)
 	if err != nil {
 		return err
@@ -101,13 +103,12 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 	if err != nil {
 		return err
 	}
-	res, err := c.do(req)
+
+	_, err = c.do(req)
 	if err != nil {
 		return err
 	}
-	if res.StatusCode != http.StatusOK {
-		return RepositoryPatchErr
-	}
+
 	return nil
 }
 
@@ -120,23 +121,18 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode == http.StatusOK {
-		resBytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
-		var repo RepoRep
-		err = json.Unmarshal(resBytes, &repo)
-		if err != nil {
-			return nil, err
-		}
-		return &repo, err
+
+	resBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
 	}
-	if res.StatusCode == http.StatusNotFound {
-		return nil, RepositoryNotFoundErr
+	defer res.Body.Close()
+	var repo RepoRep
+	err = json.Unmarshal(resBytes, &repo)
+	if err != nil {
+		return nil, err
 	}
-	return nil, RepositoryGetErr
+	return &repo, err
 }
 
 func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
@@ -149,13 +145,10 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 	if err != nil {
 		return err
 	}
-	res, err := c.do(req)
-	if err != nil {
-		return RepositoryPostErr
-	}
 
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
-		return RepositoryPostErr
+	_, err = c.do(req)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -163,9 +156,10 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 
 func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 	currentRepo, err := c.getCodeReferenceRepository(repo.Name)
-	if err != nil && err != RepositoryNotFoundErr {
-		return err
+	if err != nil && err != NotFoundErr {
+		return fmt.Errorf("error retrieving repository: %s", err)
 	}
+
 	if currentRepo != nil {
 		if !currentRepo.Enabled {
 			return RepositoryDisabledErr
@@ -178,12 +172,20 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 			HunkUrlTemplate:   currentRepo.HunkUrlTemplate,
 		}
 		if !reflect.DeepEqual(currentRepoParams, repo) {
-			return c.patchCodeReferenceRepository(currentRepoParams, repo)
+			err = c.patchCodeReferenceRepository(currentRepoParams, repo)
+			if err != nil {
+				return fmt.Errorf("error updating repository: %s", err)
+			}
 		}
 		return nil
 	}
 
-	return c.postCodeReferenceRepository(repo)
+	err = c.postCodeReferenceRepository(repo)
+	if err != nil {
+		return fmt.Errorf("error creating repository: %s", err)
+	}
+
+	return nil
 }
 
 func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) error {
@@ -196,16 +198,21 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 	if err != nil {
 		return err
 	}
-	res, err := c.do(req)
+
+	_, err = c.do(req)
 	if err != nil {
+		if err == ConflictErr {
+			return fmt.Errorf("existing updateSequenceId is greater than %d", branch.UpdateSequenceId)
+		}
 		return err
 	}
 
-	if res.StatusCode != 200 {
-		return BranchPutErr
-	}
-
 	return nil
+}
+
+type ldErrorResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 func (c ApiClient) do(req *h.Request) (*http.Response, error) {
@@ -215,18 +222,41 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode == http.StatusUnauthorized {
-		return res, errors.New("unauthorized, check your LaunchDarkly access token")
-	}
-	if res.StatusCode == http.StatusBadRequest {
+
+	// Check for all general status codes returned by the code references API, attempting to deconstruct LD error messages, if possible.
+	switch res.StatusCode {
+	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
+		return res, nil
+	default:
 		resBytes, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return nil, err
 		}
 		defer res.Body.Close()
-		return res, errors.New(string(resBytes))
+		var ldErr ldErrorResponse
+		err = json.Unmarshal(resBytes, &ldErr)
+		if err == nil && ldErr.Message != "" {
+			return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
+		}
+		return res, fallbackErrorForStatus(res.StatusCode)
 	}
-	return res, nil
+}
+
+func fallbackErrorForStatus(code int) error {
+	switch code {
+	case http.StatusBadRequest:
+		return errors.New("bad request")
+	case http.StatusUnauthorized:
+		return errors.New("unauthorized, check your LaunchDarkly access token")
+	case http.StatusNotFound:
+		return NotFoundErr
+	case http.StatusConflict:
+		return ConflictErr
+	case http.StatusRequestEntityTooLarge:
+		return EntityTooLargeErr
+	default:
+		return UnknownErr
+	}
 }
 
 type RepoParams struct {

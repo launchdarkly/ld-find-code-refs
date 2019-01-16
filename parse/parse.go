@@ -76,7 +76,7 @@ func Parse() {
 
 	headSha, err := cmd.RevParse()
 	if err != nil {
-		log.Error.Fatalf("Error parsing current commit sha: %s", err)
+		log.Error.Fatalf("error parsing current commit sha: %s", err)
 	}
 	projKey := o.ProjKey.Value()
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
@@ -152,7 +152,6 @@ func filterShortFlagKeys(flags []string) []string {
 }
 
 func getFlags(ldApi ld.ApiClient) ([]string, error) {
-	log.Debug.Printf("requesting flag list from LaunchDarkly")
 	flags, err := ldApi.GetFlagKeyList()
 	if err != nil {
 		log.Error.Printf("error retrieving flag list from LaunchDarkly: %s", err)
