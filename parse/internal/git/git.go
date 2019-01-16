@@ -48,7 +48,7 @@ func (g Git) Checkout() error {
 func (g Git) Grep(flags []string, ctxLines int) ([][]string, error) {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("ag --nogroup"))
+	sb.WriteString(fmt.Sprintf("ag --nogroup --case-sensitive"))
 	if ctxLines > 0 {
 		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
 	}
