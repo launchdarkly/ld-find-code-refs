@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/launchdarkly/git-flag-parser/parse/internal/git"
-	"github.com/launchdarkly/git-flag-parser/parse/internal/ld"
-	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
-	o "github.com/launchdarkly/git-flag-parser/parse/internal/options"
+	"github.com/launchdarkly/git-flag-parser/internal/git"
+	"github.com/launchdarkly/git-flag-parser/internal/ld"
+	"github.com/launchdarkly/git-flag-parser/internal/log"
+	o "github.com/launchdarkly/git-flag-parser/internal/options"
 )
 
 const minFlagKeyLen = 3

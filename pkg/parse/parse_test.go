@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/launchdarkly/git-flag-parser/parse/internal/ld"
+	"github.com/launchdarkly/git-flag-parser/internal/ld"
 )
 
 // Since our hunking algorithm uses some maps, resulting slice orders are not deterministic

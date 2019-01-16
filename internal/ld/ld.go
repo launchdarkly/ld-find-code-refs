@@ -14,7 +14,7 @@ import (
 
 	ldapi "github.com/launchdarkly/api-client-go"
 
-	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
+	"github.com/launchdarkly/git-flag-parser/internal/log"
 	jsonpatch "github.com/launchdarkly/json-patch"
 )
 
