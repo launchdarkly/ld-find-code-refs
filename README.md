@@ -17,7 +17,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Execution via CLI
 
-The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/git-flag-parser/releases/latest). Additionally, a docker image containing the git flag parser is available on the docker registry as [`ldactions/git-flag-parser`](https://hub.docker.com/r/ldactions/git-flag-parser)
+The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/git-flag-parser/releases/latest). Additionally, a docker image containing the git flag parser is available on the docker registry as [`launchdarkly/git-flag-parser`](https://hub.docker.com/r/launchdarkly/git-flag-parser)
 
 macOS users should download the darwin release for their respective system architecture.
 

@@ -30,10 +30,10 @@ echo-release-notes:
 
 define publish_docker
 	test $(1) || (echo "Please provide tag"; exit 1)
-	docker build -t ldactions/$(2):$(1) build/package/$(3)
-	docker tag ldactions/$(2):$(1) ldactions/$(2):latest
-	docker push ldactions/$(2):$(1)
-	docker push ldactions/$(2):latest
+	docker build -t launchdarkly/$(2):$(1) build/package/$(3)
+	docker tag launchdarkly/$(2):$(1) launchdarkly/$(2):latest
+	docker push launchdarkly/$(2):$(1)
+	docker push launchdarkly/$(2):latest
 endef
 
 publish-cli-docker: compile-binary
