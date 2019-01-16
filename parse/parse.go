@@ -244,8 +244,7 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 	aggregatedGrepResults := g.aggregateByPath()
 
 	if len(aggregatedGrepResults) > maxFileCount {
-		log.Info("number of files containing code references exceeded limit",
-			map[string]interface{}{"number of matched files": len(aggregatedGrepResults), "file limit": maxFileCount})
+		log.Warning.Printf("found %d files with code references, which exceeded the limit of %d", len(aggregatedGrepResults), maxFileCount)
 		aggregatedGrepResults = aggregatedGrepResults[0:maxFileCount]
 	}
 
@@ -253,16 +252,14 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 
 	for _, fileGrepResults := range aggregatedGrepResults {
 		if numHunks > maxHunkCount {
-			log.Info("Exceeded maximum hunk limit, halting code reference search.",
-				map[string]interface{}{"hunk count": numHunks, "limit": maxHunkCount})
+			log.Warning.Printf("found %d code reference hunks across all files, which exceeeded the limit of %d. halting code reference search", numHunks, maxHunkCount)
 			break
 		}
 
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
 
 		if len(hunks) > maxHunksPerFileCount {
-			log.Info("Exceded hunk limit for file, truncating file hunks",
-				map[string]interface{}{"hunk count": len(hunks), "limit": maxHunksPerFileCount, "path": fileGrepResults.path})
+			log.Warning.Printf("found %d code reference hunks in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileGrepResults.path, maxHunksPerFileCount)
 			hunks = hunks[0:maxHunksPerFileCount]
 		}
 
@@ -342,14 +339,14 @@ func (fgr fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkR
 	hunks := []ld.HunkRep{}
 
 	for flagKey, flagReferences := range fgr.flagReferenceMap {
-		flagHunks := buildHunksForFlag(projKey, flagKey, flagReferences, fgr.fileGrepResultLines, ctxLines)
+		flagHunks := buildHunksForFlag(projKey, flagKey, fgr.path, flagReferences, fgr.fileGrepResultLines, ctxLines)
 		hunks = append(hunks, flagHunks...)
 	}
 
 	return hunks
 }
 
-func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
+func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 
 	var previousHunk *ld.HunkRep
@@ -425,8 +422,7 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
 		// This guards against a situation where the user has very long files with many false positive matches.
 		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
-			log.Info("Exceeded permitted number of flag reference lines + context lines for file",
-				map[string]interface{}{"flag": flag, "limit": maxHunkedLinesPerFileAndFlagCount})
+			log.Warning.Printf("Found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. Ignoring this code reference", numHunkedLines, path, flag, maxHunkedLinesPerFileAndFlagCount)
 			return hunks
 		}
 	}
