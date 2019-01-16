@@ -2,7 +2,6 @@ package parse
 
 import (
 	"container/list"
-	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -51,7 +50,7 @@ type branch struct {
 func Parse() {
 	err, cb := o.Init()
 	if err != nil {
-		log.Error("Unable to validate command line options", err, nil)
+		log.Error.Printf("could not validate command line options: %s", err)
 		cb()
 		os.Exit(1)
 	}
@@ -77,7 +76,7 @@ func Parse() {
 
 	headSha, err := cmd.RevParse()
 	if err != nil {
-		fatal("Unable to parse current commit sha", err)
+		log.Error.Fatalf("Error parsing current commit sha: %s", err)
 	}
 	projKey := o.ProjKey.Value()
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
@@ -91,22 +90,21 @@ func Parse() {
 
 	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 	if err != nil {
-		fatal("Unable to connect repository to LaunchDarkly", err)
+		log.Error.Fatalf("could not validate repository connection: %s", err)
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
-		fatal("Unable to retrieve flag keys", err)
+		log.Error.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
 	}
 	if len(flags) == 0 {
-		log.Info("No flag keys found for selected project, exiting early", log.Field("projKey", projKey))
+		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
 		os.Exit(0)
 	}
 
 	filteredFlags := filterShortFlagKeys(flags)
 	if len(filteredFlags) == 0 {
-		msg := fmt.Sprintf("No flag keys larger than the min. flag key length of %v were found, exiting early", minFlagKeyLen)
-		log.Info(msg, log.Field("projKey", projKey))
+		log.Info.Printf("no flag keys larger than the min found for project: %s. flag key length of %v were found, exiting early", projKey, minFlagKeyLen)
 		os.Exit(0)
 	}
 
@@ -128,14 +126,13 @@ func Parse() {
 	exclude, _ := regexp.Compile(o.Exclude.Value())
 	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, exclude)
 	if err != nil {
-		fatal("Error searching for flag key references", err)
+		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
 	b.GrepResults = refs
 
 	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), repoParams.Name)
-
 	if err != nil {
-		fatal("Error sending code references to LaunchDarkly", err)
+		log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
 	}
 }
 
@@ -155,10 +152,10 @@ func filterShortFlagKeys(flags []string) []string {
 }
 
 func getFlags(ldApi ld.ApiClient) ([]string, error) {
-	log.Debug("Requesting flag list from LaunchDarkly", log.Field("projKey", ldApi.Options.ProjKey))
+	log.Debug.Printf("requesting flag list from LaunchDarkly")
 	flags, err := ldApi.GetFlagKeyList()
 	if err != nil {
-		log.Error("Error retrieving flag list from LaunchDarkly", err, log.Field("projKey", ldApi.Options.ProjKey))
+		log.Error.Printf("error retrieving flag list from LaunchDarkly: %s", err)
 		return nil, err
 	}
 	return flags, nil
@@ -191,7 +188,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		lineText := r[4]
 		lineNum, err := strconv.Atoi(lineNumber)
 		if err != nil {
-			fatal("encountered an error generating flag references", err)
+			log.Error.Fatalf("encountered an unexpected error generating flag references: %s", err)
 		}
 		ref := grepResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
@@ -288,7 +285,7 @@ func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Eleme
 		// should always return search results sorted by line number. We sanity check
 		// that lines are sorted _just in case_ since the downstream hunking algorithm
 		// only works on sorted lines.
-		log.Fatal("grep results returned out of order", nil)
+		log.Error.Fatalf("grep results returned out of order")
 	}
 
 	return fgr.fileGrepResultLines.PushBack(grepResult)
@@ -398,11 +395,6 @@ func initHunk(projKey, flagKey string) ld.HunkRep {
 
 func makeTimestamp() int64 {
 	return int64(time.Now().UnixNano()) / int64(time.Millisecond)
-}
-
-func fatal(msg string, err error) {
-	log.Fatal(msg, err)
-	os.Exit(1)
 }
 
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.

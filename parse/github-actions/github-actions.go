@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -15,14 +14,14 @@ import (
 )
 
 func main() {
-	log.Info("Setting GitHub action env vars", nil)
+	log.Info.Printf("Setting GitHub action env vars")
 	ghRepo := strings.Split(os.Getenv("GITHUB_REPOSITORY"), "/")
 	if len(ghRepo) < 2 {
-		log.Fatal("Invalid GitHub repository name", fmt.Errorf("unable to find GitHub repository name"))
+		log.Error.Fatalf("unable to validate GitHub repository name: %s", ghRepo)
 	}
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
-		log.Fatal("Error parsing GitHub event payload", fmt.Errorf("unable to parse GitHub event payload: %+v at '%s'\n", err, os.Getenv("GITHUB_EVENT_PATH")))
+		log.Error.Fatalf("error parsing GitHub event payload at %s: %s", os.Getenv("GITHUB_EVENT_PATH"), err)
 	}
 
 	options := map[string]string{
@@ -36,7 +35,7 @@ func main() {
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
 	if err != nil {
-		log.Fatal("Error settings options", err)
+		log.Error.Fatalf("Error settings options: %s", err)
 	}
 	for k, v := range ldOptions {
 		options[k] = v
@@ -46,13 +45,13 @@ func main() {
 	for k, v := range options {
 		err := flag.Set(k, v)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error setting option %s", k), err)
+			log.Error.Fatalf("could not set option %s: %s", k, err)
 		}
 	}
 	// Don't log ld access token
 	optionsForLog := options
 	optionsForLog["accessToken"] = ""
-	log.Info(fmt.Sprintf("Starting repo parsing program with options:\n %+v\n", options), nil)
+	log.Info.Printf("starting repo parsing program with options:\n %+v\n", options)
 	parse.Parse()
 }
 

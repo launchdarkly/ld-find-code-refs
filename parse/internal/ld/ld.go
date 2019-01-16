@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,8 +14,8 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 
 	ldapi "github.com/launchdarkly/api-client-go"
-
 	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
+
 	jsonpatch "github.com/launchdarkly/json-patch"
 )
 
@@ -50,6 +51,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 		options.BaseUri = "https://app.launchdarkly.com"
 	}
 	client := h.NewClient()
+	client.Logger = log.Debug
 	if options.RetryMax != nil && *options.RetryMax >= 0 {
 		client.RetryMax = *options.RetryMax
 	}
@@ -190,17 +192,14 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 		return err
 	}
 	putUrl := fmt.Sprintf("%s%s/%s/branches/%s", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branch.Name))
-	log.Debug("Sending code references", log.Field("url", putUrl))
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
 	}
 	res, err := c.do(req)
 	if err != nil {
-		return BranchPutErr
+		return err
 	}
-
-	log.Debug("LaunchDarkly PUT branches endpoint responded with status "+res.Status, log.Field("url", putUrl))
 
 	if res.StatusCode != 200 {
 		return BranchPutErr
@@ -212,7 +211,22 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Add("Authorization", c.Options.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
-	return c.httpClient.Do(req)
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode == http.StatusUnauthorized {
+		return res, errors.New("unauthorized, check your LaunchDarkly access token")
+	}
+	if res.StatusCode == http.StatusBadRequest {
+		resBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+		return res, errors.New(string(resBytes))
+	}
+	return res, nil
 }
 
 type RepoParams struct {
