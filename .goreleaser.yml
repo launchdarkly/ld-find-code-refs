@@ -1,7 +1,7 @@
 builds:
   -
     binary: git-flag-parser
-    main: .
+    main: ./cmd/git-flag-parser/
     env:
       - CGO_ENABLED=0
     goos:

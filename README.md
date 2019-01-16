@@ -1,7 +1,5 @@
 # git-flag-parser
 
-*Note:* [Code references](https://docs.launchdarkly.com/v2.0/docs/git-code-references) is currently a beta LaunchDarkly feature. If you'd like to join the beta, please email beta@launchdarkly.com.
-
 Command line program for generating flag code references.
 
 This repository provides solutions for configuring [LaunchDarkly code references](hhttps://docs.launchdarkly.com/v2.0/docs/git-code-references) with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
@@ -19,7 +17,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Execution via CLI
 
-The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/git-flag-parser/releases/latest). Additionally, a docker image containing the git flag parser is available on the docker registry as [`ldactions/git-flag-parser`](https://hub.docker.com/r/ldactions/git-flag-parser)
+The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/git-flag-parser/releases/latest). Additionally, a docker image containing the git flag parser is available on the docker registry as [`launchdarkly/git-flag-parser`](https://hub.docker.com/r/launchdarkly/git-flag-parser)
 
 macOS users should download the darwin release for their respective system architecture.
 
