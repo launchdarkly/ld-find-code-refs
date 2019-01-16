@@ -15,8 +15,17 @@ import (
 	o "github.com/launchdarkly/git-flag-parser/internal/options"
 )
 
+// These are defensive limits intended to prevent corner cases stemming from
+// large repos, false positives, etc. The goal is a) to prevent the parser
+// from taking a very long time to run and b) to prevent the parser from
+// PUTing a massive json payload. These limits will likely be tweaked over
+// time. The LaunchDarkly backend will also apply limits.
 const minFlagKeyLen = 3
+const maxFileCount = 5000
 const maxLineCharCount = 500
+const maxHunkCount = 5000
+const maxHunksPerFileCount = 1000
+const maxHunkedLinesPerFileAndFlagCount = 500
 
 type grepResultLine struct {
 	Path     string
@@ -232,8 +241,31 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 
 	aggregatedGrepResults := g.aggregateByPath()
 
+	if len(aggregatedGrepResults) > maxFileCount {
+		log.Info("number of files containing code references exceeded limit",
+			map[string]interface{}{"number of matched files": len(aggregatedGrepResults), "file limit": maxFileCount})
+		aggregatedGrepResults = aggregatedGrepResults[0:maxFileCount]
+	}
+
+	numHunks := 0
+
 	for _, fileGrepResults := range aggregatedGrepResults {
+		if numHunks > maxHunkCount {
+			log.Info("Exceeded maximum hunk limit, halting code reference search.",
+				map[string]interface{}{"hunk count": numHunks, "limit": maxHunkCount})
+			break
+		}
+
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
+
+		if len(hunks) > maxHunksPerFileCount {
+			log.Info("Exceded hunk limit for file, truncating file hunks",
+				map[string]interface{}{"hunk count": len(hunks), "limit": maxHunksPerFileCount, "path": fileGrepResults.path})
+			hunks = hunks[0:maxHunksPerFileCount]
+		}
+
+		numHunks += len(hunks)
+
 		reps = append(reps, ld.ReferenceHunksRep{Path: fileGrepResults.path, Hunks: hunks})
 	}
 	return reps
@@ -327,6 +359,8 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 
 	appendToPreviousHunk := false
 
+	numHunkedLines := 0
+
 	for _, ref := range flagReferences {
 		// Each ref is either the start of a new hunk or a continuation of the previous hunk.
 		// NOTE: its possible that this flag reference is totally contained in the previous hunk
@@ -369,6 +403,7 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 				lineText := truncateLine(ptr.Value.(grepResultLine).LineText)
 				hunkStringBuilder.WriteString(lineText + "\n")
 				lastSeenLineNum = ptrLineNum
+				numHunkedLines += 1
 			}
 
 			if ptr.Next() != nil {
@@ -383,6 +418,14 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 			currentHunk.Lines = hunkStringBuilder.String()
 			hunks = append(hunks, currentHunk)
 			previousHunk = &hunks[len(hunks)-1]
+		}
+
+		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
+		// This guards against a situation where the user has very long files with many false positive matches.
+		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
+			log.Info("Exceeded permitted number of flag reference lines + context lines for file",
+				map[string]interface{}{"flag": flag, "limit": maxHunkedLinesPerFileAndFlagCount})
+			return hunks
 		}
 	}
 
