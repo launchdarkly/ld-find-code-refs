@@ -38,13 +38,15 @@ const (
 )
 
 var (
-	NotFoundErr                       = fmt.Errorf("not found")
-	ConflictErr                       = fmt.Errorf("conflict")
-	EntityTooLargeErr                 = fmt.Errorf("entity too large")
-	UnauthorizedErr                   = fmt.Errorf("unauthorized, check your LaunchDarkly access token")
-	UnknownErr                        = fmt.Errorf("an unknown error occured")
-	RepositoryDisabledErr             = fmt.Errorf("repository is disabled")
-	BranchUpdateSequenceIdConflictErr = fmt.Errorf("existing updateSequenceId is newer")
+	NotFoundErr                       = errors.New("not found")
+	ConflictErr                       = errors.New("conflict")
+	EntityTooLargeErr                 = errors.New("entity too large")
+	RateLimitExceededErr              = errors.New("rate limit exceeded")
+	InternalServiceErr                = errors.New("internal service error")
+	UnauthorizedErr                   = errors.New("unauthorized, check your LaunchDarkly access token")
+	UnknownErr                        = errors.New("an unknown error occured")
+	RepositoryDisabledErr             = errors.New("repository is disabled")
+	BranchUpdateSequenceIdConflictErr = errors.New("updateSequenceId conflict")
 )
 
 func InitApiClient(options ApiOptions) ApiClient {
@@ -201,9 +203,6 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 
 	_, err = c.do(req)
 	if err != nil {
-		if err == ConflictErr {
-			return fmt.Errorf("existing updateSequenceId is greater than %d", branch.UpdateSequenceId)
-		}
 		return err
 	}
 
@@ -235,9 +234,15 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 		defer res.Body.Close()
 		var ldErr ldErrorResponse
 		err = json.Unmarshal(resBytes, &ldErr)
-		if err == nil && ldErr.Message != "" {
-			return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
+
+		if err == nil {
+			if ldErr.Code == "updateSequenceId_conflict" {
+				return res, BranchUpdateSequenceIdConflictErr
+			} else if ldErr.Message != "" {
+				return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
+			}
 		}
+		// The LaunchDarkly API should guarantee that we never have to fallback to these generic error messages, but we have them as a safeguard
 		return res, fallbackErrorForStatus(res.StatusCode)
 	}
 }
@@ -254,8 +259,12 @@ func fallbackErrorForStatus(code int) error {
 		return ConflictErr
 	case http.StatusRequestEntityTooLarge:
 		return EntityTooLargeErr
+	case http.StatusTooManyRequests:
+		return RateLimitExceededErr
+	case http.StatusInternalServerError:
+		return InternalServiceErr
 	default:
-		return UnknownErr
+		return fmt.Errorf("LaunchDarkly API responded with status code %d", code)
 	}
 }
 

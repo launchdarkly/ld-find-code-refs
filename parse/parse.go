@@ -90,7 +90,7 @@ func Parse() {
 
 	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 	if err != nil {
-		log.Error.Fatalf("could not validate repository connection: %s", err)
+		log.Error.Fatalf(err.Error())
 	}
 
 	flags, err := getFlags(ldApi)
@@ -132,7 +132,11 @@ func Parse() {
 
 	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), repoParams.Name)
 	if err != nil {
-		log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
+		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
+			log.Info.Printf("existing updateSequenceId is greater than %d", *b.UpdateSequenceId)
+		} else {
+			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
+		}
 	}
 }
 
