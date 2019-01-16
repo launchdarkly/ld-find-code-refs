@@ -22,7 +22,7 @@ func main() {
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
 	if err != nil {
-		log.Error.Fatalf("Error settings options", err)
+		log.Error.Fatalf("Error setting options %s", err)
 	}
 	for k, v := range ldOptions {
 		options[k] = v
