@@ -1,6 +1,4 @@
-# git-flag-parser
-
-*Note:* [Code references](https://docs.launchdarkly.com/v2.0/docs/git-code-references) is currently a beta LaunchDarkly feature. If you'd like to join the beta, please email beta@launchdarkly.com.
+# ld-find-code-refs
 
 Command line program for generating flag code references.
 
@@ -19,13 +17,13 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Execution via CLI
 
-The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/git-flag-parser/releases/latest). Additionally, a docker image containing the git flag parser is available on the docker registry as [`ldactions/git-flag-parser`](https://hub.docker.com/r/ldactions/git-flag-parser)
+The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Additionally, a docker image containing ld-find-code-refs is available on the docker registry as [`launchdarkly/ld-find-code-refs`](https://hub.docker.com/r/launchdarkly/ld-find-code-refs)
 
 macOS users should download the darwin release for their respective system architecture.
 
-The `git-flag-parser` requires [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure it has been installed and added to your system path before running the git-flag-parser.
+The `ld-find-code-refs` program requires [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure it has been installed and added to your system path before running the ld-find-code-refs.
 
-A number of command-line arguments are available to the parser, some optional, and some required. Command line arguments may be passed to the program in any order.
+A number of command-line arguments are available to the code ref finder, some optional, and some required. Command line arguments may be passed to the program in any order.
 
 ### Required arguments
 
@@ -36,10 +34,10 @@ A number of command-line arguments are available to the parser, some optional, a
 | `projKey` | A LaunchDarkly project key. |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly |
 
-Here's an example shell invocation of the git-flag-parser for one of LaunchDarkly's demo repositories:, with the binary located in the current directory, and a minimal configuration:
+Here's an example shell invocation of the ld-find-code-refs for one of LaunchDarkly's demo repositories:, with the binary located in the current directory, and a minimal configuration:
 
 ```shell
-./git-flag-parser \
+./ld-find-code-refs \
   -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
   -dir="/path/to/git/repo" \
   -repoName="my-repository" \
@@ -53,16 +51,16 @@ Here's an example shell invocation of the git-flag-parser for one of LaunchDarkl
 | `baseUri` | Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly. | `https://app.launchdarkly.com` |
 | `contextLines` | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | -1 |
 | `defaultBranch` | The git default branch. The LaunchDarkly UI will default to display code references for this branch. | "master" |
-| `exclude` | A regular expression (PCRE) defining the files and directories which the flag parser should exclude. Partial matches are allowed. Examples: `vendor/`, `vendor/.*` | "" |
-| `updateSequenceId` | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag parser. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current unix timestamp. | n/a |
+| `exclude` | A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: `vendor/`, `vendor/.*` | "" |
+| `updateSequenceId` | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the program. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current unix timestamp. | n/a |
 | `repoHead` | The branch to scan for code references. Should be provided if the `git push` was initiated on a non-master branch. | "master" | no |
 | `repoType` | The repo service provider. Used to generate repository links in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom | "custom" |
-| `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/git-flag-parser` | "" |
-| `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/git-flag-parser/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit. | "" |
-| `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/git-flag-parser/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.  | "" |
+| `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs` | "" |
+| `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit. | "" |
+| `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.  | "" |
 
 ```shell
-./git-flag-parser \
+./ld-find-code-refs \
   -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
   -dir="/path/to/git/repo" \
   -repoName="SupportService" \
@@ -75,6 +73,6 @@ Here's an example shell invocation of the git-flag-parser for one of LaunchDarkl
   -repoType="github" \
   -repuUrl="https://github.com/launchdarkly/SupportService" \
   -updateSequenceId="$(date +%s)" \
-  -commitUrlTemplate="https://github.com/launchdarkly/git-flag-parser/commit/${sha}"
-  -hunkUrlTemplate="https://github.com/launchdarkly/git-flag-parser/blob/${sha}/${filePath}#L${lineNumber}"
+  -commitUrlTemplate="https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}"
+  -hunkUrlTemplate="https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}"
 ```
