@@ -15,6 +15,11 @@ import (
 	o "github.com/launchdarkly/git-flag-parser/parse/internal/options"
 )
 
+// These are defensive limits intended to prevent corner cases stemming from
+// large repos, false positives, etc. The goal is a) to prevent the parser
+// from taking a very long time to run and b) to prevent the parser from
+// PUTing a massive json payload. These limits will likely be tweaked over
+// time. The LaunchDarkly backend will also apply limits.
 const minFlagKeyLen = 3
 const maxFileCount = 5000
 const maxLineCharCount = 500
