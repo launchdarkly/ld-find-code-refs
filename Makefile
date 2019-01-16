@@ -13,7 +13,10 @@ test: lint
 lint:
 	./bin/golangci-lint run ./...
 
-compile-binary:
+compile-macos-binary:
+	GOOS=darwin GOARCH=amd64 go build -o out/git-flag-parser ./cmd/git-flag-parser
+
+compile-linux-binary:
 	GOOS=linux GOARCH=amd64 go build -o build/package/cmd/git-flag-parser ./cmd/git-flag-parser
 
 compile-github-actions-binary:
@@ -36,7 +39,7 @@ define publish_docker
 	docker push launchdarkly/$(2):latest
 endef
 
-publish-cli-docker: compile-binary
+publish-cli-docker: compile-linux-binary
 	$(call publish_docker,$(TAG),git-flag-parser,cmd)
 
 publish-github-actions-docker: compile-github-actions-binary
@@ -62,4 +65,4 @@ clean:
 	rm -f build/pacakge/github-actions/github-actions-flag-parser
 	rm -f build/pacakge/bitbucket-pipelines-flag-parser/bitbucket-pipelines-flag-parser
 
-.PHONY: init test lint compile-github-actions-binary compile-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all clean
+.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all clean
