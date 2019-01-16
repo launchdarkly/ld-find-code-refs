@@ -336,7 +336,6 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 	appendToPreviousHunk := false
 
 	numHunkedLines := 0
-	exceededLineLimit := false
 
 	for _, ref := range flagReferences {
 		// Each ref is either the start of a new hunk or a continuation of the previous hunk.
@@ -388,26 +387,19 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 			}
 		}
 
-		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
-		// This guards against a situation where the user has very long files with many false positive matches.
-		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
-			exceededLineLimit = true
-		}
-
 		if appendToPreviousHunk {
 			previousHunk.Lines = hunkStringBuilder.String()
 			appendToPreviousHunk = false
+		} else {
+			currentHunk.Lines = hunkStringBuilder.String()
+			hunks = append(hunks, currentHunk)
+			previousHunk = &hunks[len(hunks)-1]
 
-			if !exceededLineLimit {
-				continue
-			}
 		}
 
-		currentHunk.Lines = hunkStringBuilder.String()
-		hunks = append(hunks, currentHunk)
-		previousHunk = &hunks[len(hunks)-1]
-
-		if exceededLineLimit {
+		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
+		// This guards against a situation where the user has very long files with many false positive matches.
+		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
 			log.Info("Exceeded permitted number of flag reference lines + context lines for file",
 				map[string]interface{}{"flag": flag, "limit": maxHunkedLinesPerFileAndFlagCount})
 			return hunks
