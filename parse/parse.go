@@ -144,7 +144,7 @@ func Parse() {
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
-			log.Warning.Printf("existing updateSequenceId is greater than or equal to than the set value of %d", *b.UpdateSequenceId)
+			log.Warning.Printf("updateSequenceId (%d) must be greater than existing updateSequenceId", *b.UpdateSequenceId)
 		} else {
 			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}
