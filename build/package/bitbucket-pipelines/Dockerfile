@@ -5,6 +5,6 @@ RUN apk add --no-cache git
 RUN apk add --no-cache the_silver_searcher
 RUN apk add --no-cache openssh
 
-COPY bitbucket-pipelines-flag-parser /bitbucket-pipelines-flag-parser
+COPY ld-find-code-refs-bitbucket-pipeline /ld-find-code-refs-bitbucket-pipeline
 
-ENTRYPOINT ["/bitbucket-pipelines-flag-parser"]
+ENTRYPOINT ["/ld-find-code-refs-bitbucket-pipeline"]

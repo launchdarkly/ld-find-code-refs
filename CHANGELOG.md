@@ -1,6 +1,6 @@
 # Change log
 
-All notable changes to the LaunchDarkly git-flag-parser will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
+All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
 ### Changed
 - `updateSequenceId` is now an optional parameter. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`.

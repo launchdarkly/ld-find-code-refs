@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/launchdarkly/git-flag-parser/internal/git"
-	"github.com/launchdarkly/git-flag-parser/internal/ld"
-	"github.com/launchdarkly/git-flag-parser/internal/log"
-	o "github.com/launchdarkly/git-flag-parser/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/git"
+	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
 // These are defensive limits intended to prevent corner cases stemming from
-// large repos, false positives, etc. The goal is a) to prevent the parser
-// from taking a very long time to run and b) to prevent the parser from
+// large repos, false positives, etc. The goal is a) to prevent the program
+// from taking a very long time to run and b) to prevent the program from
 // PUTing a massive json payload. These limits will likely be tweaked over
 // time. The LaunchDarkly backend will also apply limits.
 const minFlagKeyLen = 3
@@ -69,7 +69,7 @@ func Parse() {
 
 	cmd := git.Git{Workspace: o.Dir.Value(), Head: currBranch, RepoName: o.RepoName.Value()}
 
-	// TODO: Reintroduce this codepath if we decide the flag parser should be able to clone repos
+	// TODO: Reintroduce this codepath if we decide the flag finder should be able to clone repos
 	// endpoint := o.CloneEndpoint.Value()
 	// if endpoint != "" {
 	// 	dir, err := ioutil.TempDir("", cmd.RepoName)
