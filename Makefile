@@ -61,6 +61,7 @@ publish-release-circle-orb: validate-circle-orb
 publish-all: publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-release-circle-orb
 
 clean:
+	rm -rf out/
 	rm -f build/pacakge/cmd/git-flag-parser
 	rm -f build/package/github-actions/github-actions-flag-parser
 	rm -f build/package/bitbucket-pipelines-flag-parser/bitbucket-pipelines-flag-parser
