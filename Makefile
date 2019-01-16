@@ -20,10 +20,10 @@ compile-linux-binary:
 	GOOS=linux GOARCH=amd64 go build -o build/package/cmd/git-flag-parser ./cmd/git-flag-parser
 
 compile-github-actions-binary:
-	GOOS=linux GOARCH=amd64 go build -o out/github-actions-flag-parser ./build/package/github-actions
+	GOOS=linux GOARCH=amd64 go build -o build/package/github-actions/github-actions-flag-parser ./build/package/github-actions
 
 compile-bitbucket-pipelines-binary:
-	GOOS=linux GOARCH=amd64 go build -o out/bitbucket-pipelines-flag-parser ./build/package/bitbucket-pipelines
+	GOOS=linux GOARCH=amd64 go build -o build/package/bitbucket-pipelines/bitbucket-pipelines-flag-parser ./build/package/bitbucket-pipelines
 
 # Get the lines added to the most recent changelog update (minus the first 2 lines)
 RELEASE_NOTES=<(GIT_EXTERNAL_DIFF='bash -c "diff --unchanged-line-format=\"\" $$2 $$5" || true' git log --ext-diff -1 --pretty= -p CHANGELOG.md)
@@ -62,7 +62,7 @@ publish-all: publish-cli-docker publish-github-actions-docker publish-bitbucket-
 
 clean:
 	rm -f build/pacakge/cmd/git-flag-parser
-	rm -f build/pacakge/github-actions/github-actions-flag-parser
-	rm -f build/pacakge/bitbucket-pipelines-flag-parser/bitbucket-pipelines-flag-parser
+	rm -f build/package/github-actions/github-actions-flag-parser
+	rm -f build/package/bitbucket-pipelines-flag-parser/bitbucket-pipelines-flag-parser
 
 .PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all clean
