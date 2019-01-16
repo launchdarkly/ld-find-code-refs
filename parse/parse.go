@@ -394,7 +394,6 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 			currentHunk.Lines = hunkStringBuilder.String()
 			hunks = append(hunks, currentHunk)
 			previousHunk = &hunks[len(hunks)-1]
-
 		}
 
 		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
