@@ -14,8 +14,6 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 
 	ldapi "github.com/launchdarkly/api-client-go"
-	"github.com/launchdarkly/git-flag-parser/parse/internal/log"
-
 	jsonpatch "github.com/launchdarkly/json-patch"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
