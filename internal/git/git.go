@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/launchdarkly/git-flag-parser/internal/log"
+	log "github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
 type Git struct {

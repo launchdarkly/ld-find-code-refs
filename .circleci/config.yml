@@ -15,7 +15,7 @@ defaults:
       github.com/kyoh86/richgo
 
   build_steps: &build_steps
-    working_directory: /go/src/github.com/launchdarkly/git-flag-parser
+    working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
       - run:
@@ -70,7 +70,7 @@ jobs:
   test-publish:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/launchdarkly/git-flag-parser
+    working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
       - setup_remote_docker
@@ -79,7 +79,7 @@ jobs:
   publish:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/launchdarkly/git-flag-parser
+    working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
       - setup_remote_docker

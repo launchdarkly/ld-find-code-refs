@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/launchdarkly/git-flag-parser/internal/log"
-	o "github.com/launchdarkly/git-flag-parser/internal/options"
-	"github.com/launchdarkly/git-flag-parser/pkg/parse"
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/pkg/parse"
 )
 
 func main() {

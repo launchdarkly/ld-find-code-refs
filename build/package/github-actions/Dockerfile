@@ -5,6 +5,6 @@ RUN apk add --no-cache git
 RUN apk add --no-cache the_silver_searcher
 RUN apk add --no-cache openssh
 
-COPY github-actions-flag-parser /github-actions-flag-parser
+COPY ld-find-code-refs-github-action /ld-find-code-refs-github-action
 
-ENTRYPOINT ["/github-actions-flag-parser"]
+ENTRYPOINT ["/ld-find-code-refs-github-action"]
