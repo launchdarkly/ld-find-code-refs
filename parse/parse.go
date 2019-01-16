@@ -130,10 +130,12 @@ func Parse() {
 	}
 	b.GrepResults = refs
 
-	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), repoParams.Name)
+	branchRep := b.makeBranchRep(projKey, ctxLines)
+	log.Info.Printf("sending %d code reference hunks across %d files to LaunchDarkly", branchRep.TotalHunkCount(), len(branchRep.References))
+	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
-			log.Info.Printf("existing updateSequenceId is greater than %d", *b.UpdateSequenceId)
+			log.Info.Printf("existing updateSequenceId is greater than or equal to %d", *b.UpdateSequenceId)
 		} else {
 			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}

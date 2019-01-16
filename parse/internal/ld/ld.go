@@ -43,6 +43,7 @@ var (
 	EntityTooLargeErr                 = errors.New("entity too large")
 	RateLimitExceededErr              = errors.New("rate limit exceeded")
 	InternalServiceErr                = errors.New("internal service error")
+	ServiceUnavailableErr             = errors.New("service unavailable")
 	UnauthorizedErr                   = errors.New("unauthorized, check your LaunchDarkly access token")
 	UnknownErr                        = errors.New("an unknown error occured")
 	RepositoryDisabledErr             = errors.New("repository is disabled")
@@ -263,6 +264,8 @@ func fallbackErrorForStatus(code int) error {
 		return RateLimitExceededErr
 	case http.StatusInternalServerError:
 		return InternalServiceErr
+	case http.StatusServiceUnavailable:
+		return ServiceUnavailableErr
 	default:
 		return fmt.Errorf("LaunchDarkly API responded with status code %d", code)
 	}
@@ -291,6 +294,14 @@ type BranchRep struct {
 	SyncTime         int64               `json:"syncTime"`
 	IsDefault        bool                `json:"isDefault"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
+}
+
+func (b BranchRep) TotalHunkCount() int {
+	count := 0
+	for _, r := range b.References {
+		count += len(r.Hunks)
+	}
+	return count
 }
 
 type ReferenceHunksRep struct {
