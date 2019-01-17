@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [0.2.1] - 2019-01-17
+### Fixed
+- Fix a bug causing an error to be returned when a repository connection to LaunchDarkly does not initially exist on execution.
+
 ## [0.2.0] - 2019-01-16
 ### Fixed
 - Use case-sensitive `ag` search so we don't get false positives that look like flag keys but have different casing.
