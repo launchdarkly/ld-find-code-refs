@@ -17,24 +17,37 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Execution via CLI
 
-The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Additionally, a docker image containing ld-find-code-refs is available on the docker registry as [`launchdarkly/ld-find-code-refs`](https://hub.docker.com/r/launchdarkly/ld-find-code-refs)
+The command line program may be run manually, and executed in an environment of your choosing.
 
-macOS users should download the darwin release for their respective system architecture.
+### Installing
+#### MacOS
+
+```shell
+brew tap launchdarkly/tap
+brew install ld-find-code-refs
+```
+
+You can now run `ld-find-code-refs`.
+
+#### Manual
+
+Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest).
 
 The `ld-find-code-refs` program requires [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure it has been installed and added to your system path before running the ld-find-code-refs.
 
-A number of command-line arguments are available to the code ref finder, some optional, and some required. Command line arguments may be passed to the program in any order.
 
 ### Required arguments
 
+A number of command-line arguments are available to the code ref finder, some optional, and some required. Command line arguments may be passed to the program in any order.
+
 | Option | Description |
 |-|-|
-| `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-references` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
+| `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
 | `dir` | **Absolute** path to existing checkout of the git repo. Relative paths are not currently supported. |
 | `projKey` | A LaunchDarkly project key. |
-| `repoName` | Git repo name. Will be displayed in LaunchDarkly |
+| `repoName` | Git repo name. Will be displayed in LaunchDarkly. Repo names must only contain letters, numbers, '.', '_' or '-'." |
 
-Here's an example shell invocation of the ld-find-code-refs for one of LaunchDarkly's demo repositories:, with the binary located in the current directory, and a minimal configuration:
+Here's an example shell invocation of the ld-find-code-refs for one of LaunchDarkly's demo repositories, with the binary located in the current directory, and a minimal configuration:
 
 ```shell
 ./ld-find-code-refs \
@@ -58,6 +71,8 @@ Here's an example shell invocation of the ld-find-code-refs for one of LaunchDar
 | `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs` | "" |
 | `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit. | "" |
 | `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.  | "" |
+
+Here's an example shell invocation of the `ld-find-code-refs` for one of LaunchDarkly's demo repositories, with the binary located in the current directory, with all options configured:
 
 ```shell
 ./ld-find-code-refs \
