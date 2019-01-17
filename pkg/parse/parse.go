@@ -113,7 +113,8 @@ func Parse() {
 
 	filteredFlags := filterShortFlagKeys(flags)
 	if len(filteredFlags) == 0 {
-		log.Info.Printf("no flag keys larger than the min found for project: %s. flag key length of %v were found, exiting early", projKey, minFlagKeyLen)
+		log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
+			minFlagKeyLen, projKey)
 		os.Exit(0)
 	}
 
@@ -144,7 +145,7 @@ func Parse() {
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
-			log.Warning.Printf("updateSequenceId (%d) must be greater than existing updateSequenceId", *b.UpdateSequenceId)
+			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
 		} else {
 			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}
@@ -422,7 +423,8 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
 		// This guards against a situation where the user has very long files with many false positive matches.
 		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
-			log.Warning.Printf("Found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. Ignoring this code reference", numHunkedLines, path, flag, maxHunkedLinesPerFileAndFlagCount)
+			log.Warning.Printf("Found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. Truncating code references for this path and flag.",
+				numHunkedLines, path, flag, maxHunkedLinesPerFileAndFlagCount)
 			return hunks
 		}
 	}
