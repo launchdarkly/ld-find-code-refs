@@ -17,15 +17,36 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Execution via CLI
 
-The command line program may be run manually, and executed in an environment of your choosing. Downloads for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Additionally, a docker image containing ld-find-code-refs is available on the docker registry as [`launchdarkly/ld-find-code-refs`](https://hub.docker.com/r/launchdarkly/ld-find-code-refs)
+The command line program may be run manually, and executed in an environment of your choosing. 
 
-macOS users should download the darwin release for their respective system architecture.
+### Installing
+#### MacOS
+
+#### Homebrew
+
+```shell
+brew tap launchdarkly/tap
+brew install ld-find-code-refs
+```
+
+#### Docker
+
+```shell
+docker run launchdarkly/ld-find-code-refs:latest ld-find-code-refs
+```
+
+Additionally, a docker image containing ld-find-code-refs is available on the docker registry as [`launchdarkly/ld-find-code-refs`](https://hub.docker.com/r/launchdarkly/ld-find-code-refs)
+
+#### Manual
+
+Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). 
 
 The `ld-find-code-refs` program requires [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure it has been installed and added to your system path before running the ld-find-code-refs.
 
-A number of command-line arguments are available to the code ref finder, some optional, and some required. Command line arguments may be passed to the program in any order.
 
 ### Required arguments
+
+A number of command-line arguments are available to the code ref finder, some optional, and some required. Command line arguments may be passed to the program in any order.
 
 | Option | Description |
 |-|-|
