@@ -29,13 +29,7 @@ brew tap launchdarkly/tap
 brew install ld-find-code-refs
 ```
 
-#### Docker
-
-```shell
-docker run launchdarkly/ld-find-code-refs:latest ld-find-code-refs
-```
-
-Additionally, a docker image containing ld-find-code-refs is available on the docker registry as [`launchdarkly/ld-find-code-refs`](https://hub.docker.com/r/launchdarkly/ld-find-code-refs)
+You can now run `ld-find-code-refs`.
 
 #### Manual
 
