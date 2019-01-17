@@ -17,7 +17,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Execution via CLI
 
-The command line program may be run manually, and executed in an environment of your choosing. 
+The command line program may be run manually, and executed in an environment of your choosing.
 
 ### Installing
 #### MacOS
@@ -39,7 +39,7 @@ Additionally, a docker image containing ld-find-code-refs is available on the do
 
 #### Manual
 
-Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). 
+Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest).
 
 The `ld-find-code-refs` program requires [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure it has been installed and added to your system path before running the ld-find-code-refs.
 
@@ -50,7 +50,7 @@ A number of command-line arguments are available to the code ref finder, some op
 
 | Option | Description |
 |-|-|
-| `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-references` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
+| `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
 | `dir` | **Absolute** path to existing checkout of the git repo. Relative paths are not currently supported. |
 | `projKey` | A LaunchDarkly project key. |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly |
