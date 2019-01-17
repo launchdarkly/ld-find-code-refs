@@ -22,8 +22,6 @@ The command line program may be run manually, and executed in an environment of 
 ### Installing
 #### MacOS
 
-#### Homebrew
-
 ```shell
 brew tap launchdarkly/tap
 brew install ld-find-code-refs
