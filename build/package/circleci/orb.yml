@@ -1,5 +1,5 @@
 version: 2.1
-description: Job for finding, parsing, and sending feature flag code references to LaunchDarkly
+description: Job for finding and sending feature flag code references to LaunchDarkly
 
 executors:
   default:
