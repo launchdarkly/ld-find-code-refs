@@ -15,8 +15,7 @@ func TestPostCodeReferenceRepository(t *testing.T) {
 		expectedErr    error
 	}{
 		{"succeeds", 200, nil},
-		{"succeeds on conflict", 409, nil},
-		{"fails on internal error", 500, RepositoryPostErr},
+		{"succeeds on conflict", 409, ConflictErr},
 	}
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
@@ -41,7 +40,7 @@ func TestGetCodeReferenceRepository(t *testing.T) {
 		expectedErr    error
 	}{
 		{"succeeds", 200, `{"name":"test","type":"custom","sourceLink":"https://example.org"}`, nil},
-		{"fails on not found", 404, ``, RepositoryNotFoundErr},
+		{"fails on not found", 404, ``, NotFoundErr},
 	}
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
@@ -69,7 +68,7 @@ func TestPatchCodeReferenceRepository(t *testing.T) {
 		expectedErr    error
 	}{
 		{"succeeds", RepoParams{Url: "github.com"}, RepoParams{Url: "bitbucket.com"}, 200, nil},
-		{"fails on 404", RepoParams{Url: "github.com"}, RepoParams{Url: "bitbucket.com"}, 404, RepositoryPatchErr},
+		{"fails on 404", RepoParams{Url: "github.com"}, RepoParams{Url: "bitbucket.com"}, 404, NotFoundErr},
 	}
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
@@ -93,7 +92,6 @@ func TestPutCodeReferenceBranch(t *testing.T) {
 		expectedErr    error
 	}{
 		{"succeeds", 200, nil},
-		{"fails on internal error", 500, BranchPutErr},
 	}
 
 	for _, tt := range specs {

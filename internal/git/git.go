@@ -5,8 +5,6 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
-
-	log "github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
 type Git struct {
@@ -25,34 +23,25 @@ Group 4: Line contents
 var grepRegex, _ = regexp.Compile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
 func (g Git) RevParse() (string, error) {
-	g.logDebug("Parsing latest commit", nil)
 	cmd := exec.Command("git", "rev-parse", g.Head)
 	cmd.Dir = g.Workspace
 	out, err := cmd.Output()
 	if err != nil {
-		g.logError("Failed to parse latest commit", err, nil)
+		return "", err
 	}
 	return strings.TrimSpace(string(out)), nil
 }
 
 func (g Git) Clone(endpoint string) error {
-	g.logDebug("Cloning repo", nil)
 	cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", "--branch", g.Head, endpoint, g.Workspace)
 	err := cmd.Run()
-	if err != nil {
-		g.logError("Failed to clone repo", err, nil)
-	}
 	return err
 }
 
 func (g Git) Checkout() error {
-	g.logDebug("Checking out to selected branch", nil)
 	checkout := exec.Command("git", "checkout", g.Head)
 	checkout.Dir = g.Workspace
 	err := checkout.Run()
-	if err != nil {
-		g.logError("Failed to checkout selected branch", err, nil)
-	}
 	return err
 }
 
@@ -72,14 +61,12 @@ func (g Git) Grep(flags []string, ctxLines int) ([][]string, error) {
 
 	cmd := sb.String()
 	sh := exec.Command("sh", "-c", cmd)
-	g.logDebug("Grepping for flag keys", map[string]interface{}{"numFlags": len(escapedFlags), "contextLines": ctxLines, "cmd": cmd})
 	sh.Dir = g.Workspace
 	out, err := sh.Output()
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
 		}
-		g.logError("Error grepping for flag keys", err, map[string]interface{}{"numFlags": len(escapedFlags), "contextLines": ctxLines})
 		return nil, err
 	}
 	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(g.Workspace) + "/)" + grepRegex.String())
@@ -88,22 +75,4 @@ func (g Git) Grep(flags []string, ctxLines int) ([][]string, error) {
 	}
 	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(string(out), -1)
 	return ret, err
-}
-
-func (g Git) logDebug(msg string, fields map[string]interface{}) {
-	if fields == nil {
-		fields = map[string]interface{}{}
-	}
-	fields["dir"] = g.Workspace
-	fields["branch"] = g.Head
-	log.Debug(msg, fields)
-}
-
-func (g Git) logError(msg string, err error, fields map[string]interface{}) {
-	if fields == nil {
-		fields = map[string]interface{}{}
-	}
-	fields["dir"] = g.Workspace
-	fields["branch"] = g.Head
-	log.Error(msg, err, fields)
 }

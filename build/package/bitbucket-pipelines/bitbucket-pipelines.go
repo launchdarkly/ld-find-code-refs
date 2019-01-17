@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
@@ -11,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Info("Setting Bitbucket action env vars", nil)
+	log.Info.Printf("Setting Bitbucket action env vars")
 
 	options := map[string]string{
 		"repoType":         "bitbucket",
@@ -23,7 +22,7 @@ func main() {
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
 	if err != nil {
-		log.Fatal("Error settings options", err)
+		log.Error.Fatalf("Error setting options %s", err)
 	}
 	for k, v := range ldOptions {
 		options[k] = v
@@ -33,9 +32,9 @@ func main() {
 	for k, v := range options {
 		err := flag.Set(k, v)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error setting option %s", k), err)
+			log.Error.Fatalf("Error setting option %s: %s", k, err)
 		}
 	}
-	log.Info(fmt.Sprintf("Starting repo parsing program with options:\n %+v\n", options), nil)
+	log.Info.Printf("Starting repo parsing program with options:\n %+v\n", options)
 	parse.Parse()
 }

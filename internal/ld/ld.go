@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 
 	ldapi "github.com/launchdarkly/api-client-go"
-
 	jsonpatch "github.com/launchdarkly/json-patch"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
@@ -37,12 +37,16 @@ const (
 )
 
 var (
-	RepositoryPostErr     = fmt.Errorf("error creating repository")
-	RepositoryPatchErr    = fmt.Errorf("error updating repository")
-	RepositoryGetErr      = fmt.Errorf("error retrieving repository")
-	RepositoryNotFoundErr = fmt.Errorf("repository not found")
-	RepositoryDisabledErr = fmt.Errorf("repository is disabled")
-	BranchPutErr          = fmt.Errorf("error updating branch")
+	NotFoundErr                       = errors.New("not found")
+	ConflictErr                       = errors.New("conflict")
+	EntityTooLargeErr                 = errors.New("entity too large")
+	RateLimitExceededErr              = errors.New("rate limit exceeded")
+	InternalServiceErr                = errors.New("internal service error")
+	ServiceUnavailableErr             = errors.New("service unavailable")
+	UnauthorizedErr                   = errors.New("unauthorized, check your LaunchDarkly access token")
+	UnknownErr                        = errors.New("an unknown error occured")
+	RepositoryDisabledErr             = errors.New("repository is disabled")
+	BranchUpdateSequenceIdConflictErr = errors.New("updateSequenceId conflict")
 )
 
 func InitApiClient(options ApiOptions) ApiClient {
@@ -50,6 +54,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 		options.BaseUri = "https://app.launchdarkly.com"
 	}
 	client := h.NewClient()
+	client.Logger = log.Debug
 	if options.RetryMax != nil && *options.RetryMax >= 0 {
 		client.RetryMax = *options.RetryMax
 	}
@@ -85,6 +90,7 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 	if err != nil {
 		return err
 	}
+
 	newBytes, err := json.Marshal(repo)
 	if err != nil {
 		return err
@@ -99,13 +105,12 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 	if err != nil {
 		return err
 	}
-	res, err := c.do(req)
+
+	_, err = c.do(req)
 	if err != nil {
 		return err
 	}
-	if res.StatusCode != http.StatusOK {
-		return RepositoryPatchErr
-	}
+
 	return nil
 }
 
@@ -118,23 +123,18 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode == http.StatusOK {
-		resBytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
-		var repo RepoRep
-		err = json.Unmarshal(resBytes, &repo)
-		if err != nil {
-			return nil, err
-		}
-		return &repo, err
+
+	resBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
 	}
-	if res.StatusCode == http.StatusNotFound {
-		return nil, RepositoryNotFoundErr
+	defer res.Body.Close()
+	var repo RepoRep
+	err = json.Unmarshal(resBytes, &repo)
+	if err != nil {
+		return nil, err
 	}
-	return nil, RepositoryGetErr
+	return &repo, err
 }
 
 func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
@@ -147,13 +147,10 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 	if err != nil {
 		return err
 	}
-	res, err := c.do(req)
-	if err != nil {
-		return RepositoryPostErr
-	}
 
-	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusConflict {
-		return RepositoryPostErr
+	_, err = c.do(req)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -161,9 +158,10 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 
 func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 	currentRepo, err := c.getCodeReferenceRepository(repo.Name)
-	if err != nil && err != RepositoryNotFoundErr {
-		return err
+	if err != nil && err != NotFoundErr {
+		return fmt.Errorf("error retrieving repository: %s", err)
 	}
+
 	if currentRepo != nil {
 		if !currentRepo.Enabled {
 			return RepositoryDisabledErr
@@ -176,12 +174,20 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 			HunkUrlTemplate:   currentRepo.HunkUrlTemplate,
 		}
 		if !reflect.DeepEqual(currentRepoParams, repo) {
-			return c.patchCodeReferenceRepository(currentRepoParams, repo)
+			err = c.patchCodeReferenceRepository(currentRepoParams, repo)
+			if err != nil {
+				return fmt.Errorf("error updating repository: %s", err)
+			}
 		}
 		return nil
 	}
 
-	return c.postCodeReferenceRepository(repo)
+	err = c.postCodeReferenceRepository(repo)
+	if err != nil {
+		return fmt.Errorf("error creating repository: %s", err)
+	}
+
+	return nil
 }
 
 func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) error {
@@ -190,29 +196,78 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 		return err
 	}
 	putUrl := fmt.Sprintf("%s%s/%s/branches/%s", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branch.Name))
-	log.Debug("Sending code references", log.Field("url", putUrl))
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
 	}
-	res, err := c.do(req)
+
+	_, err = c.do(req)
 	if err != nil {
-		return BranchPutErr
-	}
-
-	log.Debug("LaunchDarkly PUT branches endpoint responded with status "+res.Status, log.Field("url", putUrl))
-
-	if res.StatusCode != 200 {
-		return BranchPutErr
+		return err
 	}
 
 	return nil
 }
 
+type ldErrorResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
 func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Add("Authorization", c.Options.ApiKey)
 	req.Header.Add("Content-Type", "application/json")
-	return c.httpClient.Do(req)
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for all general status codes returned by the code references API, attempting to deconstruct LD error messages, if possible.
+	switch res.StatusCode {
+	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
+		return res, nil
+	default:
+		resBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+		var ldErr ldErrorResponse
+		err = json.Unmarshal(resBytes, &ldErr)
+
+		if err == nil {
+			if ldErr.Code == "updateSequenceId_conflict" {
+				return res, BranchUpdateSequenceIdConflictErr
+			} else if ldErr.Message != "" {
+				return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
+			}
+		}
+		// The LaunchDarkly API should guarantee that we never have to fallback to these generic error messages, but we have them as a safeguard
+		return res, fallbackErrorForStatus(res.StatusCode)
+	}
+}
+
+func fallbackErrorForStatus(code int) error {
+	switch code {
+	case http.StatusBadRequest:
+		return errors.New("bad request")
+	case http.StatusUnauthorized:
+		return errors.New("unauthorized, check your LaunchDarkly access token")
+	case http.StatusNotFound:
+		return NotFoundErr
+	case http.StatusConflict:
+		return ConflictErr
+	case http.StatusRequestEntityTooLarge:
+		return EntityTooLargeErr
+	case http.StatusTooManyRequests:
+		return RateLimitExceededErr
+	case http.StatusInternalServerError:
+		return InternalServiceErr
+	case http.StatusServiceUnavailable:
+		return ServiceUnavailableErr
+	default:
+		return fmt.Errorf("LaunchDarkly API responded with status code %d", code)
+	}
 }
 
 type RepoParams struct {
@@ -238,6 +293,14 @@ type BranchRep struct {
 	SyncTime         int64               `json:"syncTime"`
 	IsDefault        bool                `json:"isDefault"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
+}
+
+func (b BranchRep) TotalHunkCount() int {
+	count := 0
+	for _, r := range b.References {
+		count += len(r.Hunks)
+	}
+	return count
 }
 
 type ReferenceHunksRep struct {

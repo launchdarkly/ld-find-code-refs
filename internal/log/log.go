@@ -1,33 +1,43 @@
 package log
 
 import (
+	"io"
+	"log"
 	"os"
+)
 
-	logger "github.com/sirupsen/logrus"
+// Global package level loggers
+var (
+	Debug   *log.Logger
+	Info    *log.Logger
+	Warning *log.Logger
+	Error   *log.Logger
 )
 
 func init() {
-	logger.SetFormatter(&logger.TextFormatter{})
-	logger.SetOutput(os.Stdout)
-	logger.SetLevel(logger.DebugLevel)
+	InitLogging(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
 }
 
-func Fatal(msg string, err error) {
-	logger.WithError(err).Fatal(msg)
-}
+// InitLogging overrides the default loggers that write to stdout
+func InitLogging(
+	debugHandle io.Writer,
+	infoHandle io.Writer,
+	warningHandle io.Writer,
+	errorHandle io.Writer) {
 
-func Error(msg string, err error, fields map[string]interface{}) {
-	logger.WithFields(logger.Fields(fields)).WithError(err).Error(msg)
-}
+	Debug = log.New(debugHandle,
+		"DEBUG: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 
-func Debug(msg string, fields map[string]interface{}) {
-	logger.WithFields(logger.Fields(fields)).Debug(msg)
-}
+	Info = log.New(infoHandle,
+		"INFO: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 
-func Info(msg string, fields map[string]interface{}) {
-	logger.WithFields(logger.Fields(fields)).Info(msg)
-}
+	Warning = log.New(warningHandle,
+		"WARNING: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 
-func Field(key string, val interface{}) map[string]interface{} {
-	return map[string]interface{}{key: val}
+	Error = log.New(errorHandle,
+		"ERROR: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 }

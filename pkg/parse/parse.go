@@ -2,7 +2,6 @@ package parse
 
 import (
 	"container/list"
-	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -60,7 +59,7 @@ type branch struct {
 func Parse() {
 	err, cb := o.Init()
 	if err != nil {
-		log.Error("Unable to validate command line options", err, nil)
+		log.Error.Printf("could not validate command line options: %s", err)
 		cb()
 		os.Exit(1)
 	}
@@ -86,7 +85,7 @@ func Parse() {
 
 	headSha, err := cmd.RevParse()
 	if err != nil {
-		fatal("Unable to parse current commit sha", err)
+		log.Error.Fatalf("error parsing current commit sha: %s", err)
 	}
 	projKey := o.ProjKey.Value()
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
@@ -100,22 +99,22 @@ func Parse() {
 
 	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 	if err != nil {
-		fatal("Unable to connect repository to LaunchDarkly", err)
+		log.Error.Fatalf(err.Error())
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
-		fatal("Unable to retrieve flag keys", err)
+		log.Error.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
 	}
 	if len(flags) == 0 {
-		log.Info("No flag keys found for selected project, exiting early", log.Field("projKey", projKey))
+		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
 		os.Exit(0)
 	}
 
 	filteredFlags := filterShortFlagKeys(flags)
 	if len(filteredFlags) == 0 {
-		msg := fmt.Sprintf("No flag keys larger than the min. flag key length of %v were found, exiting early", minFlagKeyLen)
-		log.Info(msg, log.Field("projKey", projKey))
+		log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
+			minFlagKeyLen, projKey)
 		os.Exit(0)
 	}
 
@@ -137,14 +136,19 @@ func Parse() {
 	exclude, _ := regexp.Compile(o.Exclude.Value())
 	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, exclude)
 	if err != nil {
-		fatal("Error searching for flag key references", err)
+		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
 	b.GrepResults = refs
 
-	err = ldApi.PutCodeReferenceBranch(b.makeBranchRep(projKey, ctxLines), repoParams.Name)
-
+	branchRep := b.makeBranchRep(projKey, ctxLines)
+	log.Info.Printf("sending %d code reference hunks across %d files to LaunchDarkly", branchRep.TotalHunkCount(), len(branchRep.References))
+	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {
-		fatal("Error sending code references to LaunchDarkly", err)
+		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
+			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
+		} else {
+			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
+		}
 	}
 }
 
@@ -164,10 +168,9 @@ func filterShortFlagKeys(flags []string) []string {
 }
 
 func getFlags(ldApi ld.ApiClient) ([]string, error) {
-	log.Debug("Requesting flag list from LaunchDarkly", log.Field("projKey", ldApi.Options.ProjKey))
 	flags, err := ldApi.GetFlagKeyList()
 	if err != nil {
-		log.Error("Error retrieving flag list from LaunchDarkly", err, log.Field("projKey", ldApi.Options.ProjKey))
+		log.Error.Printf("error retrieving flag list from LaunchDarkly: %s", err)
 		return nil, err
 	}
 	return flags, nil
@@ -200,7 +203,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		lineText := r[4]
 		lineNum, err := strconv.Atoi(lineNumber)
 		if err != nil {
-			fatal("encountered an error generating flag references", err)
+			log.Error.Fatalf("encountered an unexpected error generating flag references: %s", err)
 		}
 		ref := grepResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
@@ -242,8 +245,7 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 	aggregatedGrepResults := g.aggregateByPath()
 
 	if len(aggregatedGrepResults) > maxFileCount {
-		log.Info("number of files containing code references exceeded limit",
-			map[string]interface{}{"number of matched files": len(aggregatedGrepResults), "file limit": maxFileCount})
+		log.Warning.Printf("found %d files with code references, which exceeded the limit of %d", len(aggregatedGrepResults), maxFileCount)
 		aggregatedGrepResults = aggregatedGrepResults[0:maxFileCount]
 	}
 
@@ -251,16 +253,14 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 
 	for _, fileGrepResults := range aggregatedGrepResults {
 		if numHunks > maxHunkCount {
-			log.Info("Exceeded maximum hunk limit, halting code reference search.",
-				map[string]interface{}{"hunk count": numHunks, "limit": maxHunkCount})
+			log.Warning.Printf("found %d code reference hunks across all files, which exceeeded the limit of %d. halting code reference search", numHunks, maxHunkCount)
 			break
 		}
 
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
 
 		if len(hunks) > maxHunksPerFileCount {
-			log.Info("Exceded hunk limit for file, truncating file hunks",
-				map[string]interface{}{"hunk count": len(hunks), "limit": maxHunksPerFileCount, "path": fileGrepResults.path})
+			log.Warning.Printf("found %d code reference hunks in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileGrepResults.path, maxHunksPerFileCount)
 			hunks = hunks[0:maxHunksPerFileCount]
 		}
 
@@ -320,7 +320,7 @@ func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Eleme
 		// should always return search results sorted by line number. We sanity check
 		// that lines are sorted _just in case_ since the downstream hunking algorithm
 		// only works on sorted lines.
-		log.Fatal("grep results returned out of order", nil)
+		log.Error.Fatalf("grep results returned out of order")
 	}
 
 	return fgr.fileGrepResultLines.PushBack(grepResult)
@@ -340,14 +340,14 @@ func (fgr fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkR
 	hunks := []ld.HunkRep{}
 
 	for flagKey, flagReferences := range fgr.flagReferenceMap {
-		flagHunks := buildHunksForFlag(projKey, flagKey, flagReferences, fgr.fileGrepResultLines, ctxLines)
+		flagHunks := buildHunksForFlag(projKey, flagKey, fgr.path, flagReferences, fgr.fileGrepResultLines, ctxLines)
 		hunks = append(hunks, flagHunks...)
 	}
 
 	return hunks
 }
 
-func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
+func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 
 	var previousHunk *ld.HunkRep
@@ -423,8 +423,8 @@ func buildHunksForFlag(projKey, flag string, flagReferences []*list.Element, fil
 		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
 		// This guards against a situation where the user has very long files with many false positive matches.
 		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
-			log.Info("Exceeded permitted number of flag reference lines + context lines for file",
-				map[string]interface{}{"flag": flag, "limit": maxHunkedLinesPerFileAndFlagCount})
+			log.Warning.Printf("Found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. Truncating code references for this path and flag.",
+				numHunkedLines, path, flag, maxHunkedLinesPerFileAndFlagCount)
 			return hunks
 		}
 	}
@@ -441,11 +441,6 @@ func initHunk(projKey, flagKey string) ld.HunkRep {
 
 func makeTimestamp() int64 {
 	return int64(time.Now().UnixNano()) / int64(time.Millisecond)
-}
-
-func fatal(msg string, err error) {
-	log.Fatal(msg, err)
-	os.Exit(1)
 }
 
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.
