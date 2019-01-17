@@ -53,9 +53,9 @@ A number of command-line arguments are available to the code ref finder, some op
 | `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
 | `dir` | **Absolute** path to existing checkout of the git repo. Relative paths are not currently supported. |
 | `projKey` | A LaunchDarkly project key. |
-| `repoName` | Git repo name. Will be displayed in LaunchDarkly |
+| `repoName` | Git repo name. Will be displayed in LaunchDarkly. Repo names must only contain letters, numbers, '.', '_' or '-'." |
 
-Here's an example shell invocation of the ld-find-code-refs for one of LaunchDarkly's demo repositories:, with the binary located in the current directory, and a minimal configuration:
+Here's an example shell invocation of the ld-find-code-refs for one of LaunchDarkly's demo repositories, with the binary located in the current directory, and a minimal configuration:
 
 ```shell
 ./ld-find-code-refs \
@@ -79,6 +79,8 @@ Here's an example shell invocation of the ld-find-code-refs for one of LaunchDar
 | `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs` | "" |
 | `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit. | "" |
 | `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.  | "" |
+
+Here's an example shell invocation of the `ld-find-code-refs` for one of LaunchDarkly's demo repositories, with the binary located in the current directory, with all options configured:
 
 ```shell
 ./ld-find-code-refs \
