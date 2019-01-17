@@ -238,6 +238,8 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 		if err == nil {
 			if ldErr.Code == "updateSequenceId_conflict" {
 				return res, BranchUpdateSequenceIdConflictErr
+			} else if ldErr.Code == "not_found" {
+				return res, NotFoundErr
 			} else if ldErr.Message != "" {
 				return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
 			}
