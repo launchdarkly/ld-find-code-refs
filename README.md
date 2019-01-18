@@ -36,7 +36,7 @@ You can now run `ld-find-code-refs`.
 
 Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest).
 
-The `ld-find-code-refs` program requires [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure it has been installed and added to your system path before running the ld-find-code-refs.
+The `ld-find-code-refs` program requires [Git](https://git-scm.org) and [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure these dependencies have been installed and added to your system path before running `ld-find-code-refs`.
 
 ### Examples
 
