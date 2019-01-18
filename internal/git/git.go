@@ -72,16 +72,3 @@ func (g Git) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
 	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(string(out), -1)
 	return ret, err
 }
-
-// func (g Git) Clone(endpoint string) error {
-// 	cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", "--branch", g.Head, endpoint, g.Workspace)
-// 	err := cmd.Run()
-// 	return err
-// }
-
-// func (g Git) Checkout() error {
-// 	checkout := exec.Command("git", "checkout", g.Head)
-// 	checkout.Dir = g.Workspace
-// 	err := checkout.Run()
-// 	return err
-// }
