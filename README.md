@@ -6,6 +6,8 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Configuration options
 
+We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the ld-find-code-refs utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
+
 | System | Status |
 |---------------------|---------------------------------------------------------------------------------------------------------|
 | GitHub Actions | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions) |
@@ -20,7 +22,8 @@ This repository provides solutions for configuring [LaunchDarkly code references
 The command line program may be run manually, and executed in an environment of your choosing.
 
 ### Installing
-#### MacOS
+
+#### macOS
 
 ```shell
 brew tap launchdarkly/tap
@@ -35,6 +38,55 @@ Precompiled binaries for the latest release can be found [here](https://github.c
 
 The `ld-find-code-refs` program requires [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure it has been installed and added to your system path before running the ld-find-code-refs.
 
+### Examples
+
+The section provides examples of various `bash` commands to execute `ld-find-code-refs` (when installed in the system PATH) with various configurations. We recommend reading through the following examples to gain an understanding of common configurations, as well as the detailed sections below documenting advanced configuration options.
+
+Minimal configuration:
+
+```bash
+ld-find-code-refs \
+  -accessToken=$YOUR_LAUNCHDARKLY_ACCESS_TOKEN \ # example: api-xxxx
+  -projKey=$YOUR_LAUNCHDARKLY_PROJECT_KEY \ # example: my-project
+  -repoName=$YOUR_REPOSITORY_NAME \ # example: ld-find-code-refs
+  -dir="/path/to/git/repo"
+```
+
+Configuration with [context lines](https://docs.launchdarkly.com/v2.0/docs/git-code-references#section-adding-context-lines) provided:
+
+```bash
+ld-find-code-refs \
+  -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
+  -projKey="$YOUR_LAUNCHDARKLY_PROJECT_KEY" \
+  -repoName="$YOUR_REPOSITORY_NAME" \
+  -dir="/path/to/git/repo" \
+  -contextLines=3 # can be up to 5. -1 (or not configured) indicates no source code will be sent to LD
+```
+
+The above configuration, with the `vendor/` directory and all `css` files ignored by the scanner. The `exclude` parameter may be configuration as any regular expression that matches the files and directories you'd like to ignore for your repository:
+
+```bash
+ld-find-code-refs \
+  -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
+  -projKey="$YOUR_LAUNCHDARKLY_PROJECT_KEY" \
+  -repoName="$YOUR_REPOSITORY_NAME" \
+  -dir="/path/to/git/repo" \
+  -contextLines=3
+  -exclude="vendor/|\.css" # replace with desired regex pattern
+```
+
+A configuration with the the `repoType` set to GitHub, and the `repuUrl` set to a GitHub URL. We recommend configuring these parameters so LaunchDarkly is able to generate reference links to your source code:
+
+```bash
+ld-find-code-refs \
+  -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
+  -projKey="$YOUR_LAUNCHDARKLY_PROJECT_KEY" \
+  -repoName="$YOUR_REPOSITORY_NAME" \
+  -dir="/path/to/git/repo" \
+  -contextLines=3
+  -repoType="github"
+  -repoUrl="$YOUR_REPOSITORY_URL" # example: https://github.com/launchdarkly/ld-find-code-refs
+```
 
 ### Required arguments
 
@@ -47,47 +99,19 @@ A number of command-line arguments are available to the code ref finder, some op
 | `projKey` | A LaunchDarkly project key. |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly. Repo names must only contain letters, numbers, '.', '_' or '-'." |
 
-Here's an example shell invocation of the ld-find-code-refs for one of LaunchDarkly's demo repositories, with the binary located in the current directory, and a minimal configuration:
-
-```shell
-./ld-find-code-refs \
-  -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
-  -dir="/path/to/git/repo" \
-  -repoName="my-repository" \
-  -projKey="default"
-```
-
 ### Optional arguments
+
+Although these arguments are optional, a (*) indicates a recommended parameter that adds great value if configured.
 
 | Option | Description | Default |
 |-|-|-|
 | `baseUri` | Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly. | `https://app.launchdarkly.com` |
-| `contextLines` | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | -1 |
+| `contextLines` (*) | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | -1 |
 | `defaultBranch` | The git default branch. The LaunchDarkly UI will default to display code references for this branch. | "master" |
-| `exclude` | A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: `vendor/`, `vendor/.*` | "" |
+| `exclude` (*) | A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: `vendor/`, `\.css`, `vendor/|\.css` | "" |
 | `updateSequenceId` | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the program. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current unix timestamp. | n/a |
-| `repoHead` | The branch to scan for code references. Should be provided if the `git push` was initiated on a non-master branch. | "master" | no |
-| `repoType` | The repo service provider. Used to generate repository links in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom | "custom" |
-| `repoUrl` | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs` | "" |
+| `repoHead` (*) | The branch to scan for code references. Should be provided if the `git push` was initiated on a non-master branch. | "master" | no |
+| `repoType` (*) | The repo service provider. Used to generate repository links in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom | "custom" |
+| `repoUrl` (*) | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs` | "" |
 | `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit. | "" |
 | `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.  | "" |
-
-Here's an example shell invocation of the `ld-find-code-refs` for one of LaunchDarkly's demo repositories, with the binary located in the current directory, with all options configured:
-
-```shell
-./ld-find-code-refs \
-  -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
-  -dir="/path/to/git/repo" \
-  -repoName="SupportService" \
-  -projKey="default" \
-  -baseUri="https://app.launchdarkly.com" \
-  -contextLines=2 \
-  -defaultBranch="master" \
-  -exclude="vendor/" \
-  -repoHead="master" \
-  -repoType="github" \
-  -repuUrl="https://github.com/launchdarkly/SupportService" \
-  -updateSequenceId="$(date +%s)" \
-  -commitUrlTemplate="https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}"
-  -hunkUrlTemplate="https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}"
-```
