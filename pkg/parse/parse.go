@@ -168,11 +168,6 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 }
 
 func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
-	// err := cmd.Checkout()
-	// if err != nil {
-	// 	return grepResultLines{}, err
-	// }
-
 	grepResult, err := cmd.SearchForFlags(flags, ctxLines)
 	if err != nil {
 		return grepResultLines{}, err
