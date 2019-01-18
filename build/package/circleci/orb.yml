@@ -9,7 +9,7 @@ executors:
       base_uri:
         type: string
       context_lines:
-        type: string
+        type: integer
       default_branch:
         type: string
       exclude:
@@ -69,11 +69,11 @@ jobs:
         type: string
         default: "https://app.launchdarkly.com"
       context_lines:
-        description: The number of context lines above and below a code reference for the job to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.
-        type: string
-        default: "-1"
+        description: The number of context lines above and below a code reference for the job to send to LaunchDarkly. By default, the flag finder will not send any context lines to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.
+        type: integer
+        default: -1
       exclude:
-        description:  "A regular expression (PCRE) defining the files and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `vendor/*`"
+        description:  "A regular expression (PCRE) defining the files, file types, and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `vendor/.*`, `.*\\.css`"
         type: string
         default: ""
       repo_type:
