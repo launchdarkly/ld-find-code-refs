@@ -865,7 +865,7 @@ func Test_filterShortFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := filterShortFlagKeys(tt.flags)
+			got, _ := filterShortFlagKeys(tt.flags)
 			require.Equal(t, tt.want, got)
 		})
 	}
