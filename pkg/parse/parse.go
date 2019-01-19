@@ -87,7 +87,14 @@ func Parse() {
 	if err != nil {
 		log.Error.Fatalf("error parsing current commit sha: %s", err)
 	}
+
 	projKey := o.ProjKey.Value()
+	if strings.HasPrefix(projKey, "sdk-") {
+		log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+	} else if strings.HasPrefix(projKey, "api-") {
+		log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+	}
+
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
 	repoParams := ld.RepoParams{
 		Type:              o.RepoType.Value(),
@@ -111,11 +118,13 @@ func Parse() {
 		os.Exit(0)
 	}
 
-	filteredFlags := filterShortFlagKeys(flags)
+	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
 	if len(filteredFlags) == 0 {
 		log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
 			minFlagKeyLen, projKey)
 		os.Exit(0)
+	} else if len(omittedFlags) > 0 {
+		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
 	ctxLines := o.ContextLines.Value()
@@ -141,7 +150,9 @@ func Parse() {
 	b.GrepResults = refs
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
-	log.Info.Printf("sending %d code reference hunks across %d files to LaunchDarkly", branchRep.TotalHunkCount(), len(branchRep.References))
+	log.Info.Printf("sending %d code references across %d flags and %d files to LaunchDarkly for project: %s", branchRep.TotalHunkCount(), len(filteredFlags), len(branchRep.References), projKey)
+	branchRep.PrintReferenceCountTable()
+
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
@@ -154,23 +165,22 @@ func Parse() {
 
 // Very short flag keys lead to many false positives when searching in code,
 // so we filter them out.
-func filterShortFlagKeys(flags []string) []string {
+func filterShortFlagKeys(flags []string) (filtered []string, omitted []string) {
 	filteredFlags := []string{}
-
+	omittedFlags := []string{}
 	for _, flag := range flags {
 		if len(flag) >= minFlagKeyLen {
 			filteredFlags = append(filteredFlags, flag)
+		} else {
+			omittedFlags = append(omittedFlags, flag)
 		}
-
 	}
-
-	return filteredFlags
+	return filteredFlags, omittedFlags
 }
 
 func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	flags, err := ldApi.GetFlagKeyList()
 	if err != nil {
-		log.Error.Printf("error retrieving flag list from LaunchDarkly: %s", err)
 		return nil, err
 	}
 	return flags, nil
@@ -253,14 +263,14 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 
 	for _, fileGrepResults := range aggregatedGrepResults {
 		if numHunks > maxHunkCount {
-			log.Warning.Printf("found %d code reference hunks across all files, which exceeeded the limit of %d. halting code reference search", numHunks, maxHunkCount)
+			log.Warning.Printf("found %d code references across all files, which exceeeded the limit of %d. halting code reference search", numHunks, maxHunkCount)
 			break
 		}
 
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
 
 		if len(hunks) > maxHunksPerFileCount {
-			log.Warning.Printf("found %d code reference hunks in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileGrepResults.path, maxHunksPerFileCount)
+			log.Warning.Printf("found %d code references in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileGrepResults.path, maxHunksPerFileCount)
 			hunks = hunks[0:maxHunksPerFileCount]
 		}
 

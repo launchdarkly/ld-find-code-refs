@@ -9,9 +9,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
+	"sort"
+	"strconv"
 
 	h "github.com/hashicorp/go-retryablehttp"
+	"github.com/olekukonko/tablewriter"
 
 	ldapi "github.com/launchdarkly/api-client-go"
 	jsonpatch "github.com/launchdarkly/json-patch"
@@ -315,4 +319,39 @@ type HunkRep struct {
 	Lines              string `json:"lines,omitempty"`
 	ProjKey            string `json:"projKey"`
 	FlagKey            string `json:"flagKey"`
+}
+
+type tableData [][]string
+
+func (t tableData) Len() int {
+	return len(t)
+}
+
+func (t tableData) Less(i, j int) bool {
+	first, _ := strconv.ParseInt(t[i][1], 10, 32)
+	second, _ := strconv.ParseInt(t[j][1], 10, 32)
+	return first > second
+}
+
+func (t tableData) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
+}
+
+func (b BranchRep) PrintReferenceCountTable() {
+	data := tableData{}
+	refByFlagCount := map[string]int64{}
+	for _, ref := range b.References {
+		for _, hunk := range ref.Hunks {
+			refByFlagCount[hunk.FlagKey]++
+		}
+	}
+	for k, v := range refByFlagCount {
+		data = append(data, []string{k, strconv.FormatInt(v, 10)})
+	}
+	sort.Sort(data)
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Flag", "# References"})
+	table.SetBorder(false)
+	table.AppendBulk(data)
+	table.Render()
 }
