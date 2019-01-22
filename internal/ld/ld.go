@@ -353,16 +353,16 @@ func (b BranchRep) PrintReferenceCountTable() {
 	sort.Sort(data)
 
 	truncatedData := data
+	var additionalRefCount int64 = 0
 	if len(truncatedData) > maxFlagKeysDisplayed {
 		truncatedData = data[0:maxFlagKeysDisplayed]
 
-		var additionalRefCount int64 = 0
 		for _, v := range data[maxFlagKeysDisplayed:] {
 			i, _ := strconv.ParseInt(v[1], 10, 64)
 			additionalRefCount += i
 		}
-		truncatedData = append(truncatedData, []string{"Other Flags", strconv.FormatInt(additionalRefCount, 10)})
 	}
+	truncatedData = append(truncatedData, []string{"Other Flags", strconv.FormatInt(additionalRefCount, 10)})
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Flag", "# References"})
