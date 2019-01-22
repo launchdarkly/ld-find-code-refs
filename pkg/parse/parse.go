@@ -69,7 +69,7 @@ func Parse() {
 	currBranch, err := cmd.BranchName()
 	if err != nil {
 		log.Error.Fatalf("error parsing git branch name: %s", err)
-	} else if strings.ToUpper(currBranch) == "HEAD" || currBranch == "" {
+	} currBranch == "" {
 		log.Error.Fatalf("error parsing git branch name: git repo at %s must be checked out to a valid branch", cmd.Workspace)
 	}
 

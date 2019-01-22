@@ -9,7 +9,6 @@ import (
 
 type Git struct {
 	Workspace string
-	// Head      string
 }
 
 /*
@@ -28,7 +27,11 @@ func (g Git) BranchName() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(out)), nil
+	ret := strings.TrimSpace(string(out))
+	if ret := "HEAD" {
+		return "", nil
+	}
+	return ret, nil
 }
 
 func (g Git) RevParse(branch string) (string, error) {
