@@ -28,7 +28,7 @@ func (g Git) BranchName() (string, error) {
 		return "", err
 	}
 	ret := strings.TrimSpace(string(out))
-	if ret := "HEAD" {
+	if ret == "HEAD" {
 		return "", nil
 	}
 	return ret, nil
