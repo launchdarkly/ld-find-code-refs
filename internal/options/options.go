@@ -187,7 +187,13 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 		"exclude":      os.Getenv("LD_EXCLUDE"),
 		"contextLines": os.Getenv("LD_CONTEXT_LINES"),
 		"baseUri":      os.Getenv("LD_BASE_URI"),
+		"debug":        os.Getenv("LD_DEBUG"),
 	}
+
+	if ldOptions["debug"] == "" {
+		ldOptions["debug"] = "false"
+	}
+
 	_, err := regexp.Compile(ldOptions["exclude"])
 	if err != nil {
 		return ldOptions, fmt.Errorf("couldn't parse LD_EXCLUDE as regex: %+v", err)
@@ -202,4 +208,12 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 	}
 
 	return ldOptions, nil
+}
+
+func GetDebugOptionFromEnv() (bool, error) {
+	debug := os.Getenv("debug")
+	if debug == "" {
+		return false, nil
+	}
+	return strconv.ParseBool(debug)
 }

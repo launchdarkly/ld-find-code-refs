@@ -3,10 +3,18 @@ package ld
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
+
+func TestMain(m *testing.M) {
+	log.InitLogging(true)
+	os.Exit(m.Run())
+}
 
 func TestPostCodeReferenceRepository(t *testing.T) {
 	specs := []struct {

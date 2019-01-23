@@ -2,7 +2,6 @@ package parse
 
 import (
 	"container/list"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -58,22 +57,6 @@ type branch struct {
 	UpdateSequenceId *int64
 	SyncTime         int64
 	GrepResults      grepResultLines
-}
-
-func init() {
-	err, cb := o.Init()
-	if err != nil {
-		log.Error.Printf("could not validate command line options: %s", err)
-		cb()
-		os.Exit(1)
-	}
-
-	debugOut := ioutil.Discard
-	if o.Debug.Value() {
-		debugOut = os.Stdout
-	}
-
-	log.InitLogging(debugOut, os.Stdout, os.Stdout, os.Stderr)
 }
 
 func Parse() {
