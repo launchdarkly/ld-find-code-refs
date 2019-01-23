@@ -15,7 +15,6 @@ func main() {
 	options := map[string]string{
 		"repoType":         "bitbucket",
 		"repoName":         os.Getenv("BITBUCKET_REPO_SLUG"),
-		"repoHead":         os.Getenv("BITBUCKET_BRANCH"),
 		"dir":              os.Getenv("BITBUCKET_CLONE_DIR"),
 		"repoUrl":          os.Getenv("BITBUCKET_GIT_HTTP_ORIGIN"),
 		"updateSequenceId": os.Getenv("BITBUCKET_BUILD_NUMBER"),
