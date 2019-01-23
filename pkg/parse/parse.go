@@ -2,6 +2,7 @@ package parse
 
 import (
 	"container/list"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -59,7 +60,7 @@ type branch struct {
 	GrepResults      grepResultLines
 }
 
-func Parse() {
+func init() {
 	err, cb := o.Init()
 	if err != nil {
 		log.Error.Printf("could not validate command line options: %s", err)
@@ -67,6 +68,15 @@ func Parse() {
 		os.Exit(1)
 	}
 
+	debugOut := ioutil.Discard
+	if o.Debug.Value() {
+		debugOut = os.Stdout
+	}
+
+	log.InitLogging(debugOut, os.Stdout, os.Stdout, os.Stderr)
+}
+
+func Parse() {
 	cmd := git.Git{Workspace: o.Dir.Value()}
 
 	currBranch, err := cmd.BranchName()
@@ -148,7 +158,10 @@ func Parse() {
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
 	log.Info.Printf("sending %d code references across %d flags and %d files to LaunchDarkly for project: %s", branchRep.TotalHunkCount(), len(filteredFlags), len(branchRep.References), projKey)
-	branchRep.PrintReferenceCountTable()
+
+	if o.Debug.Value() {
+		branchRep.PrintReferenceCountTable()
+	}
 
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {

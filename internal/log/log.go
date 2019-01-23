@@ -3,7 +3,6 @@ package log
 import (
 	"io"
 	"log"
-	"os"
 )
 
 // Global package level loggers
@@ -13,10 +12,6 @@ var (
 	Warning *log.Logger
 	Error   *log.Logger
 )
-
-func init() {
-	InitLogging(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
-}
 
 // InitLogging overrides the default loggers that write to stdout
 func InitLogging(
