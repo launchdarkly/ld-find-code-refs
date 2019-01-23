@@ -19,12 +19,15 @@ import (
 // from taking a very long time to run and b) to prevent the program from
 // PUTing a massive json payload. These limits will likely be tweaked over
 // time. The LaunchDarkly backend will also apply limits.
-const minFlagKeyLen = 3
-const maxFileCount = 5000
-const maxLineCharCount = 500
-const maxHunkCount = 5000
-const maxHunksPerFileCount = 1000
-const maxHunkedLinesPerFileAndFlagCount = 500
+const (
+	minFlagKeyLen                     = 3
+	maxFileCount                      = 5000
+	maxLineCharCount                  = 500
+	maxHunkCount                      = 5000
+	maxHunksPerFileCount              = 1000
+	maxHunkedLinesPerFileAndFlagCount = 500
+	maxProjKeyLength                  = 20
+)
 
 type grepResultLine struct {
 	Path     string
@@ -89,10 +92,14 @@ func Parse() {
 	}
 
 	projKey := o.ProjKey.Value()
-	if strings.HasPrefix(projKey, "sdk-") {
-		log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
-	} else if strings.HasPrefix(projKey, "api-") {
-		log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+
+	// Check for potential sdk keys or access tokens provided as the project key
+	if len(projKey) > maxProjKeyLength {
+		if strings.HasPrefix(projKey, "sdk-") {
+			log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+		} else if strings.HasPrefix(projKey, "api-") {
+			log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+		}
 	}
 
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
