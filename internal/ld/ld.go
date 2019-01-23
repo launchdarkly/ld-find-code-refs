@@ -341,13 +341,13 @@ const maxFlagKeysDisplayed = 50
 
 func (b BranchRep) PrintReferenceCountTable() {
 	data := tableData{}
-	refByFlagCount := map[string]int64{}
+	refCountByFlag := map[string]int64{}
 	for _, ref := range b.References {
 		for _, hunk := range ref.Hunks {
-			refByFlagCount[hunk.FlagKey]++
+			refCountByFlag[hunk.FlagKey]++
 		}
 	}
-	for k, v := range refByFlagCount {
+	for k, v := range refCountByFlag {
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)
