@@ -51,7 +51,6 @@ commands:
               -repoType=${LD_REPO_TYPE} \
               -repoUrl=${LD_REPO_URL} \
               -repoName=${CIRCLE_PROJECT_REPONAME} \
-              -repoHead=${CIRCLE_BRANCH} \
               -updateSequenceId=${CIRCLE_BUILD_NUM} \
               -defaultBranch=${LD_DEFAULT_BRANCH} \
               -commitUrlTemplate=${LD_COMMIT_URL_TEMPLATE} \

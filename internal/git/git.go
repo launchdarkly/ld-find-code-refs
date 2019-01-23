@@ -9,8 +9,6 @@ import (
 
 type Git struct {
 	Workspace string
-	Head      string
-	RepoName  string
 }
 
 /*
@@ -22,8 +20,22 @@ Group 4: Line contents
 */
 var grepRegex, _ = regexp.Compile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
-func (g Git) RevParse() (string, error) {
-	cmd := exec.Command("git", "rev-parse", g.Head)
+func (g Git) BranchName() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	cmd.Dir = g.Workspace
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	ret := strings.TrimSpace(string(out))
+	if ret == "HEAD" {
+		return "", nil
+	}
+	return ret, nil
+}
+
+func (g Git) RevParse(branch string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", branch)
 	cmd.Dir = g.Workspace
 	out, err := cmd.Output()
 	if err != nil {
@@ -32,20 +44,7 @@ func (g Git) RevParse() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func (g Git) Clone(endpoint string) error {
-	cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", "--branch", g.Head, endpoint, g.Workspace)
-	err := cmd.Run()
-	return err
-}
-
-func (g Git) Checkout() error {
-	checkout := exec.Command("git", "checkout", g.Head)
-	checkout.Dir = g.Workspace
-	err := checkout.Run()
-	return err
-}
-
-func (g Git) Grep(flags []string, ctxLines int) ([][]string, error) {
+func (g Git) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("ag --nogroup --case-sensitive"))

@@ -64,29 +64,20 @@ func Parse() {
 		os.Exit(1)
 	}
 
-	currBranch := o.RepoHead.Value()
+	cmd := git.Git{Workspace: o.Dir.Value()}
 
-	cmd := git.Git{Workspace: o.Dir.Value(), Head: currBranch, RepoName: o.RepoName.Value()}
+	currBranch, err := cmd.BranchName()
+	if err != nil {
+		log.Error.Fatalf("error parsing git branch name: %s", err)
+	} else if currBranch == "" {
+		log.Error.Fatalf("error parsing git branch name: git repo at %s must be checked out to a valid branch", cmd.Workspace)
+	}
 
-	// TODO: Reintroduce this codepath if we decide the flag finder should be able to clone repos
-	// endpoint := o.CloneEndpoint.Value()
-	// if endpoint != "" {
-	// 	dir, err := ioutil.TempDir("", cmd.RepoName)
-	// 	if err != nil {
-	// 		fatal("Failed to create temp directory for repo clone", err)
-	// 	}
-	// 	defer os.RemoveAll(dir)
-	// 	cmd.Workspace = dir
-	// 	err = cmd.Clone(endpoint)
-	// 	if err != nil {
-	// 		fatal("Unable to clone repo", err)
-	// 	}
-	// }
-
-	headSha, err := cmd.RevParse()
+	headSha, err := cmd.RevParse(currBranch)
 	if err != nil {
 		log.Error.Fatalf("error parsing current commit sha: %s", err)
 	}
+
 	projKey := o.ProjKey.Value()
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
 	repoParams := ld.RepoParams{
@@ -177,12 +168,7 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 }
 
 func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
-	err := cmd.Checkout()
-	if err != nil {
-		return grepResultLines{}, err
-	}
-
-	grepResult, err := cmd.Grep(flags, ctxLines)
+	grepResult, err := cmd.SearchForFlags(flags, ctxLines)
 	if err != nil {
 		return grepResultLines{}, err
 	}
