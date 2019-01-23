@@ -82,14 +82,14 @@ func (m optionMap) find(name string) *option {
 }
 
 const (
-	noUpdateSequenceId = int64(-1)
-	noContextLines     = -1
+	noUpdateSequenceId  = int64(-1)
+	defaultContextLines = 2
 )
 
 var options = optionMap{
 	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
 	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
-	ContextLines:      option{noContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
+	ContextLines:      option{defaultContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
 	DefaultBranch:     option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", false},
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "vendor/*`, false},
@@ -182,7 +182,7 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 	}
 
 	if ldOptions["contextLines"] == "" {
-		ldOptions["contextLines"] = "-1"
+		ldOptions["contextLines"] = "2"
 	}
 	_, err = strconv.ParseInt(ldOptions["contextLines"], 10, 32)
 	if err != nil {

@@ -60,7 +60,7 @@ ld-find-code-refs \
   -projKey="$YOUR_LAUNCHDARKLY_PROJECT_KEY" \
   -repoName="$YOUR_REPOSITORY_NAME" \
   -dir="/path/to/git/repo" \
-  -contextLines=3 # can be up to 5. -1 (or not configured) indicates no source code will be sent to LD
+  -contextLines=3 # can be up to 5. If < 0, no source code will be sent to LD
 ```
 
 The above configuration, with the `vendor/` directory and all `css` files ignored by the scanner. The `exclude` parameter may be configuration as any regular expression that matches the files and directories you'd like to ignore for your repository:
@@ -106,7 +106,7 @@ Although these arguments are optional, a (*) indicates a recommended parameter t
 | Option | Description | Default |
 |-|-|-|
 | `baseUri` | Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly. | `https://app.launchdarkly.com` |
-| `contextLines` (*) | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | `-1` |
+| `contextLines` (*) | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. | `2` |
 | `defaultBranch` | The git default branch. The LaunchDarkly UI will default to display code references for this branch. | `master` |
 | `exclude` (*) | A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: `vendor/`, `\.css`, `vendor/\|\.css` | |
 | `updateSequenceId` | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the program. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current unix timestamp. | |
