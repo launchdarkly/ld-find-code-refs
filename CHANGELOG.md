@@ -10,6 +10,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 - Removed the `repoHead` parameter. `ld-find-code-refs` now only supports scanning repositories already checked out to the desired branch.
 - Removed an unnecessary dependency on openssh in Dockerfiles.
 - Improved logging to provide more detailed summaries of actions performed by the scanner.
+- The default for `contextLines` is now 2. To disable sending source code to LaunchDarkly, set the `contextLines` argument to `-1`.
 
 ## [0.2.1] - 2019-01-17
 ### Fixed
