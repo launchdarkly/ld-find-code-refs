@@ -72,7 +72,7 @@ jobs:
         type: integer
         default: -1
       exclude:
-        description:  "A regular expression (PCRE) defining the files, file types, and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `\.css`, `vendor/|\.css`"
+        description: "A regular expression (PCRE) defining the files, file types, and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `\\.css`, `vendor/|\\.css`"
         type: string
         default: ""
       repo_type:
