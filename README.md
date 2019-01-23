@@ -48,7 +48,7 @@ Minimal configuration:
 ld-find-code-refs \
   -accessToken=$YOUR_LAUNCHDARKLY_ACCESS_TOKEN \ # example: api-xxxx
   -projKey=$YOUR_LAUNCHDARKLY_PROJECT_KEY \ # example: my-project
-  -repoName=$YOUR_REPOSITORY_NAME \ # example: ld-find-code-refs
+  -repoName=$YOUR_REPOSITORY_NAME \ # example: my-repo
   -dir="/path/to/git/repo"
 ```
 
