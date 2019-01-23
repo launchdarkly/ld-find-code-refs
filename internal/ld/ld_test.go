@@ -12,7 +12,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.InitLogging(true)
+	log.Init(true)
 	os.Exit(m.Run())
 }
 
