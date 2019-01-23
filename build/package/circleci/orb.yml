@@ -33,7 +33,7 @@ executors:
       LD_HUNK_URL_TEMPLATE: << parameters.hunk_url_template >>
       LD_DEFAULT_BRANCH: << parameters.default_branch >>
     docker:
-      - image: launchdarkly/ld-find-code-refs:0.2.1
+      - image: launchdarkly/ld-find-code-refs:0.3.0
 commands:
   find-flags:
     steps:
@@ -72,7 +72,7 @@ jobs:
         type: integer
         default: 2
       exclude:
-        description:  "A regular expression (PCRE) defining the files, file types, and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `\.css`, `vendor/|\.css`"
+        description: "A regular expression (PCRE) defining the files, file types, and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `\\.css`, `vendor/|\\.css`"
         type: string
         default: ""
       repo_type:
