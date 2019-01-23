@@ -3,6 +3,10 @@
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
 ## [0.3.0] - 2019-01-23
+
+### Added
+- Added openssh as a dependency for the command-line docker image.
+
 ### Changed
 - The default for `contextLines` is now 2. To disable sending source code to LaunchDarkly, set the `contextLines` argument to `-1`.
 - Improved logging to provide more detailed summaries of actions performed by the scanner.
