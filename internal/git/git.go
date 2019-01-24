@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
 type Git struct {
@@ -21,13 +23,13 @@ Group 4: Line contents
 var grepRegex, _ = regexp.Compile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
 func (g Git) BranchName() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	cmd.Dir = g.Workspace
+	cmd := exec.Command("git", "-C", g.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
 	ret := strings.TrimSpace(string(out))
+	log.Debug.Printf("identified branch name: %s", ret)
 	if ret == "HEAD" {
 		return "", nil
 	}
@@ -35,9 +37,9 @@ func (g Git) BranchName() (string, error) {
 }
 
 func (g Git) RevParse(branch string) (string, error) {
-	cmd := exec.Command("git", "rev-parse", branch)
-	cmd.Dir = g.Workspace
+	cmd := exec.Command("git", "-C", g.Workspace, "rev-parse", branch)
 	out, err := cmd.Output()
+	log.Debug.Printf("identified sha: %s", strings.TrimSpace(string(out)))
 	if err != nil {
 		return "", err
 	}
@@ -60,7 +62,6 @@ func (g Git) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
 
 	cmd := sb.String()
 	sh := exec.Command("sh", "-c", cmd)
-	sh.Dir = g.Workspace
 	out, err := sh.Output()
 	if err != nil {
 		if err.Error() == "exit status 1" {
