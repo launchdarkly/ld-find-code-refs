@@ -2,7 +2,9 @@ package parse
 
 import (
 	"container/list"
+	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -67,7 +69,12 @@ func Parse() {
 		os.Exit(1)
 	}
 
-	cmd := git.Git{Workspace: o.Dir.Value()}
+	absPath, err := normalizeAndValidatePath(o.Dir.Value())
+	if err != nil {
+		log.Error.Fatalf("could not validate directory option: %s", err)
+	}
+
+	cmd := git.Git{Workspace: absPath}
 
 	currBranch, err := cmd.BranchName()
 	if err != nil {
@@ -158,6 +165,39 @@ func Parse() {
 			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}
 	}
+}
+
+func normalizeAndValidatePath(path string) (string, error) {
+	absPath, err := filepath.Abs(o.Dir.Value())
+	if err != nil {
+		return "", fmt.Errorf("invalid directory: %s", err)
+	}
+	log.Info.Printf("absolute directory path: %s", absPath)
+
+	exists, err := dirExists(absPath)
+	if err != nil {
+		return "", fmt.Errorf("invalid directory: %s", err)
+	}
+
+	if !exists {
+		return "", fmt.Errorf("directory does not exist: %s", absPath)
+	}
+
+	return absPath, nil
+}
+
+func dirExists(path string) (bool, error) {
+	fileInfo, err := os.Stat(path)
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return fileInfo.Mode().IsDir(), nil
 }
 
 // Very short flag keys lead to many false positives when searching in code,
