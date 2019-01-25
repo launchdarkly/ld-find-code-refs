@@ -95,7 +95,7 @@ A number of command-line arguments are available to the code ref finder, some op
 | Option | Description |
 |-|-|
 | `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
-| `dir` | **Absolute** path to existing checkout of the git repo. Relative paths are not currently supported. The currently checked out branch will be scanned for code references. |
+| `dir` | Path to existing checkout of the git repo. The currently checked out branch will be scanned for code references. |
 | `projKey` | A LaunchDarkly project key. |
 | `repoName` | Git repo name. Will be displayed in LaunchDarkly. Repo names must only contain letters, numbers, '.', '_' or '-'." |
 
