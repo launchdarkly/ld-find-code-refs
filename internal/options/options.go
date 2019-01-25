@@ -18,6 +18,7 @@ type Option interface {
 type StringOption string
 type IntOption string
 type Int64Option string
+type BoolOption string
 
 func (o StringOption) name() string {
 	return string(o)
@@ -26,6 +27,9 @@ func (o IntOption) name() string {
 	return string(o)
 }
 func (o Int64Option) name() string {
+	return string(o)
+}
+func (o BoolOption) name() string {
 	return string(o)
 }
 
@@ -48,10 +52,15 @@ func (o Int64Option) Value() int64 {
 	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(int64)
 }
 
+func (o BoolOption) Value() bool {
+	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(bool)
+}
+
 const (
 	AccessToken       = StringOption("accessToken")
 	BaseUri           = StringOption("baseUri")
 	ContextLines      = IntOption("contextLines")
+	Debug             = BoolOption("debug")
 	DefaultBranch     = StringOption("defaultBranch")
 	Dir               = StringOption("dir")
 	Exclude           = StringOption("exclude")
@@ -92,6 +101,7 @@ var options = optionMap{
 	ContextLines:      option{defaultContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
 	DefaultBranch:     option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", false},
+	Debug:             option{false, "Enables verbose debug logging", false},
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "vendor/*`, false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
 	UpdateSequenceId:  option{noUpdateSequenceId, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
@@ -164,6 +174,8 @@ func Populate() {
 			flag.Int(name, v, o.usage)
 		case string:
 			flag.String(name, v, o.usage)
+		case bool:
+			flag.Bool(name, v, o.usage)
 		}
 	}
 }
@@ -175,7 +187,13 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 		"exclude":      os.Getenv("LD_EXCLUDE"),
 		"contextLines": os.Getenv("LD_CONTEXT_LINES"),
 		"baseUri":      os.Getenv("LD_BASE_URI"),
+		"debug":        os.Getenv("LD_DEBUG"),
 	}
+
+	if ldOptions["debug"] == "" {
+		ldOptions["debug"] = "false"
+	}
+
 	_, err := regexp.Compile(ldOptions["exclude"])
 	if err != nil {
 		return ldOptions, fmt.Errorf("couldn't parse LD_EXCLUDE as regex: %+v", err)
@@ -190,4 +208,12 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 	}
 
 	return ldOptions, nil
+}
+
+func GetDebugOptionFromEnv() (bool, error) {
+	debug := os.Getenv("LD_DEBUG")
+	if debug == "" {
+		return false, nil
+	}
+	return strconv.ParseBool(debug)
 }

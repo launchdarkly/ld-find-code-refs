@@ -10,8 +10,14 @@ import (
 )
 
 func main() {
-	log.Info.Printf("Setting Bitbucket action env vars")
+	debug, err := o.GetDebugOptionFromEnv()
+	// init logging before checking error because we need to log the error if there is one
+	log.Init(debug)
+	if err != nil {
+		log.Error.Fatalf("error parsing debug option: %s", err)
+	}
 
+	log.Info.Printf("setting Bitbucket Pipelines env vars")
 	options := map[string]string{
 		"repoType":         "bitbucket",
 		"repoName":         os.Getenv("BITBUCKET_REPO_SLUG"),
@@ -31,9 +37,10 @@ func main() {
 	for k, v := range options {
 		err := flag.Set(k, v)
 		if err != nil {
-			log.Error.Fatalf("Error setting option %s: %s", k, err)
+			log.Error.Fatalf("error setting option %s: %s", k, err)
 		}
 	}
-	log.Info.Printf("Starting repo parsing program with options:\n %+v\n", options)
+	log.Info.Printf("starting repo parsing program with options:\n %+v\n", options)
+
 	parse.Parse()
 }

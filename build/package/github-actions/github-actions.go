@@ -14,6 +14,13 @@ import (
 )
 
 func main() {
+	debug, err := o.GetDebugOptionFromEnv()
+	// init logging before checking error because we need to log the error if there is one
+	log.Init(debug)
+	if err != nil {
+		log.Error.Fatalf("error parsing debug option: %s", err)
+	}
+
 	log.Info.Printf("Setting GitHub action env vars")
 	ghRepo := strings.Split(os.Getenv("GITHUB_REPOSITORY"), "/")
 	if len(ghRepo) < 2 {

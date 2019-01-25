@@ -1,7 +1,7 @@
 package log
 
 import (
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -14,30 +14,26 @@ var (
 	Error   *log.Logger
 )
 
-func init() {
-	InitLogging(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
-}
-
-// InitLogging overrides the default loggers that write to stdout
-func InitLogging(
-	debugHandle io.Writer,
-	infoHandle io.Writer,
-	warningHandle io.Writer,
-	errorHandle io.Writer) {
+// Init overrides the default loggers that write to stdout
+func Init(debug bool) {
+	debugHandle := ioutil.Discard
+	if debug {
+		debugHandle = os.Stdout
+	}
 
 	Debug = log.New(debugHandle,
 		"DEBUG: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Info = log.New(infoHandle,
+	Info = log.New(os.Stdout,
 		"INFO: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Warning = log.New(warningHandle,
+	Warning = log.New(os.Stdout,
 		"WARNING: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Error = log.New(errorHandle,
+	Error = log.New(os.Stderr,
 		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 }

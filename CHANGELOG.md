@@ -6,6 +6,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ### Added
 - Added support for relative paths to CLI `-dir` parameter.
+- Added a new command line argument, `debug`, which enables verbose debug logging.
 
 ## [0.3.0] - 2019-01-23
 

@@ -362,7 +362,7 @@ func (b BranchRep) PrintReferenceCountTable() {
 			additionalRefCount += i
 		}
 	}
-	truncatedData = append(truncatedData, []string{"Other Flags", strconv.FormatInt(additionalRefCount, 10)})
+	truncatedData = append(truncatedData, []string{"Other flags", strconv.FormatInt(additionalRefCount, 10)})
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Flag", "# References"})

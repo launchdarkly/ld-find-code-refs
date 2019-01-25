@@ -62,13 +62,6 @@ type branch struct {
 }
 
 func Parse() {
-	err, cb := o.Init()
-	if err != nil {
-		log.Error.Printf("could not validate command line options: %s", err)
-		cb()
-		os.Exit(1)
-	}
-
 	absPath, err := normalizeAndValidatePath(o.Dir.Value())
 	if err != nil {
 		log.Error.Fatalf("could not validate directory option: %s", err)
@@ -155,7 +148,10 @@ func Parse() {
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
 	log.Info.Printf("sending %d code references across %d flags and %d files to LaunchDarkly for project: %s", branchRep.TotalHunkCount(), len(filteredFlags), len(branchRep.References), projKey)
-	branchRep.PrintReferenceCountTable()
+
+	if o.Debug.Value() {
+		branchRep.PrintReferenceCountTable()
+	}
 
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {
