@@ -1,6 +1,7 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"regexp"
@@ -8,10 +9,6 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
-
-type Git struct {
-	Workspace string
-}
 
 /*
 grepRegex splits resulting grep lines into groups
@@ -21,6 +18,24 @@ Group 3: Line number
 Group 4: Line contents
 */
 var grepRegex, _ = regexp.Compile("([^:]+)(:|-)([0-9]+)[:-](.*)")
+
+type Git struct {
+	Workspace string
+}
+
+func NewClient(path string) (Git, error) {
+	client := Git{path}
+	_, err := exec.LookPath("git")
+	if err != nil {
+		return client, errors.New("git is a required dependency, but was not found in the system PATH")
+	}
+	_, err = exec.LookPath("ag")
+	if err != nil {
+		return client, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
+	}
+
+	return client, nil
+}
 
 func (g Git) BranchName() (string, error) {
 	cmd := exec.Command("git", "-C", g.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
