@@ -72,7 +72,6 @@ func Parse() {
 	absPath, err := normalizeAndValidatePath(o.Dir.Value())
 	if err != nil {
 		log.Error.Fatalf("could not validate directory option: %s", err)
-		os.Exit(1)
 	}
 
 	cmd := git.Git{Workspace: absPath}
