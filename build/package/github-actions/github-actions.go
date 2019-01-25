@@ -10,7 +10,7 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
-	"github.com/launchdarkly/ld-find-code-refs/pkg/parse"
+	"github.com/launchdarkly/ld-find-code-refs/pkg/coderefs"
 )
 
 func main() {
@@ -58,7 +58,7 @@ func main() {
 	optionsForLog := options
 	optionsForLog["accessToken"] = ""
 	log.Info.Printf("starting repo parsing program with options:\n %+v\n", options)
-	parse.Parse()
+	coderefs.Scan()
 }
 
 type Event struct {

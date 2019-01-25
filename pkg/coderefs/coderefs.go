@@ -1,16 +1,14 @@
-package parse
+package coderefs
 
 import (
 	"container/list"
-	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/git"
+	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
@@ -61,27 +59,10 @@ type branch struct {
 	GrepResults      grepResultLines
 }
 
-func Parse() {
-	absPath, err := normalizeAndValidatePath(o.Dir.Value())
+func Scan() {
+	cmd, err := command.NewClient(o.Dir.Value())
 	if err != nil {
-		log.Error.Fatalf("could not validate directory option: %s", err)
-	}
-
-	cmd, err := git.NewClient(absPath)
-	if err != nil {
-		log.Error.Fatalf("error: %s", err)
-	}
-
-	currBranch, err := cmd.BranchName()
-	if err != nil {
-		log.Error.Fatalf("error parsing git branch name: %s", err)
-	} else if currBranch == "" {
-		log.Error.Fatalf("error parsing git branch name: git repo at %s must be checked out to a valid branch", cmd.Workspace)
-	}
-
-	headSha, err := cmd.RevParse(currBranch)
-	if err != nil {
-		log.Error.Fatalf("error parsing current commit sha: %s", err)
+		log.Error.Fatalf("%s", err)
 	}
 
 	projKey := o.ProjKey.Value()
@@ -134,11 +115,11 @@ func Parse() {
 		updateId = &updateIdOption
 	}
 	b := &branch{
-		Name:             currBranch,
-		IsDefault:        o.DefaultBranch.Value() == currBranch,
+		Name:             cmd.GitBranch,
+		IsDefault:        o.DefaultBranch.Value() == cmd.GitBranch,
 		UpdateSequenceId: updateId,
 		SyncTime:         makeTimestamp(),
-		Head:             headSha,
+		Head:             cmd.GitSha,
 	}
 
 	// exclude option has already been validated as regex
@@ -166,39 +147,6 @@ func Parse() {
 	}
 }
 
-func normalizeAndValidatePath(path string) (string, error) {
-	absPath, err := filepath.Abs(o.Dir.Value())
-	if err != nil {
-		return "", fmt.Errorf("invalid directory: %s", err)
-	}
-	log.Info.Printf("absolute directory path: %s", absPath)
-
-	exists, err := dirExists(absPath)
-	if err != nil {
-		return "", fmt.Errorf("invalid directory: %s", err)
-	}
-
-	if !exists {
-		return "", fmt.Errorf("directory does not exist: %s", absPath)
-	}
-
-	return absPath, nil
-}
-
-func dirExists(path string) (bool, error) {
-	fileInfo, err := os.Stat(path)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return fileInfo.Mode().IsDir(), nil
-}
-
 // Very short flag keys lead to many false positives when searching in code,
 // so we filter them out.
 func filterShortFlagKeys(flags []string) (filtered []string, omitted []string) {
@@ -222,7 +170,7 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func (b *branch) findReferences(cmd git.Git, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
+func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
 	grepResult, err := cmd.SearchForFlags(flags, ctxLines)
 	if err != nil {
 		return grepResultLines{}, err
