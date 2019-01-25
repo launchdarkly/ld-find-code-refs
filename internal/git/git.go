@@ -39,11 +39,12 @@ func (g Git) BranchName() (string, error) {
 func (g Git) RevParse(branch string) (string, error) {
 	cmd := exec.Command("git", "-C", g.Workspace, "rev-parse", branch)
 	out, err := cmd.Output()
-	log.Debug.Printf("identified sha: %s", strings.TrimSpace(string(out)))
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(out)), nil
+	ret := strings.TrimSpace(string(out))
+	log.Debug.Printf("identified sha: %s", ret)
+	return ret, nil
 }
 
 func (g Git) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
