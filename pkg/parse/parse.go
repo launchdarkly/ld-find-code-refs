@@ -67,7 +67,10 @@ func Parse() {
 		log.Error.Fatalf("could not validate directory option: %s", err)
 	}
 
-	cmd := git.Git{Workspace: absPath}
+	cmd, err := git.NewClient(absPath)
+	if err != nil {
+		log.Error.Fatalf("error: %s", err)
+	}
 
 	currBranch, err := cmd.BranchName()
 	if err != nil {
@@ -86,9 +89,9 @@ func Parse() {
 	// Check for potential sdk keys or access tokens provided as the project key
 	if len(projKey) > maxProjKeyLength {
 		if strings.HasPrefix(projKey, "sdk-") {
-			log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
 		} else if strings.HasPrefix(projKey, "api-") {
-			log.Warning.Printf("Provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
 		}
 	}
 
