@@ -211,7 +211,7 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 }
 
 func GetDebugOptionFromEnv() (bool, error) {
-	debug := os.Getenv("debug")
+	debug := os.Getenv("LD_DEBUG")
 	if debug == "" {
 		return false, nil
 	}
