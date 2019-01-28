@@ -5,7 +5,7 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
-	"github.com/launchdarkly/ld-find-code-refs/pkg/parse"
+	"github.com/launchdarkly/ld-find-code-refs/pkg/coderefs"
 )
 
 func main() {
@@ -17,5 +17,5 @@ func main() {
 		os.Exit(1)
 	}
 	log.Init(o.Debug.Value())
-	parse.Parse()
+	coderefs.Scan()
 }
