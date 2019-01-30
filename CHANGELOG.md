@@ -2,7 +2,7 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [0.4.0] - 2019-01-28
+## [0.4.0] - 2019-01-30
 
 ### Added
 - Added support for relative paths to CLI `-dir` parameter.
