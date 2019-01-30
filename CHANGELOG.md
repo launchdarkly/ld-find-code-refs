@@ -7,10 +7,14 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Added
 - Added support for relative paths to CLI `-dir` parameter.
 - Added a new command line argument, `debug`, which enables verbose debug logging.
-- `ld-find-code-refs` will now exit early if required dependencies are not installed on the system PATH
+- `ld-find-code-refs` will now exit early if required dependencies are not installed on the system PATH.
 
 ### Changed
-- Renamed `parse` package to `coderefs`. The `Parse()` method in the aformentioned package is now `Scan()`
+- Renamed `parse` package to `coderefs`. The `Parse()` method in the aformentioned package is now `Scan()`.
+
+### Fixed
+- `ld-find-code-refs` will no longer erroneously make PATCH API requests to LaunchDarkly when url template parameters have not been configured.
+
 
 ## [0.3.0] - 2019-01-23
 
