@@ -20,24 +20,25 @@ release:
 brew:
   name: ld-find-code-refs
 
+  description: "Enables you to keep track of feature flag usage in your code from LaunchDarkly."
+
+  homepage: "https://launchdarkly.com"
+
   github:
     owner: launchdarkly
     name: homebrew-tap-test
 
-  url_template: "http://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-
-  commit_author:
-    name: goreleaserbot
-    email: dev@launchdarkly.com
-
   folder: Formula
 
-  caveats: "Enables you to keep track of feature flag usage in your code from LaunchDarkly."
-
-  homepage: "https://launchdarkly.com"
+  url_template: "http://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
   dependencies:
     - "ag"
 
   install: |
     bin.install "ld-find-code-refs"
+
+  commit_author:
+    name: goreleaserbot
+    email: dev@launchdarkly.com
+
