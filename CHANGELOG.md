@@ -4,6 +4,8 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ### Changed
 - Automate Homebrew releases
+- Added word boundaries to flag key regexes.
+  - This should reduce false positives. E.g. for flag key `cool-feature` we will no longer match `verycool-features`.
 
 ## [0.4.0] - 2019-01-30
 
