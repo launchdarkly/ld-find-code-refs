@@ -46,7 +46,7 @@ brew:
 
   folder: Formula
 
-  url_template: "http://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+  url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
   dependencies:
     - "ag"
