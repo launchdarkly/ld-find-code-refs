@@ -55,6 +55,6 @@ brew:
     bin.install "ld-find-code-refs"
 
   commit_author:
-    name: goreleaserbot
+    name: LaunchDarklyCI
     email: dev@launchdarkly.com
 
