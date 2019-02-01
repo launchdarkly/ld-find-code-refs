@@ -2,6 +2,9 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+### Added
+- Generate deb and rpm packages when releasing artifacts.
+
 ### Changed
 - Automate Homebrew releases
 
