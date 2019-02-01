@@ -33,7 +33,7 @@ executors:
       LD_HUNK_URL_TEMPLATE: << parameters.hunk_url_template >>
       LD_DEFAULT_BRANCH: << parameters.default_branch >>
     docker:
-      - image: launchdarkly/ld-find-code-refs:0.4.0
+      - image: launchdarkly/ld-find-code-refs:0.4.1
 commands:
   find-flags:
     steps:
