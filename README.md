@@ -32,6 +32,24 @@ brew install ld-find-code-refs
 
 You can now run `ld-find-code-refs`.
 
+#### Linux
+We do not yet have repositories set up for our linux packages, but we do upload deb and rpm packages with our github releases. 
+
+##### Ubuntu
+This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
+
+```shell
+apt-get install silversearcher-ag
+
+wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/latest \
+	| grep "browser_download_url" \
+	| grep "amd64.deb" \
+	| cut -d'"' -f4 \
+	| wget -qi - -O ld-find-code-refs.amd64.deb
+
+dpkg -i ld-find-code-refs.amd64.deb
+```
+
 #### Manual
 
 Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest).

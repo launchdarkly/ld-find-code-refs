@@ -74,6 +74,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run: sudo apt-get install rpm
       - run: curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --skip-publish --skip-validate --release-notes <(make echo-release-notes)
 
   publish:
@@ -83,6 +84,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run: sudo apt-get install rpm
       - run: curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --release-notes <(make echo-release-notes)
 
 
