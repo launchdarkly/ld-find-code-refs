@@ -20,7 +20,7 @@ release:
 brew:
   name: ld-find-code-refs
 
-  description: "Enables you to keep track of feature flag usage in your code from LaunchDarkly."
+  description: "Job for finding and sending feature flag code references to LaunchDarkly"
 
   homepage: "https://launchdarkly.com"
 
