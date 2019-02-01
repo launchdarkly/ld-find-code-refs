@@ -17,3 +17,28 @@ release:
   # If set to true, will mark the release as not ready for production.
   prerelease: auto
 
+brew:
+  name: ld-find-code-refs
+
+  description: "Job for finding and sending feature flag code references to LaunchDarkly"
+
+  homepage: "https://launchdarkly.com"
+
+  github:
+    owner: launchdarkly
+    name: homebrew-tap
+
+  folder: Formula
+
+  url_template: "http://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+
+  dependencies:
+    - "ag"
+
+  install: |
+    bin.install "ld-find-code-refs"
+
+  commit_author:
+    name: goreleaserbot
+    email: dev@launchdarkly.com
+
