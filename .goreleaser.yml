@@ -26,7 +26,7 @@ brew:
 
   github:
     owner: launchdarkly
-    name: homebrew-tap-test
+    name: homebrew-tap
 
   folder: Formula
 
