@@ -95,11 +95,12 @@ func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error)
 		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
 	}
 
-	escapedFlags := []string{}
+	flagRegexes := []string{}
 	for _, v := range flags {
-		escapedFlags = append(escapedFlags, regexp.QuoteMeta(v))
+		escapedFlag := regexp.QuoteMeta(v)
+		flagRegexes = append(flagRegexes, "\\b"+escapedFlag+"\\b")
 	}
-	sb.WriteString(" '" + strings.Join(escapedFlags, "|") + "' " + c.Workspace)
+	sb.WriteString(" '" + strings.Join(flagRegexes, "|") + "' " + c.Workspace)
 
 	cmd := sb.String()
 	sh := exec.Command("sh", "-c", cmd)
