@@ -3,10 +3,12 @@ package coderefs
 import (
 	"container/list"
 	"os"
-	"regexp"
+	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	ignore "github.com/sabhiram/go-gitignore"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -60,9 +62,25 @@ type branch struct {
 }
 
 func Scan() {
-	cmd, err := command.NewClient(o.Dir.Value())
+	dir := o.Dir.Value()
+	cmd, err := command.NewClient(dir)
 	if err != nil {
 		log.Error.Fatalf("%s", err)
+	}
+
+	ldIgnorePath := path.Join(dir, ".ldignore")
+	exclude := o.Exclude.Value()
+	var ldIgnore *ignore.GitIgnore
+	if _, err := os.Stat(ldIgnorePath); !os.IsNotExist(err) {
+		ldIgnore, err = ignore.CompileIgnoreFileAndLines(ldIgnorePath, exclude)
+		if err != nil {
+			log.Error.Fatalf("error compiling .ldignore and exclude: %s", err)
+		}
+	} else if exclude != "" {
+		ldIgnore, err = ignore.CompileIgnoreLines(exclude)
+		if err != nil {
+			log.Error.Fatalf("error compiling exclude: %s", err)
+		}
 	}
 
 	projKey := o.ProjKey.Value()
@@ -123,8 +141,7 @@ func Scan() {
 	}
 
 	// exclude option has already been validated as regex
-	exclude, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, exclude)
+	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, ldIgnore)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -170,21 +187,21 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
+func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, ldIgnore *ignore.GitIgnore) (grepResultLines, error) {
 	grepResult, err := cmd.SearchForFlags(flags, ctxLines)
 	if err != nil {
 		return grepResultLines{}, err
 	}
 
-	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
+	return generateReferencesFromGrep(flags, grepResult, ctxLines, ldIgnore), nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, ldIgnore *ignore.GitIgnore) []grepResultLine {
 	references := []grepResultLine{}
 
 	for _, r := range grepResult {
 		path := r[1]
-		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
+		if ldIgnore != nil && ldIgnore.MatchesPath(path) {
 			continue
 		}
 		contextContainsFlagKey := r[2] == ":"

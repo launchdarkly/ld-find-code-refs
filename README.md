@@ -33,7 +33,7 @@ brew install ld-find-code-refs
 You can now run `ld-find-code-refs`.
 
 #### Linux
-We do not yet have repositories set up for our linux packages, but we do upload deb and rpm packages with our github releases. 
+We do not yet have repositories set up for our linux packages, but we do upload deb and rpm packages with our github releases.
 
 ##### Ubuntu
 This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
@@ -133,3 +133,12 @@ Although these arguments are optional, a (*) indicates a recommended parameter t
 | `repoUrl` (*) | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs` | |
 | `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit. | |
 | `hunkUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.  | |
+
+### Ignoring files and directories
+
+`ld-find-code-refs` provides multiple methods for ignoring files and directories:
+
+1. Provide a `.ldignore` file in the root directory of your Git repository. All patterns specified in `.ldignore` file will be excluded by the scanner. Patterns must follow the `.gitignore` format as specified here: https://git-scm.com/docs/gitignore#_pattern_format
+2. The `exclude` command line option (see above section) may be used to specify a single regular expression for the exclude pattern.
+
+If both `.ldignore` and the `exclude` argument are provided, `ld-find-code-refs` will test against both for file exclusion.
