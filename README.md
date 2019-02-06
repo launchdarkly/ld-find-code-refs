@@ -141,4 +141,4 @@ Although these arguments are optional, a (*) indicates a recommended parameter t
 1. Provide a `.ldignore` file in the root directory of your Git repository. All patterns specified in `.ldignore` file will be excluded by the scanner. Patterns must follow the `.gitignore` format as specified here: https://git-scm.com/docs/gitignore#_pattern_format
 2. The `exclude` command line option (see above section) may be used to specify a single regular expression for the exclude pattern.
 
-If both `.ldignore` and the `exclude` argument are provided, `ld-find-code-refs` will test against both for file exclusion.
+If both `.ldignore` and the `exclude` argument are provided, `ld-find-code-refs` will test against both for file exclusion. Do note that `.ldignore` expects shell glob patterns, while the `exclude` option expects a PCRE-compliant regular expression.
