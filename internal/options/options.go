@@ -71,6 +71,7 @@ const (
 	RepoUrl           = StringOption("repoUrl")
 	CommitUrlTemplate = StringOption("commitUrlTemplate")
 	HunkUrlTemplate   = StringOption("hunkUrlTemplate")
+	Version           = BoolOption("version")
 )
 
 type option struct {
@@ -110,6 +111,7 @@ var options = optionMap{
 	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
 	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.", false},
 	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but repoUrl is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.", false},
+	Version:           option{false, "If provided, the scanner will print the version number and exit early", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
