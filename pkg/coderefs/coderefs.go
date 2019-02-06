@@ -248,6 +248,12 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
 
+		if len(hunks) == 0 {
+			log.Error.Printf("unknown error scanning for code references in %s", fileGrepResults.path)
+			log.Debug.Printf("%+v", fileGrepResults)
+			continue
+		}
+
 		if len(hunks) > maxHunksPerFileCount {
 			log.Warning.Printf("found %d code references in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileGrepResults.path, maxHunksPerFileCount)
 			hunks = hunks[0:maxHunksPerFileCount]
@@ -412,7 +418,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
 		// This guards against a situation where the user has very long files with many false positive matches.
 		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
-			log.Warning.Printf("Found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. Truncating code references for this path and flag.",
+			log.Warning.Printf("found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. truncating code references for this path and flag.",
 				numHunkedLines, path, flag, maxHunkedLinesPerFileAndFlagCount)
 			return hunks
 		}

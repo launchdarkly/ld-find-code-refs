@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## Master
+### Fixed
+- `ld-find-code-refs` will no longer error out if an unknown error occurs when scanning for code reference hunks within a file. Instead, an error will be logged.
+
 ## [0.5.0] - 2019-02-01
 ### Added
 - Generate deb and rpm packages when releasing artifacts.
