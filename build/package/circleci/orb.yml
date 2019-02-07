@@ -1,9 +1,77 @@
 version: 2.1
 description: "Job for finding and sending feature flag code references to LaunchDarkly. Code references documentation: https://docs.launchdarkly.com/v2.0/docs/git-code-references"
 
+examples:
+  minimal:
+    description: Minimal configuration
+    usage:
+      version: 2.1
+      orbs:
+        launchdarkly: launchdarkly/ld-find-code-refs@0.5.0
+      workflows:
+        main:
+          jobs:
+            - launchdarkly/find-code-references:
+                access_token: "${LD_ACCESS_TOKEN}"
+                proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
+                debug: true
+
+  context_lines:
+    description: "Configuration with context lines provided. Context line documentation: https://docs.launchdarkly.com/v2.0/docs/git-code-references#section-adding-context-lines"
+    usage:
+      version: 2.1
+      orbs:
+        launchdarkly: launchdarkly/ld-find-code-refs@0.5.0
+      workflows:
+        main:
+          jobs:
+            - launchdarkly/find-code-references:
+                debug: true
+                access_token: "${LD_ACCESS_TOKEN}"
+                proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
+                context_lines: 3
+
+  exclude_files:
+    description: "The above configuration, with the `vendor/` directory and all `css` files ignored by the scanner. The `exclude` parameter may be configuration as any regular expression that matches the files and directories you'd like to ignore for your repository"
+    usage:
+      version: 2.1
+      orbs:
+        launchdarkly: launchdarkly/ld-find-code-refs@0.5.0
+      workflows:
+        main:
+          jobs:
+            - launchdarkly/find-code-references:
+                debug: true
+                access_token: "${LD_ACCESS_TOKEN}"
+                proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
+                context_lines: 3
+                exclude: 'vendor/|\.css'
+
+  :
+    description: "A configuration with the the `repoType` set to GitHub, and the `repuUrl` set to a GitHub URL. We recommend configuring these parameters so LaunchDarkly is able to generate reference links to your source code"
+    usage:
+      version: 2.1
+      orbs:
+        launchdarkly: launchdarkly/ld-find-code-refs@0.5.0
+      workflows:
+        main:
+          jobs:
+            - launchdarkly/find-code-references:
+                debug: true
+                access_token: "${LD_ACCESS_TOKEN}"
+                proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
+                repo_type: 'github'
+                repo_url: 'YOUR_REPO_URL'
+                context_lines: 3
+
 jobs:
   find-code-references:
+    description: Scans a git repository for code references.
     parameters:
+      access_token:
+        description: LaunchDarkly access token (use env var $LD_ACCESS_TOKEN to populate).
+        type: string
+        default: "${LD_ACCESS_TOKEN}"
       proj_key:
         description: LaunchDarkly project key
         type: string
@@ -44,16 +112,6 @@ jobs:
         description: "Enables verbose debug logging."
         type: boolean
         default: false
-    environment:
-      LD_PROJ_KEY: << parameters.proj_key >>
-      LD_BASE_URI: << parameters.base_uri >>
-      LD_EXCLUDE: << parameters.exclude >>
-      LD_CONTEXT_LINES: << parameters.context_lines >>
-      LD_REPO_TYPE: << parameters.repo_type >>
-      LD_REPO_URL: << parameters.repo_url >>
-      LD_COMMIT_URL_TEMPLATE: << parameters.commit_url_template >>
-      LD_HUNK_URL_TEMPLATE: << parameters.hunk_url_template >>
-      LD_DEFAULT_BRANCH: << parameters.default_branch >>
     docker:
       - image: launchdarkly/ld-find-code-refs:0.5.0
     steps:
@@ -63,16 +121,17 @@ jobs:
           name: Find flag references
           command: |
             ld-find-code-refs \
-              -accessToken=${LD_ACCESS_TOKEN} \
-              -projKey=${LD_PROJ_KEY} \
-              -exclude=${LD_EXCLUDE} \
-              -contextLines=${LD_CONTEXT_LINES} \
-              -baseUri=${LD_BASE_URI} \
-              -repoType=${LD_REPO_TYPE} \
-              -repoUrl=${LD_REPO_URL} \
+              -debug=<< parameters.debug >> \
+              -accessToken=<< parameters.access_token >> \
+              -projKey=<< parameters.proj_key >> \
+              -exclude=<< parameters.exclude >> \
+              -contextLines=<< parameters.context_lines >> \
+              -baseUri=<< parameters.base_uri >> \
+              -repoType=<< parameters.repo_type >> \
+              -repoUrl=<< parameters.repo_url >> \
+              -defaultBranch=<< parameters.default_branch >> \
+              -commitUrlTemplate=<< parameters.commit_url_template >> \
+              -hunkUrlTemplate=<< parameters.hunk_url_template >> \
               -repoName=${CIRCLE_PROJECT_REPONAME} \
               -updateSequenceId=${CIRCLE_BUILD_NUM} \
-              -defaultBranch=${LD_DEFAULT_BRANCH} \
-              -commitUrlTemplate=${LD_COMMIT_URL_TEMPLATE} \
-              -hunkUrlTemplate=${LD_HUNK_URL_TEMPLATE} \
               -dir=/repo
