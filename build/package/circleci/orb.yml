@@ -2,7 +2,7 @@ version: 2.1
 description: "Job for finding and sending feature flag code references to LaunchDarkly. Code references documentation: https://docs.launchdarkly.com/v2.0/docs/git-code-references"
 
 examples:
-  minimal:
+  minimal_config:
     description: Minimal configuration
     usage:
       version: 2.1
@@ -47,7 +47,7 @@ examples:
                 context_lines: 3
                 exclude: 'vendor/|\.css'
 
-  :
+  standard_configuration:
     description: "A configuration with the the `repoType` set to GitHub, and the `repuUrl` set to a GitHub URL. We recommend configuring these parameters so LaunchDarkly is able to generate reference links to your source code"
     usage:
       version: 2.1
