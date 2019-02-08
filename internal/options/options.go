@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
 // Can't wait for contracts
@@ -140,6 +142,11 @@ func Init() (err error, errCb func()) {
 			}
 		}
 	})
+
+	fmt.Printf("ld-find-code-refs version %s", version.Version)
+	if Version.Value() {
+		os.Exit(0)
+	}
 
 	if opt != "" {
 		return fmt.Errorf("required option %s not set", opt), flag.PrintDefaults

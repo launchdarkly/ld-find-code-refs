@@ -12,6 +12,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
 // These are defensive limits intended to prevent corner cases stemming from
@@ -20,8 +21,6 @@ import (
 // PUTing a massive json payload. These limits will likely be tweaked over
 // time. The LaunchDarkly backend will also apply limits.
 const (
-	version = "0.6.0"
-
 	minFlagKeyLen                     = 3
 	maxFileCount                      = 5000
 	maxLineCharCount                  = 500
@@ -62,10 +61,6 @@ type branch struct {
 }
 
 func Scan() {
-	log.Stdout.Printf("ld-find-code-refs version " + version)
-	if o.Version.Value() {
-		return
-	}
 	cmd, err := command.NewClient(o.Dir.Value())
 	if err != nil {
 		log.Error.Fatalf("%s", err)
@@ -82,7 +77,7 @@ func Scan() {
 		}
 	}
 
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
 	repoParams := ld.RepoParams{
 		Type:              o.RepoType.Value(),
 		Name:              o.RepoName.Value(),
