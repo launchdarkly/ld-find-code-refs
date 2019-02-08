@@ -143,7 +143,7 @@ func Init() (err error, errCb func()) {
 		}
 	})
 
-	fmt.Printf("ld-find-code-refs version %s", version.Version)
+	fmt.Println("ld-find-code-refs version", version.Version)
 	if Version.Value() {
 		os.Exit(0)
 	}
