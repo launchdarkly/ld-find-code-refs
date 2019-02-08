@@ -12,6 +12,7 @@ var (
 	Info    *log.Logger
 	Warning *log.Logger
 	Error   *log.Logger
+	Stdout  *log.Logger
 )
 
 // Init overrides the default loggers that write to stdout
@@ -36,4 +37,6 @@ func Init(debug bool) {
 	Error = log.New(os.Stderr,
 		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
+
+	Stdout = log.New(os.Stdout, "", 0)
 }
