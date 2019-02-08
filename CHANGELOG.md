@@ -6,6 +6,9 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Added
 - The `debug` option is now available to the CircleCI orb.
 
+### Changed
+- The command-line [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs) now specifies `ld-find-code-refs` as the entrypoint. The docker image may now be run as `docker run launchdarkly/ld-find-code-refs -accessToken="api-xxx"...`
+
 ## [0.5.0] - 2019-02-01
 ### Added
 - Generate deb and rpm packages when releasing artifacts.

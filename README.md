@@ -59,7 +59,7 @@ A Windows executable of `ld-find-code-refs` is not currently available. If you'd
 
 ```shell
 docker pull launchdarkly/ld-find-code-refs
-docker run -it launchdarkly/ld-find-code-refs
+docker run launchdarkly/ld-find-code-refs -accessToken="api-xxx"...
 ```
 
 #### Manual
