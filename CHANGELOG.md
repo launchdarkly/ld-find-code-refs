@@ -4,6 +4,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## Master
 ### Added
+- Added a new command line argument, `version`. If provided, the current `ld-find-code-refs` version number will be logged, and the scanner will exit with a return code of 0.
 - The `debug` option is now available to the CircleCI orb.
 
 ### Changed

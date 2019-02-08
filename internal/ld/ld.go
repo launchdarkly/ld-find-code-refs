@@ -29,10 +29,11 @@ type ApiClient struct {
 }
 
 type ApiOptions struct {
-	ApiKey   string
-	ProjKey  string
-	BaseUri  string
-	RetryMax *int
+	ApiKey    string
+	ProjKey   string
+	BaseUri   string
+	UserAgent string
+	RetryMax  *int
 }
 
 const (
@@ -65,7 +66,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 	return ApiClient{
 		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{
 			BasePath:  options.BaseUri + v2ApiPath,
-			UserAgent: "github-actor",
+			UserAgent: options.UserAgent,
 		}),
 		httpClient: client,
 		Options:    options,
@@ -123,6 +124,7 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", c.Options.UserAgent)
 	res, err := c.do(req)
 	if err != nil {
 		return nil, err
