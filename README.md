@@ -50,6 +50,18 @@ wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/l
 dpkg -i ld-find-code-refs.amd64.deb
 ```
 
+### Windows
+A Windows executable of `ld-find-code-refs` is not currently available. If you'd like to test `ld-find-code-refs` on a Windows machine, we recommend using the [docker image](https://github.com/launchdarkly/ld-find-code-refs#docker). Windows 10 users may use the [Ubuntu subsystem for Windows](https://docs.microsoft.com/en-us/windows/wsl/install-win10) as a stopgap.
+
+### Docker
+`ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs). The command line program is installed in the system path of this docker image.
+<!-- TODO: update with entrypoint execution when available -->
+
+```shell
+docker pull launchdarkly/ld-find-code-refs
+docker run -it launchdarkly/ld-find-code-refs
+```
+
 #### Manual
 
 Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest).
