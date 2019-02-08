@@ -3,6 +3,9 @@
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
 ## Master
+### Added
+- The `debug` option is now available to the CircleCI orb.
+
 ### Changed
 - The internal API for specifying the default git branch (`defaultBranch`) has been changed. The `defaultBranch` argument on earlier versions of `ld-find-code-refs` will no longer do anything.
 
