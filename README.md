@@ -33,7 +33,7 @@ brew install ld-find-code-refs
 You can now run `ld-find-code-refs`.
 
 #### Linux
-We do not yet have repositories set up for our linux packages, but we do upload deb and rpm packages with our github releases. 
+We do not yet have repositories set up for our linux packages, but we do upload deb and rpm packages with our github releases.
 
 ##### Ubuntu
 This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
@@ -48,6 +48,18 @@ wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/l
 	| wget -qi - -O ld-find-code-refs.amd64.deb
 
 dpkg -i ld-find-code-refs.amd64.deb
+```
+
+### Windows
+A Windows executable of `ld-find-code-refs` is not currently available. If you'd like to test `ld-find-code-refs` on a Windows machine, we recommend using the [docker image](https://github.com/launchdarkly/ld-find-code-refs#docker). Windows 10 users may use the [Ubuntu subsystem for Windows](https://docs.microsoft.com/en-us/windows/wsl/install-win10) as a stopgap.
+
+### Docker
+`ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs). The command line program is installed in the system path of this docker image.
+<!-- TODO: update with entrypoint execution when available -->
+
+```shell
+docker pull launchdarkly/ld-find-code-refs
+docker run -it launchdarkly/ld-find-code-refs
 ```
 
 #### Manual
