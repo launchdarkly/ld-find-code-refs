@@ -105,7 +105,7 @@ var options = optionMap{
 	DefaultBranch:     option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", false},
 	Debug:             option{false, "Enables verbose debug logging", false},
-	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "vendor/*`, false},
+	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css`, false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
 	UpdateSequenceId:  option{noUpdateSequenceId, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
 	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Both a repo name and the repo name with an organization identifier are valid. Examples: "linux", "torvalds/linux."`, true},
