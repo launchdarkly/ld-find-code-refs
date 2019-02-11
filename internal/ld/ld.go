@@ -178,6 +178,7 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 			Url:               currentRepo.Url,
 			CommitUrlTemplate: currentRepo.CommitUrlTemplate,
 			HunkUrlTemplate:   currentRepo.HunkUrlTemplate,
+			DefaultBranch:     currentRepo.DefaultBranch,
 		}
 
 		// Don't patch templates if command line arguments are not provided.
@@ -189,6 +190,11 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 			if repo.HunkUrlTemplate == "" {
 				currentRepoParams.HunkUrlTemplate = ""
 			}
+		}
+
+		// If defaultBranch is absent and repo already exists, do nothing
+		if currentRepoParams.DefaultBranch == "" {
+			currentRepoParams.DefaultBranch = repo.DefaultBranch
 		}
 
 		if !reflect.DeepEqual(currentRepoParams, repo) {
@@ -296,6 +302,7 @@ type RepoParams struct {
 	Url               string `json:"sourceLink"`
 	CommitUrlTemplate string `json:"commitUrlTemplate"`
 	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
+	DefaultBranch     string `json:"defaultBranch"`
 }
 
 type RepoRep struct {
@@ -304,6 +311,7 @@ type RepoRep struct {
 	Url               string `json:"sourceLink"`
 	CommitUrlTemplate string `json:"commitUrlTemplate"`
 	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
+	DefaultBranch     string `json:"defaultBranch"`
 	Enabled           bool   `json:"enabled,omitempty"`
 }
 type BranchRep struct {
@@ -311,7 +319,6 @@ type BranchRep struct {
 	Head             string              `json:"head"`
 	UpdateSequenceId *int64              `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
-	IsDefault        bool                `json:"isDefault"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
 }
 
