@@ -2,10 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [0.5.0] - 2019-02-01
-### Master
+## Master
+### Added
+- The `debug` option is now available to the CircleCI orb.
 - Added support for parsing `.ldignore` files specified in the root directory of the scanned repository. `.ldignore` may be used to specify a pattern (compatible with the `.gitignore` spec: https://git-scm.com/docs/gitignore#_pattern_format) for files to exclude from scanning.
 
+## [0.5.0] - 2019-02-01
 ### Added
 - Generate deb and rpm packages when releasing artifacts.
 
