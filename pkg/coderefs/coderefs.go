@@ -197,8 +197,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 
 	for _, r := range grepResult {
 		path := r[1]
-		if (exclude != nil && exclude.String() != "" && exclude.MatchString(path)) ||
-			(ldIgnore != nil && ldIgnore.MatchesPath(path)) {
+		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) || ldIgnore != nil && ldIgnore.MatchesPath(path) {
 			continue
 		}
 		contextContainsFlagKey := r[2] == ":"
