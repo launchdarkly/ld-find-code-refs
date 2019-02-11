@@ -12,6 +12,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
 // These are defensive limits intended to prevent corner cases stemming from
@@ -53,7 +54,6 @@ type fileGrepResults struct {
 type branch struct {
 	Name             string
 	Head             string
-	IsDefault        bool
 	UpdateSequenceId *int64
 	SyncTime         int64
 	GrepResults      grepResultLines
@@ -76,13 +76,14 @@ func Scan() {
 		}
 	}
 
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
 	repoParams := ld.RepoParams{
 		Type:              o.RepoType.Value(),
 		Name:              o.RepoName.Value(),
 		Url:               o.RepoUrl.Value(),
 		CommitUrlTemplate: o.CommitUrlTemplate.Value(),
 		HunkUrlTemplate:   o.HunkUrlTemplate.Value(),
+		DefaultBranch:     o.DefaultBranch.Value(),
 	}
 
 	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
@@ -116,7 +117,6 @@ func Scan() {
 	}
 	b := &branch{
 		Name:             cmd.GitBranch,
-		IsDefault:        o.DefaultBranch.Value() == cmd.GitBranch,
 		UpdateSequenceId: updateId,
 		SyncTime:         makeTimestamp(),
 		Head:             cmd.GitSha,
@@ -223,7 +223,6 @@ func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
 		Head:             b.Head,
 		UpdateSequenceId: b.UpdateSequenceId,
 		SyncTime:         b.SyncTime,
-		IsDefault:        b.IsDefault,
 		References:       b.GrepResults.makeReferenceHunksReps(projKey, ctxLines),
 	}
 }

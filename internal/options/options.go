@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
 // Can't wait for contracts
@@ -71,6 +73,7 @@ const (
 	RepoUrl           = StringOption("repoUrl")
 	CommitUrlTemplate = StringOption("commitUrlTemplate")
 	HunkUrlTemplate   = StringOption("hunkUrlTemplate")
+	Version           = BoolOption("version")
 )
 
 type option struct {
@@ -99,7 +102,7 @@ var options = optionMap{
 	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
 	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
 	ContextLines:      option{defaultContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
-	DefaultBranch:     option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
+	DefaultBranch:     option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", false},
 	Debug:             option{false, "Enables verbose debug logging", false},
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "vendor/*`, false},
@@ -110,6 +113,7 @@ var options = optionMap{
 	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
 	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.", false},
 	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but repoUrl is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.", false},
+	Version:           option{false, "If provided, the scanner will print the version number and exit early", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -138,6 +142,11 @@ func Init() (err error, errCb func()) {
 			}
 		}
 	})
+
+	fmt.Println("ld-find-code-refs version", version.Version)
+	if Version.Value() {
+		os.Exit(0)
+	}
 
 	if opt != "" {
 		return fmt.Errorf("required option %s not set", opt), flag.PrintDefaults
