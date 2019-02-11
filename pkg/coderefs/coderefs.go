@@ -341,14 +341,14 @@ func (fgr fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkR
 	hunks := []ld.HunkRep{}
 
 	for flagKey, flagReferences := range fgr.flagReferenceMap {
-		flagHunks := buildHunksForFlag(projKey, flagKey, fgr.path, flagReferences, fgr.fileGrepResultLines, ctxLines)
+		flagHunks := buildHunksForFlag(projKey, flagKey, fgr.path, flagReferences, ctxLines)
 		hunks = append(hunks, flagHunks...)
 	}
 
 	return hunks
 }
 
-func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
+func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Element, ctxLines int) []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 
 	var previousHunk *ld.HunkRep
@@ -441,7 +441,7 @@ func initHunk(projKey, flagKey string) ld.HunkRep {
 }
 
 func makeTimestamp() int64 {
-	return int64(time.Now().UnixNano()) / int64(time.Millisecond)
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.

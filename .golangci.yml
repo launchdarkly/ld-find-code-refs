@@ -7,13 +7,12 @@ run:
 linters:
   enable-all: true
   disable:
-    - gochecknoinits
-    - gochecknoglobals
-    - gofmt
-    - lll
-    - maligned
-    - prealloc
-    - unparam
+      - golint
+      - stylecheck
+      - gochecknoglobals
+      - lll
+      - errcheck
+      - interfacer
   fast: false
 
 linter-settings:

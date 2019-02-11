@@ -15,11 +15,11 @@ import (
 /*
 grepRegex splits resulting grep lines into groups
 Group 1: File path.
-Group 2: Seperator. A colon indicates a match, a hyphen indicates a context lines
+Group 2: Separator. A colon indicates a match, a hyphen indicates a context lines
 Group 3: Line number
 Group 4: Line contents
 */
-var grepRegex, _ = regexp.Compile("([^:]+)(:|-)([0-9]+)[:-](.*)")
+var grepRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
 type Client struct {
 	Workspace string
@@ -63,6 +63,7 @@ func NewClient(path string) (Client, error) {
 }
 
 func (c Client) branchName() (string, error) {
+	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.Output()
 	if err != nil {
@@ -77,6 +78,7 @@ func (c Client) branchName() (string, error) {
 }
 
 func (c Client) revParse(branch string) (string, error) {
+	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", branch)
 	out, err := cmd.Output()
 	if err != nil {
@@ -103,6 +105,7 @@ func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error)
 	sb.WriteString(" '" + strings.Join(flagRegexes, "|") + "' " + c.Workspace)
 
 	cmd := sb.String()
+	/* #nosec */
 	sh := exec.Command("sh", "-c", cmd)
 	out, err := sh.Output()
 	if err != nil {

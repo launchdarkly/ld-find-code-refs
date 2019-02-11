@@ -77,6 +77,7 @@ type Sender struct {
 }
 
 func parseEvent(path string) (*Event, error) {
+	/* #nosec */
 	eventJsonFile, err := os.Open(path)
 	if err != nil {
 		return nil, err
