@@ -9,6 +9,8 @@ This project uses [goreleaser](https://goreleaser.com/) to generate github relea
 
 Make sure you update the changelog before generating a release.
 
+Once a release has been completed, update the [BitBucket pipelines](https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe) repo with the new version number, and push a tag containing the version number along with your commit. Example release commit: https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe/commits/0b1e920c7322cd495f4fc1a09d339342d32606e4
+
 ## Docker Hub
 
 To push a new image version to Docker hub, run `make publish-cli-docker TAG=$VERSION` or `make publish-github-actions-docker TAG=$VERSION`, where `$VERSION` is the version you want to release. This will compile the ld-find-code-refs binary for either the base command line code ref finder or the github actions specialized finder, build a new image with your version tagged, and also point latest at that tag and push both latest and $VERSION to docker hub.
