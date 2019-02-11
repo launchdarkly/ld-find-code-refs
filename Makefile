@@ -1,17 +1,15 @@
 # Note: These commands pertain to the development of ld-find-code-refs.
 #       They are not intended for use by the end-users of this program.
-GOLANGCI_VERSION=v1.12.3
-
 SHELL=/bin/bash
 
 init:
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s $(GOLANGCI_VERSION)
+	pre-commit install
 
 test: lint
 	go test ./...
 
 lint:
-	./bin/golangci-lint run ./...
+	pre-commit run -a --verbose golangci-lint.
 
 compile-macos-binary:
 	GOOS=darwin GOARCH=amd64 go build -o out/ld-find-code-refs ./cmd/ld-find-code-refs

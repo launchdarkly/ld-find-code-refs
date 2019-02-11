@@ -1,0 +1,27 @@
+project_name: ld-find-code-refs
+
+run:
+  deadline: 120s
+  tests: false
+
+linters:
+  enable-all: true
+  disable:
+      - golint
+      - stylecheck
+      - gochecknoglobals
+      - lll
+      - errcheck
+      - interfacer
+  fast: false
+
+linter-settings:
+  goimports:
+    local-prefixes: github.com/launchdarkly,gopkg.in/launchdarkly
+
+issues:
+  exclude:
+    - "G104: Errors unhandled." # Let errcheck handle these
+  exclude-use-default: false
+  max-same-issues: 1000
+  max-per-linter: 1000

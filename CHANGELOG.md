@@ -16,6 +16,9 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 - `ld-find-code-refs` will no longer error out if an unknown error occurs when scanning for code reference hunks within a file. Instead, an error will be logged.
 
 ## [0.5.0] - 2019-02-01
+### Master
+- Added support for parsing `.ldignore` files specified in the root directory of the scanned repository. `.ldignore` may be used to specify a pattern (compatible with the `.gitignore` spec: https://git-scm.com/docs/gitignore#_pattern_format) for files to exclude from scanning.
+
 ### Added
 - Generate deb and rpm packages when releasing artifacts.
 

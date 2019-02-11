@@ -131,10 +131,13 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 	}
 
 	resBytes, err := ioutil.ReadAll(res.Body)
+	if res != nil {
+		defer res.Body.Close()
+	}
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+
 	var repo RepoRep
 	err = json.Unmarshal(resBytes, &repo)
 	if err != nil {
@@ -252,19 +255,24 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 		return res, nil
 	default:
 		resBytes, err := ioutil.ReadAll(res.Body)
+		if res != nil {
+			defer res.Body.Close()
+		}
 		if err != nil {
 			return nil, err
 		}
-		defer res.Body.Close()
 		var ldErr ldErrorResponse
 		err = json.Unmarshal(resBytes, &ldErr)
 
 		if err == nil {
-			if ldErr.Code == "updateSequenceId_conflict" {
+			switch ldErr.Code {
+			case "updateSequenceId_conflict":
 				return res, BranchUpdateSequenceIdConflictErr
-			} else if ldErr.Code == "not_found" {
+			case "not_found":
 				return res, NotFoundErr
-			} else if ldErr.Message != "" {
+			case "":
+				// do nothing
+			default:
 				return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
 			}
 		}

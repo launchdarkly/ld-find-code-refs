@@ -25,8 +25,10 @@ defaults:
       - run: go get -u $COMMON_GO_PACKAGES
       - run: curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
       - run: dep ensure -dry-run
-      - run: make init
-      - run: make lint
+      - run: sudo apt-get install python-pip
+      - run: sudo pip install pre-commit
+      - run: pre-commit install
+      - run: SKIP=go-unit-tests pre-commit run -a
       - run:
           name: Set up Code Climate test-reporter
           command: |
