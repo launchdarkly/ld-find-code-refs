@@ -21,6 +21,8 @@ We provide turnkey support for common trigger mechanisms and CI / CD providers. 
 
 The command line program may be run manually, and executed in an environment of your choosing. The program requires your `git` repo to be cloned locally, and the currently checked out branch will be scanned for code references.
 
+We recommend ingraining `ld-find-code-refs` into your CI/CD build process. `ld-find-code-refs` should run whenever a commit is pushed to your repository.
+
 ### Installing
 
 #### macOS
