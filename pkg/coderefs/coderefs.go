@@ -248,7 +248,7 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
 
 		if len(hunks) == 0 {
-			log.Error.Printf("unknown error scanning for code references in %s", fileGrepResults.path)
+			log.Error.Printf("expected code references but found none in '%s'", fileGrepResults.path)
 			log.Debug.Printf("%+v", fileGrepResults)
 			continue
 		}
