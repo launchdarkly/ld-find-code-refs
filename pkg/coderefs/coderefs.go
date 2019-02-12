@@ -3,10 +3,13 @@ package coderefs
 import (
 	"container/list"
 	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	ignore "github.com/sabhiram/go-gitignore"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -54,16 +57,25 @@ type fileGrepResults struct {
 type branch struct {
 	Name             string
 	Head             string
-	IsDefault        bool
 	UpdateSequenceId *int64
 	SyncTime         int64
 	GrepResults      grepResultLines
 }
 
 func Scan() {
-	cmd, err := command.NewClient(o.Dir.Value())
+	dir := o.Dir.Value()
+	cmd, err := command.NewClient(dir)
 	if err != nil {
 		log.Error.Fatalf("%s", err)
+	}
+
+	ldIgnorePath := path.Join(dir, ".ldignore")
+	var ldIgnore *ignore.GitIgnore
+	if _, err := os.Stat(ldIgnorePath); !os.IsNotExist(err) {
+		ldIgnore, err = ignore.CompileIgnoreFile(ldIgnorePath)
+		if err != nil {
+			log.Error.Fatalf("error compiling .ldignore and exclude: %s", err)
+		}
 	}
 
 	projKey := o.ProjKey.Value()
@@ -84,6 +96,7 @@ func Scan() {
 		Url:               o.RepoUrl.Value(),
 		CommitUrlTemplate: o.CommitUrlTemplate.Value(),
 		HunkUrlTemplate:   o.HunkUrlTemplate.Value(),
+		DefaultBranch:     o.DefaultBranch.Value(),
 	}
 
 	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
@@ -117,15 +130,14 @@ func Scan() {
 	}
 	b := &branch{
 		Name:             cmd.GitBranch,
-		IsDefault:        o.DefaultBranch.Value() == cmd.GitBranch,
 		UpdateSequenceId: updateId,
 		SyncTime:         makeTimestamp(),
 		Head:             cmd.GitSha,
 	}
 
-	// exclude option has already been validated as regex
-	exclude, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, exclude)
+	// exclude option has already been validated as regex in options.go
+	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
+	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, ldIgnore, excludeRegex)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -171,21 +183,21 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
+func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, ldIgnore *ignore.GitIgnore, exclude *regexp.Regexp) (grepResultLines, error) {
 	grepResult, err := cmd.SearchForFlags(flags, ctxLines)
 	if err != nil {
 		return grepResultLines{}, err
 	}
 
-	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
+	return generateReferencesFromGrep(flags, grepResult, ctxLines, ldIgnore, exclude), nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, ldIgnore *ignore.GitIgnore, exclude *regexp.Regexp) []grepResultLine {
 	references := []grepResultLine{}
 
 	for _, r := range grepResult {
 		path := r[1]
-		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
+		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) || ldIgnore != nil && ldIgnore.MatchesPath(path) {
 			continue
 		}
 		contextContainsFlagKey := r[2] == ":"
@@ -224,7 +236,6 @@ func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
 		Head:             b.Head,
 		UpdateSequenceId: b.UpdateSequenceId,
 		SyncTime:         b.SyncTime,
-		IsDefault:        b.IsDefault,
 		References:       b.GrepResults.makeReferenceHunksReps(projKey, ctxLines),
 	}
 }
@@ -248,6 +259,12 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 		}
 
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
+
+		if len(hunks) == 0 {
+			log.Error.Printf("expected code references but found none in '%s'", fileGrepResults.path)
+			log.Debug.Printf("%+v", fileGrepResults)
+			continue
+		}
 
 		if len(hunks) > maxHunksPerFileCount {
 			log.Warning.Printf("found %d code references in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileGrepResults.path, maxHunksPerFileCount)
@@ -330,14 +347,14 @@ func (fgr fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkR
 	hunks := []ld.HunkRep{}
 
 	for flagKey, flagReferences := range fgr.flagReferenceMap {
-		flagHunks := buildHunksForFlag(projKey, flagKey, fgr.path, flagReferences, fgr.fileGrepResultLines, ctxLines)
+		flagHunks := buildHunksForFlag(projKey, flagKey, fgr.path, flagReferences, ctxLines)
 		hunks = append(hunks, flagHunks...)
 	}
 
 	return hunks
 }
 
-func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Element, fileLines *list.List, ctxLines int) []ld.HunkRep {
+func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Element, ctxLines int) []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 
 	var previousHunk *ld.HunkRep
@@ -413,7 +430,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// If we have written more than the max. allowed number of lines for this file and flag, finish this hunk and exit early.
 		// This guards against a situation where the user has very long files with many false positive matches.
 		if numHunkedLines > maxHunkedLinesPerFileAndFlagCount {
-			log.Warning.Printf("Found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. Truncating code references for this path and flag.",
+			log.Warning.Printf("found %d code reference lines in %s for the flag %s, which exceeded the limit of %d. truncating code references for this path and flag.",
 				numHunkedLines, path, flag, maxHunkedLinesPerFileAndFlagCount)
 			return hunks
 		}
@@ -430,7 +447,7 @@ func initHunk(projKey, flagKey string) ld.HunkRep {
 }
 
 func makeTimestamp() int64 {
-	return int64(time.Now().UnixNano()) / int64(time.Millisecond)
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.

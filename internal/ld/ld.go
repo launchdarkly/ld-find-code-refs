@@ -131,10 +131,13 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 	}
 
 	resBytes, err := ioutil.ReadAll(res.Body)
+	if res != nil {
+		defer res.Body.Close()
+	}
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+
 	var repo RepoRep
 	err = json.Unmarshal(resBytes, &repo)
 	if err != nil {
@@ -178,6 +181,7 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 			Url:               currentRepo.Url,
 			CommitUrlTemplate: currentRepo.CommitUrlTemplate,
 			HunkUrlTemplate:   currentRepo.HunkUrlTemplate,
+			DefaultBranch:     currentRepo.DefaultBranch,
 		}
 
 		// Don't patch templates if command line arguments are not provided.
@@ -189,6 +193,11 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 			if repo.HunkUrlTemplate == "" {
 				currentRepoParams.HunkUrlTemplate = ""
 			}
+		}
+
+		// If defaultBranch is absent and repo already exists, do nothing
+		if currentRepoParams.DefaultBranch == "" {
+			currentRepoParams.DefaultBranch = repo.DefaultBranch
 		}
 
 		if !reflect.DeepEqual(currentRepoParams, repo) {
@@ -246,19 +255,24 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 		return res, nil
 	default:
 		resBytes, err := ioutil.ReadAll(res.Body)
+		if res != nil {
+			defer res.Body.Close()
+		}
 		if err != nil {
 			return nil, err
 		}
-		defer res.Body.Close()
 		var ldErr ldErrorResponse
 		err = json.Unmarshal(resBytes, &ldErr)
 
 		if err == nil {
-			if ldErr.Code == "updateSequenceId_conflict" {
+			switch ldErr.Code {
+			case "updateSequenceId_conflict":
 				return res, BranchUpdateSequenceIdConflictErr
-			} else if ldErr.Code == "not_found" {
+			case "not_found":
 				return res, NotFoundErr
-			} else if ldErr.Message != "" {
+			case "":
+				// do nothing
+			default:
 				return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
 			}
 		}
@@ -296,6 +310,7 @@ type RepoParams struct {
 	Url               string `json:"sourceLink"`
 	CommitUrlTemplate string `json:"commitUrlTemplate"`
 	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
+	DefaultBranch     string `json:"defaultBranch"`
 }
 
 type RepoRep struct {
@@ -304,6 +319,7 @@ type RepoRep struct {
 	Url               string `json:"sourceLink"`
 	CommitUrlTemplate string `json:"commitUrlTemplate"`
 	HunkUrlTemplate   string `json:"hunkUrlTemplate"`
+	DefaultBranch     string `json:"defaultBranch"`
 	Enabled           bool   `json:"enabled,omitempty"`
 }
 type BranchRep struct {
@@ -311,7 +327,6 @@ type BranchRep struct {
 	Head             string              `json:"head"`
 	UpdateSequenceId *int64              `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
-	IsDefault        bool                `json:"isDefault"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
 }
 

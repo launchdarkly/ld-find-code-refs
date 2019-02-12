@@ -12,68 +12,67 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
-// Can't wait for contracts
 type Option interface {
 	name() string
 }
 
-type StringOption string
-type IntOption string
-type Int64Option string
-type BoolOption string
+type stringOption string
+type intOption string
+type int64Option string
+type boolOption string
 
-func (o StringOption) name() string {
+func (o stringOption) name() string {
 	return string(o)
 }
-func (o IntOption) name() string {
+func (o intOption) name() string {
 	return string(o)
 }
-func (o Int64Option) name() string {
+func (o int64Option) name() string {
 	return string(o)
 }
-func (o BoolOption) name() string {
+func (o boolOption) name() string {
 	return string(o)
 }
 
-func (o StringOption) Value() string {
+func (o stringOption) Value() string {
 	return flag.Lookup(string(o)).Value.String()
 }
 
-func (o IntOption) Value() int {
+func (o intOption) Value() int {
 	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(int)
 }
 
-func (o IntOption) maximumError(max int) error {
+func (o intOption) maximumError(max int) error {
 	if o.Value() > max {
 		return fmt.Errorf("%s option must be <= %d", string(o), max)
 	}
 	return nil
 }
 
-func (o Int64Option) Value() int64 {
+func (o int64Option) Value() int64 {
 	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(int64)
 }
 
-func (o BoolOption) Value() bool {
+func (o boolOption) Value() bool {
 	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(bool)
 }
 
 const (
-	AccessToken       = StringOption("accessToken")
-	BaseUri           = StringOption("baseUri")
-	ContextLines      = IntOption("contextLines")
-	Debug             = BoolOption("debug")
-	DefaultBranch     = StringOption("defaultBranch")
-	Dir               = StringOption("dir")
-	Exclude           = StringOption("exclude")
-	ProjKey           = StringOption("projKey")
-	UpdateSequenceId  = Int64Option("updateSequenceId")
-	RepoName          = StringOption("repoName")
-	RepoType          = StringOption("repoType")
-	RepoUrl           = StringOption("repoUrl")
-	CommitUrlTemplate = StringOption("commitUrlTemplate")
-	HunkUrlTemplate   = StringOption("hunkUrlTemplate")
-	Version           = BoolOption("version")
+	AccessToken       = stringOption("accessToken")
+	BaseUri           = stringOption("baseUri")
+	ContextLines      = intOption("contextLines")
+	Debug             = boolOption("debug")
+	DefaultBranch     = stringOption("defaultBranch")
+	Dir               = stringOption("dir")
+	Exclude           = stringOption("exclude")
+	ProjKey           = stringOption("projKey")
+	UpdateSequenceId  = int64Option("updateSequenceId")
+	RepoName          = stringOption("repoName")
+	RepoType          = stringOption("repoType")
+	RepoUrl           = stringOption("repoUrl")
+	CommitUrlTemplate = stringOption("commitUrlTemplate")
+	HunkUrlTemplate   = stringOption("hunkUrlTemplate")
+	Version           = boolOption("version")
 )
 
 type option struct {
@@ -86,15 +85,16 @@ type optionMap map[Option]option
 
 func (m optionMap) find(name string) *option {
 	for n, o := range m {
+		opt := o
 		if n.name() == name {
-			return &o
+			return &opt
 		}
 	}
 	return nil
 }
 
 const (
-	noUpdateSequenceId  = int64(-1)
+	noUpdateSequenceID  = int64(-1)
 	defaultContextLines = 2
 )
 
@@ -102,12 +102,12 @@ var options = optionMap{
 	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
 	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
 	ContextLines:      option{defaultContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
-	DefaultBranch:     option{"master", "The git default branch. The LaunchDarkly UI will default to this branch.", false},
+	DefaultBranch:     option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", false},
 	Debug:             option{false, "Enables verbose debug logging", false},
-	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "vendor/*`, false},
+	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css`, false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
-	UpdateSequenceId:  option{noUpdateSequenceId, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
+	UpdateSequenceId:  option{noUpdateSequenceID, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
 	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Both a repo name and the repo name with an organization identifier are valid. Examples: "linux", "torvalds/linux."`, true},
 	RepoType:          option{"custom", "The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|custom.", false},
 	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
@@ -189,6 +189,7 @@ func Populate() {
 	}
 }
 
+// GetLDOptionsFromEnv returns a map of all expected environment variables for ld-find-code-refs wrappers
 func GetLDOptionsFromEnv() (map[string]string, error) {
 	ldOptions := map[string]string{
 		"accessToken":  os.Getenv("LD_ACCESS_TOKEN"),
