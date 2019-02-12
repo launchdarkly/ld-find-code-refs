@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## Master
+### Fixed
+- The `dir` command line option was marked as optional, but is actually required. `ld-find-code-refs` will now recognize this option as required.
+
 ## [0.6.0] - 2019-02-11
 ### Added
 - Added a new command line argument, `version`. If provided, the current `ld-find-code-refs` version number will be logged, and the scanner will exit with a return code of 0.
