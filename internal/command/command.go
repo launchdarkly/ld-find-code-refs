@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
@@ -92,7 +93,7 @@ func (c Client) revParse(branch string) (string, error) {
 func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("ag --nogroup --case-sensitive"))
+	sb.WriteString(fmt.Sprintf("ag --word-regexp --nogroup --case-sensitive"))
 	if ctxLines > 0 {
 		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
 	}
@@ -100,14 +101,22 @@ func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error)
 	flagRegexes := []string{}
 	for _, v := range flags {
 		escapedFlag := regexp.QuoteMeta(v)
-		flagRegexes = append(flagRegexes, "\\b"+escapedFlag+"\\b")
+		flagRegexes = append(flagRegexes, escapedFlag)
 	}
-	sb.WriteString(" '" + strings.Join(flagRegexes, "|") + "' " + c.Workspace)
 
-	cmd := sb.String()
-	/* #nosec */
-	sh := exec.Command("sh", "-c", cmd)
-	out, err := sh.Output()
+	var command *exec.Cmd
+	if runtime.GOOS == "windows" {
+		args := strings.Split(sb.String(), " ")
+		/* #nosec */
+		command = exec.Command(args[0], args[1:]...)
+		// Padding the left-most and right-most search terms with the "?!" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
+		command.Args = append(command.Args, "'?!|"+strings.Join(flagRegexes, "|")+"|?!'", c.Workspace)
+	} else {
+		sb.WriteString(" '" + strings.Join(flagRegexes, "|") + "' " + c.Workspace)
+		/* #nosec */
+		command = exec.Command("sh", "-c", sb.String())
+	}
+	out, err := command.Output()
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
@@ -118,7 +127,11 @@ func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error)
 	if err != nil {
 		return nil, err
 	}
-	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(string(out), -1)
+	output := string(out)
+	if runtime.GOOS == "windows" {
+		output = fromWindows1252(output)
+	}
+	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
 	return ret, err
 }
 

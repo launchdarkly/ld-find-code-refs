@@ -1,12 +1,13 @@
 builds:
   -
-    binary: ld-find-code-refs/
+    binary: ld-find-code-refs
     main: ./cmd/ld-find-code-refs/
     env:
       - CGO_ENABLED=0
     goos:
       - darwin
       - linux
+      - windows
     goarch:
       - 386
       - amd64
