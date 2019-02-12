@@ -12,6 +12,10 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 - The `dir` command line option was marked as optional, but is actually required. `ld-find-code-refs` will now recognize this option as required.
 
+### Changed
+
+- The command-line [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs) now specifies `ld-find-code-refs` as the entrypoint. The docker image may now be run as `docker run launchdarkly/ld-find-code-refs -accessToken="api-xxx"...`
+
 ## [0.6.0] - 2019-02-11
 
 ### Added
@@ -27,9 +31,6 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Fixed
 
 - `ld-find-code-refs` will no longer error out if an unknown error occurs when scanning for code reference hunks within a file. Instead, an error will be logged.
-
-### Changed
-- The command-line [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs) now specifies `ld-find-code-refs` as the entrypoint. The docker image may now be run as `docker run launchdarkly/ld-find-code-refs -accessToken="api-xxx"...`
 
 ## [0.5.0] - 2019-02-01
 
