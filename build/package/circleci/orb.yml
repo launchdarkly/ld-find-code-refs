@@ -114,6 +114,7 @@ jobs:
         default: false
     docker:
       - image: launchdarkly/ld-find-code-refs:0.6.0
+        entrypoint: sh
     steps:
       - checkout:
           path: /repo
