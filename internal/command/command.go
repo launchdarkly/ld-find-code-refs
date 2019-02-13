@@ -111,7 +111,7 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string
 		/* #nosec */
 		command = exec.Command("sh", "-c", sb.String())
 	}
-	out, err := command.CombinedOutput()
+	out, err := command.Output()
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
