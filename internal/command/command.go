@@ -91,32 +91,23 @@ func (c Client) revParse(branch string) (string, error) {
 }
 
 func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string) ([][]string, error) {
-	var sb strings.Builder
-
-	sb.WriteString(fmt.Sprintf("ag --nogroup --case-sensitive"))
+	args := []string{"--nogroup", "--case-sensitive"}
 	if ctxLines > 0 {
-		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
+		args = append(args, fmt.Sprintf("-C%d", ctxLines))
 	}
 
 	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
-	var command *exec.Cmd
-	if runtime.GOOS == windows {
-		args := strings.Split(sb.String(), " ")
-		/* #nosec */
-		command = exec.Command(args[0], args[1:]...)
-		command.Args = append(command.Args, searchPattern, c.Workspace)
-	} else {
-		sb.WriteString(` "` + searchPattern + `" ` + c.Workspace)
-		/* #nosec */
-		command = exec.Command("sh", "-c", sb.String())
-	}
-	out, err := command.CombinedOutput()
+	/* #nosec */
+	cmd := exec.Command("ag", args...)
+	cmd.Args = append(cmd.Args, searchPattern, c.Workspace)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
 		}
 		return nil, errors.New(string(out))
 	}
+
 	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
 	if err != nil {
 		return nil, err
@@ -141,18 +132,7 @@ func generateFlagRegex(flags []string) string {
 }
 
 func generateDelimiterRegex(delimiters []string) (lookBehind, lookAhead string) {
-	var escapedDelims = make([]string, 0, len(delimiters))
-	for i, v := range delimiters {
-		escapedDelims = append(escapedDelims, regexp.QuoteMeta(v))
-		// escaping for command line ag
-		switch escapedDelims[i] {
-		case `"`:
-			escapedDelims[i] = "\\\""
-		case "`":
-			escapedDelims[i] = "\\`"
-		}
-	}
-	delims := strings.Join(escapedDelims, "")
+	delims := strings.Join(delimiters, "")
 	lookBehind = fmt.Sprintf("(?<=[%s])", delims)
 	lookAhead = fmt.Sprintf("(?=[%s])", delims)
 	return lookBehind, lookAhead

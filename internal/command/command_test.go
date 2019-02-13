@@ -48,14 +48,14 @@ func TestGenerateDelimiterRegex(t *testing.T) {
 		{
 			name:               "succeeds for default delimiters",
 			delimiters:         defaultDelims,
-			expectedLookBehind: "(?<=[\\\"'\\`])",
-			expectedLookAhead:  "(?=[\\\"'\\`])",
+			expectedLookBehind: "(?<=[\"'`])",
+			expectedLookAhead:  "(?=[\"'`])",
 		},
 		{
 			name:               "succeeds for extra delimiter",
 			delimiters:         []string{`"`, "'", "`", "a"},
-			expectedLookBehind: "(?<=[\\\"'\\`a])",
-			expectedLookAhead:  "(?=[\\\"'\\`a])",
+			expectedLookBehind: "(?<=[\"'`a])",
+			expectedLookAhead:  "(?=[\"'`a])",
 		},
 	}
 	for _, tt := range specs {
@@ -76,12 +76,12 @@ func TestGenerateSearchPattern(t *testing.T) {
 		{
 			name:       "correctly pads flag pattern",
 			padPattern: true,
-			expected:   "(?<=[\\\"'\\`])(a^|flag|a^)(?=[\\\"'\\`])",
+			expected:   "(?<=[\"'`])(a^|flag|a^)(?=[\"'`])",
 		},
 		{
 			name:       "correctly doesn't pad pattern",
 			padPattern: false,
-			expected:   "(?<=[\\\"'\\`])(flag)(?=[\\\"'\\`])",
+			expected:   "(?<=[\"'`])(flag)(?=[\"'`])",
 		},
 	}
 	for _, tt := range specs {
