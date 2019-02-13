@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ type stringOption string
 type intOption string
 type int64Option string
 type boolOption string
+type stringArrayOption string
 
 func (o stringOption) name() string {
 	return string(o)
@@ -31,6 +33,9 @@ func (o int64Option) name() string {
 	return string(o)
 }
 func (o boolOption) name() string {
+	return string(o)
+}
+func (o stringArrayOption) name() string {
 	return string(o)
 }
 
@@ -57,6 +62,26 @@ func (o boolOption) Value() bool {
 	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(bool)
 }
 
+func (o stringArrayOption) Value() []string {
+	return flag.Lookup(string(o)).Value.(flag.Getter).Get().([]string)
+}
+
+type StringArray []string
+
+func (o *StringArray) Set(value string) error {
+	fmt.Println("hello")
+	*o = append(*o, value)
+	return nil
+}
+
+func (o *StringArray) String() string {
+	return "[" + strings.Join(*o, " ") + "]"
+}
+
+func (o *StringArray) Get() interface{} {
+	return reflect.ValueOf([]string(*o)).Interface()
+}
+
 const (
 	AccessToken       = stringOption("accessToken")
 	BaseUri           = stringOption("baseUri")
@@ -73,6 +98,8 @@ const (
 	CommitUrlTemplate = stringOption("commitUrlTemplate")
 	HunkUrlTemplate   = stringOption("hunkUrlTemplate")
 	Version           = boolOption("version")
+	Delimiter         = stringArrayOption("delimiter")
+	DelimiterShort    = stringArrayOption("d")
 )
 
 type option struct {
@@ -98,6 +125,10 @@ const (
 	defaultContextLines = 2
 )
 
+var (
+	delimiters = StringArray{`"`, "'", "`"}
+)
+
 var options = optionMap{
 	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
 	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
@@ -105,15 +136,17 @@ var options = optionMap{
 	DefaultBranch:     option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", true},
 	Debug:             option{false, "Enables verbose debug logging", false},
-	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css`, false},
+	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css"`, false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
 	UpdateSequenceId:  option{noUpdateSequenceID, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
-	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Both a repo name and the repo name with an organization identifier are valid. Examples: "linux", "torvalds/linux."`, true},
+	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."`, true},
 	RepoType:          option{"custom", "The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|custom.", false},
 	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
 	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.", false},
 	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but repoUrl is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.", false},
 	Version:           option{false, "If provided, the scanner will print the version number and exit early", false},
+	Delimiter:         option{&delimiters, "Specifies delimiters used to match flag keys. Must be a single non-control ASCII character. Will only match flag keys with surrounded by any of the specified delimeters. This option may be specified multiple times for multiple delimiters", false},
+	DelimiterShort:    option{&delimiters, "Same as -delimiter", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -167,6 +200,18 @@ func Init() (err error, errCb func()) {
 	if err != nil {
 		return fmt.Errorf("error parsing repo url: %+v", err), flag.PrintDefaults
 	}
+
+	delims := Delimiter.Value()
+	// match all non-control ASCII characters
+	validDelims := regexp.MustCompile("[\x20-\x7E]")
+	for _, d := range delims {
+		if len(d) > 1 {
+			return fmt.Errorf("delimiter option must be exactly 1 character"), flag.PrintDefaults
+		}
+		if !validDelims.MatchString(d) {
+			return fmt.Errorf("delimiter option must be a valid non-control ASCII character"), flag.PrintDefaults
+		}
+	}
 	return nil, flag.PrintDefaults
 }
 
@@ -185,6 +230,8 @@ func Populate() {
 			flag.String(name, v, o.usage)
 		case bool:
 			flag.Bool(name, v, o.usage)
+		case *StringArray:
+			flag.Var(v, name, o.usage)
 		}
 	}
 }

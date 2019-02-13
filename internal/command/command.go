@@ -22,6 +22,8 @@ Group 4: Line contents
 */
 var grepRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
+var execCommand = exec.Command
+
 type Client struct {
 	Workspace string
 	GitBranch string
@@ -65,7 +67,7 @@ func NewClient(path string) (Client, error) {
 
 func (c Client) branchName() (string, error) {
 	/* #nosec */
-	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
+	cmd := execCommand("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -80,7 +82,7 @@ func (c Client) branchName() (string, error) {
 
 func (c Client) revParse(branch string) (string, error) {
 	/* #nosec */
-	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", branch)
+	cmd := execCommand("git", "-C", c.Workspace, "rev-parse", branch)
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -90,7 +92,7 @@ func (c Client) revParse(branch string) (string, error) {
 	return ret, nil
 }
 
-func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
+func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string) ([][]string, error) {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("ag --word-regexp --nogroup --case-sensitive"))
@@ -98,25 +100,20 @@ func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error)
 		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
 	}
 
-	flagRegexes := []string{}
-	for _, v := range flags {
-		escapedFlag := regexp.QuoteMeta(v)
-		flagRegexes = append(flagRegexes, escapedFlag)
-	}
+	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
 
 	var command *exec.Cmd
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		args := strings.Split(sb.String(), " ")
 		/* #nosec */
-		command = exec.Command(args[0], args[1:]...)
-		// Padding the left-most and right-most search terms with the "?!" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
-		command.Args = append(command.Args, "'?!|"+strings.Join(flagRegexes, "|")+"|?!'", c.Workspace)
+		command = execCommand(args[0], args[1:]...)
+		command.Args = append(command.Args, searchPattern, c.Workspace)
 	} else {
-		sb.WriteString(" '" + strings.Join(flagRegexes, "|") + "' " + c.Workspace)
+		sb.WriteString(` "` + searchPattern + `" ` + c.Workspace)
 		/* #nosec */
-		command = exec.Command("sh", "-c", sb.String())
+		command = execCommand("sh", "-c", sb.String())
 	}
-	out, err := command.Output()
+	out, err := command.CombinedOutput()
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
@@ -127,12 +124,53 @@ func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error)
 	if err != nil {
 		return nil, err
 	}
+
 	output := string(out)
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == windows {
 		output = fromWindows1252(output)
 	}
+
 	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
 	return ret, err
+}
+
+func generateFlagRegex(flags []string) string {
+	flagRegexes := []string{}
+	for _, v := range flags {
+		escapedFlag := regexp.QuoteMeta(v)
+		flagRegexes = append(flagRegexes, escapedFlag)
+	}
+	return strings.Join(flagRegexes, "|")
+}
+
+func generateDelimiterRegex(delimiters []string) (lookBehind, lookAhead string) {
+	var escapedDelims = make([]string, 0, len(delimiters))
+	for i, v := range delimiters {
+		escapedDelims = append(escapedDelims, regexp.QuoteMeta(v))
+		// escaping for command line ag
+		switch escapedDelims[i] {
+		case `"`:
+			escapedDelims[i] = "\\\""
+		case "`":
+			escapedDelims[i] = "\\`"
+		}
+	}
+	delims := strings.Join(escapedDelims, "")
+	lookBehind = fmt.Sprintf("(?<=^[%s])", delims)
+	lookAhead = fmt.Sprintf("(?=[%s])", delims)
+	return lookBehind, lookAhead
+}
+
+func generateSearchPattern(flags, delimiters []string, padPattern bool) string {
+	flagRegex := generateFlagRegex(flags)
+	lookBehind, lookAhead := generateDelimiterRegex(delimiters)
+	if padPattern {
+		// Padding the left-most and right-most search terms with the "?!" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
+		// example: (?<=^[\"'\`])?!|flag1|flag2|flag3|?!(?=[\"'\`])"
+		return lookBehind + "'?!|" + flagRegex + "|?!'" + lookAhead
+	}
+	// example: (?<=^[\"'\`])flag1|flag2|flag3(?=[\"'\`])"
+	return lookBehind + flagRegex + lookAhead
 }
 
 func normalizeAndValidatePath(path string) (string, error) {
