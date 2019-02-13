@@ -99,7 +99,6 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string
 	}
 
 	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
-	fmt.Println(searchPattern)
 	var command *exec.Cmd
 	if runtime.GOOS == windows {
 		args := strings.Split(sb.String(), " ")
