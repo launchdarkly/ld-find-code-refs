@@ -51,7 +51,7 @@ wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/l
 dpkg -i ld-find-code-refs.amd64.deb
 ```
 
-### Windows
+#### Windows
 
 A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). The following Chocolatey command may be used to install the required dependency, `ag`. If you do not have Chocolatey installed, see `ag`'s documentation for [installation instructions](https://github.com/ggreer/the_silver_searcher#windows).
 
@@ -59,7 +59,7 @@ A Windows executable of `ld-find-code-refs` is available on the [releases page](
 choco install ag
 ```
 
-### Docker
+#### Docker
 
 `ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs).
 
