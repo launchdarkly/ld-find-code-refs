@@ -60,6 +60,7 @@ choco install ag
 ```
 
 ### Docker
+
 `ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs).
 
 ```shell
@@ -123,6 +124,21 @@ ld-find-code-refs \
   -repoUrl="$YOUR_REPOSITORY_URL" # example: https://github.com/launchdarkly/ld-find-code-refs
 ```
 
+The above configuration with left and right carets specified as flag key delimiters:
+
+```bash
+ld-find-code-refs \
+  -accessToken="$YOUR_LAUNCHDARKLY_ACCESS_TOKEN" \
+  -projKey="$YOUR_LAUNCHDARKLY_PROJECT_KEY" \
+  -repoName="$YOUR_REPOSITORY_NAME" \
+  -dir="/path/to/git/repo" \
+  -contextLines=3
+  -repoType="github"
+  -repoUrl="$YOUR_REPOSITORY_URL" # example: https://github.com/launchdarkly/ld-find-code-refs
+  -d="<"
+  -d=">"
+```
+
 ### Required arguments
 
 A number of command-line arguments are available to the code ref finder, some optional, and some required. Command line arguments may be passed to the program in any order.
@@ -144,6 +160,7 @@ Although these arguments are optional, a (\*) indicates a recommended parameter 
 | `contextLines` (\*) | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.                                                                                                                                                             | `2`                            |
 | `debug`             | Enables verbose debug logging.                                                                                                                                                                                                                                                                                                                                                                                                                                      | `false`                        |
 | `defaultBranch`     | The git default branch. The LaunchDarkly UI will default to display code references for this branch.                                                                                                                                                                                                                                                                                                                                                                | `master`                       |
+| `delimiter` or `d`  | Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in a single `delimiter`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.    | `` [" ' `] ``                  |
 | `exclude` (\*)      | A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: `vendor/`, `\.css`, `vendor/\|\.css`                                                                                                                                                                                                                                                                                    |                                |
 | `updateSequenceId`  | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the program. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current unix timestamp.                                                               |                                |
 | `repoType` (\*)     | The repo service provider. Used to generate repository links in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom                                                                                                                                                                                                                                                                                                                                   | `custom`                       |

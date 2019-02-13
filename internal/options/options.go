@@ -21,7 +21,7 @@ type stringOption string
 type intOption string
 type int64Option string
 type boolOption string
-type stringArrayOption string
+type charSetOption string
 
 func (o stringOption) name() string {
 	return string(o)
@@ -35,7 +35,7 @@ func (o int64Option) name() string {
 func (o boolOption) name() string {
 	return string(o)
 }
-func (o stringArrayOption) name() string {
+func (o charSetOption) name() string {
 	return string(o)
 }
 
@@ -62,24 +62,38 @@ func (o boolOption) Value() bool {
 	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(bool)
 }
 
-func (o stringArrayOption) Value() []string {
-	return flag.Lookup(string(o)).Value.(flag.Getter).Get().([]string)
+func (o charSetOption) Value() CharSet {
+	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(CharSet)
 }
 
-type StringArray []string
+// CharSet is a set of single-byte characters
+type CharSet []string
 
-func (o *StringArray) Set(value string) error {
-	fmt.Println("hello")
-	*o = append(*o, value)
+func (o *CharSet) Set(value string) error {
+	chars := strings.Split(value, "")
+	for _, v := range chars {
+		if !o.contains(v) {
+			*o = append(*o, chars...)
+		}
+	}
 	return nil
 }
 
-func (o *StringArray) String() string {
+func (o *CharSet) String() string {
 	return "[" + strings.Join(*o, " ") + "]"
 }
 
-func (o *StringArray) Get() interface{} {
-	return reflect.ValueOf([]string(*o)).Interface()
+func (o *CharSet) Get() interface{} {
+	return reflect.ValueOf(*o).Interface()
+}
+
+func (o *CharSet) contains(c string) bool {
+	for _, v := range *o {
+		if v == c {
+			return true
+		}
+	}
+	return false
 }
 
 const (
@@ -98,8 +112,8 @@ const (
 	CommitUrlTemplate = stringOption("commitUrlTemplate")
 	HunkUrlTemplate   = stringOption("hunkUrlTemplate")
 	Version           = boolOption("version")
-	Delimiter         = stringArrayOption("delimiter")
-	DelimiterShort    = stringArrayOption("d")
+	Delimiter         = charSetOption("delimiter")
+	delimiterShort    = charSetOption("d")
 )
 
 type option struct {
@@ -126,7 +140,7 @@ const (
 )
 
 var (
-	delimiters = StringArray{`"`, "'", "`"}
+	delimiters = CharSet{`"`, "'", "`"}
 )
 
 var options = optionMap{
@@ -145,8 +159,8 @@ var options = optionMap{
 	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.", false},
 	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but repoUrl is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.", false},
 	Version:           option{false, "If provided, the scanner will print the version number and exit early", false},
-	Delimiter:         option{&delimiters, "Specifies delimiters used to match flag keys. Must be a single non-control ASCII character. Will only match flag keys with surrounded by any of the specified delimeters. This option may be specified multiple times for multiple delimiters", false},
-	DelimiterShort:    option{&delimiters, "Same as -delimiter", false},
+	Delimiter:         option{&delimiters, "Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in a single `delimiter`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.", false},
+	delimiterShort:    option{&delimiters, "Same as -delimiter", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -204,11 +218,8 @@ func Init() (err error, errCb func()) {
 	delims := Delimiter.Value()
 	// match all non-control ASCII characters
 	validDelims := regexp.MustCompile("[\x20-\x7E]")
-	for _, d := range delims {
-		if len(d) > 1 {
-			return fmt.Errorf("delimiter option must be exactly 1 character"), flag.PrintDefaults
-		}
-		if !validDelims.MatchString(d) {
+	for _, d := range []string(delims.Get().(CharSet)) {
+		if len(d) > 1 && !validDelims.MatchString(d) {
 			return fmt.Errorf("delimiter option must be a valid non-control ASCII character"), flag.PrintDefaults
 		}
 	}
@@ -230,7 +241,7 @@ func Populate() {
 			flag.String(name, v, o.usage)
 		case bool:
 			flag.Bool(name, v, o.usage)
-		case *StringArray:
+		case *CharSet:
 			flag.Var(v, name, o.usage)
 		}
 	}

@@ -184,7 +184,9 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 }
 
 func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, ldIgnore *ignore.GitIgnore, exclude *regexp.Regexp) (grepResultLines, error) {
-	grepResult, err := cmd.SearchForFlags(flags, ctxLines, o.Delimiter.Value())
+	delims := o.Delimiter.Value()
+	log.Info.Printf("finding code references with delimiters: %s", delims.String())
+	grepResult, err := cmd.SearchForFlags(flags, ctxLines, []string(delims))
 	if err != nil {
 		return grepResultLines{}, err
 	}
