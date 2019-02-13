@@ -22,8 +22,6 @@ Group 4: Line contents
 */
 var grepRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
-var execCommand = exec.Command
-
 type Client struct {
 	Workspace string
 	GitBranch string
@@ -67,7 +65,7 @@ func NewClient(path string) (Client, error) {
 
 func (c Client) branchName() (string, error) {
 	/* #nosec */
-	cmd := execCommand("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
+	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -82,7 +80,7 @@ func (c Client) branchName() (string, error) {
 
 func (c Client) revParse(branch string) (string, error) {
 	/* #nosec */
-	cmd := execCommand("git", "-C", c.Workspace, "rev-parse", branch)
+	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", branch)
 	out, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -106,12 +104,12 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string
 	if runtime.GOOS == windows {
 		args := strings.Split(sb.String(), " ")
 		/* #nosec */
-		command = execCommand(args[0], args[1:]...)
+		command = exec.Command(args[0], args[1:]...)
 		command.Args = append(command.Args, searchPattern, c.Workspace)
 	} else {
 		sb.WriteString(` "` + searchPattern + `" ` + c.Workspace)
 		/* #nosec */
-		command = execCommand("sh", "-c", sb.String())
+		command = exec.Command("sh", "-c", sb.String())
 	}
 	out, err := command.CombinedOutput()
 	if err != nil {
