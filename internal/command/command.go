@@ -66,9 +66,9 @@ func NewClient(path string) (Client, error) {
 func (c Client) branchName() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", errors.New(string(out))
 	}
 	ret := strings.TrimSpace(string(out))
 	log.Debug.Printf("identified branch name: %s", ret)
@@ -81,9 +81,9 @@ func (c Client) branchName() (string, error) {
 func (c Client) revParse(branch string) (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", branch)
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", errors.New(string(out))
 	}
 	ret := strings.TrimSpace(string(out))
 	log.Debug.Printf("identified sha: %s", ret)
@@ -110,12 +110,12 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string
 		/* #nosec */
 		command = exec.Command("sh", "-c", sb.String())
 	}
-	out, err := command.Output()
+	out, err := command.CombinedOutput()
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
 		}
-		return nil, err
+		return nil, errors.New(string(out))
 	}
 	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
 	if err != nil {
@@ -162,11 +162,11 @@ func generateSearchPattern(flags, delimiters []string, padPattern bool) string {
 	flagRegex := generateFlagRegex(flags)
 	lookBehind, lookAhead := generateDelimiterRegex(delimiters)
 	if padPattern {
-		// Padding the left-most and right-most search terms with the "?!" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
-		// example: (?<=[\"'\`])(?!|flag1|flag2|flag3|?1(?=[\"'\`])"
-		return lookBehind + "('?!|" + flagRegex + "|?!')" + lookAhead
+		// Padding the left-most and right-most search terms with the "a^" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
+		// example: (?<=[\"'\`])(a^|flag1|flag2|flag3|a^)(?=[\"'\`])"
+		return lookBehind + "(a^|" + flagRegex + "|a^)" + lookAhead
 	}
-	// example: (?<=[\"'\`])(flag1|flag2|flag3(?=[\"'\`])"
+	// example: (?<=[\"'\`])(flag1|flag2|flag3)(?=[\"'\`])"
 	return lookBehind + "(" + flagRegex + ")" + lookAhead
 }
 

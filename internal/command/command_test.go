@@ -66,3 +66,27 @@ func TestGenerateDelimiterRegex(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateSearchPattern(t *testing.T) {
+	specs := []struct {
+		name       string
+		padPattern bool
+		expected   string
+	}{
+		{
+			name:       "correctly pads flag pattern",
+			padPattern: true,
+			expected:   "(?<=[\\\"'\\`])(a^|flag|a^)(?=[\\\"'\\`])",
+		},
+		{
+			name:       "correctly doesn't pad pattern",
+			padPattern: false,
+			expected:   "(?<=[\\\"'\\`])(flag)(?=[\\\"'\\`])",
+		},
+	}
+	for _, tt := range specs {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, generateSearchPattern([]string{"flag"}, []string{`"`, "'", "`"}, tt.padPattern))
+		})
+	}
+}
