@@ -96,7 +96,7 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters options.
 	if ctxLines > 0 {
 		args = append(args, fmt.Sprintf("-C%d", ctxLines))
 	}
-	fmt.Println(args)
+
 	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
 	/* #nosec */
 	cmd := exec.Command("ag", args...)
