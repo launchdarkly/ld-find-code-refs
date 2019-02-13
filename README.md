@@ -158,7 +158,7 @@ Although these arguments are optional, a (\*) indicates a recommended parameter 
 
 `ld-find-code-refs` provides multiple methods for ignoring files and directories:
 
-1. All dotfiles and patterns in `.gitignore` will be excluded by default.
+1. All dotfiles and patterns in `.gitignore`, `.hgignore`, and `.ignore` will be excluded by default.
 2. Provide a `.ldignore` file in the root directory of your Git repository. All patterns specified in `.ldignore` file will be excluded by the scanner. Patterns must follow the `.gitignore` format as specified here: https://git-scm.com/docs/gitignore#_pattern_format
 3. The `exclude` command line option (see above section) may be used to specify a single regular expression for the exclude pattern.
 

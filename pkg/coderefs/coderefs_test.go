@@ -6,13 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	ignore "github.com/sabhiram/go-gitignore"
 	"github.com/stretchr/testify/require"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 )
-
-var ignoreAll, _ = ignore.CompileIgnoreLines("*")
 
 // Since our hunking algorithm uses some maps, resulting slice orders are not deterministic
 // We use these sorters to make sure the results are always in a deterministic order.
@@ -32,7 +29,6 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 		ctxLines   int
 		want       []grepResultLine
 		exclude    string
-		ldIgnore   *ignore.GitIgnore
 	}{
 		{
 			name:  "succeeds",
@@ -54,16 +50,6 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			ctxLines: 0,
 			want:     []grepResultLine{},
 			exclude:  ".*",
-		},
-		{
-			name:  "succeeds with ignore",
-			flags: []string{"someFlag", "anotherFlag"},
-			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
-			},
-			ctxLines: 0,
-			want:     []grepResultLine{},
-			ldIgnore: ignoreAll,
 		},
 		{
 			name:  "succeeds with no LineText lines",
@@ -128,7 +114,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ex, err := regexp.Compile(tt.exclude)
 			require.NoError(t, err)
-			got := generateReferencesFromGrep(tt.flags, tt.grepResult, tt.ctxLines, tt.ldIgnore, ex)
+			got := generateReferencesFromGrep(tt.flags, tt.grepResult, tt.ctxLines, ex)
 			require.Equal(t, tt.want, got)
 		})
 	}

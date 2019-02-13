@@ -93,7 +93,7 @@ func (c Client) revParse(branch string) (string, error) {
 func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("ag --word-regexp --nogroup --case-sensitive"))
+	sb.WriteString(fmt.Sprintf("ag --word-regexp --nogroup --case-sensitive --path-to-ignore=%s", c.Workspace+".ldignore"))
 	if ctxLines > 0 {
 		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
 	}

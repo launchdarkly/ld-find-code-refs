@@ -74,14 +74,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:7d9e2efc92185089bb2e3fe50459624b7f9914165c01cc1e8497fd4c5f77e325"
-  name = "github.com/sabhiram/go-gitignore"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "d3107576ba9425fc1c85f4b3569c4631b805a02e"
-  version = "1.0.2"
-
-[[projects]]
   digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
   name = "github.com/stretchr/testify"
   packages = [
@@ -138,7 +130,6 @@
     "github.com/launchdarkly/api-client-go",
     "github.com/launchdarkly/json-patch",
     "github.com/olekukonko/tablewriter",
-    "github.com/sabhiram/go-gitignore",
     "github.com/stretchr/testify/require",
   ]
   solver-name = "gps-cdcl"
