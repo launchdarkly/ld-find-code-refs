@@ -252,6 +252,7 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 
 	numHunks := 0
 
+	shouldSuppressUnexpectedError := false
 	for _, fileGrepResults := range aggregatedGrepResults {
 		if numHunks > maxHunkCount {
 			log.Warning.Printf("found %d code references across all files, which exceeeded the limit of %d. halting code reference search", numHunks, maxHunkCount)
@@ -260,9 +261,11 @@ func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []
 
 		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
 
-		if len(hunks) == 0 {
+		if len(hunks) == 0 && !shouldSuppressUnexpectedError {
 			log.Error.Printf("expected code references but found none in '%s'", fileGrepResults.path)
 			log.Debug.Printf("%+v", fileGrepResults)
+			// if this error occurred, it's likely to occur for many other files, and create a lot of noise. So, suppress the message for all other occurrences
+			shouldSuppressUnexpectedError = true
 			continue
 		}
 
