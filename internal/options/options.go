@@ -67,27 +67,27 @@ func (o charSetOption) Value() CharSet {
 }
 
 // CharSet is a set of single-byte characters
-type CharSet []string
+type CharSet []rune
 
 func (o *CharSet) Set(value string) error {
-	chars := strings.Split(value, "")
+	chars := value
 	for _, v := range chars {
 		if !o.contains(v) {
-			*o = append(*o, chars...)
+			*o = append(*o, v)
 		}
 	}
 	return nil
 }
 
 func (o *CharSet) String() string {
-	return "[" + strings.Join(*o, " ") + "]"
+	return "[" + strings.Join(strings.Split(string(*o), ""), " ") + "]"
 }
 
 func (o *CharSet) Get() interface{} {
 	return reflect.ValueOf(*o).Interface()
 }
 
-func (o *CharSet) contains(c string) bool {
+func (o *CharSet) contains(c rune) bool {
 	for _, v := range *o {
 		if v == c {
 			return true
@@ -140,7 +140,7 @@ const (
 )
 
 var (
-	delimiters = CharSet{`"`, "'", "`"}
+	delimiters = CharSet{'"', '\'', '`'}
 )
 
 var options = optionMap{
@@ -215,11 +215,10 @@ func Init() (err error, errCb func()) {
 		return fmt.Errorf("error parsing repo url: %+v", err), flag.PrintDefaults
 	}
 
-	delims := Delimiters.Value()
 	// match all non-control ASCII characters
 	validDelims := regexp.MustCompile("[\x20-\x7E]")
-	for _, d := range []string(delims.Get().(CharSet)) {
-		if len(d) > 1 && !validDelims.MatchString(d) {
+	for _, d := range delimiters {
+		if !validDelims.MatchString(string(d)) {
 			return fmt.Errorf("delimiter option must be a valid non-control ASCII character"), flag.PrintDefaults
 		}
 	}
