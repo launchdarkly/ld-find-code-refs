@@ -21,7 +21,7 @@ type stringOption string
 type intOption string
 type int64Option string
 type boolOption string
-type charSetOption string
+type runeSet string
 
 func (o stringOption) name() string {
 	return string(o)
@@ -35,7 +35,7 @@ func (o int64Option) name() string {
 func (o boolOption) name() string {
 	return string(o)
 }
-func (o charSetOption) name() string {
+func (o runeSet) name() string {
 	return string(o)
 }
 
@@ -62,14 +62,13 @@ func (o boolOption) Value() bool {
 	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(bool)
 }
 
-func (o charSetOption) Value() CharSet {
-	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(CharSet)
+func (o runeSet) Value() RuneSet {
+	return flag.Lookup(string(o)).Value.(flag.Getter).Get().(RuneSet)
 }
 
-// CharSet is a set of single-byte characters
-type CharSet []rune
+type RuneSet []rune
 
-func (o *CharSet) Set(value string) error {
+func (o *RuneSet) Set(value string) error {
 	chars := value
 	for _, v := range chars {
 		if !o.contains(v) {
@@ -79,15 +78,15 @@ func (o *CharSet) Set(value string) error {
 	return nil
 }
 
-func (o *CharSet) String() string {
-	return "[" + strings.Join(strings.Split(string(*o), ""), " ") + "]"
+func (o *RuneSet) String() string {
+	return "[" + string(*o) + "]"
 }
 
-func (o *CharSet) Get() interface{} {
+func (o *RuneSet) Get() interface{} {
 	return reflect.ValueOf(*o).Interface()
 }
 
-func (o *CharSet) contains(c rune) bool {
+func (o *RuneSet) contains(c rune) bool {
 	for _, v := range *o {
 		if v == c {
 			return true
@@ -112,8 +111,8 @@ const (
 	CommitUrlTemplate = stringOption("commitUrlTemplate")
 	HunkUrlTemplate   = stringOption("hunkUrlTemplate")
 	Version           = boolOption("version")
-	Delimiters        = charSetOption("delimiters")
-	delimiterShort    = charSetOption("D")
+	Delimiters        = runeSet("delimiters")
+	delimiterShort    = runeSet("D")
 )
 
 type option struct {
@@ -140,7 +139,7 @@ const (
 )
 
 var (
-	delimiters = CharSet{'"', '\'', '`'}
+	delimiters = RuneSet{'"', '\'', '`'}
 )
 
 var options = optionMap{
@@ -240,7 +239,7 @@ func Populate() {
 			flag.String(name, v, o.usage)
 		case bool:
 			flag.Bool(name, v, o.usage)
-		case *CharSet:
+		case *RuneSet:
 			flag.Var(v, name, o.usage)
 		}
 	}

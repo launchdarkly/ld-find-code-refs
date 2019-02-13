@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
 /*
@@ -90,7 +91,7 @@ func (c Client) revParse(branch string) (string, error) {
 	return ret, nil
 }
 
-func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string) ([][]string, error) {
+func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters options.RuneSet) ([][]string, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
 	if ctxLines > 0 {
 		args = append(args, fmt.Sprintf("-C%d", ctxLines))
@@ -131,14 +132,14 @@ func generateFlagRegex(flags []string) string {
 	return strings.Join(flagRegexes, "|")
 }
 
-func generateDelimiterRegex(delimiters []string) (lookBehind, lookAhead string) {
-	delims := strings.Join(delimiters, "")
-	lookBehind = fmt.Sprintf("(?<=[%s])", delims)
-	lookAhead = fmt.Sprintf("(?=[%s])", delims)
+func generateDelimiterRegex(delimiters options.RuneSet) (lookBehind, lookAhead string) {
+	delims := delimiters.String()
+	lookBehind = fmt.Sprintf("(?<=%s)", delims)
+	lookAhead = fmt.Sprintf("(?=%s)", delims)
 	return lookBehind, lookAhead
 }
 
-func generateSearchPattern(flags, delimiters []string, padPattern bool) string {
+func generateSearchPattern(flags []string, delimiters options.RuneSet, padPattern bool) string {
 	flagRegex := generateFlagRegex(flags)
 	lookBehind, lookAhead := generateDelimiterRegex(delimiters)
 	if padPattern {

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var defaultDelims = []string{`"`, "'", "`"}
+var defaultDelims = []rune{'"', '\'', '`'}
 
 func TestGenerateFlagRegex(t *testing.T) {
 	specs := []struct {
@@ -41,7 +41,7 @@ func TestGenerateFlagRegex(t *testing.T) {
 func TestGenerateDelimiterRegex(t *testing.T) {
 	specs := []struct {
 		name               string
-		delimiters         []string
+		delimiters         []rune
 		expectedLookBehind string
 		expectedLookAhead  string
 	}{
@@ -53,7 +53,7 @@ func TestGenerateDelimiterRegex(t *testing.T) {
 		},
 		{
 			name:               "succeeds for extra delimiter",
-			delimiters:         []string{`"`, "'", "`", "a"},
+			delimiters:         append(defaultDelims, 'a'),
 			expectedLookBehind: "(?<=[\"'`a])",
 			expectedLookAhead:  "(?=[\"'`a])",
 		},
@@ -86,7 +86,7 @@ func TestGenerateSearchPattern(t *testing.T) {
 	}
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, generateSearchPattern([]string{"flag"}, []string{`"`, "'", "`"}, tt.padPattern))
+			assert.Equal(t, tt.expected, generateSearchPattern([]string{"flag"}, defaultDelims, tt.padPattern))
 		})
 	}
 }
