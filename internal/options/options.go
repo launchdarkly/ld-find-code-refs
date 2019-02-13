@@ -112,7 +112,7 @@ const (
 	CommitUrlTemplate = stringOption("commitUrlTemplate")
 	HunkUrlTemplate   = stringOption("hunkUrlTemplate")
 	Version           = boolOption("version")
-	Delimiter         = charSetOption("delimiter")
+	Delimiters        = charSetOption("delimiters")
 	delimiterShort    = charSetOption("d")
 )
 
@@ -159,8 +159,8 @@ var options = optionMap{
 	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.", false},
 	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but repoUrl is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.", false},
 	Version:           option{false, "If provided, the scanner will print the version number and exit early", false},
-	Delimiter:         option{&delimiters, "Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in a single `delimiter`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.", false},
-	delimiterShort:    option{&delimiters, "Same as -delimiter", false},
+	Delimiters:        option{&delimiters, "Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in `delimiters`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may also be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.", false},
+	delimiterShort:    option{&delimiters, "Same as -delimiters", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -215,7 +215,7 @@ func Init() (err error, errCb func()) {
 		return fmt.Errorf("error parsing repo url: %+v", err), flag.PrintDefaults
 	}
 
-	delims := Delimiter.Value()
+	delims := Delimiters.Value()
 	// match all non-control ASCII characters
 	validDelims := regexp.MustCompile("[\x20-\x7E]")
 	for _, d := range []string(delims.Get().(CharSet)) {
@@ -256,6 +256,7 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 		"contextLines": os.Getenv("LD_CONTEXT_LINES"),
 		"baseUri":      os.Getenv("LD_BASE_URI"),
 		"debug":        os.Getenv("LD_DEBUG"),
+		"delimiters":   os.Getenv("LD_DELIMITERS"),
 	}
 
 	if ldOptions["debug"] == "" {

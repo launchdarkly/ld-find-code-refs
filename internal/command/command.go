@@ -101,7 +101,7 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []string
 	}
 
 	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
-
+	fmt.Println(searchPattern)
 	var command *exec.Cmd
 	if runtime.GOOS == windows {
 		args := strings.Split(sb.String(), " ")
@@ -156,7 +156,7 @@ func generateDelimiterRegex(delimiters []string) (lookBehind, lookAhead string) 
 		}
 	}
 	delims := strings.Join(escapedDelims, "")
-	lookBehind = fmt.Sprintf("(?<=^[%s])", delims)
+	lookBehind = fmt.Sprintf("(?<=[%s])", delims)
 	lookAhead = fmt.Sprintf("(?=[%s])", delims)
 	return lookBehind, lookAhead
 }
@@ -166,11 +166,11 @@ func generateSearchPattern(flags, delimiters []string, padPattern bool) string {
 	lookBehind, lookAhead := generateDelimiterRegex(delimiters)
 	if padPattern {
 		// Padding the left-most and right-most search terms with the "?!" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
-		// example: (?<=^[\"'\`])?!|flag1|flag2|flag3|?!(?=[\"'\`])"
-		return lookBehind + "'?!|" + flagRegex + "|?!'" + lookAhead
+		// example: (?<=[\"'\`])(?!|flag1|flag2|flag3|?1(?=[\"'\`])"
+		return lookBehind + "('?!|" + flagRegex + "|?!')" + lookAhead
 	}
-	// example: (?<=^[\"'\`])flag1|flag2|flag3(?=[\"'\`])"
-	return lookBehind + flagRegex + lookAhead
+	// example: (?<=[\"'\`])(flag1|flag2|flag3(?=[\"'\`])"
+	return lookBehind + "(" + flagRegex + ")" + lookAhead
 }
 
 func normalizeAndValidatePath(path string) (string, error) {

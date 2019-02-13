@@ -48,13 +48,13 @@ func TestGenerateDelimiterRegex(t *testing.T) {
 		{
 			name:               "succeeds for default delimiters",
 			delimiters:         defaultDelims,
-			expectedLookBehind: "(?<=^[\\\"'\\`])",
+			expectedLookBehind: "(?<=[\\\"'\\`])",
 			expectedLookAhead:  "(?=[\\\"'\\`])",
 		},
 		{
 			name:               "succeeds for extra delimiter",
 			delimiters:         []string{`"`, "'", "`", "a"},
-			expectedLookBehind: "(?<=^[\\\"'\\`a])",
+			expectedLookBehind: "(?<=[\\\"'\\`a])",
 			expectedLookAhead:  "(?=[\\\"'\\`a])",
 		},
 	}

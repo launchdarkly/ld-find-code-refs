@@ -7,7 +7,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Added
 
 - Added support for Windows. `ld-find-code-refs` releases will now contain a windows executable.
-- Added a new option `-delimiter` (`-d` for short), which may be specified multiple times to specify delimiters used to match flag keys.
+- Added a new option `-delimiters` (`-d` for short), which may be specified multiple times to specify delimiters used to match flag keys.
 
 ### Fixed
 
@@ -16,7 +16,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Changed
 
 - The command-line [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs) now specifies `ld-find-code-refs` as the entrypoint. The docker image may now be run as `docker run launchdarkly/ld-find-code-refs -accessToken="api-xxx"...`
-- `ld-find-code-refs` will now only match flag keys delimited by single-quotes, double-quotes, or backticks by default. To add more delimiters, use the `delimiter` command line option.
+- `ld-find-code-refs` will now only match flag keys delimited by single-quotes, double-quotes, or backticks by default. To add more delimiters, use the `delimiters` command line option.
 
 ## [0.6.0] - 2019-02-11
 
