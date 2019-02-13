@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -83,7 +82,7 @@ func (o *RuneSet) String() string {
 }
 
 func (o *RuneSet) Get() interface{} {
-	return reflect.ValueOf(*o).Interface()
+	return *o
 }
 
 func (o *RuneSet) contains(c rune) bool {
