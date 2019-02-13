@@ -113,7 +113,7 @@ const (
 	HunkUrlTemplate   = stringOption("hunkUrlTemplate")
 	Version           = boolOption("version")
 	Delimiters        = charSetOption("delimiters")
-	delimiterShort    = charSetOption("d")
+	delimiterShort    = charSetOption("D")
 )
 
 type option struct {

@@ -7,7 +7,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Added
 
 - Added support for Windows. `ld-find-code-refs` releases will now contain a windows executable.
-- Added a new option `-delimiters` (`-d` for short), which may be specified multiple times to specify delimiters used to match flag keys.
+- Added a new option `-delimiters` (`-D` for short), which may be specified multiple times to specify delimiters used to match flag keys.
 
 ### Fixed
 
