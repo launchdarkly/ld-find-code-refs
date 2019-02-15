@@ -24,7 +24,7 @@ The command line program may be run manually, and executed in an environment of 
 
 #### macOS
 
-```shell
+```bash
 brew tap launchdarkly/tap
 brew install ld-find-code-refs
 ```
@@ -39,7 +39,7 @@ We do not yet have repositories set up for our linux packages, but we do upload 
 
 This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
 
-```shell
+```bash
 apt-get install silversearcher-ag
 
 wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/latest \
@@ -61,11 +61,14 @@ choco install ag
 
 #### Docker
 
-`ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs).
+`ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs). The image provides an entrypoint for `ld-find-code-refs`, to which command line arguments may be passed. If using the entrypoint, your git repository to be scanned should be mounted as a volume. Otherwise, you may override the entrypoint and access `ld-find-code-refs` directly from the shell.
 
-```shell
+```bash
 docker pull launchdarkly/ld-find-code-refs
-docker run launchdarkly/ld-find-code-refs -accessToken="api-xxx"...
+docker run \
+  -v /Users/arnold/Documents/projects/launchdarkly/support-service:/repo \
+  launchdarkly/ld-find-code-refs \
+  -dir="/repo"
 ```
 
 #### Manual
