@@ -12,6 +12,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Fixed
 
 - The `dir` command line option was marked as optional, but is actually required. `ld-find-code-refs` will now recognize this option as required.
+- `ld-find-code-refs` was performing extra steps to ignore directories for files in directories matched by patterns in `.ldignore`. This ignore process has been streamlined directly into the search so files in `.ldignore` are never scanned.
 
 ### Changed
 
