@@ -2,7 +2,7 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## Master
+## [0.7.0] - 2019-02-15
 
 ### Added
 
