@@ -2,6 +2,8 @@ package command
 
 import "bytes"
 
+const windows = "windows"
+
 // Converts ANSI to UTF8: https://stackoverflow.com/a/12409923
 func fromWindows1252(str string) string {
 	var arr = []byte(str)

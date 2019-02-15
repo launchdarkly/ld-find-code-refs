@@ -66,9 +66,9 @@ func NewClient(path string) (Client, error) {
 func (c Client) branchName() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", errors.New(string(out))
 	}
 	ret := strings.TrimSpace(string(out))
 	log.Debug.Printf("identified branch name: %s", ret)
@@ -81,58 +81,73 @@ func (c Client) branchName() (string, error) {
 func (c Client) revParse(branch string) (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", branch)
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", errors.New(string(out))
 	}
 	ret := strings.TrimSpace(string(out))
 	log.Debug.Printf("identified sha: %s", ret)
 	return ret, nil
 }
 
-func (c Client) SearchForFlags(flags []string, ctxLines int) ([][]string, error) {
-	var sb strings.Builder
-
-	sb.WriteString(fmt.Sprintf("ag --word-regexp --nogroup --case-sensitive"))
+func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
+	args := []string{"--nogroup", "--case-sensitive"}
 	if ctxLines > 0 {
-		sb.WriteString(fmt.Sprintf(" -C%d", ctxLines))
+		args = append(args, fmt.Sprintf("-C%d", ctxLines))
 	}
 
+	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
+	/* #nosec */
+	cmd := exec.Command("ag", args...)
+	cmd.Args = append(cmd.Args, searchPattern, c.Workspace)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		if err.Error() == "exit status 1" {
+			return [][]string{}, nil
+		}
+		return nil, errors.New(string(out))
+	}
+
+	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
+	if err != nil {
+		return nil, err
+	}
+
+	output := string(out)
+	if runtime.GOOS == windows {
+		output = fromWindows1252(output)
+	}
+
+	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
+	return ret, err
+}
+
+func generateFlagRegex(flags []string) string {
 	flagRegexes := []string{}
 	for _, v := range flags {
 		escapedFlag := regexp.QuoteMeta(v)
 		flagRegexes = append(flagRegexes, escapedFlag)
 	}
+	return strings.Join(flagRegexes, "|")
+}
 
-	var command *exec.Cmd
-	if runtime.GOOS == "windows" {
-		args := strings.Split(sb.String(), " ")
-		/* #nosec */
-		command = exec.Command(args[0], args[1:]...)
-		// Padding the left-most and right-most search terms with the "?!" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
-		command.Args = append(command.Args, "'?!|"+strings.Join(flagRegexes, "|")+"|?!'", c.Workspace)
-	} else {
-		sb.WriteString(" '" + strings.Join(flagRegexes, "|") + "' " + c.Workspace)
-		/* #nosec */
-		command = exec.Command("sh", "-c", sb.String())
+func generateDelimiterRegex(delimiters []rune) (lookBehind, lookAhead string) {
+	delims := string(delimiters)
+	lookBehind = fmt.Sprintf("(?<=[%s])", delims)
+	lookAhead = fmt.Sprintf("(?=[%s])", delims)
+	return lookBehind, lookAhead
+}
+
+func generateSearchPattern(flags []string, delimiters []rune, padPattern bool) string {
+	flagRegex := generateFlagRegex(flags)
+	lookBehind, lookAhead := generateDelimiterRegex(delimiters)
+	if padPattern {
+		// Padding the left-most and right-most search terms with the "a^" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
+		// example: (?<=[\"'\`])(a^|flag1|flag2|flag3|a^)(?=[\"'\`])"
+		return lookBehind + "(a^|" + flagRegex + "|a^)" + lookAhead
 	}
-	out, err := command.Output()
-	if err != nil {
-		if err.Error() == "exit status 1" {
-			return [][]string{}, nil
-		}
-		return nil, err
-	}
-	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
-	if err != nil {
-		return nil, err
-	}
-	output := string(out)
-	if runtime.GOOS == "windows" {
-		output = fromWindows1252(output)
-	}
-	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
-	return ret, err
+	// example: (?<=[\"'\`])(flag1|flag2|flag3)(?=[\"'\`])"
+	return lookBehind + "(" + flagRegex + ")" + lookAhead
 }
 
 func normalizeAndValidatePath(path string) (string, error) {
