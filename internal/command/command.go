@@ -91,7 +91,7 @@ func (c Client) revParse(branch string) (string, error) {
 }
 
 func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
-	args := []string{"--nogroup", "--case-sensitive"}
+	args := []string{"--nogroup", "--case-sensitive", "--path-to-ignore=" + c.Workspace + "/.ldignore"}
 	if ctxLines > 0 {
 		args = append(args, fmt.Sprintf("-C%d", ctxLines))
 	}

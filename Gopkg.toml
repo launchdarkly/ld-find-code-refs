@@ -41,6 +41,3 @@
   name = "github.com/hashicorp/go-retryablehttp"
   version = "0.5.0"
 
-[[constraint]]
-  name = "github.com/sabhiram/go-gitignore"
-  version = "1.0.2"
