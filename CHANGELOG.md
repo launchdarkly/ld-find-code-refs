@@ -16,7 +16,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ### Changed
 
-- The command-line [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs) now specifies `ld-find-code-refs` as the entrypoint. The docker image may now be run as `docker run launchdarkly/ld-find-code-refs -accessToken="api-xxx"...`
+- The command-line [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs) now specifies `ld-find-code-refs` as the entrypoint. See our [documentation](https://github.com/launchdarkly/ld-find-code-refs#docker) for instructions on running `ld-find-code-refs` via docker.
 - `ld-find-code-refs` will now only match flag keys delimited by single-quotes, double-quotes, or backticks by default. To add more delimiters, use the `delimiters` command line option.
 
 ## [0.6.0] - 2019-02-11
