@@ -8,7 +8,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 - Fixed a potential bug causing `.ldignore` paths to not be detected in some environments.
 - When `.ldignore` is found, a debug message is logged.
--
+
 ## [1.0.0] - 2019-02-21
 
 Official release
