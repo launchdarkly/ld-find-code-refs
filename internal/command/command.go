@@ -92,9 +92,10 @@ func (c Client) revParse(branch string) (string, error) {
 
 func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
-	pathToIgnore := filepath.Join(c.Workspace, ".ldignore")
+	ignoreFileName := ".ldignore"
+	pathToIgnore := filepath.Join(c.Workspace, ignoreFileName)
 	if fileExists(pathToIgnore) {
-		log.Debug.Printf("excluding files matched in .ldignore")
+		log.Debug.Printf("excluding files matched in %s", ignoreFileName)
 		args = append(args, fmt.Sprintf("--path-to-ignore=%s", pathToIgnore))
 	}
 	if ctxLines > 0 {
