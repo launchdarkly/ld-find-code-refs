@@ -14,6 +14,9 @@ lint:
 compile-macos-binary:
 	GOOS=darwin GOARCH=amd64 go build -o out/ld-find-code-refs ./cmd/ld-find-code-refs
 
+compile-windows-binary:
+	GOOS=windows GOARCH=amd64 go build -o out/ld-find-code-refs.exe ./cmd/ld-find-code-refs
+
 compile-linux-binary:
 	GOOS=linux GOARCH=amd64 go build -o build/package/cmd/ld-find-code-refs ./cmd/ld-find-code-refs
 
@@ -64,4 +67,4 @@ clean:
 	rm -f build/package/github-actions/ld-find-code-refs-github-action
 	rm -f build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 
-.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all clean
+.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all clean
