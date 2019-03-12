@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.1] - 2019-03-12
+
+## Changed
+
+- Fixed a potential bug causing `.ldignore` paths to not be detected in some environments.
+- When `.ldignore` is found, a debug message is logged.
+-
 ## [1.0.0] - 2019-02-21
 
 Official release

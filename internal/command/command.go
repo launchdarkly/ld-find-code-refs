@@ -91,7 +91,12 @@ func (c Client) revParse(branch string) (string, error) {
 }
 
 func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
-	args := []string{"--nogroup", "--case-sensitive", "--path-to-ignore=" + c.Workspace + "/.ldignore"}
+	args := []string{"--nogroup", "--case-sensitive"}
+	pathToIgnore := filepath.Join(c.Workspace, ".ldignore")
+	if fileExists(pathToIgnore) {
+		log.Debug.Printf("excluding files matched in .ldignore")
+		args = append(args, fmt.Sprintf("--path-to-ignore=%s", pathToIgnore))
+	}
 	if ctxLines > 0 {
 		args = append(args, fmt.Sprintf("-C%d", ctxLines))
 	}
@@ -120,6 +125,14 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 
 	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
 	return ret, err
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func generateFlagRegex(flags []string) string {
