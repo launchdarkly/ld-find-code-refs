@@ -90,6 +90,25 @@ func (c Client) revParse(branch string) (string, error) {
 	return ret, nil
 }
 
+func (c Client) RemoteBranches() (map[string]bool, error) {
+	/* #nosec */
+	cmd := exec.Command("git", "-C", c.Workspace, "ls-remote", "--quiet", "--heads")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, errors.New(string(out))
+	}
+	rgx := regexp.MustCompile("refs/heads/(.*)")
+	results := rgx.FindAllStringSubmatch(string(out), -1)
+	log.Debug.Printf("found %d branches on remote", len(results))
+	ret := map[string]bool{}
+	for _, r := range results {
+		ret[r[1]] = true
+	}
+	// the current branch should be in the list of remote branches
+	ret[c.GitBranch] = true
+	return ret, nil
+}
+
 func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
 	ignoreFileName := ".ldignore"

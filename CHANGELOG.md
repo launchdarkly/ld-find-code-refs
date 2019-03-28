@@ -2,6 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## Master
+
+### Added
+
+- `ld-find-code-refs` will now remove branches no longer in the git remote from LaunchDarkly.
+
 ## [1.0.1] - 2019-03-12
 
 ### Changed

@@ -92,6 +92,8 @@ func Scan() {
 		log.Error.Fatalf(err.Error())
 	}
 
+	deleteStaleBranches(ldApi, cmd, repoParams.Name)
+
 	flags, err := getFlags(ldApi)
 	if err != nil {
 		log.Error.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
@@ -146,6 +148,40 @@ func Scan() {
 			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}
 	}
+}
+
+func deleteStaleBranches(ldApi ld.ApiClient, cmd command.Client, repoName string) {
+	remoteBranches, err := cmd.RemoteBranches()
+	if err != nil {
+		log.Error.Printf("could not retrieve list of branches from git: %s", err)
+		return
+	}
+
+	branches, err := ldApi.GetCodeReferenceRepositoryBranches(repoName)
+	if err != nil {
+		log.Error.Printf(err.Error())
+		return
+	}
+
+	staleBranches := calculateStaleBranches(branches, remoteBranches)
+	if len(staleBranches) > 0 {
+		log.Debug.Printf("marking branches for deletion: %v", staleBranches)
+		err = ldApi.PostDeleteBranchesTask(repoName, staleBranches)
+		if err != nil {
+			log.Error.Printf("could not mark branches for deletion: %v", err)
+		}
+	}
+}
+
+func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]bool) []string {
+	staleBranches := []string{}
+	for _, branch := range branches {
+		if !remoteBranches[branch.Name] {
+			staleBranches = append(staleBranches, branch.Name)
+		}
+	}
+	log.Info.Printf("found %d stale branches to be marked for deletion", len(staleBranches))
+	return staleBranches
 }
 
 // Very short flag keys lead to many false positives when searching in code,

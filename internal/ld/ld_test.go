@@ -116,3 +116,54 @@ func TestPutCodeReferenceBranch(t *testing.T) {
 		})
 	}
 }
+
+func TestPostDeleteBranchesTask(t *testing.T) {
+	specs := []struct {
+		name           string
+		responseStatus int
+		expectedErr    error
+	}{
+		{"succeeds", 200, nil},
+	}
+
+	for _, tt := range specs {
+		t.Run(tt.name, func(t *testing.T) {
+			testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+				res.WriteHeader(tt.responseStatus)
+			}))
+			defer testServer.Close()
+
+			retryMax := 0
+			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL, RetryMax: &retryMax})
+			err := client.PostDeleteBranchesTask("test", []string{"master"})
+			require.Equal(t, tt.expectedErr, err)
+		})
+	}
+}
+
+func TestGetCodeReferenceRepositoryBranches(t *testing.T) {
+	specs := []struct {
+		name           string
+		responseStatus int
+		responseBody   string
+		expectedErr    error
+	}{
+		{"succeeds", 200, `{"items":[{"name":"master"}]}`, nil},
+		{"fails on not found", 404, ``, NotFoundErr},
+	}
+	for _, tt := range specs {
+		t.Run(tt.name, func(t *testing.T) {
+			testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+				res.WriteHeader(tt.responseStatus)
+				_, err := res.Write([]byte(tt.responseBody))
+				require.NoError(t, err)
+			}))
+			defer testServer.Close()
+
+			retryMax := 0
+			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL, RetryMax: &retryMax})
+			_, err := client.GetCodeReferenceRepositoryBranches("test")
+			require.Equal(t, tt.expectedErr, err)
+		})
+	}
+}

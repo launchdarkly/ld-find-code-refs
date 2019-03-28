@@ -124,7 +124,6 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", c.Options.UserAgent)
 	res, err := c.do(req)
 	if err != nil {
 		return nil, err
@@ -144,6 +143,32 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 		return nil, err
 	}
 	return &repo, err
+}
+
+func (c ApiClient) GetCodeReferenceRepositoryBranches(repoName string) ([]BranchRep, error) {
+	req, err := h.NewRequest("GET", fmt.Sprintf("%s/%s/branches", c.repoUrl(), repoName), nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	resBytes, err := ioutil.ReadAll(res.Body)
+	if res != nil {
+		defer res.Body.Close()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var branches BranchCollection
+	err = json.Unmarshal(resBytes, &branches)
+	if err != nil {
+		return nil, err
+	}
+	return branches.Items, err
 }
 
 func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
@@ -236,14 +261,35 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 	return nil
 }
 
+func (c ApiClient) PostDeleteBranchesTask(repoName string, branches []string) error {
+	body, err := json.Marshal(branches)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s%s/%s/branch-delete-tasks", c.Options.BaseUri, reposPath, repoName)
+	req, err := h.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	_, err = c.do(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type ldErrorResponse struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
 func (c ApiClient) do(req *h.Request) (*http.Response, error) {
-	req.Header.Add("Authorization", c.Options.ApiKey)
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Set("Authorization", c.Options.ApiKey)
+	req.Header.Set("User-Agent", c.Options.UserAgent)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -322,6 +368,11 @@ type RepoRep struct {
 	DefaultBranch     string `json:"defaultBranch"`
 	Enabled           bool   `json:"enabled,omitempty"`
 }
+
+type BranchCollection struct {
+	Items []BranchRep `json:"items"`
+}
+
 type BranchRep struct {
 	Name             string              `json:"name"`
 	Head             string              `json:"head"`
