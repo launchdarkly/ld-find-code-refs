@@ -2,6 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## Master
+
+### Added
+
+- Added a new option `-searchTool`, which may be specified to change the underlying code reference search tool (`ag` by default). Valid options are `ag` (silver searcher) and `rg` (ripgrep).
+
 ## [1.0.1] - 2019-03-12
 
 ### Changed

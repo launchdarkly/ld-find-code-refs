@@ -184,4 +184,4 @@ Although these arguments are optional, a (\*) indicates a recommended parameter 
 
 If both `.ldignore` and the `exclude` argument are provided, `ld-find-code-refs` will test against both for file exclusion. Do note that `.ldignore` expects shell glob patterns, while the `exclude` option expects a PCRE-compliant regular expression.
 
-_Note_: The default search tool used by `ld-find-code-refs` does not fully support the use of the negation operator in `.*ignore` files. If you plan on using this operator (for including files, for example), please consider using the `-searchTool` parameter to use `rg` (ripgrep) as the underlying search tool.
+**Note**: The default search tool used by `ld-find-code-refs` does not fully support the use of the negation operator in `.*ignore` files. If you plan on using this operator (for including files, for example), please consider using the `-searchTool` parameter to use `rg` (ripgrep) as the underlying search tool.
