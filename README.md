@@ -4,6 +4,18 @@ Command line program for generating flag code references.
 
 This repository provides solutions for configuring [LaunchDarkly code references](hhttps://docs.launchdarkly.com/v2.0/docs/git-code-references) with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
 
+### Documentation quick links
+
+- [Feature guide](https://docs.launchdarkly.com/docs/git-code-references)
+- [Turn-key configuration options](#configuration-options)
+- [Execuation via CLI](#execution-via-cli)
+- [Prerequisites](#prerequisites)
+- [Installing](#installing)
+- [Examples](#examples)
+- [Required arguments](#required-arguments)
+- [Optional arguments](#optional-arguments)
+- [Ignoring files and directories](#ignoring-files-and-directories)
+
 ## Configuration options
 
 We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the ld-find-code-refs utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
@@ -20,6 +32,23 @@ We provide turnkey support for common trigger mechanisms and CI / CD providers. 
 The command line program may be run manually, and executed in an environment of your choosing. The program requires your `git` repo to be cloned locally, and the currently checked out branch will be scanned for code references.
 
 We recommend ingraining `ld-find-code-refs` into your CI/CD build process. `ld-find-code-refs` should run whenever a commit is pushed to your repository.
+
+### Prerequisites
+
+`ld-find-code-refs` has two dependencies, which need to be installed in the system path:
+
+- `git`
+- A command-line search tool. currently, `ag` (silver searcher) and `rg` (ripgrep) are supported (configurable via the `-searchTool` option). The following [installation instructions](https://github.com/launchdarkly/ld-find-code-refs/blob/2bde969b9cb2283827466db742639a6c964e003f/README.md#installing) assume `ag` is being used.
+
+All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
+
+Dependencies have been tested with the following versions:
+
+| Dependency | Version Tested |
+| ---------- | -------------- |
+| git        | 2.21.0         |
+| ag         | 2.2.0          |
+| rg         | 0.10.0         |
 
 ### Installing
 
@@ -74,13 +103,11 @@ docker run \
 
 #### Manual
 
-Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest).
-
-The `ld-find-code-refs` program requires [Git](https://git-scm.org) and [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure these dependencies have been installed and added to your system path before running `ld-find-code-refs`.
+Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`
 
 ### Examples
 
-The section provides examples of various `bash` commands to execute `ld-find-code-refs` (when installed in the system PATH) with various configurations. We recommend reading through the following examples to gain an understanding of common configurations, as well as the detailed sections below documenting advanced configuration options.
+The section provides examples of various `bash` commands to execute `ld-find-code-refs` (when installed in the system path) with various configurations. We recommend reading through the following examples to gain an understanding of common configurations, as well as the detailed sections below documenting advanced configuration options.
 
 Minimal configuration:
 
