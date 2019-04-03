@@ -150,7 +150,6 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 	cmd := exec.Command(string(c.SearchTool), args...)
 	cmd.Args = append(cmd.Args, searchPattern, c.Workspace)
 
-	fmt.Println(cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		if err.Error() == "exit status 1" {
@@ -159,7 +158,6 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 		return nil, errors.New(string(out))
 	}
 
-	fmt.Println(string(out))
 	/*
 	   searchRegex splits resulting grep lines into groups
 	   Group 1: File path.
@@ -182,9 +180,7 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 		output = fromWindows1252(output)
 	}
 
-	fmt.Println("@", output)
 	ret := searchRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
-	fmt.Println("@@", ret)
 	return ret, err
 }
 
