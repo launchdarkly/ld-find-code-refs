@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 )
 
@@ -25,7 +26,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 	tests := []struct {
 		name       string
 		flags      []string
-		grepResult [][]string
+		grepResult command.SearchResults
 		ctxLines   int
 		want       []grepResultLine
 		exclude    string
@@ -34,7 +35,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			name:  "succeeds",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
+				{"", "flags.txt", "12", ":", "someFlag"},
 			},
 			ctxLines: 0,
 			want: []grepResultLine{
@@ -45,7 +46,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			name:  "succeeds with exclude",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
+				{"", "flags.txt", "12", ":", "someFlag"},
 			},
 			ctxLines: 0,
 			want:     []grepResultLine{},
@@ -55,7 +56,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			name:  "succeeds with no LineText lines",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
+				{"", "flags.txt", "12", ":", "someFlag"},
 			},
 			ctxLines: -1,
 			want: []grepResultLine{
@@ -66,8 +67,8 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			name:  "succeeds with multiple references",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
-				{"", "path/flags.txt", ":", "12", "someFlag anotherFlag"},
+				{"", "flags.txt", "12", ":", "someFlag"},
+				{"", "path/flags.txt", "12", ":", "someFlag anotherFlag"},
 			},
 			ctxLines: 0,
 			want: []grepResultLine{
@@ -79,9 +80,9 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			name:  "succeeds with extra LineText lines",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
-				{"", "flags.txt", "-", "11", "not a flag key line"},
-				{"", "flags.txt", ":", "12", "someFlag"},
-				{"", "flags.txt", "-", "13", "not a flag key line"},
+				{"", "flags.txt", "11", "-", "not a flag key line"},
+				{"", "flags.txt", "12", ":", "someFlag"},
+				{"", "flags.txt", "13", "-", "not a flag key line"},
 			},
 			ctxLines: 1,
 			want: []grepResultLine{
@@ -94,11 +95,11 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			name:  "succeeds with extra LineText lines and multiple flags",
 			flags: []string{"someFlag", "anotherFlag"},
 			grepResult: [][]string{
-				{"", "flags.txt", "-", "11", "not a flag key line"},
-				{"", "flags.txt", ":", "12", "someFlag"},
-				{"", "flags.txt", "-", "13", "not a flag key line"},
-				{"", "flags.txt", ":", "14", "anotherFlag"},
-				{"", "flags.txt", "-", "15", "not a flag key line"},
+				{"", "flags.txt", "11", "-", "not a flag key line"},
+				{"", "flags.txt", "12", ":", "someFlag"},
+				{"", "flags.txt", "13", "-", "not a flag key line"},
+				{"", "flags.txt", "14", ":", "anotherFlag"},
+				{"", "flags.txt", "15", "-", "not a flag key line"},
 			},
 			ctxLines: 1,
 			want: []grepResultLine{

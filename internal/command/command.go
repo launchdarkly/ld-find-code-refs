@@ -13,23 +13,15 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
-/*
-grepRegex splits resulting grep lines into groups
-Group 1: File path.
-Group 2: Separator. A colon indicates a match, a hyphen indicates a context lines
-Group 3: Line number
-Group 4: Line contents
-*/
-var grepRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
-
 type Client struct {
 	Workspace string
 	GitBranch string
 	GitSha    string
+	SearchTool
 }
 
-func NewClient(path string) (Client, error) {
-	client := Client{}
+func NewClient(path string, searchTool SearchTool) (Client, error) {
+	client := Client{SearchTool: searchTool}
 
 	absPath, err := normalizeAndValidatePath(path)
 	if err != nil {
@@ -41,9 +33,18 @@ func NewClient(path string) (Client, error) {
 	if err != nil {
 		return client, errors.New("git is a required dependency, but was not found in the system PATH")
 	}
-	_, err = exec.LookPath("ag")
+
+	_, err = exec.LookPath(string(searchTool))
 	if err != nil {
-		return client, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
+		switch searchTool {
+		case SilverSearcher:
+			return client, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
+		case Ripgrep:
+			return client, errors.New("rg (ripgrep) is a required dependency, but was not found in the system PATH")
+		default:
+			return client, fmt.Errorf("%s is not a valid search tool", searchTool)
+		}
+
 	}
 
 	currBranch, err := client.branchName()
@@ -90,22 +91,66 @@ func (c Client) revParse(branch string) (string, error) {
 	return ret, nil
 }
 
-func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
-	args := []string{"--nogroup", "--case-sensitive"}
+type SearchTool string
+
+const (
+	SilverSearcher = "ag"
+	Ripgrep        = "rg"
+)
+
+// globalSearchArgs returns a standardized set of arguments to be run with each search tool
+func (c Client) globalSearchArgs() []string {
+	argsForClient := map[SearchTool][]string{
+		SilverSearcher: {"--nogroup", "--case-sensitive"},
+		Ripgrep:        {"--no-heading", "--case-sensitive", "--line-number", "--pcre2"},
+	}
+	return argsForClient[c.SearchTool]
+}
+
+// ignoreFileArg returns the argument to respect the .ldignore file in searches
+func (c Client) ignoreFileArg(ignoreFile string) string {
+	ignoreArgForClient := map[SearchTool]string{
+		SilverSearcher: fmt.Sprintf("--path-to-ignore=%s", ignoreFile),
+		Ripgrep:        fmt.Sprintf("--ignore-file=%s", ignoreFile),
+	}
+	return ignoreArgForClient[c.SearchTool]
+}
+
+// contextLinesArg returns the argument to include context lines in the search result:w
+func (c Client) contextLineArg(contextLines int) string {
+	return fmt.Sprintf("-C%d", contextLines)
+}
+
+/*
+	SearchResults is an abstraction for the [][]string returned by a regex
+	on the results of a code reference search.
+	Each reference has it's results split into and array of the following shape:
+	Index 0: Full match
+	Index 1: File path.
+	Index 2: Line number.
+	Index 3: Separator. A colon indicates a match, a hyphen indicates a context lines
+	Index 4: Line contents.
+*/
+type SearchResults [][]string
+
+func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) (SearchResults, error) {
+	args := c.globalSearchArgs()
 	ignoreFileName := ".ldignore"
 	pathToIgnore := filepath.Join(c.Workspace, ignoreFileName)
 	if fileExists(pathToIgnore) {
 		log.Debug.Printf("excluding files matched in %s", ignoreFileName)
-		args = append(args, fmt.Sprintf("--path-to-ignore=%s", pathToIgnore))
+		args = append(args, c.ignoreFileArg(pathToIgnore))
 	}
 	if ctxLines > 0 {
-		args = append(args, fmt.Sprintf("-C%d", ctxLines))
+		args = append(args, c.contextLineArg(ctxLines))
 	}
 
 	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
 	/* #nosec */
-	cmd := exec.Command("ag", args...)
+	cmd := exec.Command(string(c.SearchTool), args...)
 	cmd.Args = append(cmd.Args, searchPattern, c.Workspace)
+
+	fmt.Println(cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		if err.Error() == "exit status 1" {
@@ -114,7 +159,20 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 		return nil, errors.New(string(out))
 	}
 
-	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
+	fmt.Println(string(out))
+	/*
+	   searchRegex splits resulting grep lines into groups
+	   Group 1: File path.
+	   Group 2: Line number.
+	   Group 3: Separator. A colon indicates a match, a hyphen indicates a context lines
+	   Group 4: Line contents.
+
+	   Example output from line search tool: /path/to/file/flags.go:2:ldClient.BoolVariation("my-flag-key", user, false)
+	   Example result: ["/path/to/file/flags.go:2:ldClient.BoolVariation(\"my-flag-key\", user, false)", "/path/to/file/flags.go", 2, ":", "ldClient.BoolVariation(\"my-flag-key\", user, false)"]
+	*/
+	searchRegex := regexp.MustCompile("(.*)[:-]([0-9]+)(:|-)(.*)")
+
+	searchRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "[\\/]?)" + searchRegex.String())
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +182,9 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 		output = fromWindows1252(output)
 	}
 
-	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
+	fmt.Println("@", output)
+	ret := searchRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
+	fmt.Println("@@", ret)
 	return ret, err
 }
 

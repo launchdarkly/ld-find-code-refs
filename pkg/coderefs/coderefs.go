@@ -61,7 +61,7 @@ type branch struct {
 
 func Scan() {
 	dir := o.Dir.Value()
-	cmd, err := command.NewClient(dir)
+	cmd, err := command.NewClient(dir, command.SearchTool(o.SearchTool.Value()))
 	if err != nil {
 		log.Error.Fatalf("%s", err)
 	}
@@ -178,11 +178,10 @@ func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int
 	if err != nil {
 		return grepResultLines{}, err
 	}
-
 	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
+func generateReferencesFromGrep(flags []string, grepResult command.SearchResults, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
 	references := []grepResultLine{}
 
 	for _, r := range grepResult {
@@ -190,8 +189,8 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
 			continue
 		}
-		contextContainsFlagKey := r[2] == ":"
-		lineNumber := r[3]
+		lineNumber := r[2]
+		contextContainsFlagKey := r[3] == ":"
 		lineText := r[4]
 		lineNum, err := strconv.Atoi(lineNumber)
 		if err != nil {

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
@@ -112,6 +113,7 @@ const (
 	Version           = boolOption("version")
 	Delimiters        = runeSet("delimiters")
 	delimiterShort    = runeSet("D")
+	SearchTool        = stringOption("searchTool")
 )
 
 type option struct {
@@ -159,6 +161,7 @@ var options = optionMap{
 	Version:           option{false, "If provided, the scanner will print the version number and exit early", false},
 	Delimiters:        option{&delimiters, "Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in `delimiters`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may also be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.", false},
 	delimiterShort:    option{&delimiters, "Same as -delimiters", false},
+	SearchTool:        option{command.SilverSearcher, "Specifies the underlying search tool to be used for finding code references. Currently 'ag' (silver searcher) and 'rg' (ripgrep) are supported.", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.
@@ -212,6 +215,10 @@ func Init() (err error, errCb func()) {
 	if err != nil {
 		return fmt.Errorf("error parsing repo url: %+v", err), flag.PrintDefaults
 	}
+	searchTool := command.SearchTool(SearchTool.Value())
+	if searchTool != command.SilverSearcher && searchTool != command.Ripgrep {
+		return fmt.Errorf("searchTool must be 'ag' (silver searcher) or 'rg' (ripgrep)"), flag.PrintDefaults
+	}
 
 	// match all non-control ASCII characters
 	validDelims := regexp.MustCompile("[\x20-\x7E]")
@@ -254,6 +261,7 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 		"baseUri":      os.Getenv("LD_BASE_URI"),
 		"debug":        os.Getenv("LD_DEBUG"),
 		"delimiters":   os.Getenv("LD_DELIMITERS"),
+		"searchTool":   os.Getenv("LD_SEARCH_TOOL"),
 	}
 
 	if ldOptions["debug"] == "" {

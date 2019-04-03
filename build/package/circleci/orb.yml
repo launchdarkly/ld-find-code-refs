@@ -129,6 +129,10 @@ jobs:
         description: "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types."
         type: string
         default: ""
+       search_tool:
+         description: "Specifies the underlying search tool to be used for finding code references. Currently 'ag' (silver searcher) and 'rg' (ripgrep) are supported."
+         type: string
+         default: "ag"
       debug:
         description: "Enables verbose debug logging."
         type: boolean
@@ -155,6 +159,7 @@ jobs:
               -delimiters=<< parameters.delimiters >> \
               -commitUrlTemplate=<< parameters.commit_url_template >> \
               -hunkUrlTemplate=<< parameters.hunk_url_template >> \
+              -searchTool=<< parameters.search_tool >> \
               -repoName=${CIRCLE_PROJECT_REPONAME} \
               -updateSequenceId=${CIRCLE_BUILD_NUM} \
               -dir=/repo
