@@ -147,18 +147,18 @@ func Scan() {
 		}
 	}
 
-	err = deleteStaleBranches(ldApi, cmd, repoParams.Name)
+	remoteBranches, err := cmd.RemoteBranches()
 	if err != nil {
-		log.Error.Fatalf("failed to mark stale branches for deletion: %s", err)
+		log.Warning.Printf("unable to retrieve branch list from remote, skipping branch deletion: %s", err)
+	} else {
+		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
+		if err != nil {
+			log.Error.Fatalf("failed to mark stale branches for deletion: %s", err)
+		}
 	}
 }
 
-func deleteStaleBranches(ldApi ld.ApiClient, cmd command.Client, repoName string) error {
-	remoteBranches, err := cmd.RemoteBranches()
-	if err != nil {
-		return err
-	}
-
+func deleteStaleBranches(ldApi ld.ApiClient, repoName string, remoteBranches map[string]bool) error {
 	branches, err := ldApi.GetCodeReferenceRepositoryBranches(repoName)
 	if err != nil {
 		return err

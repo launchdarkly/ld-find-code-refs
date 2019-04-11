@@ -208,3 +208,5 @@ If both `.ldignore` and the `exclude` argument are provided, `ld-find-code-refs`
 ### Branch garbage collection
 
 After scanning has completed, `ld-find-code-refs` will search for and delete any stale branches. A branch is considered stale if it has references in LaunchDarkly, but no longer exists on the Git remote. As a consequence of this behavior, any code references on local branches or branches belonging only to a remote other than the default one will be removed the next time `ld-find-code-refs` is run on a different branch.
+
+This operation requires your environment to be authenticated for remote access to your repository. Branch cleanup is not currently supported when running `ld-find-code-refs` via Github actions or Bitbucket pipelines.
