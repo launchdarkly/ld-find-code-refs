@@ -14,6 +14,8 @@ This repository provides solutions for configuring [LaunchDarkly code references
 - [Examples](#examples)
 - [Required arguments](#required-arguments)
 - [Optional arguments](#optional-arguments)
+- [Ignoring files and directories](#ignoring-files-and-directories)
+- [Branch garbage collection](#branch-garbage-collection)
 
 ## Configuration options
 
@@ -202,3 +204,7 @@ Although these arguments are optional, a (\*) indicates a recommended parameter 
 3. The `exclude` command line option (see above section) may be used to specify a single regular expression for the exclude pattern.
 
 If both `.ldignore` and the `exclude` argument are provided, `ld-find-code-refs` will test against both for file exclusion. Do note that `.ldignore` expects shell glob patterns, while the `exclude` option expects a PCRE-compliant regular expression.
+
+### Branch garbage collection
+
+After scanning has completed, `ld-find-code-refs` will search for and delete any stale branches. A branch is considered stale if it has references in LaunchDarkly, but no longer exists on the Git remote. As a consequence of this behavior, any code references on local branches or branches belonging only to a remote other than the default one will be removed the next time `ld-find-code-refs` is run on a different branch.
