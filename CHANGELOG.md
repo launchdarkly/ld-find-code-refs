@@ -4,9 +4,9 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## Master
 
-### Added
+### [1.1.0] - 2019-04-11
 
-- `ld-find-code-refs` will now remove branches no longer in the git remote from LaunchDarkly.
+- `ld-find-code-refs` will now remove branches that no longer exist in the git remote from LaunchDarkly.
 
 ## [1.0.1] - 2019-03-12
 

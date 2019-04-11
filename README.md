@@ -4,23 +4,46 @@ Command line program for generating flag code references.
 
 This repository provides solutions for configuring [LaunchDarkly code references](hhttps://docs.launchdarkly.com/v2.0/docs/git-code-references) with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
 
+### Documentation quick links
+
+- [Feature guide](https://docs.launchdarkly.com/docs/git-code-references)
+- [Turn-key configuration options](#configuration-options)
+- [Execuation via CLI](#execution-via-cli)
+- [Prerequisites](#prerequisites)
+- [Installing](#installing)
+- [Examples](#examples)
+- [Required arguments](#required-arguments)
+- [Optional arguments](#optional-arguments)
+- [Ignoring files and directories](#ignoring-files-and-directories)
+- [Branch garbage collection](#branch-garbage-collection)
+
 ## Configuration options
 
 We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the ld-find-code-refs utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
 
-| System              | Status                                                                            |
-| ------------------- | --------------------------------------------------------------------------------- |
-| GitHub Actions      | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions)               |
-| CircleCI Orbs       | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs)                |
-| Bitbucket Pipes | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipes-coderefs) |
-| Manually via CLI    | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli) |
-| AWS Lambda jobs     | Planned                                                                           |
+| System           | Status                                                                            |
+| ---------------- | --------------------------------------------------------------------------------- |
+| GitHub Actions   | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions)               |
+| CircleCI Orbs    | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs)                |
+| Bitbucket Pipes  | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipes-coderefs)     |
+| Manually via CLI | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli) |
 
 ## Execution via CLI
 
 The command line program may be run manually, and executed in an environment of your choosing. The program requires your `git` repo to be cloned locally, and the currently checked out branch will be scanned for code references.
 
 We recommend ingraining `ld-find-code-refs` into your CI/CD build process. `ld-find-code-refs` should run whenever a commit is pushed to your repository.
+
+### Prerequisites
+
+`ld-find-code-refs` has two dependencies, which need to be installed in the system path:
+
+| Dependency | Version Tested |
+| ---------- | -------------- |
+| git        | 2.21.0         |
+| ag         | 2.2.0          |
+
+All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
 
 ### Installing
 
@@ -75,9 +98,7 @@ docker run \
 
 #### Manual
 
-Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest).
-
-The `ld-find-code-refs` program requires [Git](https://git-scm.org) and [The Silver Searcher](https://github.com/ggreer/the_silver_searcher#installing) to be installed as a dependency, so make sure these dependencies have been installed and added to your system path before running `ld-find-code-refs`.
+Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`
 
 ### Examples
 
@@ -159,20 +180,20 @@ A number of command-line arguments are available to the code ref finder, some op
 
 Although these arguments are optional, a (\*) indicates a recommended parameter that adds great value if configured.
 
-| Option              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Default                        |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `baseUri`           | Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly.                                                                                                                                                                                                                                                                                                                                     | `https://app.launchdarkly.com` |
-| `contextLines` (\*) | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.                                                                                                                                                             | `2`                            |
-| `debug`             | Enables verbose debug logging.                                                                                                                                                                                                                                                                                                                                                                                                                                      | `false`                        |
-| `defaultBranch`     | The git default branch. The LaunchDarkly UI will default to display code references for this branch.                                                                                                                                                                                                                                                                                                                                                                | `master`                       |
-| `delimiters` or `D`  | Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in `delimiters`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may also be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.    | `` [" ' `] ``                  |
-| `exclude` (\*)      | A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: `vendor/`, `\.css`, `vendor/\|\.css`                                                                                                                                                                                                                                                                                    |                                |
-| `updateSequenceId`  | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the program. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current unix timestamp.                                                               |                                |
-| `repoType` (\*)     | The repo service provider. Used to generate repository links in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom                                                                                                                                                                                                                                                                                                                                   | `custom`                       |
-| `repoUrl` (\*)      | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs`                                                                                                                                                                                                                                           |                                |
-| `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.                                                    |                                |
-| `hunkUrlTemplate`   | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference. |                                |
-| `version` | If provided, the current `ld-find-code-refs` version number will be logged, and the scanner will exit with a return code of 0. | `false` | 
+| Option              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Default                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| `baseUri`           | Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly.                                                                                                                                                                                                                                                                                                                                          | `https://app.launchdarkly.com` |
+| `contextLines` (\*) | The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the line containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.                                                                                                                                                                  | `2`                            |
+| `debug`             | Enables verbose debug logging.                                                                                                                                                                                                                                                                                                                                                                                                                                           | `false`                        |
+| `defaultBranch`     | The git default branch. The LaunchDarkly UI will default to display code references for this branch.                                                                                                                                                                                                                                                                                                                                                                     | `master`                       |
+| `delimiters` or `D` | Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in `delimiters`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may also be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched. | `` [" ' `] ``                  |
+| `exclude` (\*)      | A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: `vendor/`, `\.css`, `vendor/\|\.css`                                                                                                                                                                                                                                                                                         |                                |
+| `updateSequenceId`  | An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the program. If not provided, data will always be updated. If provided, data will only be updated if the existing `updateSequenceId` is less than the new `updateSequenceId`. Examples: the time a `git push` was initiated, CI build number, the current unix timestamp.                                                                    |                                |
+| `repoType` (\*)     | The repo service provider. Used to generate repository links in the LaunchDarkly UI. Acceptable values: github\|bitbucket\|custom                                                                                                                                                                                                                                                                                                                                        | `custom`                       |
+| `repoUrl` (\*)      | The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs`                                                                                                                                                                                                                                                |                                |
+| `commitUrlTemplate` | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.                                                         |                                |
+| `hunkUrlTemplate`   | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.      |                                |
+| `version`           | If provided, the current `ld-find-code-refs` version number will be logged, and the scanner will exit with a return code of 0.                                                                                                                                                                                                                                                                                                                                           | `false`                        |
 
 ### Ignoring files and directories
 
@@ -183,3 +204,7 @@ Although these arguments are optional, a (\*) indicates a recommended parameter 
 3. The `exclude` command line option (see above section) may be used to specify a single regular expression for the exclude pattern.
 
 If both `.ldignore` and the `exclude` argument are provided, `ld-find-code-refs` will test against both for file exclusion. Do note that `.ldignore` expects shell glob patterns, while the `exclude` option expects a PCRE-compliant regular expression.
+
+### Branch garbage collection
+
+After scanning has completed, `ld-find-code-refs` will search for and delete any stale branches. A branch is considered stale if it has references in LaunchDarkly, but no longer exists on the Git remote. As a consequence of this behavior, any code references on local branches or branches belonging only to a remote other than the default one will be removed the next time `ld-find-code-refs` is run on a different branch.
