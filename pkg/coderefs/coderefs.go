@@ -146,6 +146,45 @@ func Scan() {
 			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}
 	}
+
+	err = deleteStaleBranches(ldApi, cmd, repoParams.Name)
+	if err != nil {
+		log.Error.Fatalf("failed to mark stale branches for deletion: %s", err)
+	}
+}
+
+func deleteStaleBranches(ldApi ld.ApiClient, cmd command.Client, repoName string) error {
+	remoteBranches, err := cmd.RemoteBranches()
+	if err != nil {
+		return err
+	}
+
+	branches, err := ldApi.GetCodeReferenceRepositoryBranches(repoName)
+	if err != nil {
+		return err
+	}
+
+	staleBranches := calculateStaleBranches(branches, remoteBranches)
+	if len(staleBranches) > 0 {
+		log.Debug.Printf("marking branches for deletion: %v", staleBranches)
+		err = ldApi.PostDeleteBranchesTask(repoName, staleBranches)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]bool) []string {
+	staleBranches := []string{}
+	for _, branch := range branches {
+		if !remoteBranches[branch.Name] {
+			staleBranches = append(staleBranches, branch.Name)
+		}
+	}
+	log.Info.Printf("found %d stale branches to be marked for deletion", len(staleBranches))
+	return staleBranches
 }
 
 // Very short flag keys lead to many false positives when searching in code,
