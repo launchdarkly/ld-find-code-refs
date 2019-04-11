@@ -4,7 +4,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## [1.1.1] - 2019-04-11
 
-### Changed
+### Fixed
 
 - `ld-find-code-refs` will no longer exit with a fatal error when Git credentials have not been configured (required for branch cleanup). Instead, a warning will be logged.
 
