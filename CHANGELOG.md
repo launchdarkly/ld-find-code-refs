@@ -2,9 +2,15 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## Master
+## [1.1.1] - 2019-04-11
 
-### [1.1.0] - 2019-04-11
+### Changed
+
+- `ld-find-code-refs` will no longer exit with a fatal error when Git credentials have not been configured (required for branch cleanup). Instead, a warning will be logged.
+
+## [1.1.0] - 2019-04-11
+
+### Added
 
 - `ld-find-code-refs` will now remove branches that no longer exist in the git remote from LaunchDarkly.
 
