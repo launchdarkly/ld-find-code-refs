@@ -53,6 +53,7 @@ func NewClient(path string) (Client, error) {
 	} else if currBranch == "" {
 		return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.Workspace)
 	}
+	log.Info.Printf("git branch: %s", currBranch)
 	client.GitBranch = currBranch
 
 	head, err := client.headSha()
