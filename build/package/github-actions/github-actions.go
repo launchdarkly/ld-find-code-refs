@@ -28,7 +28,7 @@ func main() {
 	if len(ghRepo) < 2 {
 		log.Error.Fatalf("unable to validate GitHub repository name: %s", ghRepo)
 	}
-	ghBranch, error := parseBranch(os.Getenv("GITHUB_REF"))
+	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
 	if err != nil {
 		log.Error.Fatalf("error parsing GITHUB_REF: %s", err)
 	}
