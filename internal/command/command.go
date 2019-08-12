@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
 /*
@@ -50,20 +51,26 @@ func NewClient(path string) (Client, error) {
 	if err != nil {
 		return client, fmt.Errorf("error parsing git branch name: %s", err)
 	} else if currBranch == "" {
-		return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch", client.Workspace)
+		return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.Workspace)
 	}
 	client.GitBranch = currBranch
 
-	headSha, err := client.revParse(currBranch)
+	head, err := client.headSha()
 	if err != nil {
 		return client, fmt.Errorf("error parsing current commit sha: %s", err)
 	}
-	client.GitSha = headSha
+	client.GitSha = head
 
 	return client, nil
 }
 
 func (c Client) branchName() (string, error) {
+	// Some CI systems leave the repository in a detached HEAD state. To support those, this logic allows
+	// users to pass the branch name in by hand as an option.
+	if o.Branch.Value() != "" {
+		return o.Branch.Value(), nil
+	}
+
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -78,15 +85,15 @@ func (c Client) branchName() (string, error) {
 	return ret, nil
 }
 
-func (c Client) revParse(branch string) (string, error) {
+func (c Client) headSha() (string, error) {
 	/* #nosec */
-	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", branch)
+	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "HEAD")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", errors.New(string(out))
 	}
 	ret := strings.TrimSpace(string(out))
-	log.Debug.Printf("identified sha: %s", ret)
+	log.Debug.Printf("identified head sha: %s", ret)
 	return ret, nil
 }
 

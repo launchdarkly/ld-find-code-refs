@@ -97,6 +97,7 @@ func (o *RuneSet) contains(c rune) bool {
 const (
 	AccessToken       = stringOption("accessToken")
 	BaseUri           = stringOption("baseUri")
+	Branch            = stringOption("branch")
 	ContextLines      = intOption("contextLines")
 	Debug             = boolOption("debug")
 	DefaultBranch     = stringOption("defaultBranch")
@@ -144,6 +145,7 @@ var (
 var options = optionMap{
 	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
 	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
+	Branch:            option{"", "The currently checked out git branch. If not provided, branch name will be auto-detected. Please provide when using CI systems that leave the repository in a detached HEAD state.", false},
 	ContextLines:      option{defaultContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
 	DefaultBranch:     option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", true},
