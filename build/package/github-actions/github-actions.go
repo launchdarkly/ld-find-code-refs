@@ -103,7 +103,7 @@ func parseEvent(path string) (*Event, error) {
 }
 
 func parseBranch(ref string) (string, error) {
-	re := regexp.MustCompile(`$refs/heads/(.+)^`)
+	re := regexp.MustCompile(`^refs/heads/(.+)$`)
 	results := re.FindStringSubmatch(ref)
 
 	if results == nil {
