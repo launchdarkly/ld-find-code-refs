@@ -9,7 +9,7 @@ test: lint
 	go test ./...
 
 lint:
-	pre-commit run -a --verbose golangci-lint.
+	pre-commit run -a --verbose golangci-lint
 
 compile-macos-binary:
 	GOOS=darwin GOARCH=amd64 go build -o out/ld-find-code-refs ./cmd/ld-find-code-refs

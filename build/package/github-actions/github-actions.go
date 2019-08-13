@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -26,12 +28,17 @@ func main() {
 	if len(ghRepo) < 2 {
 		log.Error.Fatalf("unable to validate GitHub repository name: %s", ghRepo)
 	}
+	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
+	if err != nil {
+		log.Error.Fatalf("error parsing GITHUB_REF: %s", err)
+	}
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
 		log.Error.Fatalf("error parsing GitHub event payload at %s: %s", os.Getenv("GITHUB_EVENT_PATH"), err)
 	}
 
 	options := map[string]string{
+		"branch":           ghBranch,
 		"repoType":         "github",
 		"repoName":         ghRepo[1],
 		"dir":              os.Getenv("GITHUB_WORKSPACE"),
@@ -93,4 +100,15 @@ func parseEvent(path string) (*Event, error) {
 		return nil, err
 	}
 	return &evt, err
+}
+
+func parseBranch(ref string) (string, error) {
+	re := regexp.MustCompile(`^refs/heads/(.+)$`)
+	results := re.FindStringSubmatch(ref)
+
+	if results == nil {
+		return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %s", ref)
+	}
+
+	return results[1], nil
 }
