@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.0] - 2019-08-13
+
+### Added
+
+- Added a `--branch` option to the CLI. This lets a branch name be manually specified when the repo is in a detached head state.
+- Github actions v2 support: the github actions wrapper reads the branch name from `GITHUB_REF` and populates the `branch` option with it.
+
 ## [1.1.1] - 2019-04-11
 
 ### Fixed
