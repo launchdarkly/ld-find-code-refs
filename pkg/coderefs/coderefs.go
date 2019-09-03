@@ -213,12 +213,26 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
-	grepResult, err := cmd.SearchForFlags(flags, ctxLines, delims)
-	if err != nil {
-		return grepResultLines{}, err
+
+	var pageSize = 50
+	var grepResults [][]string
+	log.Info.Printf("paginating %d flags with a pagesize of %d", len(flags), pageSize)
+	for from := 0; from < len(flags); from += pageSize {
+		to := from + pageSize
+		if to > len(flags) {
+			to = len(flags)
+		}
+
+		log.Info.Printf("grepping for flags in group: [%d, %d]", from, to)
+		grepResult, err := cmd.SearchForFlags(flags[from:to], ctxLines, delims)
+		if err != nil {
+			return grepResultLines{}, err
+		}
+
+		grepResults = append(grepResults, grepResult...)
 	}
 
-	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
+	return generateReferencesFromGrep(flags, grepResults, ctxLines, exclude), nil
 }
 
 func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {

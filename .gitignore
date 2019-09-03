@@ -6,3 +6,4 @@ build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 build/package/cmd/ld-find-code-refs
 /dist/
 /bin/
+.idea/
