@@ -27,6 +27,20 @@ func init() {
 	log.Init(true)
 }
 
+func Test_sortGrepResults(t *testing.T) {
+	cats1 := grepResultLine{Path: "/dev/null/cats", LineNum: 1, LineText: "", FlagKeys: []string{"src/meow/yes/pls"}}
+	cats2 := grepResultLine{Path: "/dev/null/cats", LineNum: 2, LineText: "", FlagKeys: []string{"src/meow/feed/me"}}
+	dogs5 := grepResultLine{Path: "/dev/null/dogs", LineNum: 5, LineText: "", FlagKeys: []string{"src/woof/oh/fine"}}
+	dogs15 := grepResultLine{Path: "/dev/null/dogs", LineNum: 15, LineText: "", FlagKeys: []string{"src/woof/walk/me"}}
+
+	linesToSort := grepResultLines{dogs15, cats2, dogs5, cats1}
+	expectedResults := grepResultLines{cats1, cats2, dogs5, dogs15}
+
+	sortGrepResults(linesToSort);
+
+	assert.Exactly(t, linesToSort, expectedResults, "search order for grepLines not as expected")
+}
+
 func Test_generateReferencesFromGrep(t *testing.T) {
 	tests := []struct {
 		name       string

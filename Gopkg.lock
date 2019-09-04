@@ -130,6 +130,7 @@
     "github.com/launchdarkly/api-client-go",
     "github.com/launchdarkly/json-patch",
     "github.com/olekukonko/tablewriter",
+    "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
   ]
   solver-name = "gps-cdcl"
