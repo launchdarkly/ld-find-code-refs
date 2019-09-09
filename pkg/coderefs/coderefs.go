@@ -40,6 +40,25 @@ type grepResultLine struct {
 
 type grepResultLines []grepResultLine
 
+func (lines grepResultLines) Len() int {
+	return len(lines)
+}
+
+func (lines grepResultLines) Less(i, j int) bool {
+	if lines[i].Path < lines[j].Path {
+		return true
+	}
+	if lines[i].Path > lines[j].Path {
+		return false
+	}
+	return lines[i].LineNum < lines[j].LineNum
+}
+
+func (lines grepResultLines) Swap(i, j int) {
+	lines[i], lines[j] = lines[j], lines[i]
+	return
+}
+
 // map of flag keys to slices of lines those flags occur on
 type flagReferenceMap map[string][]*list.Element
 
@@ -131,7 +150,7 @@ func Scan() {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
 	b.GrepResults = refs
-	sortGrepResults(b.GrepResults)
+	sort.Sort(b.GrepResults)
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
 	log.Info.Printf("sending %d code references across %d flags and %d files to LaunchDarkly for project: %s", branchRep.TotalHunkCount(), len(filteredFlags), len(branchRep.References), projKey)
@@ -158,19 +177,6 @@ func Scan() {
 			log.Error.Fatalf("failed to mark stale branches for deletion: %s", err)
 		}
 	}
-}
-
-// Sorts grep results by Path and then line number
-func sortGrepResults(lines grepResultLines) {
-	sort.Slice(lines, func(i, j int) bool {
-		if lines[i].Path < lines[j].Path {
-			return true
-		}
-		if lines[i].Path > lines[j].Path {
-			return false
-		}
-		return lines[i].LineNum < lines[j].LineNum
-	})
 }
 
 func deleteStaleBranches(ldApi ld.ApiClient, repoName string, remoteBranches map[string]bool) error {
@@ -229,16 +235,17 @@ func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
 
-	var pageSize = 500
-	var grepResults [][]string
+	pageSize := o.PageSize.Value()
 	log.Info.Printf("paginating %d flags with a pagesize of %d", len(flags), pageSize)
+
+	var grepResults [][]string
 	for from := 0; from < len(flags); from += pageSize {
 		to := from + pageSize
 		if to > len(flags) {
 			to = len(flags)
 		}
 
-		log.Info.Printf("grepping for flags in group: [%d, %d]", from, to)
+		log.Debug.Printf("grepping for flags in group: [%d, %d]", from, to)
 		grepResult, err := cmd.SearchForFlags(flags[from:to], ctxLines, delims)
 		if err != nil {
 			return grepResultLines{}, err

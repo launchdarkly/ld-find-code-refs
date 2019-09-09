@@ -36,7 +36,7 @@ func Test_sortGrepResults(t *testing.T) {
 	linesToSort := grepResultLines{dogs15, cats2, dogs5, cats1}
 	expectedResults := grepResultLines{cats1, cats2, dogs5, dogs15}
 
-	sortGrepResults(linesToSort);
+	sort.Sort(linesToSort)
 
 	assert.Exactly(t, linesToSort, expectedResults, "search order for grepLines not as expected")
 }
