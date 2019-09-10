@@ -59,7 +59,7 @@ func paginatedSearch(cmd command.Client, flags []string, maxSumFlagKeyLength, ct
 						return nil, FatalPaginatedSearchErr
 					}
 
-					// if this fails unexpectedly, fallback to the simple search algorithm for the remaining pages
+					// if this fails unexpectedly, fallback to a simple search algorithm for the remaining pages
 					log.Debug.Printf("encountered an error paginating, falling back to simple paginated search")
 					remainder, err := simplePaginatedSearch(cmd, flags[from:], len(nextSearchKeys)-1, ctxLines, delims)
 					if err != nil {

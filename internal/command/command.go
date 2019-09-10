@@ -29,14 +29,19 @@ var SearchTooLargeErr = errors.New("regular expression is too large")
 // https://github.com/vmg/pcre/blob/master/pcre_internal.h#L436
 const SafePaginationCharCount = 60000
 
-type Client struct {
+type Client interface {
+	SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error)
+	RemoteBranches() (map[string]bool, error)
+}
+
+type gitClient struct {
 	Workspace string
 	GitBranch string
 	GitSha    string
 }
 
-func NewClient(path string) (Client, error) {
-	client := Client{}
+func newGitClient(path string) (gitClient, error) {
+	client := gitClient{}
 
 	absPath, err := normalizeAndValidatePath(path)
 	if err != nil {
@@ -47,10 +52,6 @@ func NewClient(path string) (Client, error) {
 	_, err = exec.LookPath("git")
 	if err != nil {
 		return client, errors.New("git is a required dependency, but was not found in the system PATH")
-	}
-	_, err = exec.LookPath("ag")
-	if err != nil {
-		return client, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
 	}
 
 	currBranch, err := client.branchName()
@@ -71,7 +72,7 @@ func NewClient(path string) (Client, error) {
 	return client, nil
 }
 
-func (c Client) branchName() (string, error) {
+func (c gitClient) branchName() (string, error) {
 	// Some CI systems leave the repository in a detached HEAD state. To support those, this logic allows
 	// users to pass the branch name in by hand as an option.
 	if o.Branch.Value() != "" {
@@ -92,7 +93,7 @@ func (c Client) branchName() (string, error) {
 	return ret, nil
 }
 
-func (c Client) headSha() (string, error) {
+func (c gitClient) headSha() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -104,7 +105,7 @@ func (c Client) headSha() (string, error) {
 	return ret, nil
 }
 
-func (c Client) RemoteBranches() (map[string]bool, error) {
+func (c gitClient) RemoteBranches() (map[string]bool, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.Workspace, "ls-remote", "--quiet", "--heads")
 	out, err := cmd.CombinedOutput()
@@ -123,7 +124,26 @@ func (c Client) RemoteBranches() (map[string]bool, error) {
 	return ret, nil
 }
 
-func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
+type AgClient struct {
+	gitClient
+}
+
+func NewAgClient(path string) (AgClient, error) {
+	gitClient, err := newGitClient(path)
+	if err != nil {
+		return AgClient{}, err
+	}
+
+	client := AgClient{gitClient}
+	_, err = exec.LookPath("ag")
+	if err != nil {
+		return client, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
+	}
+
+	return client, nil
+}
+
+func (c AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
 	ignoreFileName := ".ldignore"
 	pathToIgnore := filepath.Join(c.Workspace, ignoreFileName)
