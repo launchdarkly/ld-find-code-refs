@@ -103,7 +103,6 @@ const (
 	DefaultBranch     = stringOption("defaultBranch")
 	Dir               = stringOption("dir")
 	Exclude           = stringOption("exclude")
-	PageSize          = intOption("pageSize")
 	ProjKey           = stringOption("projKey")
 	UpdateSequenceId  = int64Option("updateSequenceId")
 	RepoName          = stringOption("repoName")
@@ -152,7 +151,6 @@ var options = optionMap{
 	Dir:               option{"", "Path to existing checkout of the git repo.", true},
 	Debug:             option{false, "Enables verbose debug logging", false},
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css"`, false},
-	PageSize:          option{500, "Controls how many feature flags are searched for at a given time.", false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
 	UpdateSequenceId:  option{noUpdateSequenceID, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
 	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."`, true},
@@ -259,7 +257,6 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 		"baseUri":      os.Getenv("LD_BASE_URI"),
 		"debug":        os.Getenv("LD_DEBUG"),
 		"delimiters":   os.Getenv("LD_DELIMITERS"),
-		"pageSize":     os.Getenv("LD_PAGESIZE"),
 	}
 
 	if ldOptions["debug"] == "" {
@@ -277,11 +274,6 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 	_, err = strconv.ParseInt(ldOptions["contextLines"], 10, 32)
 	if err != nil {
 		return ldOptions, fmt.Errorf("couldn't parse LD_CONTEXT_LINES as an integer: %+v", err)
-	}
-
-	_, err = strconv.ParseInt(ldOptions["pageSize"], 10, 32)
-	if err != nil {
-		return ldOptions, fmt.Errorf("couldn't parse LD_PAGE_SIZE as an integer: %+v", err)
 	}
 
 	return ldOptions, nil

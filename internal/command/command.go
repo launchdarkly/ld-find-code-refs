@@ -23,6 +23,12 @@ Group 4: Line contents
 */
 var grepRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
+var SearchTooLargeErr = errors.New("regular expression is too large")
+
+// SafePaginationCharCount determines the maximum sum of flag key lengths to be used in a single smart paginated search. Bounded by the 2^16 limit of pcre_compile() with the parameters set by our underlying search tool (ag)
+// https://github.com/vmg/pcre/blob/master/pcre_internal.h#L436
+const SafePaginationCharCount = 60000
+
 type Client struct {
 	Workspace string
 	GitBranch string
@@ -137,6 +143,8 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
+		} else if strings.Contains(string(out), SearchTooLargeErr.Error()) {
+			return [][]string{}, SearchTooLargeErr
 		}
 		return nil, errors.New(string(out))
 	}

@@ -2,6 +2,7 @@ package coderefs
 
 import (
 	"container/list"
+	"errors"
 	"os"
 	"regexp"
 	"sort"
@@ -231,30 +232,76 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
-	delims := o.Delimiters.Value()
-	log.Info.Printf("finding code references with delimiters: %s", delims.String())
-
-	pageSize := o.PageSize.Value()
-	log.Info.Printf("paginating %d flags with a pagesize of %d", len(flags), pageSize)
-
-	var grepResults [][]string
+// simplePaginatedSearch attempts to search by reducing pageSize until a valid search is generated
+func simplePaginatedSearch(cmd command.Client, flags []string, pageSize, ctxLines int, delims []rune) ([][]string, error) {
+	var results [][]string
 	for from := 0; from < len(flags); from += pageSize {
 		to := from + pageSize
 		if to > len(flags) {
 			to = len(flags)
 		}
 
-		log.Debug.Printf("grepping for flags in group: [%d, %d]", from, to)
-		grepResult, err := cmd.SearchForFlags(flags[from:to], ctxLines, delims)
+		log.Debug.Printf("searching for flags in group: [%d, %d]", from, to)
+		result, err := cmd.SearchForFlags(flags[from:to], ctxLines, delims)
 		if err != nil {
-			return grepResultLines{}, err
+			if err == command.SearchTooLargeErr {
+				nextPageSize := pageSize / 2
+				log.Debug.Printf("encountered an error paginating at pagesize %d, attempting with a pagesize of %d", pageSize, nextPageSize)
+				if nextPageSize > 0 {
+					return simplePaginatedSearch(cmd, flags, pageSize, ctxLines, delims)
+				}
+				return nil, errors.New("failed to generate a valid search pattern")
+			}
+			return nil, err
 		}
-
-		grepResults = append(grepResults, grepResult...)
+		results = append(results, result...)
 	}
+	return results, nil
+}
 
-	return generateReferencesFromGrep(flags, grepResults, ctxLines, exclude), nil
+// paginatedSearch attempts to come up with a maximal set of flag keys to search for at a time dependent on the value set by safePaginationCharCount
+func paginatedSearch(cmd command.Client, flags []string, ctxLines int, delims []rune) ([][]string, error) {
+	var results [][]string
+	nextSearchKeys := []string{}
+	totalKeyLength := len(delims) * 2
+	from := 0
+	for to, key := range flags {
+		totalKeyLength += len(key) + strings.Count(key, ".")
+		if totalKeyLength > command.SafePaginationCharCount {
+			log.Debug.Printf("searching for flags in group: [%d, %d]", from, to)
+			result, err := cmd.SearchForFlags(nextSearchKeys, ctxLines, delims)
+			err = command.SearchTooLargeErr
+			if err != nil {
+				if err == command.SearchTooLargeErr {
+					// if this fails unexpectedly, fallback to the simple search algorithm for the remaining pages
+					log.Debug.Printf("encountered an error paginating, falling back to simple paginated search")
+					remainder, err := simplePaginatedSearch(cmd, flags[from:], len(nextSearchKeys)-1, ctxLines, delims)
+					if err != nil {
+						return nil, err
+					}
+					return append(results, remainder...), nil
+				}
+				return nil, err
+			}
+			results = append(results, result...)
+			nextSearchKeys = []string{}
+			totalKeyLength = len(delims) * 2
+			from = to + 1
+		}
+		nextSearchKeys = append(nextSearchKeys, key)
+	}
+	return results, nil
+}
+
+func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
+	delims := o.Delimiters.Value()
+	log.Info.Printf("finding code references with delimiters: %s", delims.String())
+
+	results, err := paginatedSearch(cmd, flags, ctxLines, delims)
+	if err != nil {
+		return grepResultLines{}, err
+	}
+	return generateReferencesFromGrep(flags, results, ctxLines, exclude), nil
 }
 
 func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
