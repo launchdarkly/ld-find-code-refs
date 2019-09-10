@@ -2,6 +2,7 @@ package coderefs
 
 import (
 	"container/list"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -218,10 +219,10 @@ func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int
 		return grepResultLines{}, err
 	}
 
-	return generateReferencesFromGrep(flags, grepResult, ctxLines, exclude), nil
+	return generateReferencesFromGrep(flags, grepResult, ctxLines, string(delims), exclude), nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, exclude *regexp.Regexp) []grepResultLine {
+func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []grepResultLine {
 	references := []grepResultLine{}
 
 	for _, r := range grepResult {
@@ -238,7 +239,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		}
 		ref := grepResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
-			ref.FlagKeys = findReferencedFlags(lineText, flags)
+			ref.FlagKeys = findReferencedFlags(lineText, flags, delims)
 		}
 		if ctxLines >= 0 {
 			ref.LineText = lineText
@@ -249,10 +250,11 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 	return references
 }
 
-func findReferencedFlags(ref string, flags []string) []string {
+func findReferencedFlags(ref string, flags []string, delims string) []string {
 	ret := []string{}
 	for _, flag := range flags {
-		if strings.Contains(ref, flag) {
+		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, flag, delims))
+		if matcher.MatchString(ref) {
 			ret = append(ret, flag)
 		}
 	}
