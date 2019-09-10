@@ -27,7 +27,16 @@ func init() {
 	log.Init(true)
 }
 
+func delimit(s string, delim string) string {
+	return delim + s + delim
+}
+
 func Test_generateReferencesFromGrep(t *testing.T) {
+	testFlagKey := "someFlag"
+	testFlagKey2 := "anotherFlag"
+	testResult := []string{"", "flags.txt", ":", "12", delimit(testFlagKey, `"`)}
+	testWant := grepResultLine{Path: "flags.txt", LineNum: 12, LineText: delimit(testFlagKey, `"`), FlagKeys: []string{testFlagKey}}
+
 	tests := []struct {
 		name       string
 		flags      []string
@@ -37,82 +46,93 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 		exclude    string
 	}{
 		{
-			name:  "succeeds",
-			flags: []string{"someFlag", "anotherFlag"},
-			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
-			},
-			ctxLines: 0,
-			want: []grepResultLine{
-				{Path: "flags.txt", LineNum: 12, LineText: "someFlag", FlagKeys: []string{"someFlag"}},
-			},
+			name:       "succeeds",
+			flags:      []string{testFlagKey, testFlagKey2},
+			grepResult: [][]string{testResult},
+			ctxLines:   0,
+			want:       []grepResultLine{testWant},
 		},
 		{
-			name:  "succeeds with exclude",
-			flags: []string{"someFlag", "anotherFlag"},
-			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
-			},
-			ctxLines: 0,
-			want:     []grepResultLine{},
-			exclude:  ".*",
+			name:       "succeeds with exclude",
+			flags:      []string{testFlagKey, testFlagKey2},
+			grepResult: [][]string{testResult},
+			ctxLines:   0,
+			want:       []grepResultLine{},
+			exclude:    ".*",
 		},
 		{
-			name:  "succeeds with no LineText lines",
-			flags: []string{"someFlag", "anotherFlag"},
-			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
-			},
-			ctxLines: -1,
+			name:       "succeeds with no LineText lines",
+			flags:      []string{testFlagKey, testFlagKey2},
+			grepResult: [][]string{testResult},
+			ctxLines:   -1,
 			want: []grepResultLine{
-				{Path: "flags.txt", LineNum: 12, FlagKeys: []string{"someFlag"}},
+				{Path: "flags.txt", LineNum: 12, FlagKeys: []string{testFlagKey}},
 			},
 		},
 		{
 			name:  "succeeds with multiple references",
-			flags: []string{"someFlag", "anotherFlag"},
+			flags: []string{testFlagKey, testFlagKey2},
 			grepResult: [][]string{
-				{"", "flags.txt", ":", "12", "someFlag"},
-				{"", "path/flags.txt", ":", "12", "someFlag anotherFlag"},
+				testResult,
+				{"", "path/flags.txt", ":", "12", `"someFlag" "anotherFlag"`},
 			},
 			ctxLines: 0,
 			want: []grepResultLine{
-				{Path: "flags.txt", LineNum: 12, LineText: "someFlag", FlagKeys: []string{"someFlag"}},
-				{Path: "path/flags.txt", LineNum: 12, LineText: "someFlag anotherFlag", FlagKeys: []string{"someFlag", "anotherFlag"}},
+				testWant,
+				{Path: "path/flags.txt", LineNum: 12, LineText: `"someFlag" "anotherFlag"`, FlagKeys: []string{testFlagKey, testFlagKey2}},
 			},
 		},
 		{
 			name:  "succeeds with extra LineText lines",
-			flags: []string{"someFlag", "anotherFlag"},
+			flags: []string{testFlagKey, testFlagKey2},
 			grepResult: [][]string{
 				{"", "flags.txt", "-", "11", "not a flag key line"},
-				{"", "flags.txt", ":", "12", "someFlag"},
+				testResult,
 				{"", "flags.txt", "-", "13", "not a flag key line"},
 			},
 			ctxLines: 1,
 			want: []grepResultLine{
 				{Path: "flags.txt", LineNum: 11, LineText: "not a flag key line"},
-				{Path: "flags.txt", LineNum: 12, LineText: "someFlag", FlagKeys: []string{"someFlag"}},
+				testWant,
 				{Path: "flags.txt", LineNum: 13, LineText: "not a flag key line"},
 			},
 		},
 		{
 			name:  "succeeds with extra LineText lines and multiple flags",
-			flags: []string{"someFlag", "anotherFlag"},
+			flags: []string{testFlagKey, testFlagKey2},
 			grepResult: [][]string{
 				{"", "flags.txt", "-", "11", "not a flag key line"},
-				{"", "flags.txt", ":", "12", "someFlag"},
+				testResult,
 				{"", "flags.txt", "-", "13", "not a flag key line"},
-				{"", "flags.txt", ":", "14", "anotherFlag"},
+				{"", "flags.txt", ":", "14", delimit(testFlagKey2, `"`)},
 				{"", "flags.txt", "-", "15", "not a flag key line"},
 			},
 			ctxLines: 1,
 			want: []grepResultLine{
 				{Path: "flags.txt", LineNum: 11, LineText: "not a flag key line"},
-				{Path: "flags.txt", LineNum: 12, LineText: "someFlag", FlagKeys: []string{"someFlag"}},
+				testWant,
 				{Path: "flags.txt", LineNum: 13, LineText: "not a flag key line"},
-				{Path: "flags.txt", LineNum: 14, LineText: "anotherFlag", FlagKeys: []string{"anotherFlag"}},
+				{Path: "flags.txt", LineNum: 14, LineText: delimit(testFlagKey2, `"`), FlagKeys: []string{testFlagKey2}},
 				{Path: "flags.txt", LineNum: 15, LineText: "not a flag key line"},
+			},
+		},
+		{
+			name:       "does not match substring flag key",
+			flags:      []string{testFlagKey, testFlagKey[:4]},
+			grepResult: [][]string{testResult},
+			ctxLines:   0,
+			want:       []grepResultLine{testWant},
+		},
+		{
+			// delimeters don't have to match on both sides
+			name:  "succeeds with multiple delimiters",
+			flags: []string{"someFlag", "some"},
+			grepResult: [][]string{
+				{"", "flags.txt", ":", "12", `"` + testFlagKey + "'"},
+			},
+			ctxLines: 0,
+			want: []grepResultLine{
+				{Path: "flags.txt", LineNum: 12, LineText: `"` + testFlagKey + "'", FlagKeys: []string{testFlagKey}},
 			},
 		},
 	}
@@ -120,7 +140,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ex, err := regexp.Compile(tt.exclude)
 			require.NoError(t, err)
-			got := generateReferencesFromGrep(tt.flags, tt.grepResult, tt.ctxLines, ex)
+			got := generateReferencesFromGrep(tt.flags, tt.grepResult, tt.ctxLines, `"'`, ex)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -150,7 +170,7 @@ func Test_findReferencedFlags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := findReferencedFlags(tt.ref, []string{"someFlag", "anotherFlag"})
+			got := findReferencedFlags(tt.ref, []string{"someFlag", "anotherFlag"}, `"`)
 			require.Equal(t, tt.want, got)
 		})
 	}
