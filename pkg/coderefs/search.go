@@ -51,7 +51,6 @@ func paginatedSearch(cmd command.Client, flags []string, maxSumFlagKeyLength, ct
 		if totalKeyLength > maxSumFlagKeyLength {
 			log.Debug.Printf("searching for flags in group: [%d, %d]", from, to)
 			result, err := cmd.SearchForFlags(nextSearchKeys, ctxLines, delims)
-			err = command.SearchTooLargeErr
 			if err != nil {
 				if err == command.SearchTooLargeErr {
 					// this shouldn't be possible with a valid maxSumFlagKeyLength
@@ -59,7 +58,8 @@ func paginatedSearch(cmd command.Client, flags []string, maxSumFlagKeyLength, ct
 						return nil, FatalPaginatedSearchErr
 					}
 
-					// if this fails unexpectedly, fallback to a simple search algorithm for the remaining pages
+					// we expect all search implementations to complete successfully,
+					// if pagination fails unexpectedly, fallback to a simple search algorithm for the remaining pages
 					log.Debug.Printf("encountered an error paginating, falling back to simple paginated search")
 					remainder, err := simplePaginatedSearch(cmd, flags[from:], len(nextSearchKeys)-1, ctxLines, delims)
 					if err != nil {
