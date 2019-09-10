@@ -31,9 +31,12 @@ func delimit(s string, delim string) string {
 	return delim + s + delim
 }
 
+const (
+	testFlagKey  = "someFlag"
+	testFlagKey2 = "anotherFlag"
+)
+
 func Test_generateReferencesFromGrep(t *testing.T) {
-	testFlagKey := "someFlag"
-	testFlagKey2 := "anotherFlag"
 	testResult := []string{"", "flags.txt", ":", "12", delimit(testFlagKey, `"`)}
 	testWant := grepResultLine{Path: "flags.txt", LineNum: 12, LineText: delimit(testFlagKey, `"`), FlagKeys: []string{testFlagKey}}
 
@@ -154,12 +157,12 @@ func Test_findReferencedFlags(t *testing.T) {
 	}{
 		{
 			name: "finds a flag",
-			ref:  "line contains someFlag",
+			ref:  "line contains " + delimit(testFlagKey, `"`),
 			want: []string{"someFlag"},
 		},
 		{
 			name: "finds multiple flags",
-			ref:  "line contains someFlag and anotherFlag",
+			ref:  "line contains " + delimit(testFlagKey, `"`) + " " + delimit(testFlagKey2, `"`),
 			want: []string{"someFlag", "anotherFlag"},
 		},
 		{
@@ -170,7 +173,7 @@ func Test_findReferencedFlags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := findReferencedFlags(tt.ref, []string{"someFlag", "anotherFlag"}, `"`)
+			got := findReferencedFlags(tt.ref, []string{testFlagKey, testFlagKey2}, `"`)
 			require.Equal(t, tt.want, got)
 		})
 	}
