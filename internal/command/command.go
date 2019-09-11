@@ -169,13 +169,15 @@ func (c AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune
 	cmd := exec.Command("ag", args...)
 	cmd.Args = append(cmd.Args, searchPattern, c.Workspace)
 	out, err := cmd.CombinedOutput()
+	res := string(out)
 	if err != nil {
 		if err.Error() == "exit status 1" {
-			return [][]string{}, nil
-		} else if strings.Contains(string(out), SearchTooLargeErr.Error()) || strings.Contains(err.Error(), "The filename") {
-			return [][]string{}, SearchTooLargeErr
+			return nil, nil
+		} else if strings.Contains(res, SearchTooLargeErr.Error()) ||
+			(runtime.GOOS == windows && strings.Contains(err.Error(), windowsSearchTooLargeErr.Error())) {
+			return nil, SearchTooLargeErr
 		}
-		return nil, errors.New(string(out))
+		return nil, errors.New(res)
 	}
 
 	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
