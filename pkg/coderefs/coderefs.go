@@ -234,7 +234,7 @@ func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
 
-	results, err := paginatedSearch(cmd, flags, command.SafePaginationCharCount, ctxLines, delims)
+	results, err := paginatedSearch(cmd, flags, command.SafePaginationCharCount(), ctxLines, delims)
 	if err != nil {
 		return grepResultLines{}, err
 	}

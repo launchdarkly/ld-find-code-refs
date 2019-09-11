@@ -26,9 +26,17 @@ var grepRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 var SearchTooLargeErr = errors.New("regular expression is too large")
 
 // SafePaginationCharCount determines the maximum sum of flag key lengths to be used in a single smart paginated search.
-// Bounded by the 2^16 limit of pcre_compile() with the parameters set by our underlying search tool (ag)
+// Safely bounded under the 2^16 limit of pcre_compile() with the parameters set by our underlying search tool (ag)
 // https://github.com/vmg/pcre/blob/master/pcre_internal.h#L436
-const SafePaginationCharCount = 60000
+func SafePaginationCharCount() int {
+	if runtime.GOOS == windows {
+		// workaround win32 limitation on maximum command length
+		// https://support.microsoft.com/en-us/help/830473/command-prompt-cmd-exe-command-line-string-limitation
+		return 30000
+	}
+
+	return 60000
+}
 
 type Client interface {
 	SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error)
@@ -164,7 +172,7 @@ func (c AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return [][]string{}, nil
-		} else if strings.Contains(string(out), SearchTooLargeErr.Error()) {
+		} else if strings.Contains(string(out), SearchTooLargeErr.Error()) || strings.Contains(err.Error(), "The filename") {
 			return [][]string{}, SearchTooLargeErr
 		}
 		return nil, errors.New(string(out))
