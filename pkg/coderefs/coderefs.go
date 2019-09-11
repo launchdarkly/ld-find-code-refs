@@ -56,7 +56,6 @@ func (lines grepResultLines) Less(i, j int) bool {
 
 func (lines grepResultLines) Swap(i, j int) {
 	lines[i], lines[j] = lines[j], lines[i]
-	return
 }
 
 // map of flag keys to slices of lines those flags occur on
