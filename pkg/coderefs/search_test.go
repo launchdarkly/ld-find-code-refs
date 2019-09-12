@@ -12,13 +12,15 @@ import (
 type MockClient struct {
 	results [][]string
 	err     error
+	pages   [][]string
 }
 
-func (c MockClient) RemoteBranches() (map[string]bool, error) {
+func (c *MockClient) RemoteBranches() (map[string]bool, error) {
 	return nil, errors.New("Mock error")
 }
 
-func (c MockClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
+func (c *MockClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
+	c.pages = append(c.pages, flags)
 	return c.results, c.err
 }
 
@@ -29,99 +31,55 @@ func Test_paginatedSearch(t *testing.T) {
 		mockResults         [][]string
 		mockErr             error
 		expectedResults     [][]string
+		expectedPages       [][]string
 		expectedErr         error
 	}{
 		{
 			name:                "returns results with 1 page",
 			mockResults:         [][]string{{"hello"}},
 			expectedResults:     [][]string{{"hello"}},
-			maxSumFlagKeyLength: 20,
+			expectedPages:       [][]string{{"flag1", "flag2"}},
+			maxSumFlagKeyLength: 12,
 		},
 		{
 			name:                "combines results with multiple pages",
 			mockResults:         [][]string{{"hello"}},
 			expectedResults:     [][]string{{"hello"}, {"hello"}},
-			maxSumFlagKeyLength: 5,
+			expectedPages:       [][]string{{"flag1"}, {"flag2"}},
+			maxSumFlagKeyLength: 7,
 		},
 		{
-			name:                "pagination fails when client fails to generate a search pattern",
-			mockErr:             command.SearchTooLargeErr,
+			name:    "pagination fails when client fails to generate a search pattern",
+			mockErr: command.SearchTooLargeErr,
+			// should try to recursively page 3 times and fail every time
+			expectedPages:       [][]string{{"flag1"}, {"flag1"}, {"flag1"}},
 			expectedErr:         NoSearchPatternErr,
-			maxSumFlagKeyLength: 10,
+			maxSumFlagKeyLength: 7,
 		},
 		{
 			// this case should be impossible outside of tests
 			name:                "pagination fails when maxSumFlagKeyLength is too low",
 			mockErr:             command.SearchTooLargeErr,
-			expectedErr:         FatalPaginatedSearchErr,
+			expectedErr:         NoSearchPatternErr,
 			maxSumFlagKeyLength: 0,
 		},
 	}
 
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
+			client := MockClient{
+				results: tt.mockResults,
+				err:     tt.mockErr,
+			}
+
 			res, err := paginatedSearch(
-				MockClient{
-					results: tt.mockResults,
-					err:     tt.mockErr,
-				},
-				[]string{testFlagKey, testFlagKey2},
+				&client,
+				[]string{"flag1", "flag2"},
 				tt.maxSumFlagKeyLength,
 				0,
 				[]rune{'"'},
 			)
-			assert.Equal(t, tt.expectedResults, res)
-			assert.Equal(t, tt.expectedErr, err)
-		})
-	}
-}
-
-func Test_simplePaginatedSearch(t *testing.T) {
-	specs := []struct {
-		name             string
-		startingPageSize int
-		mockResults      [][]string
-		mockErr          error
-		expectedResults  [][]string
-		expectedErr      error
-	}{
-		{
-			name:             "returns results with 1 page",
-			startingPageSize: 2,
-			mockResults:      [][]string{{"hello"}},
-			expectedResults:  [][]string{{"hello"}},
-		},
-		{
-			name:             "combines results with multiple pages",
-			startingPageSize: 1,
-			mockResults:      [][]string{{"hello"}},
-			expectedResults:  [][]string{{"hello"}, {"hello"}},
-		},
-		{
-			name:             "pagination fails when client fails to generate a search pattern",
-			mockErr:          command.SearchTooLargeErr,
-			expectedErr:      NoSearchPatternErr,
-			startingPageSize: 2,
-		},
-		{
-			name:             "pagination fails when pageSize is too low",
-			expectedErr:      NoSearchPatternErr,
-			startingPageSize: -1,
-		},
-	}
-
-	for _, tt := range specs {
-		t.Run(tt.name, func(t *testing.T) {
-			res, err := simplePaginatedSearch(
-				MockClient{
-					results: tt.mockResults,
-					err:     tt.mockErr,
-				},
-				[]string{"someFlag", "anotherFlag"},
-				tt.startingPageSize,
-				0,
-				[]rune{'"'},
-			)
+			assert.Equal(t, tt.expectedPages, client.pages)
 			assert.Equal(t, tt.expectedResults, res)
 			assert.Equal(t, tt.expectedErr, err)
 		})

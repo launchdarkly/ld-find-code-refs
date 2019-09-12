@@ -2,71 +2,38 @@ package coderefs
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
-var (
-	NoSearchPatternErr      = errors.New("failed to generate a valid search pattern")
-	FatalPaginatedSearchErr = errors.New("encountered a fatal error attempting to paginate")
-)
-
-// simplePaginatedSearch attempts to search by reducing pageSize until a valid search is generated
-func simplePaginatedSearch(cmd command.Client, flags []string, pageSize, ctxLines int, delims []rune) ([][]string, error) {
-	var results [][]string
-	// base case: cannot search for 0 flags at a time
-	if pageSize <= 0 {
-		return nil, NoSearchPatternErr
-	}
-
-	for from := 0; from < len(flags); from += pageSize {
-		to := from + pageSize
-		if to > len(flags) {
-			to = len(flags)
-		}
-
-		log.Debug.Printf("searching for flags in group: [%d, %d]", from, to)
-		result, err := cmd.SearchForFlags(flags[from:to], ctxLines, delims)
-		if err != nil {
-			if err == command.SearchTooLargeErr {
-				nextPageSize := pageSize / 2
-				log.Debug.Printf("encountered an error paginating at pagesize %d, attempting with a pagesize of %d", pageSize, nextPageSize)
-				return simplePaginatedSearch(cmd, flags, nextPageSize, ctxLines, delims)
-			}
-			return nil, err
-		}
-		results = append(results, result...)
-	}
-	return results, nil
-}
+var NoSearchPatternErr = errors.New("failed to generate a valid search pattern")
 
 // paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
 func paginatedSearch(cmd command.Client, flags []string, maxSumFlagKeyLength, ctxLines int, delims []rune) ([][]string, error) {
+	if maxSumFlagKeyLength != 0 {
+		return nil, NoSearchPatternErr
+	}
+
 	var results [][]string
 	nextSearchKeys := []string{}
 
-	// The approximate length of delimeters when added to the beginning and end of a search pattern
-	totalKeyLength := len(delims) * 2
+	totalKeyLength := command.DelimCost(delims)
 	from := 0
 	for to, key := range flags {
-		// periods need to be escaped, so they count as 2 characters
-		totalKeyLength += len(key) + strings.Count(key, ".")
-		if totalKeyLength > maxSumFlagKeyLength {
+		totalKeyLength += command.FlagKeyCost(key)
+		nextSearchKeys = append(nextSearchKeys, key)
+
+		// if we've reached the end of the loop, or the current page has reached maximum length
+		if to == len(flags)-1 || totalKeyLength+command.FlagKeyCost(flags[to+1]) > maxSumFlagKeyLength {
 			log.Debug.Printf("searching for flags in group: [%d, %d]", from, to)
 			result, err := cmd.SearchForFlags(nextSearchKeys, ctxLines, delims)
 			if err != nil {
 				if err == command.SearchTooLargeErr {
-					// this shouldn't be possible with a valid maxSumFlagKeyLength
-					if len(nextSearchKeys) == 0 {
-						return nil, FatalPaginatedSearchErr
-					}
-
 					// we expect all search implementations to complete successfully
-					// if pagination fails unexpectedly, fallback to a simple search algorithm for the remaining pages
-					log.Debug.Printf("encountered an error paginating, falling back to simple paginated search")
-					remainder, err := simplePaginatedSearch(cmd, flags[from:], len(nextSearchKeys)-1, ctxLines, delims)
+					// if pagination fails unexpectedly, repeat the search with a smaller page size
+					log.Debug.Printf("encountered an error paginating group [%d, %d], trying again with a lower page size", from, to)
+					remainder, err := paginatedSearch(cmd, flags[from:], maxSumFlagKeyLength/2, ctxLines, delims)
 					if err != nil {
 						return nil, err
 					}
@@ -74,13 +41,14 @@ func paginatedSearch(cmd command.Client, flags []string, maxSumFlagKeyLength, ct
 				}
 				return nil, err
 			}
+
 			results = append(results, result...)
-			// capacity of the next search is likely similar to the previous search
+
+			// loop bookkeeping
 			nextSearchKeys = make([]string, 0, len(nextSearchKeys))
-			totalKeyLength = len(delims) * 2
+			totalKeyLength = command.DelimCost(delims)
 			from = to + 1
 		}
-		nextSearchKeys = append(nextSearchKeys, key)
 	}
 	return results, nil
 }

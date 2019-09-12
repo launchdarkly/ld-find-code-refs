@@ -1,6 +1,7 @@
 package coderefs
 
 import (
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -35,6 +36,11 @@ const (
 	testFlagKey  = "someFlag"
 	testFlagKey2 = "anotherFlag"
 )
+
+func TestMain(m *testing.M) {
+	log.Init(true)
+	os.Exit(m.Run())
+}
 
 func Test_sortGrepResults(t *testing.T) {
 	cats1 := grepResultLine{Path: "/dev/null/cats", LineNum: 1, LineText: "", FlagKeys: []string{"src/meow/yes/pls"}}

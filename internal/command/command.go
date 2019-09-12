@@ -38,6 +38,15 @@ func SafePaginationCharCount() int {
 	return 60000
 }
 
+func FlagKeyCost(key string) int {
+	// periods need to be escaped, so they count as 2 characters
+	return len(key) + strings.Count(key, ".")
+}
+
+func DelimCost(delims []rune) int {
+	return len(delims) * 2
+}
+
 type Client interface {
 	SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error)
 	RemoteBranches() (map[string]bool, error)
@@ -137,22 +146,21 @@ type AgClient struct {
 	gitClient
 }
 
-func NewAgClient(path string) (AgClient, error) {
+func NewAgClient(path string) (*AgClient, error) {
 	gitClient, err := newGitClient(path)
 	if err != nil {
-		return AgClient{}, err
+		return nil, err
 	}
 
-	client := AgClient{gitClient}
 	_, err = exec.LookPath("ag")
 	if err != nil {
-		return client, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
+		return nil, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
 	}
 
-	return client, nil
+	return &AgClient{gitClient}, nil
 }
 
-func (c AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
+func (c *AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
 	ignoreFileName := ".ldignore"
 	pathToIgnore := filepath.Join(c.Workspace, ignoreFileName)
