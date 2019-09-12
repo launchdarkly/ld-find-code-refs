@@ -11,7 +11,7 @@ var NoSearchPatternErr = errors.New("failed to generate a valid search pattern")
 
 // paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
 func paginatedSearch(cmd command.Client, flags []string, maxSumFlagKeyLength, ctxLines int, delims []rune) ([][]string, error) {
-	if maxSumFlagKeyLength != 0 {
+	if maxSumFlagKeyLength == 0 {
 		return nil, NoSearchPatternErr
 	}
 
