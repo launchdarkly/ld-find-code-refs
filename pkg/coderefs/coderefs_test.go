@@ -786,9 +786,9 @@ func Test_makeHunkReps(t *testing.T) {
 
 			require.Equal(t, len(groupedResults), 1)
 
-			filesearchResults := groupedResults[0]
+			fileSearchResults := groupedResults[0]
 
-			got := filesearchResults.makeHunkReps(projKey, tt.ctxLines)
+			got := fileSearchResults.makeHunkReps(projKey, tt.ctxLines)
 
 			sort.Sort(byStartingLineNumber(got))
 
@@ -843,7 +843,7 @@ func Test_groupIntoPathMap(t *testing.T) {
 	require.Contains(t, aRefMap, "flag-1")
 	require.Contains(t, aRefMap, "flag-2")
 
-	aLines := aRefs.filesearchResultLines
+	aLines := aRefs.fileSearchResultLines
 	require.Equal(t, aLines.Len(), 2)
 	require.Equal(t, aLines.Front().Value, searchResultPathALine1)
 	require.Equal(t, aLines.Back().Value, searchResultPathALine2)
@@ -857,7 +857,7 @@ func Test_groupIntoPathMap(t *testing.T) {
 	require.Contains(t, bRefMap, "flag-3")
 	require.Contains(t, bRefMap, "flag-4")
 
-	bLines := bRefs.filesearchResultLines
+	bLines := bRefs.fileSearchResultLines
 	require.Equal(t, bLines.Len(), 2)
 	require.Equal(t, bLines.Front().Value, searchResultPathBLine1)
 	require.Equal(t, bLines.Back().Value, searchResultPathBLine2)
