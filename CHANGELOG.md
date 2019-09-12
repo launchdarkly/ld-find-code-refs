@@ -2,6 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.1] - [DATE]
+
+### Fixed
+- `ld-find-code-refs` now supports scanning repositories with a large number of flags using a pagination strategy. Thanks @cuzzasoft!
+- Delimiters will now always be respected when searching for flags referenced in code. This fixes a bug causing references for certain flag keys to match against other flag keys that are substrings of the matched reference.
+
 ## [1.2.0] - 2019-08-13
 
 ### Added

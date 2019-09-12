@@ -65,7 +65,7 @@ func Test_paginatedSearch(t *testing.T) {
 					results: tt.mockResults,
 					err:     tt.mockErr,
 				},
-				[]string{"someFlag", "anotherFlag"},
+				[]string{testFlagKey, testFlagKey2},
 				tt.maxSumFlagKeyLength,
 				0,
 				[]rune{'"'},
