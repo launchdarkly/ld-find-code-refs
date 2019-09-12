@@ -40,6 +40,6 @@ func Init(debug bool) {
 		log.Ldate|log.Ltime|log.Lshortfile)
 
 	Fatal = log.New(os.Stderr,
-		"FATAL Please search for or files new bugs on GitHub (https://github.com/launchdarkly/ld-find-code-refs): ",
+		"FATAL Please file an issue at https://github.com/launchdarkly/ld-find-code-refs: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 }
