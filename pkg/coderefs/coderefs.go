@@ -31,14 +31,14 @@ const (
 	maxProjKeyLength                  = 20
 )
 
-type seachResultLine struct {
+type searchResultLine struct {
 	Path     string
 	LineNum  int
 	LineText string
 	FlagKeys []string
 }
 
-type seachResultLines []seachResultLine
+type searchResultLines []searchResultLine
 
 // map of flag keys to slices of lines those flags occur on
 type flagReferenceMap map[string][]*list.Element
@@ -57,7 +57,7 @@ type branch struct {
 	Head             string
 	UpdateSequenceId *int64
 	SyncTime         int64
-	SearchResults    seachResultLines
+	SearchResults    searchResultLines
 }
 
 func Scan() {
@@ -211,19 +211,19 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (seachResultLines, error) {
+func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
 	searchResult, err := cmd.SearchForFlags(flags, ctxLines, delims)
 	if err != nil {
-		return seachResultLines{}, err
+		return searchResultLines{}, err
 	}
 
 	return generateReferences(flags, searchResult, ctxLines, string(delims), exclude), nil
 }
 
-func generateReferences(flags []string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []seachResultLine {
-	references := []seachResultLine{}
+func generateReferences(flags []string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
+	references := []searchResultLine{}
 
 	for _, r := range searchResult {
 		path := r[1]
@@ -237,7 +237,7 @@ func generateReferences(flags []string, searchResult [][]string, ctxLines int, d
 		if err != nil {
 			log.Error.Fatalf("encountered an unexpected error generating flag references: %s", err)
 		}
-		ref := seachResultLine{Path: path, LineNum: lineNum}
+		ref := searchResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
 			ref.FlagKeys = findReferencedFlags(lineText, flags, delims)
 		}
@@ -271,7 +271,7 @@ func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
 	}
 }
 
-func (g seachResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []ld.ReferenceHunksRep {
+func (g searchResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []ld.ReferenceHunksRep {
 	reps := []ld.ReferenceHunksRep{}
 
 	aggregatedSearchResults := g.aggregateByPath()
@@ -312,8 +312,8 @@ func (g seachResultLines) makeReferenceHunksReps(projKey string, ctxLines int) [
 	return reps
 }
 
-// Assumes invariant: seachResultLines will already be sorted by path.
-func (g seachResultLines) aggregateByPath() []fileSearchResults {
+// Assumes invariant: searchResultLines will already be sorted by path.
+func (g searchResultLines) aggregateByPath() []fileSearchResults {
 	allFileResults := []fileSearchResults{}
 
 	if len(g) == 0 {
@@ -354,9 +354,9 @@ func (g seachResultLines) aggregateByPath() []fileSearchResults {
 	return allFileResults
 }
 
-func (fsr *fileSearchResults) addSearchResult(searchResult seachResultLine) *list.Element {
+func (fsr *fileSearchResults) addSearchResult(searchResult searchResultLine) *list.Element {
 	prev := fsr.fileSearchResultLines.Back()
-	if prev != nil && prev.Value.(seachResultLine).LineNum > searchResult.LineNum {
+	if prev != nil && prev.Value.(searchResultLine).LineNum > searchResult.LineNum {
 		// This should never happen, as `ag` (and any other search program we might use
 		// should always return search results sorted by line number. We sanity check
 		// that lines are sorted _just in case_ since the downstream hunking algorithm
@@ -420,7 +420,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 			// If we seek earlier than the end of the last hunk, this reference overlaps at least
 			// partially with the last hunk and we should (possibly) expand the previous hunk rather than
 			// starting a new hunk.
-			if ptr.Value.(seachResultLine).LineNum <= lastSeenLineNum {
+			if ptr.Value.(searchResultLine).LineNum <= lastSeenLineNum {
 				appendToPreviousHunk = true
 			}
 		}
@@ -428,7 +428,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// If we are starting a new hunk, initialize it
 		if !appendToPreviousHunk {
 			currentHunk = initHunk(projKey, flag)
-			currentHunk.StartingLineNumber = ptr.Value.(seachResultLine).LineNum
+			currentHunk.StartingLineNumber = ptr.Value.(searchResultLine).LineNum
 			hunkStringBuilder.Reset()
 		}
 
@@ -439,9 +439,9 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		//     If so: write that line to the hunkStringBuilder
 		//     Record that line as the last seen line.
 		for i := 0; i < numCtxLinesBeforeFlagRef+1+ctxLines; i++ {
-			ptrLineNum := ptr.Value.(seachResultLine).LineNum
+			ptrLineNum := ptr.Value.(searchResultLine).LineNum
 			if ptrLineNum > lastSeenLineNum {
-				lineText := truncateLine(ptr.Value.(seachResultLine).LineText)
+				lineText := truncateLine(ptr.Value.(searchResultLine).LineText)
 				hunkStringBuilder.WriteString(lineText + "\n")
 				lastSeenLineNum = ptrLineNum
 				numHunkedLines += 1
