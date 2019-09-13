@@ -37,6 +37,8 @@ func NewClient(path string) (Client, error) {
 	if err != nil {
 		return client, fmt.Errorf("could not validate directory option: %s", err)
 	}
+	log.Info.Printf("absolute directory path: %s", absPath)
+
 	client.Workspace = absPath
 
 	_, err = exec.LookPath("git")

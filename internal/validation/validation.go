@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
 func NormalizeAndValidatePath(path string) (string, error) {
@@ -13,7 +11,6 @@ func NormalizeAndValidatePath(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("invalid directory: %s", err)
 	}
-	log.Info.Printf("absolute directory path: %s", absPath)
 
 	exists, err := dirExists(absPath)
 	if err != nil {

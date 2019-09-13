@@ -398,12 +398,13 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 		tag = sha[:7]
 	}
 
-	absPath, err := validation.NormalizeAndValidatePath(filepath.Join(outDir, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag)))
+	absPath, err := validation.NormalizeAndValidatePath(outDir)
 	if err != nil {
 		return "", fmt.Errorf("invalid outDir '%s': %s", outDir, err)
 	}
+	path = filepath.Join(absPath, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag))
 
-	f, err := os.Create(absPath)
+	f, err := os.Create(path)
 	if err != nil {
 		return "", err
 	}
@@ -428,7 +429,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 	})
 
 	records = append([][]string{{"flagKey", "path", "startingLineNumber", "lines"}}, records...)
-	return absPath, w.WriteAll(records)
+	return path, w.WriteAll(records)
 }
 
 type ReferenceHunksRep struct {
