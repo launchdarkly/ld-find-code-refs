@@ -21,8 +21,8 @@ import (
 
 	ldapi "github.com/launchdarkly/api-client-go"
 	jsonpatch "github.com/launchdarkly/json-patch"
-	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 type ApiClient struct {
@@ -398,7 +398,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 		tag = sha[:7]
 	}
 
-	absPath, err := command.NormalizeAndValidatePath(filepath.Join(outDir, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag)))
+	absPath, err := validation.NormalizeAndValidatePath(filepath.Join(outDir, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag)))
 	if err != nil {
 		return "", fmt.Errorf("invalid outDir '%s': %s", outDir, err)
 	}
