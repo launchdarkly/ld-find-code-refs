@@ -3,6 +3,7 @@ package ld
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -19,6 +21,7 @@ import (
 
 	ldapi "github.com/launchdarkly/api-client-go"
 	jsonpatch "github.com/launchdarkly/json-patch"
+	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
@@ -389,9 +392,56 @@ func (b BranchRep) TotalHunkCount() int {
 	return count
 }
 
+func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, err error) {
+	tag := b.Name
+	if len(sha) >= 7 {
+		tag = sha[:7]
+	}
+
+	absPath, err := command.NormalizeAndValidatePath(filepath.Join(outDir, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag)))
+	if err != nil {
+		return "", fmt.Errorf("invalid outDir '%s': %s", outDir, err)
+	}
+
+	f, err := os.Create(absPath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	records := make([][]string, 0, len(b.References)+1)
+	for _, ref := range b.References {
+		records = append(records, ref.toRecords()...)
+	}
+
+	// sort csv by flag key
+	sort.Slice(records, func(i, j int) bool {
+		// sort by flagKey -> path -> startingLineNumber
+		for k := 0; k < 3; k++ {
+			if records[i][k] != records[j][k] {
+				return records[i][k] < records[j][k]
+			}
+		}
+		// above loop should always return since startingLineNumber is guaranteed to be unique
+		return false
+	})
+
+	records = append([][]string{{"flagKey", "path", "startingLineNumber", "lines"}}, records...)
+	return absPath, w.WriteAll(records)
+}
+
 type ReferenceHunksRep struct {
 	Path  string    `json:"path"`
 	Hunks []HunkRep `json:"hunks"`
+}
+
+func (r ReferenceHunksRep) toRecords() [][]string {
+	ret := make([][]string, 0, len(r.Hunks))
+	for _, hunk := range r.Hunks {
+		ret = append(ret, []string{hunk.FlagKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines})
+	}
+	return ret
 }
 
 type HunkRep struct {

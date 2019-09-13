@@ -32,7 +32,7 @@ type Client struct {
 func NewClient(path string) (Client, error) {
 	client := Client{}
 
-	absPath, err := normalizeAndValidatePath(path)
+	absPath, err := NormalizeAndValidatePath(path)
 	if err != nil {
 		return client, fmt.Errorf("could not validate directory option: %s", err)
 	}
@@ -191,7 +191,7 @@ func generateSearchPattern(flags []string, delimiters []rune, padPattern bool) s
 	return lookBehind + "(" + flagRegex + ")" + lookAhead
 }
 
-func normalizeAndValidatePath(path string) (string, error) {
+func NormalizeAndValidatePath(path string) (string, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return "", fmt.Errorf("invalid directory: %s", err)

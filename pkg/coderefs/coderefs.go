@@ -88,9 +88,13 @@ func Scan() {
 		DefaultBranch:     o.DefaultBranch.Value(),
 	}
 
-	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
-	if err != nil {
-		log.Error.Fatalf(err.Error())
+	isDryRun := o.DryRun.Value()
+
+	if !isDryRun {
+		err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
+		if err != nil {
+			log.Error.Fatalf(err.Error())
+		}
 	}
 
 	flags, err := getFlags(ldApi)
@@ -133,11 +137,37 @@ func Scan() {
 	b.GrepResults = refs
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
-	log.Info.Printf("sending %d code references across %d flags and %d files to LaunchDarkly for project: %s", branchRep.TotalHunkCount(), len(filteredFlags), len(branchRep.References), projKey)
+
+	outDir := o.OutDir.Value()
+	if outDir != "" {
+		outPath, err := branchRep.WriteToCSV(outDir, projKey, repoParams.Name, cmd.GitSha)
+		if err != nil {
+			log.Error.Fatalf("error writing code references to csv: %s", err)
+		}
+		log.Info.Printf("wrote code references to %s", outPath)
+	}
 
 	if o.Debug.Value() {
 		branchRep.PrintReferenceCountTable()
 	}
+
+	if isDryRun {
+		log.Info.Printf(
+			"dry run found %d code references across %d flags and %d files",
+			branchRep.TotalHunkCount(),
+			len(filteredFlags),
+			len(branchRep.References),
+		)
+		return
+	}
+
+	log.Info.Printf(
+		"sending %d code references across %d flags and %d files to LaunchDarkly for project: %s",
+		branchRep.TotalHunkCount(),
+		len(filteredFlags),
+		len(branchRep.References),
+		projKey,
+	)
 
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
 	if err != nil {
