@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/command"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
@@ -228,13 +228,13 @@ func Init() (err error, errCb func()) {
 		}
 	}
 
-	_, err = command.NormalizeAndValidatePath(Dir.Value())
+	_, err = validation.NormalizeAndValidatePath(Dir.Value())
 	if err != nil {
 		return fmt.Errorf("invalid dir: %s", err), flag.PrintDefaults
 	}
 
 	if OutDir.Value() != "" {
-		_, err = command.NormalizeAndValidatePath(OutDir.Value())
+		_, err = validation.NormalizeAndValidatePath(OutDir.Value())
 		if err != nil {
 			return fmt.Errorf("invalid outDir: %s", err), flag.PrintDefaults
 		}
