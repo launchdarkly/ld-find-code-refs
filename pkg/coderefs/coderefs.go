@@ -60,7 +60,6 @@ type branch struct {
 }
 
 func Scan() {
-	log.Fatal.Fatalf("blah blah blah")
 	dir := o.Dir.Value()
 	cmd, err := command.NewClient(dir)
 	if err != nil {
