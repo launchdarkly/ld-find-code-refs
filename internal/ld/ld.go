@@ -393,9 +393,12 @@ func (b BranchRep) TotalHunkCount() int {
 }
 
 func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, err error) {
-	tag := b.Name
+	// Try to create a filename with a shortened sha, but if the sha is too short for some unexpected reason, use the branch name instead
+	var tag string
 	if len(sha) >= 7 {
 		tag = sha[:7]
+	} else {
+		tag = b.Name
 	}
 
 	absPath, err := validation.NormalizeAndValidatePath(outDir)
