@@ -81,7 +81,12 @@ type branch struct {
 
 func Scan() {
 	dir := o.Dir.Value()
-	cmd, err := command.NewAgClient(dir)
+	searchClient, err := command.NewAgClient(dir)
+	if err != nil {
+		log.Error.Fatalf("%s", err)
+	}
+
+	gitClient, err := command.NewGitClient(dir)
 	if err != nil {
 		log.Error.Fatalf("%s", err)
 	}
@@ -137,15 +142,15 @@ func Scan() {
 		updateId = &updateIdOption
 	}
 	b := &branch{
-		Name:             cmd.GitBranch,
+		Name:             gitClient.GitBranch,
 		UpdateSequenceId: updateId,
 		SyncTime:         makeTimestamp(),
-		Head:             cmd.GitSha,
+		Head:             gitClient.GitSha,
 	}
 
 	// exclude option has already been validated as regex in options.go
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, excludeRegex)
+	refs, err := b.findReferences(searchClient, filteredFlags, ctxLines, excludeRegex)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -168,7 +173,7 @@ func Scan() {
 		}
 	}
 
-	remoteBranches, err := cmd.RemoteBranches()
+	remoteBranches, err := gitClient.RemoteBranches()
 	if err != nil {
 		log.Warning.Printf("unable to retrieve branch list from remote, skipping branch deletion: %s", err)
 	} else {
@@ -231,7 +236,7 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
+func (b *branch) findReferences(cmd command.Searcher, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
 

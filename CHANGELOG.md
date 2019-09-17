@@ -2,7 +2,7 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [1.2.1] - [DATE]
+## [1.3.0] - [DATE]
 
 ### Fixed
 - `ld-find-code-refs` now supports scanning repositories with a large number of flags using a pagination strategy. Thanks @cuzzasoft!
