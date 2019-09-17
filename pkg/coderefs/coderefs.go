@@ -56,7 +56,7 @@ func Scan() {
 	dir := o.Dir.Value()
 	searchClient, err := command.NewAgClient(dir)
 	if err != nil {
-		log.Error.Fatalf("%s", err)
+		log.Fatal.Fatalf("%s", err)
 	}
 
 	gitClient, err := command.NewGitClient(dir)
