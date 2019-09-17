@@ -42,65 +42,65 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func Test_sortGrepResults(t *testing.T) {
-	cats1 := grepResultLine{Path: "/dev/null/cats", LineNum: 1, LineText: "", FlagKeys: []string{"src/meow/yes/pls"}}
-	cats2 := grepResultLine{Path: "/dev/null/cats", LineNum: 2, LineText: "", FlagKeys: []string{"src/meow/feed/me"}}
-	dogs5 := grepResultLine{Path: "/dev/null/dogs", LineNum: 5, LineText: "", FlagKeys: []string{"src/woof/oh/fine"}}
-	dogs15 := grepResultLine{Path: "/dev/null/dogs", LineNum: 15, LineText: "", FlagKeys: []string{"src/woof/walk/me"}}
+func Test_sortSearchResults(t *testing.T) {
+	cats1 := searchResultLine{Path: "/dev/null/cats", LineNum: 1, LineText: "", FlagKeys: []string{"src/meow/yes/pls"}}
+	cats2 := searchResultLine{Path: "/dev/null/cats", LineNum: 2, LineText: "", FlagKeys: []string{"src/meow/feed/me"}}
+	dogs5 := searchResultLine{Path: "/dev/null/dogs", LineNum: 5, LineText: "", FlagKeys: []string{"src/woof/oh/fine"}}
+	dogs15 := searchResultLine{Path: "/dev/null/dogs", LineNum: 15, LineText: "", FlagKeys: []string{"src/woof/walk/me"}}
 
-	linesToSort := grepResultLines{dogs15, cats2, dogs5, cats1}
-	expectedResults := grepResultLines{cats1, cats2, dogs5, dogs15}
+	linesToSort := searchResultLines{dogs15, cats2, dogs5, cats1}
+	expectedResults := searchResultLines{cats1, cats2, dogs5, dogs15}
 
 	sort.Sort(linesToSort)
 
-	assert.Exactly(t, linesToSort, expectedResults, "search order for grepLines not as expected")
+	assert.Exactly(t, linesToSort, expectedResults, "search order for searchResultLines not as expected")
 }
 
-func Test_generateReferencesFromGrep(t *testing.T) {
+func Test_generateReferences(t *testing.T) {
 	testResult := []string{"", "flags.txt", ":", "12", delimit(testFlagKey, `"`)}
-	testWant := grepResultLine{Path: "flags.txt", LineNum: 12, LineText: delimit(testFlagKey, `"`), FlagKeys: []string{testFlagKey}}
+	testWant := searchResultLine{Path: "flags.txt", LineNum: 12, LineText: delimit(testFlagKey, `"`), FlagKeys: []string{testFlagKey}}
 
 	tests := []struct {
-		name       string
-		flags      []string
-		grepResult [][]string
-		ctxLines   int
-		want       []grepResultLine
-		exclude    string
+		name         string
+		flags        []string
+		searchResult [][]string
+		ctxLines     int
+		want         []searchResultLine
+		exclude      string
 	}{
 		{
-			name:       "succeeds",
-			flags:      []string{testFlagKey, testFlagKey2},
-			grepResult: [][]string{testResult},
-			ctxLines:   0,
-			want:       []grepResultLine{testWant},
+			name:         "succeeds",
+			flags:        []string{testFlagKey, testFlagKey2},
+			searchResult: [][]string{testResult},
+			ctxLines:     0,
+			want:         []searchResultLine{testWant},
 		},
 		{
-			name:       "succeeds with exclude",
-			flags:      []string{testFlagKey, testFlagKey2},
-			grepResult: [][]string{testResult},
-			ctxLines:   0,
-			want:       []grepResultLine{},
-			exclude:    ".*",
+			name:         "succeeds with exclude",
+			flags:        []string{testFlagKey, testFlagKey2},
+			searchResult: [][]string{testResult},
+			ctxLines:     0,
+			want:         []searchResultLine{},
+			exclude:      ".*",
 		},
 		{
-			name:       "succeeds with no LineText lines",
-			flags:      []string{testFlagKey, testFlagKey2},
-			grepResult: [][]string{testResult},
-			ctxLines:   -1,
-			want: []grepResultLine{
+			name:         "succeeds with no LineText lines",
+			flags:        []string{testFlagKey, testFlagKey2},
+			searchResult: [][]string{testResult},
+			ctxLines:     -1,
+			want: []searchResultLine{
 				{Path: "flags.txt", LineNum: 12, FlagKeys: []string{testFlagKey}},
 			},
 		},
 		{
 			name:  "succeeds with multiple references",
 			flags: []string{testFlagKey, testFlagKey2},
-			grepResult: [][]string{
+			searchResult: [][]string{
 				testResult,
 				{"", "path/flags.txt", ":", "12", `"someFlag" "anotherFlag"`},
 			},
 			ctxLines: 0,
-			want: []grepResultLine{
+			want: []searchResultLine{
 				testWant,
 				{Path: "path/flags.txt", LineNum: 12, LineText: `"someFlag" "anotherFlag"`, FlagKeys: []string{testFlagKey, testFlagKey2}},
 			},
@@ -108,13 +108,13 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 		{
 			name:  "succeeds with extra LineText lines",
 			flags: []string{testFlagKey, testFlagKey2},
-			grepResult: [][]string{
+			searchResult: [][]string{
 				{"", "flags.txt", "-", "11", "not a flag key line"},
 				testResult,
 				{"", "flags.txt", "-", "13", "not a flag key line"},
 			},
 			ctxLines: 1,
-			want: []grepResultLine{
+			want: []searchResultLine{
 				{Path: "flags.txt", LineNum: 11, LineText: "not a flag key line"},
 				testWant,
 				{Path: "flags.txt", LineNum: 13, LineText: "not a flag key line"},
@@ -123,7 +123,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 		{
 			name:  "succeeds with extra LineText lines and multiple flags",
 			flags: []string{testFlagKey, testFlagKey2},
-			grepResult: [][]string{
+			searchResult: [][]string{
 				{"", "flags.txt", "-", "11", "not a flag key line"},
 				testResult,
 				{"", "flags.txt", "-", "13", "not a flag key line"},
@@ -131,7 +131,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 				{"", "flags.txt", "-", "15", "not a flag key line"},
 			},
 			ctxLines: 1,
-			want: []grepResultLine{
+			want: []searchResultLine{
 				{Path: "flags.txt", LineNum: 11, LineText: "not a flag key line"},
 				testWant,
 				{Path: "flags.txt", LineNum: 13, LineText: "not a flag key line"},
@@ -140,21 +140,21 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 			},
 		},
 		{
-			name:       "does not match substring flag key",
-			flags:      []string{testFlagKey, testFlagKey[:4]},
-			grepResult: [][]string{testResult},
-			ctxLines:   0,
-			want:       []grepResultLine{testWant},
+			name:         "does not match substring flag key",
+			flags:        []string{testFlagKey, testFlagKey[:4]},
+			searchResult: [][]string{testResult},
+			ctxLines:     0,
+			want:         []searchResultLine{testWant},
 		},
 		{
 			// delimeters don't have to match on both sides
 			name:  "succeeds with multiple delimiters",
 			flags: []string{"someFlag", "some"},
-			grepResult: [][]string{
+			searchResult: [][]string{
 				{"", "flags.txt", ":", "12", `"` + testFlagKey + "'"},
 			},
 			ctxLines: 0,
-			want: []grepResultLine{
+			want: []searchResultLine{
 				{Path: "flags.txt", LineNum: 12, LineText: `"` + testFlagKey + "'", FlagKeys: []string{testFlagKey}},
 			},
 		},
@@ -163,7 +163,7 @@ func Test_generateReferencesFromGrep(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ex, err := regexp.Compile(tt.exclude)
 			require.NoError(t, err)
-			got := generateReferencesFromGrep(tt.flags, tt.grepResult, tt.ctxLines, `"'`, ex)
+			got := generateReferences(tt.flags, tt.searchResult, tt.ctxLines, `"'`, ex)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -204,30 +204,30 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 
 	tests := []struct {
 		name string
-		refs grepResultLines
+		refs searchResultLines
 		want []ld.ReferenceHunksRep
 	}{
 		{
 			name: "no references",
-			refs: grepResultLines{},
+			refs: searchResultLines{},
 			want: []ld.ReferenceHunksRep{},
 		},
 		{
 			name: "single path, single reference with context lines",
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "context +1",
@@ -250,14 +250,14 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 		},
 		{
 			name: "multiple paths, single reference with context lines",
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  1,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/c/d",
 					LineNum:  10,
 					LineText: "flag-2",
@@ -306,26 +306,26 @@ func Test_makeHunkReps(t *testing.T) {
 	tests := []struct {
 		name     string
 		ctxLines int
-		refs     grepResultLines
+		refs     searchResultLines
 		want     []ld.HunkRep
 	}{
 		{
 			name:     "single reference with context lines",
 			ctxLines: 1,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "context +1",
@@ -344,32 +344,32 @@ func Test_makeHunkReps(t *testing.T) {
 		{
 			name:     "multiple references, single flag, one hunk",
 			ctxLines: 1,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "context inner",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  8,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  9,
 					LineText: "context +1",
@@ -388,32 +388,32 @@ func Test_makeHunkReps(t *testing.T) {
 		{
 			name:     "multiple references, multiple context lines, single flag, one hunk",
 			ctxLines: 2,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "context inner",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  8,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  9,
 					LineText: "context +1",
@@ -432,38 +432,38 @@ func Test_makeHunkReps(t *testing.T) {
 		{
 			name:     "multiple references, single flag, multiple hunks",
 			ctxLines: 1,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "a context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "a flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "a context +1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  9,
 					LineText: "b context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  10,
 					LineText: "b flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  11,
 					LineText: "b context +1",
@@ -488,32 +488,32 @@ func Test_makeHunkReps(t *testing.T) {
 		{
 			name:     "multiple consecutive references, multiple flags, multiple hunks",
 			ctxLines: 1,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "context inner",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  8,
 					LineText: "flag-2",
 					FlagKeys: []string{"flag-2"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  9,
 					LineText: "context +1",
@@ -538,38 +538,38 @@ func Test_makeHunkReps(t *testing.T) {
 		{
 			name:     "multiple consecutive (non overlapping) references, multiple flags, multiple hunks",
 			ctxLines: 1,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "a context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "a flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "a context +1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  8,
 					LineText: "b context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  9,
 					LineText: "b flag-2",
 					FlagKeys: []string{"flag-2"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  10,
 					LineText: "b context +1",
@@ -594,32 +594,32 @@ func Test_makeHunkReps(t *testing.T) {
 		{
 			name:     "multiple references, single flag, 0 context, multiple hunks",
 			ctxLines: 0,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "context inner",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  8,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  9,
 					LineText: "context +1",
@@ -644,32 +644,32 @@ func Test_makeHunkReps(t *testing.T) {
 		{
 			name:     "multiple references, single flag, negative context, multiple hunks",
 			ctxLines: -1,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  5,
 					LineText: "context -1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  6,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  7,
 					LineText: "context inner",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  8,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  9,
 					LineText: "context +1",
@@ -699,38 +699,38 @@ func Test_makeHunkReps(t *testing.T) {
 			// times forwards, which would walk past the correct end of the hunk and into the next hunk
 			name:     "multiple references, first reference at start of file",
 			ctxLines: 1,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  1,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  2,
 					LineText: "context+1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  3,
 					LineText: "context+3",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  10,
 					LineText: "context-1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  11,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  12,
 					LineText: "context+1",
@@ -757,32 +757,32 @@ func Test_makeHunkReps(t *testing.T) {
 			// previous test case
 			name:     "multiple references, first reference at start of file",
 			ctxLines: 2,
-			refs: grepResultLines{
-				grepResultLine{
+			refs: searchResultLines{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  1,
 					LineText: "context-1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  2,
 					LineText: "flag-1",
 					FlagKeys: []string{"flag-1"},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  3,
 					LineText: "context+1",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  4,
 					LineText: "context+2",
 					FlagKeys: []string{},
 				},
-				grepResultLine{
+				searchResultLine{
 					Path:     "a/b",
 					LineNum:  10,
 					LineText: "context+alot+shouldn'tbeinhunk",
@@ -806,9 +806,9 @@ func Test_makeHunkReps(t *testing.T) {
 
 			require.Equal(t, len(groupedResults), 1)
 
-			fileGrepResults := groupedResults[0]
+			fileSearchResults := groupedResults[0]
 
-			got := fileGrepResults.makeHunkReps(projKey, tt.ctxLines)
+			got := fileSearchResults.makeHunkReps(projKey, tt.ctxLines)
 
 			sort.Sort(byStartingLineNumber(got))
 
@@ -818,38 +818,38 @@ func Test_makeHunkReps(t *testing.T) {
 }
 
 func Test_groupIntoPathMap(t *testing.T) {
-	grepResultPathALine1 := grepResultLine{
+	searchResultPathALine1 := searchResultLine{
 		Path:     "a",
 		LineNum:  1,
 		LineText: "flag-1",
 		FlagKeys: []string{"flag-1"},
 	}
 
-	grepResultPathALine2 := grepResultLine{
+	searchResultPathALine2 := searchResultLine{
 		Path:     "a",
 		LineNum:  2,
 		LineText: "flag-2",
 		FlagKeys: []string{"flag-2"},
 	}
 
-	grepResultPathBLine1 := grepResultLine{
+	searchResultPathBLine1 := searchResultLine{
 		Path:     "b",
 		LineNum:  1,
 		LineText: "flag-3",
 		FlagKeys: []string{"flag-3"},
 	}
-	grepResultPathBLine2 := grepResultLine{
+	searchResultPathBLine2 := searchResultLine{
 		Path:     "b",
 		LineNum:  2,
 		LineText: "flag-2",
 		FlagKeys: []string{"flag-4"},
 	}
 
-	lines := grepResultLines{
-		grepResultPathALine1,
-		grepResultPathALine2,
-		grepResultPathBLine1,
-		grepResultPathBLine2,
+	lines := searchResultLines{
+		searchResultPathALine1,
+		searchResultPathALine2,
+		searchResultPathBLine1,
+		searchResultPathBLine2,
 	}
 
 	linesByPath := lines.aggregateByPath()
@@ -863,10 +863,10 @@ func Test_groupIntoPathMap(t *testing.T) {
 	require.Contains(t, aRefMap, "flag-1")
 	require.Contains(t, aRefMap, "flag-2")
 
-	aLines := aRefs.fileGrepResultLines
+	aLines := aRefs.fileSearchResultLines
 	require.Equal(t, aLines.Len(), 2)
-	require.Equal(t, aLines.Front().Value, grepResultPathALine1)
-	require.Equal(t, aLines.Back().Value, grepResultPathALine2)
+	require.Equal(t, aLines.Front().Value, searchResultPathALine1)
+	require.Equal(t, aLines.Back().Value, searchResultPathALine2)
 
 	bRefs := linesByPath[1]
 	require.Equal(t, bRefs.path, "b")
@@ -877,10 +877,10 @@ func Test_groupIntoPathMap(t *testing.T) {
 	require.Contains(t, bRefMap, "flag-3")
 	require.Contains(t, bRefMap, "flag-4")
 
-	bLines := bRefs.fileGrepResultLines
+	bLines := bRefs.fileSearchResultLines
 	require.Equal(t, bLines.Len(), 2)
-	require.Equal(t, bLines.Front().Value, grepResultPathBLine1)
-	require.Equal(t, bLines.Back().Value, grepResultPathBLine2)
+	require.Equal(t, bLines.Front().Value, searchResultPathBLine1)
+	require.Equal(t, bLines.Back().Value, searchResultPathBLine2)
 }
 
 func Test_filterShortFlags(t *testing.T) {

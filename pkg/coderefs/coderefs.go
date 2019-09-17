@@ -32,20 +32,20 @@ const (
 	maxProjKeyLength                  = 20
 )
 
-type grepResultLine struct {
+type searchResultLine struct {
 	Path     string
 	LineNum  int
 	LineText string
 	FlagKeys []string
 }
 
-type grepResultLines []grepResultLine
+type searchResultLines []searchResultLine
 
-func (lines grepResultLines) Len() int {
+func (lines searchResultLines) Len() int {
 	return len(lines)
 }
 
-func (lines grepResultLines) Less(i, j int) bool {
+func (lines searchResultLines) Less(i, j int) bool {
 	if lines[i].Path < lines[j].Path {
 		return true
 	}
@@ -55,19 +55,19 @@ func (lines grepResultLines) Less(i, j int) bool {
 	return lines[i].LineNum < lines[j].LineNum
 }
 
-func (lines grepResultLines) Swap(i, j int) {
+func (lines searchResultLines) Swap(i, j int) {
 	lines[i], lines[j] = lines[j], lines[i]
 }
 
 // map of flag keys to slices of lines those flags occur on
 type flagReferenceMap map[string][]*list.Element
 
-// this struct contains a linked list of all the grep result lines
+// this struct contains a linked list of all the search result lines
 // for a single file, and a map of flag keys to slices of lines where
 // those flags occur.
-type fileGrepResults struct {
-	path                string
-	fileGrepResultLines *list.List
+type fileSearchResults struct {
+	path                  string
+	fileSearchResultLines *list.List
 	flagReferenceMap
 }
 
@@ -76,7 +76,7 @@ type branch struct {
 	Head             string
 	UpdateSequenceId *int64
 	SyncTime         int64
-	GrepResults      grepResultLines
+	SearchResults    searchResultLines
 }
 
 func Scan() {
@@ -88,7 +88,7 @@ func Scan() {
 
 	gitClient, err := command.NewGitClient(dir)
 	if err != nil {
-		log.Error.Fatalf("%s", err)
+		log.Fatal.Fatalf("%s", err)
 	}
 
 	projKey := o.ProjKey.Value()
@@ -114,12 +114,12 @@ func Scan() {
 
 	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 	if err != nil {
-		log.Error.Fatalf(err.Error())
+		log.Fatal.Fatalf(err.Error())
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
-		log.Error.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
+		log.Fatal.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
 	}
 	if len(flags) == 0 {
 		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
@@ -152,10 +152,11 @@ func Scan() {
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
 	refs, err := b.findReferences(searchClient, filteredFlags, ctxLines, excludeRegex)
 	if err != nil {
-		log.Error.Fatalf("error searching for flag key references: %s", err)
+		log.Fatal.Fatalf("error searching for flag key references: %s", err)
 	}
-	b.GrepResults = refs
-	sort.Sort(b.GrepResults)
+
+	b.SearchResults = refs
+	sort.Sort(b.SearchResults)
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
 	log.Info.Printf("sending %d code references across %d flags and %d files to LaunchDarkly for project: %s", branchRep.TotalHunkCount(), len(filteredFlags), len(branchRep.References), projKey)
@@ -169,7 +170,7 @@ func Scan() {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
 		} else {
-			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
+			log.Fatal.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}
 	}
 
@@ -179,7 +180,7 @@ func Scan() {
 	} else {
 		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
 		if err != nil {
-			log.Error.Fatalf("failed to mark stale branches for deletion: %s", err)
+			log.Fatal.Fatalf("failed to mark stale branches for deletion: %s", err)
 		}
 	}
 }
@@ -236,22 +237,21 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func (b *branch) findReferences(cmd command.Searcher, flags []string, ctxLines int, exclude *regexp.Regexp) (grepResultLines, error) {
+func (b *branch) findReferences(cmd command.Searcher, flags []string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
-
 	results, err := paginatedSearch(cmd, flags, command.SafePaginationCharCount(), ctxLines, delims)
 	if err != nil {
-		return grepResultLines{}, err
+		return searchResultLines{}, err
 	}
 
-	return generateReferencesFromGrep(flags, results, ctxLines, string(delims), exclude), nil
+	return generateReferences(flags, results, ctxLines, string(delims), exclude), nil
 }
 
-func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []grepResultLine {
-	references := []grepResultLine{}
+func generateReferences(flags []string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
+	references := []searchResultLine{}
 
-	for _, r := range grepResult {
+	for _, r := range searchResult {
 		path := r[1]
 		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
 			continue
@@ -261,9 +261,9 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		lineText := r[4]
 		lineNum, err := strconv.Atoi(lineNumber)
 		if err != nil {
-			log.Error.Fatalf("encountered an unexpected error generating flag references: %s", err)
+			log.Fatal.Fatalf("encountered an unexpected error generating flag references: %s", err)
 		}
-		ref := grepResultLine{Path: path, LineNum: lineNum}
+		ref := searchResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
 			ref.FlagKeys = findReferencedFlags(lineText, flags, delims)
 		}
@@ -293,82 +293,82 @@ func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
 		Head:             b.Head,
 		UpdateSequenceId: b.UpdateSequenceId,
 		SyncTime:         b.SyncTime,
-		References:       b.GrepResults.makeReferenceHunksReps(projKey, ctxLines),
+		References:       b.SearchResults.makeReferenceHunksReps(projKey, ctxLines),
 	}
 }
 
-func (g grepResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []ld.ReferenceHunksRep {
+func (g searchResultLines) makeReferenceHunksReps(projKey string, ctxLines int) []ld.ReferenceHunksRep {
 	reps := []ld.ReferenceHunksRep{}
 
-	aggregatedGrepResults := g.aggregateByPath()
+	aggregatedSearchResults := g.aggregateByPath()
 
-	if len(aggregatedGrepResults) > maxFileCount {
-		log.Warning.Printf("found %d files with code references, which exceeded the limit of %d", len(aggregatedGrepResults), maxFileCount)
-		aggregatedGrepResults = aggregatedGrepResults[0:maxFileCount]
+	if len(aggregatedSearchResults) > maxFileCount {
+		log.Warning.Printf("found %d files with code references, which exceeded the limit of %d", len(aggregatedSearchResults), maxFileCount)
+		aggregatedSearchResults = aggregatedSearchResults[0:maxFileCount]
 	}
 
 	numHunks := 0
 
 	shouldSuppressUnexpectedError := false
-	for _, fileGrepResults := range aggregatedGrepResults {
+	for _, fileSearchResults := range aggregatedSearchResults {
 		if numHunks > maxHunkCount {
 			log.Warning.Printf("found %d code references across all files, which exceeeded the limit of %d. halting code reference search", numHunks, maxHunkCount)
 			break
 		}
 
-		hunks := fileGrepResults.makeHunkReps(projKey, ctxLines)
+		hunks := fileSearchResults.makeHunkReps(projKey, ctxLines)
 
 		if len(hunks) == 0 && !shouldSuppressUnexpectedError {
-			log.Error.Printf("expected code references but found none in '%s'", fileGrepResults.path)
-			log.Debug.Printf("%+v", fileGrepResults)
+			log.Error.Printf("expected code references but found none in '%s'", fileSearchResults.path)
+			log.Debug.Printf("%+v", fileSearchResults)
 			// if this error occurred, it's likely to occur for many other files, and create a lot of noise. So, suppress the message for all other occurrences
 			shouldSuppressUnexpectedError = true
 			continue
 		}
 
 		if len(hunks) > maxHunksPerFileCount {
-			log.Warning.Printf("found %d code references in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileGrepResults.path, maxHunksPerFileCount)
+			log.Warning.Printf("found %d code references in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileSearchResults.path, maxHunksPerFileCount)
 			hunks = hunks[0:maxHunksPerFileCount]
 		}
 
 		numHunks += len(hunks)
 
-		reps = append(reps, ld.ReferenceHunksRep{Path: fileGrepResults.path, Hunks: hunks})
+		reps = append(reps, ld.ReferenceHunksRep{Path: fileSearchResults.path, Hunks: hunks})
 	}
 	return reps
 }
 
-// Assumes invariant: grepResultLines will already be sorted by path.
-func (g grepResultLines) aggregateByPath() []fileGrepResults {
-	allFileResults := []fileGrepResults{}
+// Assumes invariant: searchResultLines will already be sorted by path.
+func (g searchResultLines) aggregateByPath() []fileSearchResults {
+	allFileResults := []fileSearchResults{}
 
 	if len(g) == 0 {
 		return allFileResults
 	}
 
 	// initialize first file
-	currentFileResults := fileGrepResults{
-		path:                g[0].Path,
-		flagReferenceMap:    flagReferenceMap{},
-		fileGrepResultLines: list.New(),
+	currentFileResults := fileSearchResults{
+		path:                  g[0].Path,
+		flagReferenceMap:      flagReferenceMap{},
+		fileSearchResultLines: list.New(),
 	}
 
-	for _, grepResult := range g {
-		// If we reach a grep result with a new path, append the old one to our list and start a new one
-		if grepResult.Path != currentFileResults.path {
+	for _, searchResult := range g {
+		// If we reach a search result with a new path, append the old one to our list and start a new one
+		if searchResult.Path != currentFileResults.path {
 			allFileResults = append(allFileResults, currentFileResults)
 
-			currentFileResults = fileGrepResults{
-				path:                grepResult.Path,
-				flagReferenceMap:    flagReferenceMap{},
-				fileGrepResultLines: list.New(),
+			currentFileResults = fileSearchResults{
+				path:                  searchResult.Path,
+				flagReferenceMap:      flagReferenceMap{},
+				fileSearchResultLines: list.New(),
 			}
 		}
 
-		elem := currentFileResults.addGrepResult(grepResult)
+		elem := currentFileResults.addSearchResult(searchResult)
 
-		if len(grepResult.FlagKeys) > 0 {
-			for _, flagKey := range grepResult.FlagKeys {
+		if len(searchResult.FlagKeys) > 0 {
+			for _, flagKey := range searchResult.FlagKeys {
 				currentFileResults.addFlagReference(flagKey, elem)
 			}
 		}
@@ -380,34 +380,34 @@ func (g grepResultLines) aggregateByPath() []fileGrepResults {
 	return allFileResults
 }
 
-func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Element {
-	prev := fgr.fileGrepResultLines.Back()
-	if prev != nil && prev.Value.(grepResultLine).LineNum > grepResult.LineNum {
-		// This should never happen, as `ag` (and any other grep program we might use
+func (fsr *fileSearchResults) addSearchResult(searchResult searchResultLine) *list.Element {
+	prev := fsr.fileSearchResultLines.Back()
+	if prev != nil && prev.Value.(searchResultLine).LineNum > searchResult.LineNum {
+		// This should never happen, as `ag` (and any other search program we might use
 		// should always return search results sorted by line number. We sanity check
 		// that lines are sorted _just in case_ since the downstream hunking algorithm
 		// only works on sorted lines.
-		log.Error.Fatalf("grep results returned out of order")
+		log.Fatal.Fatalf("search results returned out of order")
 	}
 
-	return fgr.fileGrepResultLines.PushBack(grepResult)
+	return fsr.fileSearchResultLines.PushBack(searchResult)
 }
 
-func (fgr *fileGrepResults) addFlagReference(key string, ref *list.Element) {
-	_, ok := fgr.flagReferenceMap[key]
+func (fsr *fileSearchResults) addFlagReference(key string, ref *list.Element) {
+	_, ok := fsr.flagReferenceMap[key]
 
 	if ok {
-		fgr.flagReferenceMap[key] = append(fgr.flagReferenceMap[key], ref)
+		fsr.flagReferenceMap[key] = append(fsr.flagReferenceMap[key], ref)
 	} else {
-		fgr.flagReferenceMap[key] = []*list.Element{ref}
+		fsr.flagReferenceMap[key] = []*list.Element{ref}
 	}
 }
 
-func (fgr fileGrepResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep {
+func (fsr fileSearchResults) makeHunkReps(projKey string, ctxLines int) []ld.HunkRep {
 	hunks := []ld.HunkRep{}
 
-	for flagKey, flagReferences := range fgr.flagReferenceMap {
-		flagHunks := buildHunksForFlag(projKey, flagKey, fgr.path, flagReferences, ctxLines)
+	for flagKey, flagReferences := range fsr.flagReferenceMap {
+		flagHunks := buildHunksForFlag(projKey, flagKey, fsr.path, flagReferences, ctxLines)
 		hunks = append(hunks, flagHunks...)
 	}
 
@@ -446,7 +446,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 			// If we seek earlier than the end of the last hunk, this reference overlaps at least
 			// partially with the last hunk and we should (possibly) expand the previous hunk rather than
 			// starting a new hunk.
-			if ptr.Value.(grepResultLine).LineNum <= lastSeenLineNum {
+			if ptr.Value.(searchResultLine).LineNum <= lastSeenLineNum {
 				appendToPreviousHunk = true
 			}
 		}
@@ -454,7 +454,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// If we are starting a new hunk, initialize it
 		if !appendToPreviousHunk {
 			currentHunk = initHunk(projKey, flag)
-			currentHunk.StartingLineNumber = ptr.Value.(grepResultLine).LineNum
+			currentHunk.StartingLineNumber = ptr.Value.(searchResultLine).LineNum
 			hunkStringBuilder.Reset()
 		}
 
@@ -465,9 +465,9 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		//     If so: write that line to the hunkStringBuilder
 		//     Record that line as the last seen line.
 		for i := 0; i < numCtxLinesBeforeFlagRef+1+ctxLines; i++ {
-			ptrLineNum := ptr.Value.(grepResultLine).LineNum
+			ptrLineNum := ptr.Value.(searchResultLine).LineNum
 			if ptrLineNum > lastSeenLineNum {
-				lineText := truncateLine(ptr.Value.(grepResultLine).LineText)
+				lineText := truncateLine(ptr.Value.(searchResultLine).LineText)
 				hunkStringBuilder.WriteString(lineText + "\n")
 				lastSeenLineNum = ptrLineNum
 				numHunkedLines += 1
