@@ -2,12 +2,41 @@ package coderefs
 
 import (
 	"errors"
+	"regexp"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
 var NoSearchPatternErr = errors.New("failed to generate a valid search pattern")
+
+type searchResultLine struct {
+	Path     string
+	LineNum  int
+	LineText string
+	FlagKeys []string
+}
+
+type searchResultLines []searchResultLine
+
+func (lines searchResultLines) Len() int {
+	return len(lines)
+}
+
+func (lines searchResultLines) Less(i, j int) bool {
+	if lines[i].Path < lines[j].Path {
+		return true
+	}
+	if lines[i].Path > lines[j].Path {
+		return false
+	}
+	return lines[i].LineNum < lines[j].LineNum
+}
+
+func (lines searchResultLines) Swap(i, j int) {
+	lines[i], lines[j] = lines[j], lines[i]
+}
 
 // paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
 func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, ctxLines int, delims []rune) ([][]string, error) {
@@ -51,4 +80,15 @@ func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, 
 		}
 	}
 	return results, nil
+}
+
+func findReferences(cmd command.Searcher, flags []string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
+	delims := o.Delimiters.Value()
+	log.Info.Printf("finding code references with delimiters: %s", delims.String())
+	results, err := paginatedSearch(cmd, flags, command.SafePaginationCharCount(), ctxLines, delims)
+	if err != nil {
+		return searchResultLines{}, err
+	}
+
+	return generateReferences(flags, results, ctxLines, string(delims), exclude), nil
 }

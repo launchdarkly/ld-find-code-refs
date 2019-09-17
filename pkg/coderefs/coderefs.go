@@ -32,33 +32,6 @@ const (
 	maxProjKeyLength                  = 20
 )
 
-type searchResultLine struct {
-	Path     string
-	LineNum  int
-	LineText string
-	FlagKeys []string
-}
-
-type searchResultLines []searchResultLine
-
-func (lines searchResultLines) Len() int {
-	return len(lines)
-}
-
-func (lines searchResultLines) Less(i, j int) bool {
-	if lines[i].Path < lines[j].Path {
-		return true
-	}
-	if lines[i].Path > lines[j].Path {
-		return false
-	}
-	return lines[i].LineNum < lines[j].LineNum
-}
-
-func (lines searchResultLines) Swap(i, j int) {
-	lines[i], lines[j] = lines[j], lines[i]
-}
-
 // map of flag keys to slices of lines those flags occur on
 type flagReferenceMap map[string][]*list.Element
 
@@ -150,7 +123,7 @@ func Scan() {
 
 	// exclude option has already been validated as regex in options.go
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := b.findReferences(searchClient, filteredFlags, ctxLines, excludeRegex)
+	refs, err := findReferences(searchClient, filteredFlags, ctxLines, excludeRegex)
 	if err != nil {
 		log.Fatal.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -235,17 +208,6 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 		return nil, err
 	}
 	return flags, nil
-}
-
-func (b *branch) findReferences(cmd command.Searcher, flags []string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
-	delims := o.Delimiters.Value()
-	log.Info.Printf("finding code references with delimiters: %s", delims.String())
-	results, err := paginatedSearch(cmd, flags, command.SafePaginationCharCount(), ctxLines, delims)
-	if err != nil {
-		return searchResultLines{}, err
-	}
-
-	return generateReferences(flags, results, ctxLines, string(delims), exclude), nil
 }
 
 func generateReferences(flags []string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
