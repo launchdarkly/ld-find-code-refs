@@ -42,20 +42,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func Test_sortSearchResults(t *testing.T) {
-	cats1 := searchResultLine{Path: "/dev/null/cats", LineNum: 1, LineText: "", FlagKeys: []string{"src/meow/yes/pls"}}
-	cats2 := searchResultLine{Path: "/dev/null/cats", LineNum: 2, LineText: "", FlagKeys: []string{"src/meow/feed/me"}}
-	dogs5 := searchResultLine{Path: "/dev/null/dogs", LineNum: 5, LineText: "", FlagKeys: []string{"src/woof/oh/fine"}}
-	dogs15 := searchResultLine{Path: "/dev/null/dogs", LineNum: 15, LineText: "", FlagKeys: []string{"src/woof/walk/me"}}
-
-	linesToSort := searchResultLines{dogs15, cats2, dogs5, cats1}
-	expectedResults := searchResultLines{cats1, cats2, dogs5, dogs15}
-
-	sort.Sort(linesToSort)
-
-	assert.Exactly(t, linesToSort, expectedResults, "search order for searchResultLines not as expected")
-}
-
 func Test_generateReferences(t *testing.T) {
 	testResult := []string{"", "flags.txt", ":", "12", delimit(testFlagKey, `"`)}
 	testWant := searchResultLine{Path: "flags.txt", LineNum: 12, LineText: delimit(testFlagKey, `"`), FlagKeys: []string{testFlagKey}}

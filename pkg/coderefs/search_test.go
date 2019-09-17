@@ -1,7 +1,7 @@
 package coderefs
 
 import (
-	"errors"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,10 +13,6 @@ type MockClient struct {
 	results [][]string
 	err     error
 	pages   [][]string
-}
-
-func (c *MockClient) RemoteBranches() (map[string]bool, error) {
-	return nil, errors.New("Mock error")
 }
 
 func (c *MockClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
@@ -84,4 +80,18 @@ func Test_paginatedSearch(t *testing.T) {
 			assert.Equal(t, tt.expectedErr, err)
 		})
 	}
+}
+
+func Test_sortSearchResults(t *testing.T) {
+	cats1 := searchResultLine{Path: "/dev/null/cats", LineNum: 1, LineText: "", FlagKeys: []string{"src/meow/yes/pls"}}
+	cats2 := searchResultLine{Path: "/dev/null/cats", LineNum: 2, LineText: "", FlagKeys: []string{"src/meow/feed/me"}}
+	dogs5 := searchResultLine{Path: "/dev/null/dogs", LineNum: 5, LineText: "", FlagKeys: []string{"src/woof/oh/fine"}}
+	dogs15 := searchResultLine{Path: "/dev/null/dogs", LineNum: 15, LineText: "", FlagKeys: []string{"src/woof/walk/me"}}
+
+	linesToSort := searchResultLines{dogs15, cats2, dogs5, cats1}
+	expectedResults := searchResultLines{cats1, cats2, dogs5, dogs15}
+
+	sort.Sort(linesToSort)
+
+	assert.Exactly(t, linesToSort, expectedResults, "search order for searchResultLines not as expected")
 }
