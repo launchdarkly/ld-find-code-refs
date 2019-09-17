@@ -51,7 +51,7 @@ type Searcher interface {
 }
 
 type AgClient struct {
-	Workspace string
+	workspace string
 }
 
 func NewAgClient(path string) (*AgClient, error) {
@@ -60,13 +60,13 @@ func NewAgClient(path string) (*AgClient, error) {
 		return nil, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
 	}
 
-	return &AgClient{Workspace: path}, nil
+	return &AgClient{workspace: path}, nil
 }
 
 func (c *AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
 	ignoreFileName := ".ldignore"
-	pathToIgnore := filepath.Join(c.Workspace, ignoreFileName)
+	pathToIgnore := filepath.Join(c.workspace, ignoreFileName)
 	if fileExists(pathToIgnore) {
 		log.Debug.Printf("excluding files matched in %s", ignoreFileName)
 		args = append(args, fmt.Sprintf("--path-to-ignore=%s", pathToIgnore))
@@ -78,7 +78,7 @@ func (c *AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []run
 	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
 	/* #nosec */
 	cmd := exec.Command("ag", args...)
-	cmd.Args = append(cmd.Args, searchPattern, c.Workspace)
+	cmd.Args = append(cmd.Args, searchPattern, c.workspace)
 	out, err := cmd.CombinedOutput()
 	res := string(out)
 	if err != nil {
@@ -91,7 +91,7 @@ func (c *AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []run
 		return nil, errors.New(res)
 	}
 
-	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
+	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.workspace) + "/)" + grepRegex.String())
 	if err != nil {
 		return nil, err
 	}

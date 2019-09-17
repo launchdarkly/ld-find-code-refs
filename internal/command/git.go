@@ -12,7 +12,7 @@ import (
 )
 
 type GitClient struct {
-	Workspace string
+	workspace string
 	GitBranch string
 	GitSha    string
 }
@@ -24,7 +24,7 @@ func NewGitClient(path string) (GitClient, error) {
 	if err != nil {
 		return client, fmt.Errorf("could not validate directory option: %s", err)
 	}
-	client.Workspace = absPath
+	client.workspace = absPath
 
 	_, err = exec.LookPath("git")
 	if err != nil {
@@ -35,7 +35,7 @@ func NewGitClient(path string) (GitClient, error) {
 	if err != nil {
 		return client, fmt.Errorf("error parsing git branch name: %s", err)
 	} else if currBranch == "" {
-		return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.Workspace)
+		return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
 	}
 	log.Info.Printf("git branch: %s", currBranch)
 	client.GitBranch = currBranch
@@ -57,7 +57,7 @@ func (c GitClient) branchName() (string, error) {
 	}
 
 	/* #nosec */
-	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "--abbrev-ref", "HEAD")
+	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", errors.New(string(out))
@@ -72,7 +72,7 @@ func (c GitClient) branchName() (string, error) {
 
 func (c GitClient) headSha() (string, error) {
 	/* #nosec */
-	cmd := exec.Command("git", "-C", c.Workspace, "rev-parse", "HEAD")
+	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "HEAD")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", errors.New(string(out))
@@ -84,7 +84,7 @@ func (c GitClient) headSha() (string, error) {
 
 func (c GitClient) RemoteBranches() (map[string]bool, error) {
 	/* #nosec */
-	cmd := exec.Command("git", "-C", c.Workspace, "ls-remote", "--quiet", "--heads")
+	cmd := exec.Command("git", "-C", c.workspace, "ls-remote", "--quiet", "--heads")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, errors.New(string(out))
