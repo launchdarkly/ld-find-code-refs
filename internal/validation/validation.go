@@ -37,3 +37,11 @@ func dirExists(path string) (bool, error) {
 
 	return fileInfo.Mode().IsDir(), nil
 }
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}

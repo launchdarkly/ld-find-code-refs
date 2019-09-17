@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -31,15 +32,6 @@ const (
 	maxProjKeyLength                  = 20
 )
 
-type searchResultLine struct {
-	Path     string
-	LineNum  int
-	LineText string
-	FlagKeys []string
-}
-
-type searchResultLines []searchResultLine
-
 // map of flag keys to slices of lines those flags occur on
 type flagReferenceMap map[string][]*list.Element
 
@@ -62,7 +54,12 @@ type branch struct {
 
 func Scan() {
 	dir := o.Dir.Value()
-	cmd, err := command.NewClient(dir)
+	searchClient, err := command.NewAgClient(dir)
+	if err != nil {
+		log.Fatal.Fatalf("%s", err)
+	}
+
+	gitClient, err := command.NewGitClient(dir)
 	if err != nil {
 		log.Fatal.Fatalf("%s", err)
 	}
@@ -122,25 +119,27 @@ func Scan() {
 		updateId = &updateIdOption
 	}
 	b := &branch{
-		Name:             cmd.GitBranch,
+		Name:             gitClient.GitBranch,
 		UpdateSequenceId: updateId,
 		SyncTime:         makeTimestamp(),
-		Head:             cmd.GitSha,
+		Head:             gitClient.GitSha,
 	}
 
 	// exclude option has already been validated as regex in options.go
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, excludeRegex)
+	refs, err := findReferences(searchClient, filteredFlags, ctxLines, excludeRegex)
 	if err != nil {
 		log.Fatal.Fatalf("error searching for flag key references: %s", err)
 	}
+
 	b.SearchResults = refs
+	sort.Sort(b.SearchResults)
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
 
 	outDir := o.OutDir.Value()
 	if outDir != "" {
-		outPath, err := branchRep.WriteToCSV(outDir, projKey, repoParams.Name, cmd.GitSha)
+		outPath, err := branchRep.WriteToCSV(outDir, projKey, repoParams.Name, gitClient.GitSha)
 		if err != nil {
 			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
@@ -178,7 +177,7 @@ func Scan() {
 		}
 	}
 
-	remoteBranches, err := cmd.RemoteBranches()
+	remoteBranches, err := gitClient.RemoteBranches()
 	if err != nil {
 		log.Warning.Printf("unable to retrieve branch list from remote, skipping branch deletion: %s", err)
 	} else {
@@ -239,17 +238,6 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 		return nil, err
 	}
 	return flags, nil
-}
-
-func (b *branch) findReferences(cmd command.Client, flags []string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
-	delims := o.Delimiters.Value()
-	log.Info.Printf("finding code references with delimiters: %s", delims.String())
-	searchResult, err := cmd.SearchForFlags(flags, ctxLines, delims)
-	if err != nil {
-		return searchResultLines{}, err
-	}
-
-	return generateReferences(flags, searchResult, ctxLines, string(delims), exclude), nil
 }
 
 func generateReferences(flags []string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {

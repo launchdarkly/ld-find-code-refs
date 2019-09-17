@@ -239,6 +239,7 @@ func Init() (err error, errCb func()) {
 			return fmt.Errorf("invalid outDir: %s", err), flag.PrintDefaults
 		}
 	}
+
 	return nil, flag.PrintDefaults
 }
 
@@ -289,7 +290,7 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 	}
 	_, err = strconv.ParseInt(ldOptions["contextLines"], 10, 32)
 	if err != nil {
-		return ldOptions, fmt.Errorf("coudln't parse LD_CONTEXT_LINES as an integer: %+v", err)
+		return ldOptions, fmt.Errorf("couldn't parse LD_CONTEXT_LINES as an integer: %+v", err)
 	}
 
 	return ldOptions, nil
