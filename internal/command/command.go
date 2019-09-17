@@ -3,7 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 /*
@@ -67,7 +67,7 @@ func (c *AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []run
 	args := []string{"--nogroup", "--case-sensitive"}
 	ignoreFileName := ".ldignore"
 	pathToIgnore := filepath.Join(c.workspace, ignoreFileName)
-	if fileExists(pathToIgnore) {
+	if validation.FileExists(pathToIgnore) {
 		log.Debug.Printf("excluding files matched in %s", ignoreFileName)
 		args = append(args, fmt.Sprintf("--path-to-ignore=%s", pathToIgnore))
 	}
@@ -131,45 +131,4 @@ func generateSearchPattern(flags []string, delimiters []rune, padPattern bool) s
 	}
 	// example: (?<=[\"'\`])(flag1|flag2|flag3)(?=[\"'\`])"
 	return lookBehind + "(" + flagRegex + ")" + lookAhead
-}
-
-func normalizeAndValidatePath(path string) (string, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return "", fmt.Errorf("invalid directory: %s", err)
-	}
-	log.Info.Printf("absolute directory path: %s", absPath)
-
-	exists, err := dirExists(absPath)
-	if err != nil {
-		return "", fmt.Errorf("invalid directory: %s", err)
-	}
-
-	if !exists {
-		return "", fmt.Errorf("directory does not exist: %s", absPath)
-	}
-
-	return absPath, nil
-}
-
-func dirExists(path string) (bool, error) {
-	fileInfo, err := os.Stat(path)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return fileInfo.Mode().IsDir(), nil
-}
-
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
 }

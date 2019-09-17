@@ -9,6 +9,7 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 type GitClient struct {
@@ -20,7 +21,7 @@ type GitClient struct {
 func NewGitClient(path string) (GitClient, error) {
 	client := GitClient{}
 
-	absPath, err := normalizeAndValidatePath(path)
+	absPath, err := validation.NormalizeAndValidatePath(path)
 	if err != nil {
 		return client, fmt.Errorf("could not validate directory option: %s", err)
 	}
