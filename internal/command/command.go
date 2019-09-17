@@ -16,13 +16,13 @@ import (
 )
 
 /*
-grepRegex splits resulting grep lines into groups
+searchRegex splits search result lines into groups
 Group 1: File path.
 Group 2: Separator. A colon indicates a match, a hyphen indicates a context lines
 Group 3: Line number
 Group 4: Line contents
 */
-var grepRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
+var searchRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
 type Client struct {
 	Workspace string
@@ -144,7 +144,7 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 		return nil, errors.New(string(out))
 	}
 
-	grepRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + grepRegex.String())
+	searchRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.Workspace) + "/)" + searchRegex.String())
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (c Client) SearchForFlags(flags []string, ctxLines int, delimiters []rune) 
 		output = fromWindows1252(output)
 	}
 
-	ret := grepRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
+	ret := searchRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
 	return ret, err
 }
 
