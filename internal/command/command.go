@@ -12,6 +12,7 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 /*
@@ -32,10 +33,12 @@ type Client struct {
 func NewClient(path string) (Client, error) {
 	client := Client{}
 
-	absPath, err := normalizeAndValidatePath(path)
+	absPath, err := validation.NormalizeAndValidatePath(path)
 	if err != nil {
 		return client, fmt.Errorf("could not validate directory option: %s", err)
 	}
+	log.Info.Printf("absolute directory path: %s", absPath)
+
 	client.Workspace = absPath
 
 	_, err = exec.LookPath("git")
@@ -189,37 +192,4 @@ func generateSearchPattern(flags []string, delimiters []rune, padPattern bool) s
 	}
 	// example: (?<=[\"'\`])(flag1|flag2|flag3)(?=[\"'\`])"
 	return lookBehind + "(" + flagRegex + ")" + lookAhead
-}
-
-func normalizeAndValidatePath(path string) (string, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return "", fmt.Errorf("invalid directory: %s", err)
-	}
-	log.Info.Printf("absolute directory path: %s", absPath)
-
-	exists, err := dirExists(absPath)
-	if err != nil {
-		return "", fmt.Errorf("invalid directory: %s", err)
-	}
-
-	if !exists {
-		return "", fmt.Errorf("directory does not exist: %s", absPath)
-	}
-
-	return absPath, nil
-}
-
-func dirExists(path string) (bool, error) {
-	fileInfo, err := os.Stat(path)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return fileInfo.Mode().IsDir(), nil
 }
