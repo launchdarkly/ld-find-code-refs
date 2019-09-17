@@ -64,7 +64,7 @@ func Scan() {
 	dir := o.Dir.Value()
 	cmd, err := command.NewClient(dir)
 	if err != nil {
-		log.Error.Fatalf("%s", err)
+		log.Fatal.Fatalf("%s", err)
 	}
 
 	projKey := o.ProjKey.Value()
@@ -90,12 +90,12 @@ func Scan() {
 
 	err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 	if err != nil {
-		log.Error.Fatalf(err.Error())
+		log.Fatal.Fatalf(err.Error())
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
-		log.Error.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
+		log.Fatal.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
 	}
 	if len(flags) == 0 {
 		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
@@ -128,7 +128,7 @@ func Scan() {
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
 	refs, err := b.findReferences(cmd, filteredFlags, ctxLines, excludeRegex)
 	if err != nil {
-		log.Error.Fatalf("error searching for flag key references: %s", err)
+		log.Fatal.Fatalf("error searching for flag key references: %s", err)
 	}
 	b.GrepResults = refs
 
@@ -144,7 +144,7 @@ func Scan() {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
 		} else {
-			log.Error.Fatalf("error sending code references to LaunchDarkly: %s", err)
+			log.Fatal.Fatalf("error sending code references to LaunchDarkly: %s", err)
 		}
 	}
 
@@ -154,7 +154,7 @@ func Scan() {
 	} else {
 		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
 		if err != nil {
-			log.Error.Fatalf("failed to mark stale branches for deletion: %s", err)
+			log.Fatal.Fatalf("failed to mark stale branches for deletion: %s", err)
 		}
 	}
 }
@@ -235,7 +235,7 @@ func generateReferencesFromGrep(flags []string, grepResult [][]string, ctxLines 
 		lineText := r[4]
 		lineNum, err := strconv.Atoi(lineNumber)
 		if err != nil {
-			log.Error.Fatalf("encountered an unexpected error generating flag references: %s", err)
+			log.Fatal.Fatalf("encountered an unexpected error generating flag references: %s", err)
 		}
 		ref := grepResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
@@ -361,7 +361,7 @@ func (fgr *fileGrepResults) addGrepResult(grepResult grepResultLine) *list.Eleme
 		// should always return search results sorted by line number. We sanity check
 		// that lines are sorted _just in case_ since the downstream hunking algorithm
 		// only works on sorted lines.
-		log.Error.Fatalf("grep results returned out of order")
+		log.Fatal.Fatalf("grep results returned out of order")
 	}
 
 	return fgr.fileGrepResultLines.PushBack(grepResult)
