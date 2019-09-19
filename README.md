@@ -91,7 +91,7 @@ choco install ag
 ```bash
 docker pull launchdarkly/ld-find-code-refs
 docker run \
-  -v /Users/arnold/Documents/projects/launchdarkly/support-service:/repo \
+  -v /path/to/git/repo:/repo \
   launchdarkly/ld-find-code-refs \
   -dir="/repo"
 ```
