@@ -177,13 +177,14 @@ func Scan() {
 		}
 	}
 
+	log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
 	remoteBranches, err := gitClient.RemoteBranches()
 	if err != nil {
-		log.Warning.Printf("unable to retrieve branch list from remote, skipping branch deletion: %s", err)
+		log.Warning.Printf("unable to retrieve branch list from remote, skipping code reference pruning: %s", err)
 	} else {
 		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
 		if err != nil {
-			log.Fatal.Fatalf("failed to mark stale branches for deletion: %s", err)
+			log.Fatal.Fatalf("failed to mark old branches for code reference pruning: %s", err)
 		}
 	}
 }
@@ -196,7 +197,7 @@ func deleteStaleBranches(ldApi ld.ApiClient, repoName string, remoteBranches map
 
 	staleBranches := calculateStaleBranches(branches, remoteBranches)
 	if len(staleBranches) > 0 {
-		log.Debug.Printf("marking branches for deletion: %v", staleBranches)
+		log.Debug.Printf("marking stale branches for code reference pruning: %v", staleBranches)
 		err = ldApi.PostDeleteBranchesTask(repoName, staleBranches)
 		if err != nil {
 			return err
@@ -213,7 +214,7 @@ func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]b
 			staleBranches = append(staleBranches, branch.Name)
 		}
 	}
-	log.Info.Printf("found %d stale branches to be marked for deletion", len(staleBranches))
+	log.Info.Printf("found %d stale branches to be marked for code reference pruning", len(staleBranches))
 	return staleBranches
 }
 
