@@ -56,12 +56,12 @@ func Scan() {
 	dir := o.Dir.Value()
 	searchClient, err := command.NewAgClient(dir)
 	if err != nil {
-		log.Fatal.Fatalf("%s", err)
+		log.Error.Fatalf("%s", err)
 	}
 
 	gitClient, err := command.NewGitClient(dir)
 	if err != nil {
-		log.Fatal.Fatalf("%s", err)
+		log.Error.Fatalf("%s", err)
 	}
 
 	projKey := o.ProjKey.Value()
@@ -141,7 +141,7 @@ func Scan() {
 	if outDir != "" {
 		outPath, err := branchRep.WriteToCSV(outDir, projKey, repoParams.Name, gitClient.GitSha)
 		if err != nil {
-			log.Error.Fatalf("error writing code references to csv: %s", err)
+			log.Fatal.Fatalf("error writing code references to csv: %s", err)
 		}
 		log.Info.Printf("wrote code references to %s", outPath)
 	}

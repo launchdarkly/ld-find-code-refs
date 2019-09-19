@@ -20,21 +20,21 @@ func main() {
 	// init logging before checking error because we need to log the error if there is one
 	log.Init(debug)
 	if err != nil {
-		log.Fatal.Fatalf("error parsing debug option: %s", err)
+		log.Error.Fatalf("error parsing debug option: %s", err)
 	}
 
 	log.Info.Printf("Setting GitHub action env vars")
 	ghRepo := strings.Split(os.Getenv("GITHUB_REPOSITORY"), "/")
 	if len(ghRepo) < 2 {
-		log.Fatal.Fatalf("unable to validate GitHub repository name: %s", ghRepo)
+		log.Error.Fatalf("unable to validate GitHub repository name: %s", ghRepo)
 	}
 	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
 	if err != nil {
-		log.Fatal.Fatalf("error parsing GITHUB_REF: %s", err)
+		log.Error.Fatalf("error parsing GITHUB_REF: %s", err)
 	}
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
-		log.Fatal.Fatalf("error parsing GitHub event payload at %s: %s", os.Getenv("GITHUB_EVENT_PATH"), err)
+		log.Error.Fatalf("error parsing GitHub event payload at %s: %s", os.Getenv("GITHUB_EVENT_PATH"), err)
 	}
 
 	options := map[string]string{
@@ -48,7 +48,7 @@ func main() {
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
 	if err != nil {
-		log.Fatal.Fatalf("Error setting options: %s", err)
+		log.Error.Fatalf("Error setting options: %s", err)
 	}
 	for k, v := range ldOptions {
 		options[k] = v
@@ -58,7 +58,7 @@ func main() {
 	for k, v := range options {
 		err := flag.Set(k, v)
 		if err != nil {
-			log.Fatal.Fatalf("could not set option %s: %s", k, err)
+			log.Error.Fatalf("could not set option %s: %s", k, err)
 		}
 	}
 	// Don't log ld access token

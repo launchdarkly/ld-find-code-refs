@@ -14,7 +14,7 @@ func main() {
 	// init logging before checking error because we need to log the error if there is one
 	log.Init(debug)
 	if err != nil {
-		log.Fatal.Fatalf("error parsing debug option: %s", err)
+		log.Error.Fatalf("error parsing debug option: %s", err)
 	}
 
 	log.Info.Printf("setting Bitbucket Pipelines env vars")
@@ -27,7 +27,7 @@ func main() {
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
 	if err != nil {
-		log.Fatal.Fatalf("Error setting options %s", err)
+		log.Error.Fatalf("Error setting options %s", err)
 	}
 	for k, v := range ldOptions {
 		options[k] = v
@@ -37,7 +37,7 @@ func main() {
 	for k, v := range options {
 		err := flag.Set(k, v)
 		if err != nil {
-			log.Fatal.Fatalf("error setting option %s: %s", k, err)
+			log.Error.Fatalf("error setting option %s: %s", k, err)
 		}
 	}
 	log.Info.Printf("starting repo parsing program with options:\n %+v\n", options)
