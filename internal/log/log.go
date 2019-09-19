@@ -12,6 +12,7 @@ var (
 	Info    *log.Logger
 	Warning *log.Logger
 	Error   *log.Logger
+	Fatal   *log.Logger
 	Stdout  *log.Logger
 )
 
@@ -38,5 +39,7 @@ func Init(debug bool) {
 		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Stdout = log.New(os.Stdout, "", 0)
+	Fatal = log.New(os.Stderr,
+		"FATAL Please file an issue at https://github.com/launchdarkly/ld-find-code-refs: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
 }

@@ -1,8 +1,13 @@
 package command
 
-import "bytes"
+import (
+	"bytes"
+	"errors"
+)
 
 const windows = "windows"
+
+var windowsSearchTooLargeErr = errors.New("The filename or extension is too long")
 
 // Converts ANSI to UTF8: https://stackoverflow.com/a/12409923
 func fromWindows1252(str string) string {

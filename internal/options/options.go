@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
@@ -102,7 +103,9 @@ const (
 	Debug             = boolOption("debug")
 	DefaultBranch     = stringOption("defaultBranch")
 	Dir               = stringOption("dir")
+	DryRun            = boolOption("dryRun")
 	Exclude           = stringOption("exclude")
+	OutDir            = stringOption("outDir")
 	ProjKey           = stringOption("projKey")
 	UpdateSequenceId  = int64Option("updateSequenceId")
 	RepoName          = stringOption("repoName")
@@ -150,7 +153,9 @@ var options = optionMap{
 	DefaultBranch:     option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
 	Dir:               option{"", "Path to existing checkout of the git repo.", true},
 	Debug:             option{false, "Enables verbose debug logging", false},
+	DryRun:            option{false, "If enabled, the scanner will run without sending code references to LaunchDarkly. Combine with the `outDir` option to output code references to a CSV.", false},
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css"`, false},
+	OutDir:            option{"", "If provided, will output a csv file containing all code references for the project to this directory.", false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},
 	UpdateSequenceId:  option{noUpdateSequenceID, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
 	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."`, true},
@@ -222,6 +227,19 @@ func Init() (err error, errCb func()) {
 			return fmt.Errorf("delimiter option must be a valid non-control ASCII character"), flag.PrintDefaults
 		}
 	}
+
+	_, err = validation.NormalizeAndValidatePath(Dir.Value())
+	if err != nil {
+		return fmt.Errorf("invalid dir: %s", err), flag.PrintDefaults
+	}
+
+	if OutDir.Value() != "" {
+		_, err = validation.NormalizeAndValidatePath(OutDir.Value())
+		if err != nil {
+			return fmt.Errorf("invalid outDir: %s", err), flag.PrintDefaults
+		}
+	}
+
 	return nil, flag.PrintDefaults
 }
 
@@ -272,7 +290,7 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 	}
 	_, err = strconv.ParseInt(ldOptions["contextLines"], 10, 32)
 	if err != nil {
-		return ldOptions, fmt.Errorf("coudln't parse LD_CONTEXT_LINES as an integer: %+v", err)
+		return ldOptions, fmt.Errorf("couldn't parse LD_CONTEXT_LINES as an integer: %+v", err)
 	}
 
 	return ldOptions, nil
