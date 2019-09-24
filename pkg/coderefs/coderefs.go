@@ -14,6 +14,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
 
@@ -54,12 +55,18 @@ type branch struct {
 
 func Scan() {
 	dir := o.Dir.Value()
-	searchClient, err := command.NewAgClient(dir)
+	absPath, err := validation.NormalizeAndValidatePath(dir)
+	if err != nil {
+		log.Error.Fatalf("could not validate directory option: %s", err)
+	}
+
+	log.Info.Printf("absolute directory path: %s", absPath)
+	searchClient, err := command.NewAgClient(absPath)
 	if err != nil {
 		log.Error.Fatalf("%s", err)
 	}
 
-	gitClient, err := command.NewGitClient(dir)
+	gitClient, err := command.NewGitClient(absPath)
 	if err != nil {
 		log.Error.Fatalf("%s", err)
 	}

@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 type GitClient struct {
@@ -19,15 +19,13 @@ type GitClient struct {
 }
 
 func NewGitClient(path string) (GitClient, error) {
-	client := GitClient{}
-
-	absPath, err := validation.NormalizeAndValidatePath(path)
-	if err != nil {
-		return client, fmt.Errorf("could not validate directory option: %s", err)
+	if !filepath.IsAbs(path) {
+		log.Fatal.Fatalf("expected an absolute path but received a relative path: %s", path)
 	}
-	client.workspace = absPath
 
-	_, err = exec.LookPath("git")
+	client := GitClient{workspace: path}
+
+	_, err := exec.LookPath("git")
 	if err != nil {
 		return client, errors.New("git is a required dependency, but was not found in the system PATH")
 	}

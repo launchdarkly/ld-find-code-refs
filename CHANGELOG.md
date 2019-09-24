@@ -2,6 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.3.1] - 2019-09-24
+
+### Fixed
+
+- Fixed a regression causing no references to be found when a relative path is supplied to `dir`
+
 ## [1.3.0] - 2019-09-19
 
 ### Added
