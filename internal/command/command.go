@@ -55,6 +55,9 @@ type AgClient struct {
 }
 
 func NewAgClient(path string) (*AgClient, error) {
+	if !filepath.IsAbs(path) {
+		log.Fatal.Fatalf("expected an absolute path but received a relative path: %s", path)
+	}
 	_, err := exec.LookPath("ag")
 	if err != nil {
 		return nil, errors.New("ag (The Silver Searcher) is a required dependency, but was not found in the system PATH")
