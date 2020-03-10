@@ -44,17 +44,31 @@ const (
 	reposPath = v2ApiPath + "/code-refs/repositories"
 )
 
+type ConfigurationError struct {
+	error
+}
+
+func newConfigurationError(e string) ConfigurationError {
+	return ConfigurationError{errors.New((e))}
+}
+
 var (
 	NotFoundErr                       = errors.New("not found")
 	ConflictErr                       = errors.New("conflict")
-	EntityTooLargeErr                 = errors.New("entity too large")
 	RateLimitExceededErr              = errors.New("rate limit exceeded")
 	InternalServiceErr                = errors.New("internal service error")
 	ServiceUnavailableErr             = errors.New("service unavailable")
-	UnauthorizedErr                   = errors.New("unauthorized, check your LaunchDarkly access token")
-	RepositoryDisabledErr             = errors.New("repository is disabled")
 	BranchUpdateSequenceIdConflictErr = errors.New("updateSequenceId conflict")
+	RepositoryDisabledErr             = newConfigurationError("repository is disabled")
+	UnauthorizedErr                   = newConfigurationError("unauthorized, check your LaunchDarkly access token")
+	EntityTooLargeErr                 = newConfigurationError("entity too large")
 )
+
+// IsTransient returns true if the error returned by the LaunchDarkly API is either unexpected, or unable to be resolved by the user.
+func IsTransient(err error) bool {
+	var e ConfigurationError
+	return !errors.As(err, &e)
+}
 
 func InitApiClient(options ApiOptions) ApiClient {
 	if options.BaseUri == "" {
@@ -195,7 +209,7 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 	currentRepo, err := c.getCodeReferenceRepository(repo.Name)
 	if err != nil && err != NotFoundErr {
-		return fmt.Errorf("error retrieving repository: %s", err)
+		return fmt.Errorf("error retrieving repository: %w", err)
 	}
 
 	if currentRepo != nil {
@@ -230,7 +244,7 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 		if !reflect.DeepEqual(currentRepoParams, repo) {
 			err = c.patchCodeReferenceRepository(currentRepoParams, repo)
 			if err != nil {
-				return fmt.Errorf("error updating repository: %s", err)
+				return fmt.Errorf("error updating repository: %w", err)
 			}
 		}
 		return nil
@@ -238,7 +252,7 @@ func (c ApiClient) MaybeUpsertCodeReferenceRepository(repo RepoParams) error {
 
 	err = c.postCodeReferenceRepository(repo)
 	if err != nil {
-		return fmt.Errorf("error creating repository: %s", err)
+		return fmt.Errorf("error creating repository: %w", err)
 	}
 
 	return nil
@@ -334,7 +348,7 @@ func fallbackErrorForStatus(code int) error {
 	case http.StatusBadRequest:
 		return errors.New("bad request")
 	case http.StatusUnauthorized:
-		return errors.New("unauthorized, check your LaunchDarkly access token")
+		return UnauthorizedErr
 	case http.StatusNotFound:
 		return NotFoundErr
 	case http.StatusConflict:
@@ -402,7 +416,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 
 	absPath, err := validation.NormalizeAndValidatePath(outDir)
 	if err != nil {
-		return "", fmt.Errorf("invalid outDir '%s': %s", outDir, err)
+		return "", fmt.Errorf("invalid outDir '%s': %w", outDir, err)
 	}
 	path = filepath.Join(absPath, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag))
 

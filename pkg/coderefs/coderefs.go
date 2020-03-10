@@ -99,15 +99,16 @@ func Scan() {
 		err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 		if err != nil {
 			log.Fatal.Printf(err.Error())
-			os.Exit(transientFailureExitCode)
+			fatal(err, transientFailureExitCode)
 		}
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
 		log.Fatal.Printf("could not retrieve flag keys from LaunchDarkly: %s", err)
-		os.Exit(transientFailureExitCode)
+		fatal(err, transientFailureExitCode)
 	}
+
 	if len(flags) == 0 {
 		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
 		os.Exit(0)
@@ -184,7 +185,7 @@ func Scan() {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
 		} else {
 			log.Fatal.Printf("error sending code references to LaunchDarkly: %s", err)
-			os.Exit(transientFailureExitCode)
+			fatal(err, transientFailureExitCode)
 		}
 	}
 
@@ -196,7 +197,7 @@ func Scan() {
 		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
 		if err != nil {
 			log.Fatal.Printf("failed to mark old branches for code reference pruning: %s", err)
-			os.Exit(transientFailureExitCode)
+			fatal(err, transientFailureExitCode)
 		}
 	}
 }
@@ -528,4 +529,11 @@ func truncateLine(line string) string {
 	} else {
 		return line
 	}
+}
+
+func fatal(err error, transientFailureExitCode int) {
+	if ld.IsTransient(err) {
+		os.Exit(transientFailureExitCode)
+	}
+	os.Exit(1)
 }
