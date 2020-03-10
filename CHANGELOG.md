@@ -6,7 +6,8 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ### Added
 
-- Added a `--errorOnApiFailure` option to the CLI. By default, this option is set to true. When enabled, the scanner will exit with status code 1 when the LaunchDarkly API is unreachable or otherwise returns an unexpected response, including rate limiting. Otherwise, the scanner will exit with status code 0 on API failure.
+- Added a `--transientFailureExitCode` option to the CLI. The scanner will terminate with configured exit code if the LaunchDarkly API is unreachable or returns an unexpected response, including rate limiting. Set to 1 by default.
+
 
 ## [1.3.1] - 2019-09-24
 

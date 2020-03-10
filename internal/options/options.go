@@ -96,27 +96,27 @@ func (o *RuneSet) contains(c rune) bool {
 }
 
 const (
-	AccessToken       = stringOption("accessToken")
-	BaseUri           = stringOption("baseUri")
-	Branch            = stringOption("branch")
-	ContextLines      = intOption("contextLines")
-	Debug             = boolOption("debug")
-	DefaultBranch     = stringOption("defaultBranch")
-	Dir               = stringOption("dir")
-	DryRun            = boolOption("dryRun")
-	ErrorOnApiFailure = boolOption("errorOnApiFailure")
-	Exclude           = stringOption("exclude")
-	OutDir            = stringOption("outDir")
-	ProjKey           = stringOption("projKey")
-	UpdateSequenceId  = int64Option("updateSequenceId")
-	RepoName          = stringOption("repoName")
-	RepoType          = stringOption("repoType")
-	RepoUrl           = stringOption("repoUrl")
-	CommitUrlTemplate = stringOption("commitUrlTemplate")
-	HunkUrlTemplate   = stringOption("hunkUrlTemplate")
-	Version           = boolOption("version")
-	Delimiters        = runeSet("delimiters")
-	delimiterShort    = runeSet("D")
+	AccessToken              = stringOption("accessToken")
+	BaseUri                  = stringOption("baseUri")
+	Branch                   = stringOption("branch")
+	ContextLines             = intOption("contextLines")
+	Debug                    = boolOption("debug")
+	DefaultBranch            = stringOption("defaultBranch")
+	Dir                      = stringOption("dir")
+	DryRun                   = boolOption("dryRun")
+	Exclude                  = stringOption("exclude")
+	OutDir                   = stringOption("outDir")
+	ProjKey                  = stringOption("projKey")
+	UpdateSequenceId         = int64Option("updateSequenceId")
+	RepoName                 = stringOption("repoName")
+	RepoType                 = stringOption("repoType")
+	RepoUrl                  = stringOption("repoUrl")
+	TransientFailureExitCode = intOption("transientFailureExitCode")
+	CommitUrlTemplate        = stringOption("commitUrlTemplate")
+	HunkUrlTemplate          = stringOption("hunkUrlTemplate")
+	Version                  = boolOption("version")
+	Delimiters               = runeSet("delimiters")
+	delimiterShort           = runeSet("D")
 )
 
 type option struct {
@@ -147,27 +147,27 @@ var (
 )
 
 var options = optionMap{
-	AccessToken:       option{"", "LaunchDarkly personal access token with write-level access.", true},
-	BaseUri:           option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
-	Branch:            option{"", "The currently checked out git branch. If not provided, branch name will be auto-detected. Please provide when using CI systems that leave the repository in a detached HEAD state.", false},
-	ContextLines:      option{defaultContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
-	DefaultBranch:     option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
-	Dir:               option{"", "Path to existing checkout of the git repo.", true},
-	Debug:             option{false, "Enables verbose debug logging", false},
-	DryRun:            option{false, "If enabled, the scanner will run without sending code references to LaunchDarkly. Combine with the `outDir` option to output code references to a CSV.", false},
-	ErrorOnApiFailure: option{true, "When enabled, the scanner will terminate with exit code 1 if the LaunchDarkly API is unreachable or returns an unexpected response, including rate limiting", false},
-	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css"`, false},
-	OutDir:            option{"", "If provided, will output a csv file containing all code references for the project to this directory.", false},
-	ProjKey:           option{"", "LaunchDarkly project key.", true},
-	UpdateSequenceId:  option{noUpdateSequenceID, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
-	RepoName:          option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."`, true},
-	RepoType:          option{"custom", "The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|custom.", false},
-	RepoUrl:           option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
-	CommitUrlTemplate: option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.", false},
-	HunkUrlTemplate:   option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but repoUrl is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.", false},
-	Version:           option{false, "If provided, the scanner will print the version number and exit early", false},
-	Delimiters:        option{&delimiters, "Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in `delimiters`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may also be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.", false},
-	delimiterShort:    option{&delimiters, "Same as -delimiters", false},
+	AccessToken:              option{"", "LaunchDarkly personal access token with write-level access.", true},
+	BaseUri:                  option{"https://app.launchdarkly.com", "LaunchDarkly base URI.", false},
+	Branch:                   option{"", "The currently checked out git branch. If not provided, branch name will be auto-detected. Please provide when using CI systems that leave the repository in a detached HEAD state.", false},
+	ContextLines:             option{defaultContextLines, "The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.", false},
+	DefaultBranch:            option{"", "The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to `master`.", false},
+	Dir:                      option{"", "Path to existing checkout of the git repo.", true},
+	Debug:                    option{false, "Enables verbose debug logging", false},
+	DryRun:                   option{false, "If enabled, the scanner will run without sending code references to LaunchDarkly. Combine with the `outDir` option to output code references to a CSV.", false},
+	Exclude:                  option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css"`, false},
+	OutDir:                   option{"", "If provided, will output a csv file containing all code references for the project to this directory.", false},
+	ProjKey:                  option{"", "LaunchDarkly project key.", true},
+	UpdateSequenceId:         option{noUpdateSequenceID, `An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp.`, false},
+	RepoName:                 option{"", `Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."`, true},
+	RepoType:                 option{"custom", "The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|custom.", false},
+	RepoUrl:                  option{"", "The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.", false},
+	TransientFailureExitCode: option{1, "The scanner will terminate with configured exit code if the LaunchDarkly API is unreachable or returns an unexpected response, including rate limiting.", false},
+	CommitUrlTemplate:        option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.", false},
+	HunkUrlTemplate:          option{"", "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but repoUrl is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.", false},
+	Version:                  option{false, "If provided, the scanner will print the version number and exit early", false},
+	Delimiters:               option{&delimiters, "Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in `delimiters`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may also be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.", false},
+	delimiterShort:           option{&delimiters, "Same as -delimiters", false},
 }
 
 // Init reads specified options and exits if options of invalid types or unspecified options were provided.

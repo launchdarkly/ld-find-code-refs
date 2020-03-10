@@ -94,32 +94,30 @@ func Scan() {
 
 	isDryRun := o.DryRun.Value()
 
-	shouldErrorOnApiFailure := o.ErrorOnApiFailure.Value()
+	transientFailureExitCode := o.TransientFailureExitCode.Value()
 	if !isDryRun {
 		err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 		if err != nil {
 			log.Fatal.Printf(err.Error())
-			exit(shouldErrorOnApiFailure)
+			os.Exit(transientFailureExitCode)
 		}
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
-		if shouldErrorOnApiFailure {
-			log.Fatal.Printf("could not retrieve flag keys from LaunchDarkly: %s", err)
-			exit(shouldErrorOnApiFailure)
-		}
+		log.Fatal.Printf("could not retrieve flag keys from LaunchDarkly: %s", err)
+		os.Exit(transientFailureExitCode)
 	}
 	if len(flags) == 0 {
 		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
-		exit(false)
+		os.Exit(0)
 	}
 
 	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
 	if len(filteredFlags) == 0 {
 		log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
 			minFlagKeyLen, projKey)
-		exit(false)
+		os.Exit(0)
 	} else if len(omittedFlags) > 0 {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
@@ -186,7 +184,7 @@ func Scan() {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
 		} else {
 			log.Fatal.Printf("error sending code references to LaunchDarkly: %s", err)
-			exit(shouldErrorOnApiFailure)
+			os.Exit(transientFailureExitCode)
 		}
 	}
 
@@ -198,7 +196,7 @@ func Scan() {
 		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
 		if err != nil {
 			log.Fatal.Printf("failed to mark old branches for code reference pruning: %s", err)
-			exit(shouldErrorOnApiFailure)
+			os.Exit(transientFailureExitCode)
 		}
 	}
 }
@@ -530,12 +528,4 @@ func truncateLine(line string) string {
 	} else {
 		return line
 	}
-}
-
-func exit(shouldError bool) {
-	status := 0
-	if shouldError {
-		status = 1
-	}
-	os.Exit(status)
 }
