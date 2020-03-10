@@ -250,7 +250,6 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 		return err
 	}
 	putUrl := fmt.Sprintf("%s%s/%s/branches/%s", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branch.Name))
-	log.Debug.Println(putUrl)
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
