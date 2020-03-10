@@ -1,6 +1,8 @@
 version: 2.1
 description: "Job for finding and sending feature flag code references to LaunchDarkly. Code references documentation: https://docs.launchdarkly.com/v2.0/docs/git-code-references"
-
+display:
+  home_url: https://docs.launchdarkly.com
+  source_url: https://github.com/launchdarkly/ld-find-code-refs/tree/master/build/package/circleci
 examples:
   minimal_config:
     description: Minimal configuration
