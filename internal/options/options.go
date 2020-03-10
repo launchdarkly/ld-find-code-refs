@@ -104,6 +104,7 @@ const (
 	DefaultBranch     = stringOption("defaultBranch")
 	Dir               = stringOption("dir")
 	DryRun            = boolOption("dryRun")
+	ErrorOnApiFailure = boolOption("errorOnApiFailure")
 	Exclude           = stringOption("exclude")
 	OutDir            = stringOption("outDir")
 	ProjKey           = stringOption("projKey")
@@ -154,6 +155,7 @@ var options = optionMap{
 	Dir:               option{"", "Path to existing checkout of the git repo.", true},
 	Debug:             option{false, "Enables verbose debug logging", false},
 	DryRun:            option{false, "If enabled, the scanner will run without sending code references to LaunchDarkly. Combine with the `outDir` option to output code references to a CSV.", false},
+	ErrorOnApiFailure: option{true, "When enabled, the scanner will terminate with exit code 1 if the LaunchDarkly API is unreachable or returns an unexpected response, including rate limiting", false},
 	Exclude:           option{"", `A regular expression (PCRE) defining the files and directories which the flag finder should exclude. Partial matches are allowed. Examples: "vendor/", "\.css"`, false},
 	OutDir:            option{"", "If provided, will output a csv file containing all code references for the project to this directory.", false},
 	ProjKey:           option{"", "LaunchDarkly project key.", true},

@@ -52,7 +52,6 @@ var (
 	InternalServiceErr                = errors.New("internal service error")
 	ServiceUnavailableErr             = errors.New("service unavailable")
 	UnauthorizedErr                   = errors.New("unauthorized, check your LaunchDarkly access token")
-	UnknownErr                        = errors.New("an unknown error occured")
 	RepositoryDisabledErr             = errors.New("repository is disabled")
 	BranchUpdateSequenceIdConflictErr = errors.New("updateSequenceId conflict")
 )
@@ -251,6 +250,7 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 		return err
 	}
 	putUrl := fmt.Sprintf("%s%s/%s/branches/%s", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branch.Name))
+	log.Debug.Println(putUrl)
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
