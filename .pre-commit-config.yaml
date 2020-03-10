@@ -11,6 +11,6 @@ repos:
     pass_filenames: false
 
 - repo: git://github.com/dnephin/pre-commit-golang
-  rev: v0.3.3
+  sha: v0.3.3
   hooks:
     - id: go-unit-tests
