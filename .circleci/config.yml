@@ -64,7 +64,7 @@ defaults:
 jobs:
   go-test:
     docker:
-      - image: circleci/golang:1.13.2
+      - image: circleci/golang:1.14
         environment:
           <<: *environment
 
@@ -72,7 +72,7 @@ jobs:
 
   test-publish:
     docker:
-      - image: circleci/golang:1.13.2
+      - image: circleci/golang:1.14
     working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
@@ -83,7 +83,7 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/golang:1.13.2
+      - image: circleci/golang:1.14
     working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
