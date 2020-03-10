@@ -5,12 +5,12 @@ repos:
   - id: golangci-lint
     name: golangci-lint
     description: Fast linters runner for Go.
-    entry: golangci-lint run
+    entry: golangci-lint run -D funlen -D bodyclose
     types: [go]
     language: golang
     pass_filenames: false
 
 - repo: git://github.com/dnephin/pre-commit-golang
-  sha: v0.3.3
+  rev: v0.3.3
   hooks:
     - id: go-unit-tests
