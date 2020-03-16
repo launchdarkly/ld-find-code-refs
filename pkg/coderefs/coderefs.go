@@ -533,6 +533,8 @@ func fatalServiceError(err error, ignoreServiceErrors bool) {
 			os.Exit(0)
 		}
 		err = fmt.Errorf("%w\n Add the --ignoreServiceErrors flag to ignore this error", err)
+		// Error is transient, so don't show the "please file an issue" prompt
+		log.Error.Fatal(err)
 	}
 	log.Fatal.Fatal(err)
 }

@@ -283,6 +283,10 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 		ldOptions["debug"] = "false"
 	}
 
+	if ldOptions["ignoreServiceErrors"] == "" {
+		ldOptions["ignoreServiceErrors"] = "false"
+	}
+
 	_, err := regexp.Compile(ldOptions["exclude"])
 	if err != nil {
 		return ldOptions, fmt.Errorf("couldn't parse LD_EXCLUDE as regex: %+v", err)
