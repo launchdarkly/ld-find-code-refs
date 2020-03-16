@@ -135,10 +135,10 @@ jobs:
         description: "Enables verbose debug logging."
         type: boolean
         default: false
-      transientFailureExitCode:
-        description: "The scanner will terminate with configured exit code if the LaunchDarkly API is unreachable or returns an unexpected response, including rate limiting."
-        type: integer 
-        default: 1
+      ignore_service_errors:
+        description: "If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response."
+        type: boolean
+        default: false
     docker:
       - image: launchdarkly/ld-find-code-refs:1.4.0
         entrypoint: sh
@@ -153,7 +153,7 @@ jobs:
               -accessToken=<< parameters.access_token >> \
               -projKey=<< parameters.proj_key >> \
               -exclude=<< parameters.exclude >> \
-              -errorOnApiFailure=<< parameters.errorOnApiFailure >> \
+              -ignoreServiceErrors=<< parameters.ignore_service_errors >> \
               -contextLines=<< parameters.context_lines >> \
               -baseUri=<< parameters.base_uri >> \
               -repoType=<< parameters.repo_type >> \

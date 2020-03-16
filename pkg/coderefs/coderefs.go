@@ -94,19 +94,17 @@ func Scan() {
 
 	isDryRun := o.DryRun.Value()
 
-	transientFailureExitCode := o.TransientFailureExitCode.Value()
+	ignoreServiceErrors := o.IgnoreServiceErrors.Value()
 	if !isDryRun {
 		err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 		if err != nil {
-			log.Fatal.Printf(err.Error())
-			fatal(err, transientFailureExitCode)
+			fatalServiceError(err, ignoreServiceErrors)
 		}
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
-		log.Fatal.Printf("could not retrieve flag keys from LaunchDarkly: %s", err)
-		fatal(err, transientFailureExitCode)
+		fatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
 	}
 
 	if len(flags) == 0 {
@@ -184,8 +182,7 @@ func Scan() {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
 		} else {
-			log.Fatal.Printf("error sending code references to LaunchDarkly: %s", err)
-			fatal(err, transientFailureExitCode)
+			fatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), ignoreServiceErrors)
 		}
 	}
 
@@ -196,8 +193,7 @@ func Scan() {
 	} else {
 		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
 		if err != nil {
-			log.Fatal.Printf("failed to mark old branches for code reference pruning: %s", err)
-			fatal(err, transientFailureExitCode)
+			fatalServiceError(fmt.Errorf("failed to mark old branches for code reference pruning: %w", err), ignoreServiceErrors)
 		}
 	}
 }
@@ -531,9 +527,12 @@ func truncateLine(line string) string {
 	}
 }
 
-func fatal(err error, transientFailureExitCode int) {
+func fatalServiceError(err error, ignoreServiceErrors bool) {
 	if ld.IsTransient(err) {
-		os.Exit(transientFailureExitCode)
+		if ignoreServiceErrors {
+			os.Exit(0)
+		}
+		err = fmt.Errorf("%w\n Add the --ignoreServiceErrors flag to ignore this error", err)
 	}
-	os.Exit(1)
+	log.Fatal.Fatal(err)
 }
