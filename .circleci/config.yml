@@ -64,7 +64,7 @@ defaults:
 jobs:
   go-test:
     docker:
-      - image: circleci/golang:1.11.1
+      - image: circleci/golang:1.14
         environment:
           <<: *environment
 
@@ -72,18 +72,18 @@ jobs:
 
   test-publish:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.14
     working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
       - setup_remote_docker
       - run: sudo apt-get update
       - run: sudo apt-get install rpm
-      - run: curl -sL https://git.io/goreleaser | bash -s -- --rm-dist --skip-publish --skip-validate --release-notes <(make echo-release-notes)
+      - run: curl -sL https://git.io/goreleaser | VERSION=v0.118.1 bash -s -- --rm-dist --skip-publish --skip-validate --release-notes <(make echo-release-notes)
 
   publish:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.14
     working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout

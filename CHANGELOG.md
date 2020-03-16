@@ -2,6 +2,17 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.4.0] - 2020-03-16
+
+### Added
+
+- Added a `--ignoreServiceErrors` option to the CLI. If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response.
+
+### Changed
+
+- ld-find-code-refs now requires go1.13 to build.
+
+
 ## [1.3.1] - 2019-09-24
 
 ### Fixed

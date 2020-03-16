@@ -94,17 +94,19 @@ func Scan() {
 
 	isDryRun := o.DryRun.Value()
 
+	ignoreServiceErrors := o.IgnoreServiceErrors.Value()
 	if !isDryRun {
 		err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 		if err != nil {
-			log.Fatal.Fatalf(err.Error())
+			fatalServiceError(err, ignoreServiceErrors)
 		}
 	}
 
 	flags, err := getFlags(ldApi)
 	if err != nil {
-		log.Fatal.Fatalf("could not retrieve flag keys from LaunchDarkly: %s", err)
+		fatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
 	}
+
 	if len(flags) == 0 {
 		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
 		os.Exit(0)
@@ -180,7 +182,7 @@ func Scan() {
 		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
 		} else {
-			log.Fatal.Fatalf("error sending code references to LaunchDarkly: %s", err)
+			fatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), ignoreServiceErrors)
 		}
 	}
 
@@ -191,7 +193,7 @@ func Scan() {
 	} else {
 		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
 		if err != nil {
-			log.Fatal.Fatalf("failed to mark old branches for code reference pruning: %s", err)
+			fatalServiceError(fmt.Errorf("failed to mark old branches for code reference pruning: %w", err), ignoreServiceErrors)
 		}
 	}
 }
@@ -523,4 +525,16 @@ func truncateLine(line string) string {
 	} else {
 		return line
 	}
+}
+
+func fatalServiceError(err error, ignoreServiceErrors bool) {
+	if ld.IsTransient(err) {
+		if ignoreServiceErrors {
+			os.Exit(0)
+		}
+		err = fmt.Errorf("%w\n Add the --ignoreServiceErrors flag to ignore this error", err)
+		// Error is transient, so don't show the "please file an issue" prompt
+		log.Error.Fatal(err)
+	}
+	log.Fatal.Fatal(err)
 }
