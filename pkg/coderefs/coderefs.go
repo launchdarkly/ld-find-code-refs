@@ -385,7 +385,7 @@ func (g searchResultLines) aggregateByPath() []fileSearchResults {
 		elem := currentFileResults.addSearchResult(searchResult)
 
 		if len(searchResult.FlagKeys) > 0 {
-			for flagKey, _ := range searchResult.FlagKeys {
+			for flagKey := range searchResult.FlagKeys {
 				currentFileResults.addFlagReference(flagKey, elem)
 			}
 		}
