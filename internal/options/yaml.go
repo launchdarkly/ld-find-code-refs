@@ -41,7 +41,13 @@ func (a Alias) Generate(flag string) ([]string, error) {
 	case DotCase:
 		ret = []string{strcase.ToDelimited(flag, '.')}
 	case FilePattern:
-		// TODO
+		pattern := regexp.MustCompile(strings.ReplaceAll(*a.Pattern, "FLAG_KEY", flag))
+		results := pattern.FindAllStringSubmatch(string(a.FileContents), -1)
+		for _, res := range results {
+			if len(res) > 1 {
+				ret = append(ret, res[1:]...)
+			}
+		}
 	case JavaScript:
 		// TODO
 	}
@@ -69,9 +75,11 @@ type Alias struct {
 	AliasMap map[string][]string `yaml:"aliasMap,omitempty"`
 	Path     *string             `yaml:"path,omitempty"`
 	Pattern  *string             `yaml:"pattern,omitempty"`
+	// data for pattern matching
+	FileContents []byte `yaml:"-"`
 }
 
-func (a Alias) IsValid() error {
+func (a *Alias) IsValid() error {
 	err := a.Type.IsValid()
 	if err != nil {
 		return err
@@ -125,18 +133,6 @@ func (a Alias) IsValid() error {
 		}
 	}
 
-	if a.Path != nil {
-		path := filepath.Join(Dir.Value(), filepath.Dir(*a.Path))
-		absPath, err := validation.NormalizeAndValidatePath(path)
-		if err != nil {
-			return err
-		}
-		absFile := filepath.Join(absPath, filepath.Base(*a.Path))
-		if !validation.FileExists(absFile) {
-			return fmt.Errorf("could not find file at path '%s'", absFile)
-		}
-	}
-
 	return nil
 }
 
@@ -144,10 +140,12 @@ type YamlOptions struct {
 	Aliases []Alias `yaml:"aliases"`
 }
 
-func (o YamlOptions) IsValid() error {
+func (o *YamlOptions) IsValid() error {
 	for _, a := range o.Aliases {
 		err := a.IsValid()
-		return err
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -168,6 +166,29 @@ func Yaml() (*YamlOptions, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = o.IsValid()
+	if err != nil {
+		return nil, err
+	}
+	for i, a := range o.Aliases {
+		if a.Path != nil {
+			path := filepath.Join(Dir.Value(), filepath.Dir(*a.Path))
+			absPath, err := validation.NormalizeAndValidatePath(path)
+			if err != nil {
+				return nil, err
+			}
 
+			absFile := filepath.Join(absPath, filepath.Base(*a.Path))
+			if !validation.FileExists(absFile) {
+				return nil, fmt.Errorf("could not find file at path '%s'", absFile)
+			}
+			data, err := ioutil.ReadFile(absFile)
+			if err != nil {
+				return nil, fmt.Errorf("could not process file at path '%s': %v", absFile, err)
+			}
+			a.FileContents = data
+			o.Aliases[i] = a
+		}
+	}
 	return &o, nil
 }

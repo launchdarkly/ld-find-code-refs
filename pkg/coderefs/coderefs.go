@@ -142,6 +142,7 @@ func Scan() {
 
 	// exclude option has already been validated as regex in options.go
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
+	fmt.Println(filteredFlags, aliases)
 	refs, err := findReferences(searchClient, filteredFlags, aliases, ctxLines, excludeRegex)
 	if err != nil {
 		log.Fatal.Fatalf("error searching for flag key references: %s", err)
