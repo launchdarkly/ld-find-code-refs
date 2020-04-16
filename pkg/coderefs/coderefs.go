@@ -446,7 +446,6 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// Each ref is either the start of a new hunk or a continuation of the previous hunk.
 		// NOTE: its possible that this flag reference is totally contained in the previous hunk
 		ptr := ref
-		data := ptr.Value.(searchResultLine)
 		numCtxLinesBeforeFlagRef := 0
 
 		// Attempt to seek to the start of the new hunk.
@@ -460,7 +459,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 			// If we seek earlier than the end of the last hunk, this reference overlaps at least
 			// partially with the last hunk and we should (possibly) expand the previous hunk rather than
 			// starting a new hunk.
-			if data.LineNum <= lastSeenLineNum {
+			if ptr.Value.(searchResultLine).LineNum <= lastSeenLineNum {
 				appendToPreviousHunk = true
 			}
 		}
@@ -468,8 +467,8 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// If we are starting a new hunk, initialize it
 		if !appendToPreviousHunk {
 			currentHunk = initHunk(projKey, flag)
-			currentHunk.Aliases = data.FlagKeys[flag]
-			currentHunk.StartingLineNumber = data.LineNum
+			currentHunk.Aliases = ptr.Value.(searchResultLine).FlagKeys[flag]
+			currentHunk.StartingLineNumber = ptr.Value.(searchResultLine).LineNum
 			hunkStringBuilder.Reset()
 		}
 
@@ -480,9 +479,9 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		//     If so: write that line to the hunkStringBuilder
 		//     Record that line as the last seen line.
 		for i := 0; i < numCtxLinesBeforeFlagRef+1+ctxLines; i++ {
-			ptrLineNum := data.LineNum
+			ptrLineNum := ptr.Value.(searchResultLine).LineNum
 			if ptrLineNum > lastSeenLineNum {
-				lineText := truncateLine(data.LineText)
+				lineText := truncateLine(ptr.Value.(searchResultLine).LineText)
 				hunkStringBuilder.WriteString(lineText + "\n")
 				lastSeenLineNum = ptrLineNum
 				numHunkedLines += 1
