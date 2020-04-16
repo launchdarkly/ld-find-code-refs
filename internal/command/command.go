@@ -118,6 +118,9 @@ func generateFlagRegex(flags []string) string {
 }
 
 func generateDelimiterRegex(delimiters []rune) (lookBehind, lookAhead string) {
+	if len(delimiters) == 0 {
+		return "", ""
+	}
 	delims := string(delimiters)
 	lookBehind = fmt.Sprintf("(?<=[%s])", delims)
 	lookAhead = fmt.Sprintf("(?=[%s])", delims)

@@ -13,6 +13,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
@@ -121,6 +122,11 @@ func Scan() {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
+	aliases, err := generateAliases(filteredFlags, options.Aliases)
+	if err != nil {
+		log.Fatal.Fatalf("failed to create flag key aliases: %v", err)
+	}
+
 	ctxLines := o.ContextLines.Value()
 	var updateId *int64
 	if o.UpdateSequenceId.Value() >= 0 {
@@ -136,7 +142,7 @@ func Scan() {
 
 	// exclude option has already been validated as regex in options.go
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := findReferences(searchClient, filteredFlags, ctxLines, excludeRegex)
+	refs, err := findReferences(searchClient, filteredFlags, aliases, ctxLines, excludeRegex)
 	if err != nil {
 		log.Fatal.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -250,7 +256,7 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func generateReferences(flags []string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
+func generateReferences(aliases map[string][]string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
 	references := []searchResultLine{}
 
 	for _, r := range searchResult {
@@ -267,7 +273,7 @@ func generateReferences(flags []string, searchResult [][]string, ctxLines int, d
 		}
 		ref := searchResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
-			ref.FlagKeys = findReferencedFlags(lineText, flags, delims)
+			ref.FlagKeys = findReferencedFlags(lineText, aliases, delims)
 		}
 		if ctxLines >= 0 {
 			ref.LineText = lineText
@@ -278,12 +284,18 @@ func generateReferences(flags []string, searchResult [][]string, ctxLines int, d
 	return references
 }
 
-func findReferencedFlags(ref string, flags []string, delims string) []string {
-	ret := []string{}
-	for _, flag := range flags {
-		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, flag, delims))
+func findReferencedFlags(ref string, aliases map[string][]string, delims string) map[string][]string {
+	ret := make(map[string][]string, len(aliases))
+	for key, flagAliases := range aliases {
+		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, key, delims))
 		if matcher.MatchString(ref) {
-			ret = append(ret, flag)
+			ret[key] = make([]string, 0, len(flagAliases))
+		}
+		for _, alias := range flagAliases {
+			aliasMatcher := regexp.MustCompile(strings.Join(flagAliases, "|"))
+			if aliasMatcher.MatchString(ref) {
+				ret[key] = append(ret[key], alias)
+			}
 		}
 	}
 	return ret
@@ -370,7 +382,7 @@ func (g searchResultLines) aggregateByPath() []fileSearchResults {
 		elem := currentFileResults.addSearchResult(searchResult)
 
 		if len(searchResult.FlagKeys) > 0 {
-			for _, flagKey := range searchResult.FlagKeys {
+			for flagKey, _ := range searchResult.FlagKeys {
 				currentFileResults.addFlagReference(flagKey, elem)
 			}
 		}
@@ -434,7 +446,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// Each ref is either the start of a new hunk or a continuation of the previous hunk.
 		// NOTE: its possible that this flag reference is totally contained in the previous hunk
 		ptr := ref
-
+		data := ptr.Value.(searchResultLine)
 		numCtxLinesBeforeFlagRef := 0
 
 		// Attempt to seek to the start of the new hunk.
@@ -448,7 +460,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 			// If we seek earlier than the end of the last hunk, this reference overlaps at least
 			// partially with the last hunk and we should (possibly) expand the previous hunk rather than
 			// starting a new hunk.
-			if ptr.Value.(searchResultLine).LineNum <= lastSeenLineNum {
+			if data.LineNum <= lastSeenLineNum {
 				appendToPreviousHunk = true
 			}
 		}
@@ -456,7 +468,8 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// If we are starting a new hunk, initialize it
 		if !appendToPreviousHunk {
 			currentHunk = initHunk(projKey, flag)
-			currentHunk.StartingLineNumber = ptr.Value.(searchResultLine).LineNum
+			currentHunk.Aliases = data.FlagKeys[flag]
+			currentHunk.StartingLineNumber = data.LineNum
 			hunkStringBuilder.Reset()
 		}
 
@@ -467,9 +480,9 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		//     If so: write that line to the hunkStringBuilder
 		//     Record that line as the last seen line.
 		for i := 0; i < numCtxLinesBeforeFlagRef+1+ctxLines; i++ {
-			ptrLineNum := ptr.Value.(searchResultLine).LineNum
+			ptrLineNum := data.LineNum
 			if ptrLineNum > lastSeenLineNum {
-				lineText := truncateLine(ptr.Value.(searchResultLine).LineText)
+				lineText := truncateLine(data.LineText)
 				hunkStringBuilder.WriteString(lineText + "\n")
 				lastSeenLineNum = ptrLineNum
 				numHunkedLines += 1

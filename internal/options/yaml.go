@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/iancoleman/strcase"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"gopkg.in/yaml.v2"
 )
@@ -20,6 +21,32 @@ func (a AliasType) IsValid() error {
 		return nil
 	}
 	return fmt.Errorf("%s is not a valid alias type", a)
+}
+
+func (a Alias) Generate(flag string) ([]string, error) {
+	ret := []string{}
+	switch a.Type {
+	case Literal:
+		ret = a.AliasMap[flag]
+	case CamelCase:
+		ret = []string{strcase.ToLowerCamel(flag)}
+	case PascalCase:
+		ret = []string{strcase.ToCamel(flag)}
+	case SnakeCase:
+		ret = []string{strcase.ToSnake(flag)}
+	case UpperSnakeCase:
+		ret = []string{strcase.ToScreamingSnake(flag)}
+	case KebabCase:
+		ret = []string{strcase.ToKebab(flag)}
+	case DotCase:
+		ret = []string{strcase.ToDelimited(flag, '.')}
+	case FilePattern:
+		// TODO
+	case JavaScript:
+		// TODO
+	}
+
+	return ret, nil
 }
 
 const (

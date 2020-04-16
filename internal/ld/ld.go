@@ -462,10 +462,11 @@ func (r ReferenceHunksRep) toRecords() [][]string {
 }
 
 type HunkRep struct {
-	StartingLineNumber int    `json:"startingLineNumber"`
-	Lines              string `json:"lines,omitempty"`
-	ProjKey            string `json:"projKey"`
-	FlagKey            string `json:"flagKey"`
+	StartingLineNumber int      `json:"startingLineNumber"`
+	Lines              string   `json:"lines,omitempty"`
+	ProjKey            string   `json:"projKey"`
+	FlagKey            string   `json:"flagKey"`
+	Aliases            []string `json:"aliases,omitempty"`
 }
 
 type tableData [][]string

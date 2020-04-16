@@ -15,7 +15,7 @@ type searchResultLine struct {
 	Path     string
 	LineNum  int
 	LineText string
-	FlagKeys []string
+	FlagKeys map[string][]string
 }
 
 type searchResultLines []searchResultLine
@@ -82,13 +82,22 @@ func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, 
 	return results, nil
 }
 
-func findReferences(cmd command.Searcher, flags []string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
+func findReferences(cmd command.Searcher, flags []string, aliases map[string][]string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
-	results, err := paginatedSearch(cmd, flags, command.SafePaginationCharCount(), ctxLines, delims)
+	paginationCharCount := command.SafePaginationCharCount()
+	results, err := paginatedSearch(cmd, flags, paginationCharCount, ctxLines, delims)
 	if err != nil {
 		return searchResultLines{}, err
 	}
-
-	return generateReferences(flags, results, ctxLines, string(delims), exclude), nil
+	flattenedAliases := make([]string, 0, len(flags))
+	for _, flagAliases := range aliases {
+		flattenedAliases = append(flattenedAliases, flagAliases...)
+	}
+	aliasResults, err := paginatedSearch(cmd, flattenedAliases, paginationCharCount, ctxLines, nil)
+	if err != nil {
+		return searchResultLines{}, err
+	}
+	results = append(results, aliasResults...)
+	return generateReferences(aliases, results, ctxLines, string(delims), exclude), nil
 }
