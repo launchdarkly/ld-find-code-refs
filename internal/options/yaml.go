@@ -65,6 +65,7 @@ func (a Alias) Generate(flag string) ([]string, error) {
 		if len(tokens) > 1 {
 			args = tokens[1:]
 		}
+		/* #nosec */
 		cmd := exec.CommandContext(ctx, name, args...)
 		cmd.Stdin = strings.NewReader(flag)
 		cmd.Dir = Dir.Value()
@@ -213,6 +214,7 @@ func Yaml() (*YamlOptions, error) {
 		return nil, nil
 	}
 
+	/* #nosec */
 	data, err := ioutil.ReadFile(pathToYaml)
 	if err != nil {
 		return nil, err
@@ -239,6 +241,7 @@ func Yaml() (*YamlOptions, error) {
 			if !validation.FileExists(absFile) {
 				return nil, fmt.Errorf("could not find file at path '%s'", absFile)
 			}
+			/* #nosec */
 			data, err := ioutil.ReadFile(absFile)
 			if err != nil {
 				return nil, fmt.Errorf("could not process file at path '%s': %v", absFile, err)
