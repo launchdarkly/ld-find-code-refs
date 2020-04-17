@@ -66,14 +66,15 @@ func (a Alias) Generate(flag string) ([]string, error) {
 			args = tokens[1:]
 		}
 		cmd := exec.CommandContext(ctx, name, args...)
+		cmd.Stdin = strings.NewReader(flag)
 		cmd.Dir = Dir.Value()
 		stdout, err := cmd.Output()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to execute alias command: %w", err)
 		}
 		err = json.Unmarshal(stdout, &ret)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal json output of command: %w", err)
+			return nil, fmt.Errorf("could not unmarshal json output of alias command: %w", err)
 		}
 	}
 
