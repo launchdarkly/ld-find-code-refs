@@ -1,12 +1,16 @@
 package options
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/iancoleman/strcase"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
@@ -17,7 +21,7 @@ type AliasType string
 
 func (a AliasType) IsValid() error {
 	switch a {
-	case Literal, CamelCase, PascalCase, SnakeCase, UpperSnakeCase, KebabCase, DotCase, FilePattern, JavaScript:
+	case Literal, CamelCase, PascalCase, SnakeCase, UpperSnakeCase, KebabCase, DotCase, FilePattern, Command:
 		return nil
 	}
 	return fmt.Errorf("%s is not a valid alias type", a)
@@ -48,8 +52,29 @@ func (a Alias) Generate(flag string) ([]string, error) {
 				ret = append(ret, res[1:]...)
 			}
 		}
-	case JavaScript:
-		// TODO
+	case Command:
+		ctx := context.Background()
+		if a.Timeout != nil && *a.Timeout > 0 {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*time.Duration(*a.Timeout)))
+			defer cancel()
+		}
+		tokens := strings.Split(*a.Command, " ")
+		name := tokens[0]
+		args := []string{}
+		if len(tokens) > 1 {
+			args = tokens[1:]
+		}
+		cmd := exec.CommandContext(ctx, name, args...)
+		cmd.Dir = Dir.Value()
+		stdout, err := cmd.Output()
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(stdout, &ret)
+		if err != nil {
+			return nil, fmt.Errorf("could not unmarshal json output of command: %w", err)
+		}
 	}
 
 	return ret, nil
@@ -67,7 +92,7 @@ const (
 
 	FilePattern AliasType = "filePattern"
 
-	JavaScript AliasType = "js"
+	Command AliasType = "command"
 )
 
 type Alias struct {
@@ -75,6 +100,8 @@ type Alias struct {
 	AliasMap map[string][]string `yaml:"aliasMap,omitempty"`
 	Path     *string             `yaml:"path,omitempty"`
 	Pattern  *string             `yaml:"pattern,omitempty"`
+	Command  *string             `yaml:"command,omitempty"`
+	Timeout  *int64              `yaml:"timeout,omitempty"`
 	// data for pattern matching
 	FileContents []byte `yaml:"-"`
 }
@@ -91,15 +118,33 @@ func (a *Alias) IsValid() error {
 		if a.AliasMap == nil {
 			return errors.New("literal aliases must provide an 'aliasMap'")
 		}
+		if a.Command != nil {
+			return errors.New("unexpected field for literal alias: 'command'")
+		}
+		if a.Path != nil {
+			return errors.New("unexpected field for literal alias: 'path'")
+		}
+		if a.Pattern != nil {
+			return errors.New("unexpected field for literal alias: 'pattern'")
+		}
+		if a.Timeout != nil {
+			return errors.New("unexpected field for literal alias: 'timeout'")
+		}
 	case CamelCase, PascalCase, SnakeCase, UpperSnakeCase, KebabCase, DotCase:
 		if a.AliasMap != nil {
 			return errors.New("unexpected field for case alias: 'aliasMap'")
+		}
+		if a.Command != nil {
+			return errors.New("unexpected field for case alias: 'command'")
 		}
 		if a.Path != nil {
 			return errors.New("unexpected field for case alias: 'path'")
 		}
 		if a.Pattern != nil {
 			return errors.New("unexpected field for case alias: 'pattern'")
+		}
+		if a.Timeout != nil {
+			return errors.New("unexpected field for literal alias: 'timeout'")
 		}
 	case FilePattern:
 		if a.Path == nil {
@@ -120,16 +165,27 @@ func (a *Alias) IsValid() error {
 		if a.AliasMap != nil {
 			return errors.New("unexpected field for filePattern alias: 'aliasMap'")
 		}
-
-	case JavaScript:
-		if a.Path == nil {
-			return errors.New("js aliases must provide a 'path'")
+		if a.Command != nil {
+			return errors.New("unexpected field for case alias: 'command'")
+		}
+		if a.Timeout != nil {
+			return errors.New("unexpected field for literal alias: 'timeout'")
+		}
+	case Command:
+		if a.Command == nil {
+			return errors.New("command aliases must provide a 'command'")
+		}
+		if a.Path != nil {
+			return errors.New("unexpected field for command alias: 'path'")
 		}
 		if a.Pattern != nil {
-			return errors.New("unexpected field for js alias: 'pattern'")
+			return errors.New("unexpected field for command alias: 'pattern'")
 		}
 		if a.AliasMap != nil {
-			return errors.New("unexpected field for js alias: 'aliasMap'")
+			return errors.New("unexpected field for command alias: 'aliasMap'")
+		}
+		if a.Timeout != nil && *a.Timeout < 0 {
+			return errors.New("field 'timeout' must be >= 0")
 		}
 	}
 

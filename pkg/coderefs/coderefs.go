@@ -124,7 +124,7 @@ func Scan() {
 
 	aliases, err := generateAliases(filteredFlags, options.Aliases)
 	if err != nil {
-		log.Fatal.Fatalf("failed to create flag key aliases: %v", err)
+		log.Error.Fatalf("failed to create flag key aliases: %v", err)
 	}
 
 	ctxLines := o.ContextLines.Value()
