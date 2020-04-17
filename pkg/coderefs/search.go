@@ -40,6 +40,11 @@ func (lines searchResultLines) Swap(i, j int) {
 
 // paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
 func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, ctxLines int, delims []rune) ([][]string, error) {
+	searchType := "flags"
+	if delims == nil {
+		searchType = "aliases"
+	}
+
 	if maxSumFlagKeyLength == 0 {
 		return nil, NoSearchPatternErr
 	}
@@ -55,7 +60,8 @@ func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, 
 
 		// if we've reached the end of the loop, or the current page has reached maximum length
 		if to == len(flags)-1 || totalKeyLength+command.FlagKeyCost(flags[to+1]) > maxSumFlagKeyLength {
-			log.Debug.Printf("searching for flags in group: [%d, %d]", from, to)
+
+			log.Debug.Printf("searching for %s in group: [%d, %d]", searchType, from, to)
 			result, err := cmd.SearchForFlags(nextSearchKeys, ctxLines, delims)
 			if err != nil {
 				if err == command.SearchTooLargeErr {

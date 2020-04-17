@@ -207,13 +207,12 @@ Flag key aliases may be defined using a YAML file stored in your repository at `
 
 #### Hardcoded map of flag keys to aliases
 
-TODO: The README yaml syntax for `literal` is not yet supported
-
 Example hardcoding aliases for a couple flags:
 
 ```yaml
 aliases:
-  - literal:
+  - type: literal
+    flags:
       my-flag:
         - myFlag
         - isMyFlagOn
@@ -223,12 +222,14 @@ aliases:
 
 #### Flag keys transposed to common casing conventions
 
-  * `camelCase` - `flag-key` -> `flagKey`
-  * `pascalCase` - `flag-key` -> `FlagKey`
-  * `snakeCase` - `flag-key` -> `flag_key`
-  * `upperSnakeCase` - `flag-key` -> `FLAG_KEY`
-  * `kebabCase` - `flag.key` -> `flag-key`
-  * `dotCase` - `flag_key` -> `flag.key`
+| Type             | Before     | After      |
+|------------------|------------|------------|
+| `camelCase`      | `flag-key` | `flagKey`  |
+| `pascalCase`     | `flag-key` | `FlagKey`  |
+| `snakeCase`      | `flag-key` | `flag_key` |
+| `upperSnakeCase` | `flag-key` | `FLAG_KEY` |
+| `kebabCase`      | `flag.key` | `flag-key` |
+| `dotCase`        | `flag-key` | `flag.key` |
 
 Example generating aliases in camelCase and PascalCase:
 

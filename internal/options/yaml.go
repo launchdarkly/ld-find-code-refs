@@ -31,7 +31,7 @@ func (a Alias) Generate(flag string) ([]string, error) {
 	ret := []string{}
 	switch a.Type {
 	case Literal:
-		ret = a.AliasMap[flag]
+		ret = a.Flags[flag]
 	case CamelCase:
 		ret = []string{strcase.ToLowerCamel(flag)}
 	case PascalCase:
@@ -98,12 +98,12 @@ const (
 )
 
 type Alias struct {
-	Type     AliasType           `yaml:"type"`
-	AliasMap map[string][]string `yaml:"aliasMap,omitempty"`
-	Path     *string             `yaml:"path,omitempty"`
-	Pattern  *string             `yaml:"pattern,omitempty"`
-	Command  *string             `yaml:"command,omitempty"`
-	Timeout  *int64              `yaml:"timeout,omitempty"`
+	Type    AliasType           `yaml:"type"`
+	Flags   map[string][]string `yaml:"flags,omitempty"`
+	Path    *string             `yaml:"path,omitempty"`
+	Pattern *string             `yaml:"pattern,omitempty"`
+	Command *string             `yaml:"command,omitempty"`
+	Timeout *int64              `yaml:"timeout,omitempty"`
 	// data for pattern matching
 	FileContents []byte `yaml:"-"`
 }
@@ -117,8 +117,8 @@ func (a *Alias) IsValid() error {
 	// TODO: DRY this up
 	switch a.Type {
 	case Literal:
-		if a.AliasMap == nil {
-			return errors.New("literal aliases must provide an 'aliasMap'")
+		if a.Flags == nil {
+			return errors.New("literal aliases must provide an 'flags'")
 		}
 		if a.Command != nil {
 			return errors.New("unexpected field for literal alias: 'command'")
@@ -133,8 +133,8 @@ func (a *Alias) IsValid() error {
 			return errors.New("unexpected field for literal alias: 'timeout'")
 		}
 	case CamelCase, PascalCase, SnakeCase, UpperSnakeCase, KebabCase, DotCase:
-		if a.AliasMap != nil {
-			return errors.New("unexpected field for case alias: 'aliasMap'")
+		if a.Flags != nil {
+			return errors.New("unexpected field for case alias: 'flags'")
 		}
 		if a.Command != nil {
 			return errors.New("unexpected field for case alias: 'command'")
@@ -164,8 +164,8 @@ func (a *Alias) IsValid() error {
 			return fmt.Errorf("could not validate regex pattern: %v", err)
 		}
 
-		if a.AliasMap != nil {
-			return errors.New("unexpected field for filePattern alias: 'aliasMap'")
+		if a.Flags != nil {
+			return errors.New("unexpected field for filePattern alias: 'flags'")
 		}
 		if a.Command != nil {
 			return errors.New("unexpected field for case alias: 'command'")
@@ -183,8 +183,8 @@ func (a *Alias) IsValid() error {
 		if a.Pattern != nil {
 			return errors.New("unexpected field for command alias: 'pattern'")
 		}
-		if a.AliasMap != nil {
-			return errors.New("unexpected field for command alias: 'aliasMap'")
+		if a.Flags != nil {
+			return errors.New("unexpected field for command alias: 'flags'")
 		}
 		if a.Timeout != nil && *a.Timeout < 0 {
 			return errors.New("field 'timeout' must be >= 0")
