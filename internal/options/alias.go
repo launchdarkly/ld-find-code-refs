@@ -17,6 +17,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// We're now using multiple packages for configuration.
+// Should consider switching to spf13/viper to standardize configuration for args, env, and yaml.
+
 type AliasType string
 
 func (a AliasType) IsValid() error {
@@ -25,6 +28,10 @@ func (a AliasType) IsValid() error {
 		return nil
 	}
 	return fmt.Errorf("%s is not a valid alias type", a)
+}
+
+func (t AliasType) unexpectedFieldErr(field string) error {
+	return fmt.Errorf("unexpected field for %s alias: '%s'", t, field)
 }
 
 func (a Alias) Generate(flag string) ([]string, error) {
@@ -97,15 +104,22 @@ const (
 	Command AliasType = "command"
 )
 
+// Alias is a catch-all type for alias configurations
+// TODO: can we use OOP?
 type Alias struct {
-	Type    AliasType           `yaml:"type"`
-	Flags   map[string][]string `yaml:"flags,omitempty"`
-	Path    *string             `yaml:"path,omitempty"`
-	Pattern *string             `yaml:"pattern,omitempty"`
-	Command *string             `yaml:"command,omitempty"`
-	Timeout *int64              `yaml:"timeout,omitempty"`
-	// data for pattern matching
-	FileContents []byte `yaml:"-"`
+	Type AliasType `yaml:"type"`
+
+	// Literal
+	Flags map[string][]string `yaml:"flags,omitempty"`
+
+	// FilePattern
+	Path         *string `yaml:"path,omitempty"`
+	Pattern      *string `yaml:"pattern,omitempty"`
+	FileContents []byte  `yaml:"-"` // data for pattern matching
+
+	// Command
+	Command *string `yaml:"command,omitempty"`
+	Timeout *int64  `yaml:"timeout,omitempty"`
 }
 
 func (a *Alias) IsValid() error {
@@ -114,39 +128,11 @@ func (a *Alias) IsValid() error {
 		return err
 	}
 
-	// TODO: DRY this up
+	// Validate expected fields
 	switch a.Type {
 	case Literal:
 		if a.Flags == nil {
 			return errors.New("literal aliases must provide an 'flags'")
-		}
-		if a.Command != nil {
-			return errors.New("unexpected field for literal alias: 'command'")
-		}
-		if a.Path != nil {
-			return errors.New("unexpected field for literal alias: 'path'")
-		}
-		if a.Pattern != nil {
-			return errors.New("unexpected field for literal alias: 'pattern'")
-		}
-		if a.Timeout != nil {
-			return errors.New("unexpected field for literal alias: 'timeout'")
-		}
-	case CamelCase, PascalCase, SnakeCase, UpperSnakeCase, KebabCase, DotCase:
-		if a.Flags != nil {
-			return errors.New("unexpected field for case alias: 'flags'")
-		}
-		if a.Command != nil {
-			return errors.New("unexpected field for case alias: 'command'")
-		}
-		if a.Path != nil {
-			return errors.New("unexpected field for case alias: 'path'")
-		}
-		if a.Pattern != nil {
-			return errors.New("unexpected field for case alias: 'pattern'")
-		}
-		if a.Timeout != nil {
-			return errors.New("unexpected field for literal alias: 'timeout'")
 		}
 	case FilePattern:
 		if a.Path == nil {
@@ -155,7 +141,6 @@ func (a *Alias) IsValid() error {
 		if a.Pattern == nil {
 			return errors.New("filePattern aliases must provide a 'pattern'")
 		}
-
 		if !strings.Contains(*a.Pattern, "FLAG_KEY") {
 			return errors.New("pattern must contain 'FLAG_KEY' for templating")
 		}
@@ -163,32 +148,39 @@ func (a *Alias) IsValid() error {
 		if err != nil {
 			return fmt.Errorf("could not validate regex pattern: %v", err)
 		}
-
-		if a.Flags != nil {
-			return errors.New("unexpected field for filePattern alias: 'flags'")
-		}
-		if a.Command != nil {
-			return errors.New("unexpected field for case alias: 'command'")
-		}
-		if a.Timeout != nil {
-			return errors.New("unexpected field for literal alias: 'timeout'")
-		}
 	case Command:
 		if a.Command == nil {
 			return errors.New("command aliases must provide a 'command'")
 		}
-		if a.Path != nil {
-			return errors.New("unexpected field for command alias: 'path'")
-		}
-		if a.Pattern != nil {
-			return errors.New("unexpected field for command alias: 'pattern'")
-		}
-		if a.Flags != nil {
-			return errors.New("unexpected field for command alias: 'flags'")
-		}
 		if a.Timeout != nil && *a.Timeout < 0 {
 			return errors.New("field 'timeout' must be >= 0")
 		}
+	}
+
+	// Validate unexpected fields
+	var unexpectedField string
+	switch {
+	case a.Type != Literal:
+		if a.Flags != nil {
+			unexpectedField = "flags"
+		}
+	case a.Type != FilePattern:
+		if a.Path != nil {
+			unexpectedField = "path"
+		}
+		if a.Pattern != nil {
+			unexpectedField = "pattern"
+		}
+	case a.Type != Command:
+		if a.Command != nil {
+			unexpectedField = "command"
+		}
+		if a.Timeout != nil {
+			unexpectedField = "timeout"
+		}
+	}
+	if unexpectedField != "" {
+		return a.Type.unexpectedFieldErr(unexpectedField)
 	}
 
 	return nil
@@ -221,7 +213,7 @@ func Yaml() (*YamlOptions, error) {
 	}
 
 	o := YamlOptions{}
-	err = yaml.Unmarshal(data, &o)
+	err = yaml.UnmarshalStrict(data, &o)
 	if err != nil {
 		return nil, err
 	}

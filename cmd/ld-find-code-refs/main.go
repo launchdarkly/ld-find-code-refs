@@ -12,8 +12,10 @@ func main() {
 	err, cb := o.Init()
 	if err != nil {
 		log.Init(false)
-		log.Error.Printf("could not validate command line options: %s", err)
-		cb()
+		log.Error.Printf("could not validate configuration: %s", err)
+		if cb != nil {
+			cb()
+		}
 		os.Exit(1)
 	}
 	log.Init(o.Debug.Value())
