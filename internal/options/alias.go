@@ -27,7 +27,7 @@ func (a AliasType) IsValid() error {
 	case Literal, CamelCase, PascalCase, SnakeCase, UpperSnakeCase, KebabCase, DotCase, FilePattern, Command:
 		return nil
 	}
-	return fmt.Errorf("%s is not a valid alias type", a)
+	return fmt.Errorf("'%s' is not a valid alias type", a)
 }
 
 func (t AliasType) unexpectedFieldErr(field string) error {
