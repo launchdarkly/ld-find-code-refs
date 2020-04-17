@@ -25,13 +25,12 @@ import (
 // PUTing a massive json payload. These limits will likely be tweaked over
 // time. The LaunchDarkly backend will also apply limits.
 const (
-	minFlagKeyLen                     = 3
-	maxFileCount                      = 5000
-	maxLineCharCount                  = 500
-	maxHunkCount                      = 5000
-	maxHunksPerFileCount              = 1000
-	maxHunkedLinesPerFileAndFlagCount = 500
-	maxProjKeyLength                  = 20
+	minFlagKeyLen                     = 3     // Minimum flag key length helps reduce the number of false positives
+	maxFileCount                      = 10000 // Maximum number of files containing code references
+	maxLineCharCount                  = 500   // Maximum number of characters per line
+	maxHunkCount                      = 25000 // Maximum number of total code references
+	maxHunkedLinesPerFileAndFlagCount = 500   // Maximum number of lines per flag in a file
+	maxProjKeyLength                  = 20    // Maximum project key length
 )
 
 // map of flag keys to slices of lines those flags occur on
@@ -184,12 +183,15 @@ func Scan() {
 	)
 
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
-	if err != nil {
-		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
+	switch {
+	case err == ld.BranchUpdateSequenceIdConflictErr:
+		if b.UpdateSequenceId != nil {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
-		} else {
-			fatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), ignoreServiceErrors)
 		}
+	case err == ld.EntityTooLargeErr:
+		log.Error.Fatalf("code reference payload too large for LaunchDarkly API - consider excluding more files with .ldignore")
+	case err != nil:
+		fatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), ignoreServiceErrors)
 	}
 
 	log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
@@ -341,11 +343,6 @@ func (g searchResultLines) makeReferenceHunksReps(projKey string, ctxLines int) 
 			// if this error occurred, it's likely to occur for many other files, and create a lot of noise. So, suppress the message for all other occurrences
 			shouldSuppressUnexpectedError = true
 			continue
-		}
-
-		if len(hunks) > maxHunksPerFileCount {
-			log.Warning.Printf("found %d code references in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileSearchResults.path, maxHunksPerFileCount)
-			hunks = hunks[0:maxHunksPerFileCount]
 		}
 
 		numHunks += len(hunks)

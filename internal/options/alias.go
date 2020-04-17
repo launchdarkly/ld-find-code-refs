@@ -17,8 +17,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// We're now using multiple packages for configuration.
-// Should consider switching to spf13/viper to standardize configuration for args, env, and yaml.
+// We're using multiple packages for configuration.
+// TODO: Use spf13/viper to standardize configuration for args, env, and yaml.
 
 type AliasType string
 

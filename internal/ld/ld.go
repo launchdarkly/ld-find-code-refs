@@ -333,6 +333,8 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 				return res, BranchUpdateSequenceIdConflictErr
 			case "not_found":
 				return res, NotFoundErr
+			case "request_entity_too_large":
+				return res, EntityTooLargeErr
 			case "":
 				// do nothing
 			default:
