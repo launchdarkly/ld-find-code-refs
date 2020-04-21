@@ -288,7 +288,6 @@ func generateReferences(aliases map[string][]string, searchResult [][]string, ct
 
 func findReferencedFlags(ref string, aliases map[string][]string, delims string) map[string][]string {
 	ret := make(map[string][]string, len(aliases))
-	delims = regexp.QuoteMeta(delims)
 	for key, flagAliases := range aliases {
 		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, regexp.QuoteMeta(key), delims))
 		if matcher.MatchString(ref) {
@@ -469,7 +468,6 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		if !appendToPreviousHunk {
 			currentHunk = initHunk(projKey, flag)
 			currentHunk.StartingLineNumber = ptr.Value.(searchResultLine).LineNum
-			currentHunk.Aliases = ptr.Value.(searchResultLine).FlagKeys[flag]
 			hunkStringBuilder.Reset()
 		}
 
@@ -499,6 +497,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 			appendToPreviousHunk = false
 		} else {
 			currentHunk.Lines = hunkStringBuilder.String()
+			currentHunk.Aliases = dedupe(currentHunk.Aliases)
 			hunks = append(hunks, currentHunk)
 			previousHunk = &hunks[len(hunks)-1]
 		}
@@ -519,6 +518,7 @@ func initHunk(projKey, flagKey string) ld.HunkRep {
 	return ld.HunkRep{
 		ProjKey: projKey,
 		FlagKey: flagKey,
+		Aliases: []string{},
 	}
 }
 

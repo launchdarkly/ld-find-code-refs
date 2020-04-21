@@ -1,6 +1,7 @@
 package coderefs
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"sort"
@@ -33,8 +34,12 @@ func delimit(s string, delim string) string {
 }
 
 const (
-	testFlagKey  = "someFlag"
-	testFlagKey2 = "anotherFlag"
+	testFlagKey     = "someFlag"
+	testFlagKey2    = "anotherFlag"
+	testFlagAlias   = "some-flag"
+	testFlagAlias2  = "some.flag"
+	testFlag2Alias  = "another-flag"
+	testFlag2Alias2 = "another.flag"
 )
 
 func TestMain(m *testing.M) {
@@ -43,10 +48,13 @@ func TestMain(m *testing.M) {
 }
 
 var (
-	firstFlag  = map[string][]string{testFlagKey: {}}
-	secondFlag = map[string][]string{testFlagKey2: {}}
-	twoFlags   = map[string][]string{testFlagKey: {}, testFlagKey2: {}}
-	noFlags    = map[string][]string{}
+	firstFlag            = map[string][]string{testFlagKey: {}}
+	firstFlagWithAlias   = map[string][]string{testFlagKey: {testFlagAlias}}
+	firstFlagWithAliases = map[string][]string{testFlagKey: {testFlagAlias, testFlagAlias2}}
+	secondFlag           = map[string][]string{testFlagKey2: {}}
+	twoFlags             = map[string][]string{testFlagKey: {}, testFlagKey2: {}}
+	twoFlagsWithAliases  = map[string][]string{testFlagKey: {testFlagAlias, testFlagAlias2}, testFlagKey2: {testFlag2Alias, testFlag2Alias2}}
+	noFlags              = map[string][]string{}
 )
 
 func Test_generateReferences(t *testing.T) {
@@ -96,6 +104,28 @@ func Test_generateReferences(t *testing.T) {
 			want: []searchResultLine{
 				testWant,
 				{Path: "path/flags.txt", LineNum: 12, LineText: `"someFlag" "anotherFlag"`, FlagKeys: twoFlags},
+			},
+		},
+		{
+			name:  "succeeds with aliases",
+			flags: firstFlagWithAliases,
+			searchResult: [][]string{
+				{"", "path/flags.txt", ":", "12", testFlagAlias},
+			},
+			ctxLines: 0,
+			want: []searchResultLine{
+				{Path: "path/flags.txt", LineNum: 12, LineText: testFlagAlias, FlagKeys: firstFlagWithAlias},
+			},
+		},
+		{
+			name:  "succeeds with alias and flag key",
+			flags: firstFlagWithAliases,
+			searchResult: [][]string{
+				{"", "path/flags.txt", ":", "12", delimit(testFlagKey, "'") + " " + testFlagAlias},
+			},
+			ctxLines: 0,
+			want: []searchResultLine{
+				{Path: "path/flags.txt", LineNum: 12, LineText: delimit(testFlagKey, "'") + " " + testFlagAlias, FlagKeys: firstFlagWithAlias},
 			},
 		},
 		{
@@ -183,10 +213,20 @@ func Test_findReferencedFlags(t *testing.T) {
 			ref:  "line contains no flags",
 			want: noFlags,
 		},
+		{
+			name: "finds one alias",
+			ref:  fmt.Sprintf("line contains %s", testFlagAlias),
+			want: firstFlagWithAlias,
+		},
+		{
+			name: "finds all aliases",
+			ref:  fmt.Sprintf("line contains %s %s %s %s %s %s", delimit(testFlagKey, `"`), delimit(testFlagKey2, `"`), testFlagAlias, testFlagAlias2, testFlag2Alias, testFlag2Alias2),
+			want: twoFlagsWithAliases,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := findReferencedFlags(tt.ref, twoFlags, `"`)
+			got := findReferencedFlags(tt.ref, twoFlagsWithAliases, `"`)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -236,6 +276,7 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 							Lines:              "context -1\n" + testFlagKey + "\ncontext +1\n",
 							ProjKey:            projKey,
 							FlagKey:            testFlagKey,
+							Aliases:            []string{},
 						},
 					},
 				},
@@ -279,6 +320,62 @@ func Test_makeReferenceHunksReps(t *testing.T) {
 							ProjKey:            projKey,
 							FlagKey:            testFlagKey2,
 							Aliases:            []string{},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "alias",
+			refs: searchResultLines{
+				searchResultLine{
+					Path:     "a/b",
+					LineNum:  6,
+					LineText: testFlagAlias,
+					FlagKeys: firstFlagWithAlias,
+				},
+			},
+			want: []ld.ReferenceHunksRep{
+				{
+					Path: "a/b",
+					Hunks: []ld.HunkRep{
+						{
+							StartingLineNumber: 6,
+							Lines:              testFlagAlias + "\n",
+							ProjKey:            projKey,
+							FlagKey:            testFlagKey,
+							Aliases:            []string{testFlagAlias},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "aliases",
+			refs: searchResultLines{
+				searchResultLine{
+					Path:     "a/b",
+					LineNum:  5,
+					LineText: testFlagAlias,
+					FlagKeys: firstFlagWithAliases,
+				},
+				searchResultLine{
+					Path:     "a/b",
+					LineNum:  6,
+					LineText: testFlagAlias2,
+					FlagKeys: firstFlagWithAliases,
+				},
+			},
+			want: []ld.ReferenceHunksRep{
+				{
+					Path: "a/b",
+					Hunks: []ld.HunkRep{
+						{
+							StartingLineNumber: 5,
+							Lines:              testFlagAlias + "\n" + testFlagAlias2 + "\n",
+							ProjKey:            projKey,
+							FlagKey:            testFlagKey,
+							Aliases:            []string{testFlagAlias, testFlagAlias2},
 						},
 					},
 				},
@@ -333,6 +430,7 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "context -1\n" + testFlagKey + "\ncontext +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 			},
 		},
@@ -377,6 +475,7 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "context -1\n" + testFlagKey + "\ncontext inner\n" + testFlagKey + "\ncontext +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 			},
 		},
@@ -421,6 +520,7 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "context -1\n" + testFlagKey + "\ncontext inner\n" + testFlagKey + "\ncontext +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 			},
 		},
@@ -471,12 +571,14 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "a context -1\na " + testFlagKey + "\na context +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 				{
 					StartingLineNumber: 9,
 					Lines:              "b context -1\nb " + testFlagKey + "\nb context +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 			},
 		},
@@ -521,12 +623,14 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "context -1\n" + testFlagKey + "\ncontext inner\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 				{
 					StartingLineNumber: 7,
 					Lines:              "context inner\n" + testFlagKey2 + "\ncontext +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey2,
+					Aliases:            []string{},
 				},
 			},
 		},
@@ -577,12 +681,14 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "a context -1\na " + testFlagKey + "\na context +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 				{
 					StartingLineNumber: 8,
 					Lines:              "b context -1\nb " + testFlagKey2 + "\nb context +1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey2,
+					Aliases:            []string{},
 				},
 			},
 		},
@@ -749,6 +855,7 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "context-1\n" + testFlagKey + "\ncontext+1\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 			},
 		},
@@ -795,6 +902,7 @@ func Test_makeHunkReps(t *testing.T) {
 					Lines:              "context-1\n" + testFlagKey + "\ncontext+1\ncontext+2\n",
 					ProjKey:            projKey,
 					FlagKey:            testFlagKey,
+					Aliases:            []string{},
 				},
 			},
 		},
