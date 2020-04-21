@@ -288,13 +288,14 @@ func generateReferences(aliases map[string][]string, searchResult [][]string, ct
 
 func findReferencedFlags(ref string, aliases map[string][]string, delims string) map[string][]string {
 	ret := make(map[string][]string, len(aliases))
+	delims = regexp.QuoteMeta(delims)
 	for key, flagAliases := range aliases {
-		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, key, delims))
+		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, regexp.QuoteMeta(key), delims))
 		if matcher.MatchString(ref) {
 			ret[key] = make([]string, 0, len(flagAliases))
 		}
 		for _, alias := range flagAliases {
-			aliasMatcher := regexp.MustCompile(alias)
+			aliasMatcher := regexp.MustCompile(regexp.QuoteMeta(alias))
 			if aliasMatcher.MatchString(ref) {
 				if ret[key] == nil {
 					ret[key] = make([]string, 0, len(flagAliases))
