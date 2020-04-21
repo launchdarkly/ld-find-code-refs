@@ -248,7 +248,9 @@ func Init() (err error, errCb func()) {
 	if err != nil {
 		return err, nil
 	}
-	Aliases = yamlOptions.Aliases
+	if yamlOptions != nil {
+		Aliases = yamlOptions.Aliases
+	}
 
 	return nil, flag.PrintDefaults
 }
