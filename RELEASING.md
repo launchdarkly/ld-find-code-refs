@@ -20,3 +20,7 @@ To push a new image version to Docker hub, run `make publish-cli-docker TAG=$VER
 To publish the CircleCI Orb to the Orb registry, you'll need the [CircleCI CLI](https://circleci.com/docs/2.0/local-cli/) installed, and will need to run `circleci setup` and authenticate with a circle token that has github owner status.
 
 Run `make publish-dev-circle-orb TAG=$VERSION` or `make-publish-release-circle-orb TAG=$VERSION` to publish the orb to the orb registry, where `$VERSION` is the version you want to release. Running `publish-dev-circle-orb` will publish a development-tagged (e.g. `dev:0.0.1`) orb, which can be overwritten, and `publish-release-circle-orb` will publish a release version of the orb, which is immutable. Both dev and release orbs are open to the public, but development orbs are not visible in the list of registered orbs on Circle's [website](https://circleci.com/orbs/registry/?showAll=true).
+
+## Beta builds
+
+To push a beta build, set the `PRERELEASE=true` environment variable before running a release task. e.g. `make publish-all TAG=1.0.0-beta1`.
