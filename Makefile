@@ -34,20 +34,21 @@ echo-release-notes:
 
 define publish_docker
 	test $(1) || (echo "Please provide tag"; exit 1)
-	docker build -t launchdarkly/$(2):$(1) build/package/$(3)
-	docker tag launchdarkly/$(2):$(1) launchdarkly/$(2):latest
-	docker push launchdarkly/$(2):$(1)
-	docker push launchdarkly/$(2):latest
+	docker build -t launchdarkly/$(3):$(1) build/package/$(4)
+	docker push launchdarkly/$(3):$(1)
+	test $(2) && (echo "Not pushing latest tag for prerelease"; exit 1)
+	docker tag launchdarkly/$(3):$(1) launchdarkly/$(3):latest
+	docker push launchdarkly/$(3):latest
 endef
 
 publish-cli-docker: compile-linux-binary
-	$(call publish_docker,$(TAG),ld-find-code-refs,cmd)
+	$(call publish_docker,$(TAG),$(PRERELEASE),ld-find-code-refs,cmd)
 
 publish-github-actions-docker: compile-github-actions-binary
-	$(call publish_docker,$(TAG),ld-find-code-refs-github-action,github-actions)
+	$(call publish_docker,$(TAG),$(PRERELEASE),ld-find-code-refs-github-action,github-actions)
 
 publish-bitbucket-pipelines-docker: compile-bitbucket-pipelines-binary
-	$(call publish_docker,$(TAG),ld-find-code-refs-bitbucket-pipeline,bitbucket-pipelines)
+	$(call publish_docker,$(TAG),$(PRERELEASE),ld-find-code-refs-bitbucket-pipeline,bitbucket-pipelines)
 
 validate-circle-orb:
 	test $(TAG) || (echo "Please provide tag"; exit 1)
