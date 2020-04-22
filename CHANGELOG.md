@@ -2,6 +2,17 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.5.0] - prerelease
+
+### Added
+
+- Added the ability to configure flag alias detection using a YAML configuration. See [https://github.com/launchdarkly/ld-find-code-refs#configuring-aliases](the README) for instructions.
+
+### Fixed
+
+- Improved logging around limitations.
+- Fixed an edge case where false positives might be picked up for flag keys containing regular expression characters.
+
 ## [1.4.0] - 2020-03-16
 
 ### Added
