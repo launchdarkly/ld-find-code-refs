@@ -222,7 +222,7 @@ aliases:
 
 #### Flag keys transposed to common casing conventions
 
-Example string: `AnyKind.of_key`
+Example flag key: `AnyKind.of_key`
 
 | Type             | After      |
 |------------------|------------|
