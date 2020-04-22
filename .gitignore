@@ -7,3 +7,4 @@ build/package/cmd/ld-find-code-refs
 /dist/
 /bin/
 .idea/
+*.csv

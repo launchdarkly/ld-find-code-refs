@@ -13,6 +13,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
@@ -24,13 +25,12 @@ import (
 // PUTing a massive json payload. These limits will likely be tweaked over
 // time. The LaunchDarkly backend will also apply limits.
 const (
-	minFlagKeyLen                     = 3
-	maxFileCount                      = 5000
-	maxLineCharCount                  = 500
-	maxHunkCount                      = 5000
-	maxHunksPerFileCount              = 1000
-	maxHunkedLinesPerFileAndFlagCount = 500
-	maxProjKeyLength                  = 20
+	minFlagKeyLen                     = 3     // Minimum flag key length helps reduce the number of false positives
+	maxFileCount                      = 10000 // Maximum number of files containing code references
+	maxLineCharCount                  = 500   // Maximum number of characters per line
+	maxHunkCount                      = 25000 // Maximum number of total code references
+	maxHunkedLinesPerFileAndFlagCount = 500   // Maximum number of lines per flag in a file
+	maxProjKeyLength                  = 20    // Maximum project key length
 )
 
 // map of flag keys to slices of lines those flags occur on
@@ -121,6 +121,11 @@ func Scan() {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
+	aliases, err := generateAliases(filteredFlags, options.Aliases)
+	if err != nil {
+		log.Error.Fatalf("failed to create flag key aliases: %v", err)
+	}
+
 	ctxLines := o.ContextLines.Value()
 	var updateId *int64
 	if o.UpdateSequenceId.Value() >= 0 {
@@ -136,7 +141,7 @@ func Scan() {
 
 	// exclude option has already been validated as regex in options.go
 	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := findReferences(searchClient, filteredFlags, ctxLines, excludeRegex)
+	refs, err := findReferences(searchClient, filteredFlags, aliases, ctxLines, excludeRegex)
 	if err != nil {
 		log.Fatal.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -178,12 +183,15 @@ func Scan() {
 	)
 
 	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
-	if err != nil {
-		if err == ld.BranchUpdateSequenceIdConflictErr && b.UpdateSequenceId != nil {
+	switch {
+	case err == ld.BranchUpdateSequenceIdConflictErr:
+		if b.UpdateSequenceId != nil {
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
-		} else {
-			fatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), ignoreServiceErrors)
 		}
+	case err == ld.EntityTooLargeErr:
+		log.Error.Fatalf("code reference payload too large for LaunchDarkly API - consider excluding more files with .ldignore")
+	case err != nil:
+		fatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), ignoreServiceErrors)
 	}
 
 	log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
@@ -250,7 +258,7 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func generateReferences(flags []string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
+func generateReferences(aliases map[string][]string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
 	references := []searchResultLine{}
 
 	for _, r := range searchResult {
@@ -267,7 +275,7 @@ func generateReferences(flags []string, searchResult [][]string, ctxLines int, d
 		}
 		ref := searchResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {
-			ref.FlagKeys = findReferencedFlags(lineText, flags, delims)
+			ref.FlagKeys = findReferencedFlags(lineText, aliases, delims)
 		}
 		if ctxLines >= 0 {
 			ref.LineText = lineText
@@ -278,12 +286,21 @@ func generateReferences(flags []string, searchResult [][]string, ctxLines int, d
 	return references
 }
 
-func findReferencedFlags(ref string, flags []string, delims string) []string {
-	ret := []string{}
-	for _, flag := range flags {
-		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, flag, delims))
+func findReferencedFlags(ref string, aliases map[string][]string, delims string) map[string][]string {
+	ret := make(map[string][]string, len(aliases))
+	for key, flagAliases := range aliases {
+		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, regexp.QuoteMeta(key), delims))
 		if matcher.MatchString(ref) {
-			ret = append(ret, flag)
+			ret[key] = make([]string, 0, len(flagAliases))
+		}
+		for _, alias := range flagAliases {
+			aliasMatcher := regexp.MustCompile(regexp.QuoteMeta(alias))
+			if aliasMatcher.MatchString(ref) {
+				if ret[key] == nil {
+					ret[key] = make([]string, 0, len(flagAliases))
+				}
+				ret[key] = append(ret[key], alias)
+			}
 		}
 	}
 	return ret
@@ -328,11 +345,6 @@ func (g searchResultLines) makeReferenceHunksReps(projKey string, ctxLines int) 
 			continue
 		}
 
-		if len(hunks) > maxHunksPerFileCount {
-			log.Warning.Printf("found %d code references in %s, which exceeded the limit of %d, truncating file hunks", len(hunks), fileSearchResults.path, maxHunksPerFileCount)
-			hunks = hunks[0:maxHunksPerFileCount]
-		}
-
 		numHunks += len(hunks)
 
 		reps = append(reps, ld.ReferenceHunksRep{Path: fileSearchResults.path, Hunks: hunks})
@@ -370,7 +382,7 @@ func (g searchResultLines) aggregateByPath() []fileSearchResults {
 		elem := currentFileResults.addSearchResult(searchResult)
 
 		if len(searchResult.FlagKeys) > 0 {
-			for _, flagKey := range searchResult.FlagKeys {
+			for flagKey := range searchResult.FlagKeys {
 				currentFileResults.addFlagReference(flagKey, elem)
 			}
 		}
@@ -434,7 +446,6 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 		// Each ref is either the start of a new hunk or a continuation of the previous hunk.
 		// NOTE: its possible that this flag reference is totally contained in the previous hunk
 		ptr := ref
-
 		numCtxLinesBeforeFlagRef := 0
 
 		// Attempt to seek to the start of the new hunk.
@@ -473,6 +484,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 				hunkStringBuilder.WriteString(lineText + "\n")
 				lastSeenLineNum = ptrLineNum
 				numHunkedLines += 1
+				currentHunk.Aliases = append(currentHunk.Aliases, ptr.Value.(searchResultLine).FlagKeys[flag]...)
 			}
 
 			if ptr.Next() != nil {
@@ -485,6 +497,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 			appendToPreviousHunk = false
 		} else {
 			currentHunk.Lines = hunkStringBuilder.String()
+			currentHunk.Aliases = dedupe(currentHunk.Aliases)
 			hunks = append(hunks, currentHunk)
 			previousHunk = &hunks[len(hunks)-1]
 		}
@@ -505,6 +518,7 @@ func initHunk(projKey, flagKey string) ld.HunkRep {
 	return ld.HunkRep{
 		ProjKey: projKey,
 		FlagKey: flagKey,
+		Aliases: []string{},
 	}
 }
 

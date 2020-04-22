@@ -15,7 +15,7 @@ type searchResultLine struct {
 	Path     string
 	LineNum  int
 	LineText string
-	FlagKeys []string
+	FlagKeys map[string][]string
 }
 
 type searchResultLines []searchResultLine
@@ -40,6 +40,11 @@ func (lines searchResultLines) Swap(i, j int) {
 
 // paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
 func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, ctxLines int, delims []rune) ([][]string, error) {
+	searchType := "flags"
+	if delims == nil {
+		searchType = "aliases"
+	}
+
 	if maxSumFlagKeyLength == 0 {
 		return nil, NoSearchPatternErr
 	}
@@ -55,7 +60,8 @@ func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, 
 
 		// if we've reached the end of the loop, or the current page has reached maximum length
 		if to == len(flags)-1 || totalKeyLength+command.FlagKeyCost(flags[to+1]) > maxSumFlagKeyLength {
-			log.Debug.Printf("searching for flags in group: [%d, %d]", from, to)
+
+			log.Debug.Printf("searching for %s in group: [%d, %d]", searchType, from, to)
 			result, err := cmd.SearchForFlags(nextSearchKeys, ctxLines, delims)
 			if err != nil {
 				if err == command.SearchTooLargeErr {
@@ -82,13 +88,22 @@ func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, 
 	return results, nil
 }
 
-func findReferences(cmd command.Searcher, flags []string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
+func findReferences(cmd command.Searcher, flags []string, aliases map[string][]string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
 	delims := o.Delimiters.Value()
 	log.Info.Printf("finding code references with delimiters: %s", delims.String())
-	results, err := paginatedSearch(cmd, flags, command.SafePaginationCharCount(), ctxLines, delims)
+	paginationCharCount := command.SafePaginationCharCount()
+	results, err := paginatedSearch(cmd, flags, paginationCharCount, ctxLines, delims)
 	if err != nil {
 		return searchResultLines{}, err
 	}
-
-	return generateReferences(flags, results, ctxLines, string(delims), exclude), nil
+	flattenedAliases := make([]string, 0, len(flags))
+	for _, flagAliases := range aliases {
+		flattenedAliases = append(flattenedAliases, flagAliases...)
+	}
+	aliasResults, err := paginatedSearch(cmd, flattenedAliases, paginationCharCount, ctxLines, nil)
+	if err != nil {
+		return searchResultLines{}, err
+	}
+	results = append(results, aliasResults...)
+	return generateReferences(aliases, results, ctxLines, string(delims), exclude), nil
 }

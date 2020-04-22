@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
@@ -332,6 +333,8 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 				return res, BranchUpdateSequenceIdConflictErr
 			case "not_found":
 				return res, NotFoundErr
+			case "request_entity_too_large":
+				return res, EntityTooLargeErr
 			case "":
 				// do nothing
 			default:
@@ -444,7 +447,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 		return false
 	})
 
-	records = append([][]string{{"flagKey", "path", "startingLineNumber", "lines"}}, records...)
+	records = append([][]string{{"flagKey", "path", "startingLineNumber", "lines", "aliases"}}, records...)
 	return path, w.WriteAll(records)
 }
 
@@ -456,16 +459,17 @@ type ReferenceHunksRep struct {
 func (r ReferenceHunksRep) toRecords() [][]string {
 	ret := make([][]string, 0, len(r.Hunks))
 	for _, hunk := range r.Hunks {
-		ret = append(ret, []string{hunk.FlagKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines})
+		ret = append(ret, []string{hunk.FlagKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " ")})
 	}
 	return ret
 }
 
 type HunkRep struct {
-	StartingLineNumber int    `json:"startingLineNumber"`
-	Lines              string `json:"lines,omitempty"`
-	ProjKey            string `json:"projKey"`
-	FlagKey            string `json:"flagKey"`
+	StartingLineNumber int      `json:"startingLineNumber"`
+	Lines              string   `json:"lines,omitempty"`
+	ProjKey            string   `json:"projKey"`
+	FlagKey            string   `json:"flagKey"`
+	Aliases            []string `json:"aliases,omitempty"`
 }
 
 type tableData [][]string

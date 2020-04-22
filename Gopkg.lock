@@ -35,6 +35,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:b42f449a8b6e31294dcac04a5a8b990ec494f1b046cf9c00b3a12b20f4d05807"
+  name = "github.com/iancoleman/strcase"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "16388991a33441046539eb716cff4d294d556c70"
+
+[[projects]]
+  branch = "master"
   digest = "1:a6448bdcd9a3eb6fb7147b2100f9d96ebdaff556cb110545a7a7b0ddfd201dc5"
   name = "github.com/launchdarkly/api-client-go"
   packages = ["."]
@@ -122,16 +130,26 @@
   revision = "4a4468ece617fc8205e99368fa2200e9d1fad421"
   version = "v1.3.0"
 
+[[projects]]
+  digest = "1:55b110c99c5fdc4f14930747326acce56b52cfce60b24b1c03ef686ac0e46bb1"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "53403b58ad1b561927d19068c655246f2db79d48"
+  version = "v2.2.8"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/hashicorp/go-retryablehttp",
+    "github.com/iancoleman/strcase",
     "github.com/launchdarkly/api-client-go",
     "github.com/launchdarkly/json-patch",
     "github.com/olekukonko/tablewriter",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
+    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

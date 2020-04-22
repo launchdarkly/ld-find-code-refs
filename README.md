@@ -14,6 +14,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 - [Examples](#examples)
 - [Required arguments](#required-arguments)
 - [Optional arguments](#optional-arguments)
+- [Configuring aliases](#configuring-aliases)
 - [Ignoring files and directories](#ignoring-files-and-directories)
 - [Branch garbage collection](#branch-garbage-collection)
 
@@ -198,6 +199,80 @@ Although these arguments are optional, a (\*) indicates a recommended parameter 
 | `commitUrlTemplate`        | If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each commit.                                                         |                                |
 | `hunkUrlTemplate`          | If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided and `repoType` is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.      |                                |
 | `version`                  | If provided, the current `ld-find-code-refs` version number will be logged, and the scanner will exit with a return code of 0.                                                                                                                                                                                                                                                                                                                                           | `false`                        |
+
+### Configuring aliases
+
+Flag key aliases may be defined using a YAML file stored in your repository at `.launchdarkly/config.yaml`. Configuration types may be used in conjunction and defined more than once for comprehensive alias coverage.
+
+
+#### Hardcoded map of flag keys to aliases
+
+Example hardcoding aliases for a couple flags:
+
+```yaml
+aliases:
+  - type: literal
+    flags:
+      my-flag:
+        - myFlag
+        - isMyFlagOn
+      my-other-flag:
+        - other.flag.alias
+```
+
+#### Flag keys transposed to common casing conventions
+
+Example flag key: `AnyKind.of_key`
+
+| Type             | After      |
+|------------------|------------|
+| `camelCase`      | `anyKind.ofKey`  |
+| `pascalCase`     | `AnyKind.OfKey`  |
+| `snakeCase`      | `any_kind.of_key` |
+| `upperSnakeCase` | `ANY_KIND.OF_KEY` |
+| `kebabCase`      | `any-kind.of-key` |
+| `dotCase`        | `any.kind.of.key` |
+
+Example generating aliases in camelCase and PascalCase:
+
+```yaml
+aliases:
+  - type: camelCase
+  - type: pascalCase
+```
+
+#### Search a file for a specific pattern
+
+Specify a file to search, with a regular expression containing a capture group to match aliases. The pattern must contain the templated literal `FLAG_KEY` to be replaced with flag keys.
+
+Example matching all variable names storing flag keys of the form `MyFlagKey := "my-flag"` in the file `test.go`:
+
+```yaml
+aliases:
+  - type: filePattern
+    path: test.go
+    pattern: (\w+Key) := "FLAG_KEY"
+```
+
+#### Execute a command script
+
+Any command may be executed to generate aliases. The command will receive a flag key as standard input. `ld-find-code-refs` expects a valid JSON array of flag keys output to stdout.
+
+Here's an example of a bash script which returns the the flag key as it's own alias:
+
+```yaml
+aliases:
+  - type: command
+    command: .launchdarkly/launchdarklyAlias.sh
+    timeout: 5 # seconds
+```
+
+Contents of `./launchdarkly/launchdarklyAlias.sh`:
+
+```sh
+#! /bin/sh
+read flagKey <&0; echo "[\"$flagKey\"]"
+```
 
 ### Ignoring files and directories
 

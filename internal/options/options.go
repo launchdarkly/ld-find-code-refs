@@ -119,6 +119,8 @@ const (
 	delimiterShort      = runeSet("D")
 )
 
+var Aliases []Alias
+
 type option struct {
 	defaultValue interface{}
 	usage        string
@@ -240,6 +242,14 @@ func Init() (err error, errCb func()) {
 		if err != nil {
 			return fmt.Errorf("invalid outDir: %s", err), flag.PrintDefaults
 		}
+	}
+
+	yamlOptions, err := Yaml()
+	if err != nil {
+		return err, nil
+	}
+	if yamlOptions != nil {
+		Aliases = yamlOptions.Aliases
 	}
 
 	return nil, flag.PrintDefaults
