@@ -222,14 +222,16 @@ aliases:
 
 #### Flag keys transposed to common casing conventions
 
-| Type             | Before     | After      |
-|------------------|------------|------------|
-| `camelCase`      | `flag-key` | `flagKey`  |
-| `pascalCase`     | `flag-key` | `FlagKey`  |
-| `snakeCase`      | `flag-key` | `flag_key` |
-| `upperSnakeCase` | `flag-key` | `FLAG_KEY` |
-| `kebabCase`      | `flag.key` | `flag-key` |
-| `dotCase`        | `flag-key` | `flag.key` |
+Example string: `AnyKind.of_key`
+
+| Type             | After      |
+|------------------|------------|
+| `camelCase`      | `anyKind.ofKey`  |
+| `pascalCase`     | `AnyKind.OfKey`  |
+| `snakeCase`      | `any_kind.of_key` |
+| `upperSnakeCase` | `ANY_KIND.OF_KEY` |
+| `kebabCase`      | `any-kind.of-key` |
+| `dotCase`        | `any.kind.of.key` |
 
 Example generating aliases in camelCase and PascalCase:
 

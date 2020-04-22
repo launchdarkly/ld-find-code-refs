@@ -17,9 +17,9 @@ var allNamingConventions = []o.Alias{
 	alias(o.DotCase),
 }
 
-var allSomeFlagNamingConventionAliases = slice("someFlag", "SomeFlag", "some_flag", "SOME_FLAG", "some-flag", "some.flag")
+var allSomeFlagNamingConventionAliases = slice("anyKindOfKey", "AnyKindOfKey", "any_kind.of_key", "ANY_KIND.OF_KEY", "any-kind.of-key", "any.kind.of.key")
 
-var testDataPath = "testdata/alias.txt"
+const testFlagAliasKey = "AnyKind.of_key"
 
 func Test_generateAliases(t *testing.T) {
 	specs := []struct {
@@ -31,35 +31,17 @@ func Test_generateAliases(t *testing.T) {
 	}{
 		{
 			name:  "literals",
-			flags: slice(testFlagKey),
+			flags: slice(testFlagAliasKey),
 			aliases: []o.Alias{
-				literal(slice(testFlagKey)),
+				literal(slice(testFlagAliasKey)),
 			},
-			want: makeLiteralAliases(slice(testFlagKey)),
+			want: makeLiteralAliases(slice(testFlagAliasKey)),
 		},
 		{
 			name:    "naming conventions",
-			flags:   slice(testFlagKey),
+			flags:   slice(testFlagAliasKey),
 			aliases: allNamingConventions,
-			want:    map[string][]string{testFlagKey: allSomeFlagNamingConventionAliases},
-		},
-		{
-			name:    "naming conventions using flag key with a hyphen",
-			flags:   slice("some-flag"),
-			aliases: allNamingConventions,
-			want:    map[string][]string{"some-flag": allSomeFlagNamingConventionAliases},
-		},
-		{
-			name:    "naming conventions using flag key with an underscore",
-			flags:   slice("some_flag"),
-			aliases: allNamingConventions,
-			want:    map[string][]string{"some_flag": allSomeFlagNamingConventionAliases},
-		},
-		{
-			name:    "naming conventions using flag key with a period",
-			flags:   slice("some.flag"),
-			aliases: allNamingConventions,
-			want:    map[string][]string{"some.flag": {"someFlag", "SomeFlag", "some.flag", "SOME.FLAG"}},
+			want:    map[string][]string{testFlagAliasKey: allSomeFlagNamingConventionAliases},
 		},
 		{
 			name:  "two flags",
