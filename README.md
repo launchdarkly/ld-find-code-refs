@@ -243,14 +243,17 @@ aliases:
 
 #### Search a file for a specific pattern
 
-Specify a file to search, with a regular expression containing a capture group to match aliases. The pattern must contain the templated literal `FLAG_KEY` to be replaced with flag keys.
+Specify a number of files (`paths`) using [glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) to search. Be as specific as possible with your path globs to minimize the number of files searched for aliases.
 
-Example matching all variable names storing flag keys of the form `MyFlagKey := "my-flag"` in the file `test.go`:
+You must also specify a regular expression (`pattern`) containing a capture group to match aliases. The pattern must contain the the text `FLAG_KEY`, which will be subsituted with flag keys.
+
+Example matching all variable names storing flag keys of the form `MyFlagKey := "my-flag"` in .go files do not end with `_test`:
 
 ```yaml
 aliases:
   - type: filePattern
-    path: test.go
+    paths:
+      - '*[!_test].go'
     pattern: (\w+Key) := "FLAG_KEY"
 ```
 

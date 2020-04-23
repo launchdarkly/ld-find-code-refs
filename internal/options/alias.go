@@ -9,12 +9,15 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/iancoleman/strcase"
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"gopkg.in/yaml.v2"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 // We're using multiple packages for configuration.
@@ -53,7 +56,7 @@ func (a Alias) Generate(flag string) ([]string, error) {
 		ret = []string{strcase.ToDelimited(flag, '.')}
 	case FilePattern:
 		pattern := regexp.MustCompile(strings.ReplaceAll(*a.Pattern, "FLAG_KEY", flag))
-		results := pattern.FindAllStringSubmatch(string(a.FileContents), -1)
+		results := pattern.FindAllStringSubmatch(string(a.AllFileContents), -1)
 		for _, res := range results {
 			if len(res) > 1 {
 				ret = append(ret, res[1:]...)
@@ -108,14 +111,18 @@ const (
 // TODO: can we use OOP?
 type Alias struct {
 	Type AliasType `yaml:"type"`
+	Name string    `yaml:"name"`
 
 	// Literal
 	Flags map[string][]string `yaml:"flags,omitempty"`
 
+	// TODO: Remove this field - it has been superceded by Paths and should be removed
+	Path *string `yaml:"path"`
+
 	// FilePattern
-	Path         *string `yaml:"path,omitempty"`
-	Pattern      *string `yaml:"pattern,omitempty"`
-	FileContents []byte  `yaml:"-"` // data for pattern matching
+	Paths           []string `yaml:"paths,omitempty"`
+	Pattern         *string  `yaml:"pattern,omitempty"`
+	AllFileContents []byte   `yaml:"-"` // data for pattern matching
 
 	// Command
 	Command *string `yaml:"command,omitempty"`
@@ -127,7 +134,6 @@ func (a *Alias) IsValid() error {
 	if err != nil {
 		return err
 	}
-
 	// Validate expected fields
 	switch a.Type {
 	case Literal:
@@ -135,8 +141,8 @@ func (a *Alias) IsValid() error {
 			return errors.New("literal aliases must provide an 'flags'")
 		}
 	case FilePattern:
-		if a.Path == nil {
-			return errors.New("filePattern aliases must provide a 'path'")
+		if len(a.Paths) == 0 && a.Path == nil {
+			return errors.New("filePattern aliases must provide at least one path in 'paths'")
 		}
 		if a.Pattern == nil {
 			return errors.New("filePattern aliases must provide a 'pattern'")
@@ -165,8 +171,8 @@ func (a *Alias) IsValid() error {
 			unexpectedField = "flags"
 		}
 	case a.Type != FilePattern:
-		if a.Path != nil {
-			unexpectedField = "path"
+		if len(a.Paths) > 0 {
+			unexpectedField = "paths"
 		}
 		if a.Pattern != nil {
 			unexpectedField = "pattern"
@@ -183,6 +189,62 @@ func (a *Alias) IsValid() error {
 		return a.Type.unexpectedFieldErr(unexpectedField)
 	}
 
+	return nil
+}
+
+func (a *Alias) ProcessFileContent(idx int) error {
+	if a.Type != FilePattern {
+		return nil
+	}
+
+	// TODO: Remove this block with release as the Path field is being removed
+	if a.Path != nil {
+		path := filepath.Join(Dir.Value(), filepath.Dir(*a.Path))
+		absPath, err := validation.NormalizeAndValidatePath(path)
+		if err != nil {
+			return err
+		}
+
+		absFile := filepath.Join(absPath, filepath.Base(*a.Path))
+		if !validation.FileExists(absFile) {
+			return fmt.Errorf("could not find file at path '%s'", absFile)
+		}
+		/* #nosec */
+		data, err := ioutil.ReadFile(absFile)
+		if err != nil {
+			return fmt.Errorf("could not process file at path '%s': %v", absFile, err)
+		}
+		a.AllFileContents = data
+	}
+
+	aliasId := strconv.Itoa(idx)
+	if a.Name != "" {
+		aliasId = a.Name
+	}
+
+	paths := []string{}
+	for _, glob := range a.Paths {
+		absGlob := filepath.Join(Dir.Value(), glob)
+		matches, err := filepath.Glob(absGlob)
+		if err != nil {
+			return fmt.Errorf("filePattern '%s': could not process path glob '%s'", aliasId, absGlob)
+		}
+		paths = append(paths, matches...)
+	}
+	paths = helpers.Dedupe(paths)
+	a.AllFileContents = []byte{}
+
+	for _, path := range paths {
+		if !validation.FileExists(path) {
+			return fmt.Errorf("filePattern '%s': could not find file at path '%s'", aliasId, path)
+		}
+		/* #nosec */
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("filePattern '%s': could not process file at path '%s': %v", aliasId, path, err)
+		}
+		a.AllFileContents = append(a.AllFileContents, data...)
+	}
 	return nil
 }
 
@@ -222,25 +284,11 @@ func Yaml() (*YamlOptions, error) {
 		return nil, err
 	}
 	for i, a := range o.Aliases {
-		if a.Path != nil {
-			path := filepath.Join(Dir.Value(), filepath.Dir(*a.Path))
-			absPath, err := validation.NormalizeAndValidatePath(path)
-			if err != nil {
-				return nil, err
-			}
-
-			absFile := filepath.Join(absPath, filepath.Base(*a.Path))
-			if !validation.FileExists(absFile) {
-				return nil, fmt.Errorf("could not find file at path '%s'", absFile)
-			}
-			/* #nosec */
-			data, err := ioutil.ReadFile(absFile)
-			if err != nil {
-				return nil, fmt.Errorf("could not process file at path '%s': %v", absFile, err)
-			}
-			a.FileContents = data
-			o.Aliases[i] = a
+		err = a.ProcessFileContent(i)
+		if err != nil {
+			return nil, err
 		}
+		o.Aliases[i] = a
 	}
 	return &o, nil
 }

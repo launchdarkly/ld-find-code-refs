@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
+	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
@@ -121,7 +121,7 @@ func Scan() {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
-	aliases, err := generateAliases(filteredFlags, options.Aliases)
+	aliases, err := generateAliases(filteredFlags, o.Aliases)
 	if err != nil {
 		log.Error.Fatalf("failed to create flag key aliases: %v", err)
 	}
@@ -497,7 +497,7 @@ func buildHunksForFlag(projKey, flag, path string, flagReferences []*list.Elemen
 			appendToPreviousHunk = false
 		} else {
 			currentHunk.Lines = hunkStringBuilder.String()
-			currentHunk.Aliases = dedupe(currentHunk.Aliases)
+			currentHunk.Aliases = helpers.Dedupe(currentHunk.Aliases)
 			hunks = append(hunks, currentHunk)
 			previousHunk = &hunks[len(hunks)-1]
 		}

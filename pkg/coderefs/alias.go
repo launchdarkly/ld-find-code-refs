@@ -1,6 +1,7 @@
 package coderefs
 
 import (
+	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
@@ -14,19 +15,7 @@ func generateAliases(flags []string, aliases []options.Alias) (map[string][]stri
 			}
 			ret[flag] = append(ret[flag], flagAliases...)
 		}
-		ret[flag] = dedupe(ret[flag])
+		ret[flag] = helpers.Dedupe(ret[flag])
 	}
 	return ret, nil
-}
-
-func dedupe(s []string) []string {
-	keys := make(map[string]struct{}, len(s))
-	ret := make([]string, 0, len(s))
-	for _, entry := range s {
-		if _, value := keys[entry]; !value {
-			keys[entry] = struct{}{}
-			ret = append(ret, entry)
-		}
-	}
-	return ret
 }
