@@ -201,9 +201,12 @@ func (o *YamlOptions) IsValid() error {
 }
 
 func Yaml() (*YamlOptions, error) {
-	pathToYaml := filepath.Join(Dir.Value(), ".launchdarkly/config.yaml")
+	pathToYaml := filepath.Join(Dir.Value(), ".launchdarkly/coderefs.yaml")
 	if !validation.FileExists(pathToYaml) {
-		return nil, nil
+		pathToYaml = filepath.Join(Dir.Value(), ".launchdarkly/coderefs.yml")
+		if !validation.FileExists(pathToYaml) {
+			return nil, nil
+		}
 	}
 
 	/* #nosec */

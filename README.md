@@ -202,7 +202,7 @@ Although these arguments are optional, a (\*) indicates a recommended parameter 
 
 ### Configuring aliases
 
-Flag key aliases may be defined using a YAML file stored in your repository at `.launchdarkly/config.yaml`. Configuration types may be used in conjunction and defined more than once for comprehensive alias coverage.
+Flag key aliases may be defined using a YAML file stored in your repository at `.launchdarkly/coderefs.yaml`. Configuration types may be used in conjunction and defined more than once for comprehensive alias coverage.
 
 
 #### Hardcoded map of flag keys to aliases
