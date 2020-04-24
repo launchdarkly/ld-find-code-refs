@@ -23,4 +23,4 @@ Run `make publish-dev-circle-orb TAG=$VERSION` or `make-publish-release-circle-o
 
 ## Beta builds
 
-To push a beta build, set the `PRERELEASE=true` environment variable before running a release task. e.g. `make publish-all TAG=1.0.0-beta1`.
+To push a beta build, set the `PRERELEASE=true` environment variable before running a release task. e.g. `make publish-all TAG=1.0.0-beta1`. Note: to publish a beta circle ci orb, run `make publish-dev-circle-orb TAG=$VERSION`

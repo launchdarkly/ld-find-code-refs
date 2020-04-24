@@ -176,7 +176,10 @@ var options = optionMap{
 // Returns an error if a required option has not been set, or if an option is invalid.
 func Init() (err error, errCb func()) {
 	if !populated {
-		Populate()
+		err = Populate()
+		if err != nil {
+			return err, nil
+		}
 	}
 
 	flag.Parse()
@@ -244,21 +247,15 @@ func Init() (err error, errCb func()) {
 		}
 	}
 
-	yamlOptions, err := Yaml()
-	if err != nil {
-		return err, nil
-	}
-	if yamlOptions != nil {
-		Aliases = yamlOptions.Aliases
-	}
-
 	return nil, flag.PrintDefaults
 }
 
 var populated = false
 
-func Populate() {
+func Populate() error {
+
 	populated = true
+
 	for n, o := range options {
 		name := n.name()
 		switch v := o.defaultValue.(type) {
@@ -274,6 +271,16 @@ func Populate() {
 			flag.Var(v, name, o.usage)
 		}
 	}
+
+	yamlOptions, err := Yaml()
+	if err != nil {
+		return err
+	}
+	if yamlOptions != nil {
+		Aliases = yamlOptions.Aliases
+	}
+
+	return nil
 }
 
 // GetLDOptionsFromEnv returns a map of all expected environment variables for ld-find-code-refs wrappers

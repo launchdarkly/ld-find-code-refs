@@ -33,7 +33,10 @@ func main() {
 		options[k] = v
 	}
 
-	o.Populate()
+	err = o.Populate()
+	if err != nil {
+		log.Error.Fatalf("could not set options: %v", err)
+	}
 	for k, v := range options {
 		err := flag.Set(k, v)
 		if err != nil {
