@@ -113,7 +113,7 @@ func filePattern(flag string) o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
 	a.Pattern = &pattern
-	a.FileContents = []byte(fmt.Sprintf("SOME_FLAG = '%s'", flag))
+	a.AllFileContents = []byte(fmt.Sprintf("SOME_FLAG = '%s'", flag))
 	return a
 }
 
