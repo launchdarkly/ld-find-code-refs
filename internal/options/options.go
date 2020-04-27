@@ -249,7 +249,7 @@ func Init() (err error, errCb func()) {
 
 	yamlOptions, err := Yaml()
 	if err != nil {
-		return nil, nil
+		return err, nil
 	}
 	if yamlOptions != nil {
 		Aliases = yamlOptions.Aliases
