@@ -207,6 +207,8 @@ Flag key aliases may be defined using a YAML file stored in your repository at `
 
 #### Hardcoded map of flag keys to aliases
 
+Aliases can be hardcoded using the `literal` type. This is intended to be used for testing aliasing functionality.
+
 Example hardcoding aliases for a couple flags:
 
 ```yaml
@@ -221,6 +223,8 @@ aliases:
 ```
 
 #### Flag keys transposed to common casing conventions
+
+Aliases can be generated using any of the following common naming conventions. For more robust patterns, see the other available options below this section.
 
 Example flag key: `AnyKind.of_key`
 
