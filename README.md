@@ -228,10 +228,10 @@ Aliases can be generated using any of the following common naming conventions. F
 
 Example flag key: `AnyKind.of_key`
 
-| Type             | After      |
-|------------------|------------|
-| `camelcase`      | `anyKind.ofKey`  |
-| `pascalcase`     | `AnyKind.OfKey`  |
+| Type             | After             |
+|------------------|-------------------|
+| `camelcase`      | `anyKind.ofKey`   |
+| `pascalcase`     | `AnyKind.OfKey`   |
 | `snakecase`      | `any_kind.of_key` |
 | `uppersnakecase` | `ANY_KIND.OF_KEY` |
 | `kebabcase`      | `any-kind.of-key` |
