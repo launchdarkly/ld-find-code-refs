@@ -15,7 +15,6 @@ defaults:
       github.com/kyoh86/richgo
 
   build_steps: &build_steps
-    working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
       - run:
@@ -23,8 +22,6 @@ defaults:
           command: |
             sudo apt-get install -yqq git silversearcher-ag
       - run: go get -u $COMMON_GO_PACKAGES
-      - run: curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-      - run: dep ensure -dry-run
       - run: sudo apt-get update
       - run: sudo apt-get install python-pip
       - run: sudo pip install pre-commit
@@ -73,7 +70,6 @@ jobs:
   test-publish:
     docker:
       - image: circleci/golang:1.14
-    working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
       - setup_remote_docker
@@ -84,7 +80,6 @@ jobs:
   publish:
     docker:
       - image: circleci/golang:1.14
-    working_directory: /go/src/github.com/launchdarkly/ld-find-code-refs
     steps:
       - checkout
       - setup_remote_docker
