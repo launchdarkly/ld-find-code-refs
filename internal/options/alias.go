@@ -26,20 +26,28 @@ import (
 type AliasType string
 
 func (a AliasType) IsValid() error {
-	switch a {
+	switch a.canonical() {
 	case Literal, CamelCase, PascalCase, SnakeCase, UpperSnakeCase, KebabCase, DotCase, FilePattern, Command:
 		return nil
 	}
 	return fmt.Errorf("'%s' is not a valid alias type", a)
 }
 
-func (t AliasType) unexpectedFieldErr(field string) error {
-	return fmt.Errorf("unexpected field for %s alias: '%s'", t, field)
+func (a AliasType) String() string {
+	return strings.ToLower(string(a))
+}
+
+func (a AliasType) canonical() AliasType {
+	return AliasType(a.String())
+}
+
+func (a AliasType) unexpectedFieldErr(field string) error {
+	return fmt.Errorf("unexpected field for %s alias: '%s'", a, field)
 }
 
 func (a Alias) Generate(flag string) ([]string, error) {
 	ret := []string{}
-	switch AliasType(strings.ToLower(string(a.Type))) {
+	switch a.Type.canonical() {
 	case Literal:
 		ret = a.Flags[flag]
 	case CamelCase:
