@@ -39,7 +39,7 @@ func (t AliasType) unexpectedFieldErr(field string) error {
 
 func (a Alias) Generate(flag string) ([]string, error) {
 	ret := []string{}
-	switch a.Type {
+	switch AliasType(strings.ToLower(string(a.Type))) {
 	case Literal:
 		ret = a.Flags[flag]
 	case CamelCase:
@@ -95,14 +95,14 @@ func (a Alias) Generate(flag string) ([]string, error) {
 const (
 	Literal AliasType = "literal"
 
-	CamelCase      AliasType = "camelCase"
-	PascalCase     AliasType = "pascalCase"
-	SnakeCase      AliasType = "snakeCase"
-	UpperSnakeCase AliasType = "upperSnakeCase"
-	KebabCase      AliasType = "kebabCase"
-	DotCase        AliasType = "dotCase"
+	CamelCase      AliasType = "camelcase"
+	PascalCase     AliasType = "pascalcase"
+	SnakeCase      AliasType = "snakecase"
+	UpperSnakeCase AliasType = "uppersnakecase"
+	KebabCase      AliasType = "kebabcase"
+	DotCase        AliasType = "dotcase"
 
-	FilePattern AliasType = "filePattern"
+	FilePattern AliasType = "filepattern"
 
 	Command AliasType = "command"
 )
