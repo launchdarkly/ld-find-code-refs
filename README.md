@@ -249,7 +249,7 @@ aliases:
 
 You can specify a number of files (`paths`) using [glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) to search. Be as specific as possible with your path globs to minimize the number of files searched for aliases.
 
-You must also specify a regular expression (`pattern`) containing a capture group to match aliases. The pattern must contain the the text `FLAG_KEY`, which will be interpolated with flag keys.
+You must also specify at least one regular expression (`pattern`) containing a capture group to match aliases. The pattern must contain the the text `FLAG_KEY`, which will be interpolated with flag keys.
 
 Example matching all variable names storing flag keys of the form `var ENABLE_WIDGETS = "enable-widgets"` in .go files do not end with `_test`:
 
@@ -258,7 +258,8 @@ aliases:
   - type: filepattern
     paths:
       - '*[!_test].go'
-    pattern: '(\w+) = "FLAG_KEY"'
+    patterns: 
+      - '(\w+) = "FLAG_KEY"'
 ```
 
 #### Execute a command script
