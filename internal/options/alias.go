@@ -63,13 +63,16 @@ func (a Alias) Generate(flag string) ([]string, error) {
 	case DotCase:
 		ret = []string{strcase.ToDelimited(flag, '.')}
 	case FilePattern:
-		pattern := regexp.MustCompile(strings.ReplaceAll(*a.Pattern, "FLAG_KEY", flag))
-		results := pattern.FindAllStringSubmatch(string(a.AllFileContents), -1)
-		for _, res := range results {
-			if len(res) > 1 {
-				ret = append(ret, res[1:]...)
+		for _, p := range a.Patterns {
+			pattern := regexp.MustCompile(strings.ReplaceAll(p, "FLAG_KEY", flag))
+			results := pattern.FindAllStringSubmatch(string(a.AllFileContents), -1)
+			for _, res := range results {
+				if len(res) > 1 {
+					ret = append(ret, res[1:]...)
+				}
 			}
 		}
+
 	case Command:
 		ctx := context.Background()
 		if a.Timeout != nil && *a.Timeout > 0 {
@@ -116,7 +119,6 @@ const (
 )
 
 // Alias is a catch-all type for alias configurations
-// TODO: can we use OOP?
 type Alias struct {
 	Type AliasType `yaml:"type"`
 	Name string    `yaml:"name"`
@@ -124,12 +126,9 @@ type Alias struct {
 	// Literal
 	Flags map[string][]string `yaml:"flags,omitempty"`
 
-	// TODO: Remove this field - it has been superceded by Paths and should be removed
-	Path *string `yaml:"path"`
-
 	// FilePattern
 	Paths           []string `yaml:"paths,omitempty"`
-	Pattern         *string  `yaml:"pattern,omitempty"`
+	Patterns        []string `yaml:"patterns,omitempty"`
 	AllFileContents []byte   `yaml:"-"` // data for pattern matching
 
 	// Command
@@ -149,18 +148,20 @@ func (a *Alias) IsValid() error {
 			return errors.New("literal aliases must provide an 'flags'")
 		}
 	case FilePattern:
-		if len(a.Paths) == 0 && a.Path == nil {
-			return errors.New("filePattern aliases must provide at least one path in 'paths'")
+		if len(a.Paths) == 0 {
+			return errors.New("filepattern aliases must provide at least one path in 'paths'")
 		}
-		if a.Pattern == nil {
-			return errors.New("filePattern aliases must provide a 'pattern'")
+		if len(a.Patterns) == 0 {
+			return errors.New("filepattern aliases must provide at least one pattern in 'patterns'")
 		}
-		if !strings.Contains(*a.Pattern, "FLAG_KEY") {
-			return errors.New("pattern must contain 'FLAG_KEY' for templating")
-		}
-		_, err := regexp.Compile(*a.Pattern)
-		if err != nil {
-			return fmt.Errorf("could not validate regex pattern: %v", err)
+		for _, pattern := range a.Patterns {
+			if !strings.Contains(pattern, "FLAG_KEY") {
+				return fmt.Errorf("filepattern regex '%s' must contain 'FLAG_KEY' for templating", pattern)
+			}
+			_, err := regexp.Compile(pattern)
+			if err != nil {
+				return fmt.Errorf("could not validate regex pattern: %v", err)
+			}
 		}
 	case Command:
 		if a.Command == nil {
@@ -182,8 +183,8 @@ func (a *Alias) IsValid() error {
 		if len(a.Paths) > 0 {
 			unexpectedField = "paths"
 		}
-		if a.Pattern != nil {
-			unexpectedField = "pattern"
+		if len(a.Patterns) > 0 {
+			unexpectedField = "patterns"
 		}
 	case a.Type != Command:
 		if a.Command != nil {
@@ -205,26 +206,6 @@ func (a *Alias) ProcessFileContent(idx int) error {
 		return nil
 	}
 
-	// TODO: Remove this block with release as the Path field is being removed
-	if a.Path != nil {
-		path := filepath.Join(Dir.Value(), filepath.Dir(*a.Path))
-		absPath, err := validation.NormalizeAndValidatePath(path)
-		if err != nil {
-			return err
-		}
-
-		absFile := filepath.Join(absPath, filepath.Base(*a.Path))
-		if !validation.FileExists(absFile) {
-			return fmt.Errorf("could not find file at path '%s'", absFile)
-		}
-		/* #nosec */
-		data, err := ioutil.ReadFile(absFile)
-		if err != nil {
-			return fmt.Errorf("could not process file at path '%s': %v", absFile, err)
-		}
-		a.AllFileContents = data
-	}
-
 	aliasId := strconv.Itoa(idx)
 	if a.Name != "" {
 		aliasId = a.Name
@@ -235,7 +216,7 @@ func (a *Alias) ProcessFileContent(idx int) error {
 		absGlob := filepath.Join(Dir.Value(), glob)
 		matches, err := filepath.Glob(absGlob)
 		if err != nil {
-			return fmt.Errorf("filePattern '%s': could not process path glob '%s'", aliasId, absGlob)
+			return fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
 		}
 		paths = append(paths, matches...)
 	}
@@ -244,12 +225,12 @@ func (a *Alias) ProcessFileContent(idx int) error {
 
 	for _, path := range paths {
 		if !validation.FileExists(path) {
-			return fmt.Errorf("filePattern '%s': could not find file at path '%s'", aliasId, path)
+			return fmt.Errorf("filepattern '%s': could not find file at path '%s'", aliasId, path)
 		}
 		/* #nosec */
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
-			return fmt.Errorf("filePattern '%s': could not process file at path '%s': %v", aliasId, path, err)
+			return fmt.Errorf("filepattern '%s': could not process file at path '%s': %v", aliasId, path, err)
 		}
 		a.AllFileContents = append(a.AllFileContents, data...)
 	}

@@ -112,7 +112,7 @@ func literal(flags []string) o.Alias {
 func filePattern(flag string) o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
-	a.Pattern = &pattern
+	a.Patterns = []string{pattern}
 	a.AllFileContents = []byte(fmt.Sprintf("SOME_FLAG = '%s'", flag))
 	return a
 }
