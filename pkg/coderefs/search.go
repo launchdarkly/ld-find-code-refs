@@ -2,7 +2,8 @@ package coderefs
 
 import (
 	"errors"
-	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
@@ -39,7 +40,7 @@ func (lines searchResultLines) Swap(i, j int) {
 }
 
 // paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
-func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, ctxLines int, delims []rune) ([][]string, error) {
+func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, ctxLines int, delims []byte) ([][]string, error) {
 	searchType := "flags"
 	if delims == nil {
 		searchType = "aliases"
@@ -88,11 +89,11 @@ func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, 
 	return results, nil
 }
 
-func findReferences(cmd command.Searcher, flags []string, aliases map[string][]string, ctxLines int, exclude *regexp.Regexp) (searchResultLines, error) {
-	delims := o.Delimiters.Value()
-	log.Info.Printf("finding code references with delimiters: %s", delims.String())
+func findReferences(cmd command.Searcher, flags []string, aliases map[string][]string, ctxLines int) (searchResultLines, error) {
+	delims := strings.Join(o.Delimiters, "")
+	log.Info.Printf("finding code references with delimiters: %s", delims)
 	paginationCharCount := command.SafePaginationCharCount()
-	results, err := paginatedSearch(cmd, flags, paginationCharCount, ctxLines, delims)
+	results, err := paginatedSearch(cmd, flags, paginationCharCount, ctxLines, []byte(delims))
 	if err != nil {
 		return searchResultLines{}, err
 	}
@@ -105,5 +106,30 @@ func findReferences(cmd command.Searcher, flags []string, aliases map[string][]s
 		return searchResultLines{}, err
 	}
 	results = append(results, aliasResults...)
-	return generateReferences(aliases, results, ctxLines, string(delims), exclude), nil
+	return generateReferences(aliases, results, ctxLines, string(delims)), nil
+}
+
+func generateReferences(aliases map[string][]string, searchResult [][]string, ctxLines int, delims string) []searchResultLine {
+	references := []searchResultLine{}
+
+	for _, r := range searchResult {
+		path := r[1]
+		contextContainsFlagKey := r[2] == ":"
+		lineNumber := r[3]
+		lineText := r[4]
+		lineNum, err := strconv.Atoi(lineNumber)
+		if err != nil {
+			log.Fatal.Fatalf("encountered an unexpected error generating flag references: %s", err)
+		}
+		ref := searchResultLine{Path: path, LineNum: lineNum}
+		if contextContainsFlagKey {
+			ref.FlagKeys = findReferencedFlags(lineText, aliases, delims)
+		}
+		if ctxLines >= 0 {
+			ref.LineText = lineText
+		}
+		references = append(references, ref)
+	}
+
+	return references
 }

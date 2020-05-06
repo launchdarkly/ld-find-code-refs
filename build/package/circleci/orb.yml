@@ -149,19 +149,19 @@ jobs:
           name: Find flag references
           command: |
             ld-find-code-refs \
-              -debug=<< parameters.debug >> \
-              -accessToken=<< parameters.access_token >> \
-              -projKey=<< parameters.proj_key >> \
-              -exclude=<< parameters.exclude >> \
-              -ignoreServiceErrors=<< parameters.ignore_service_errors >> \
-              -contextLines=<< parameters.context_lines >> \
-              -baseUri=<< parameters.base_uri >> \
-              -repoType=<< parameters.repo_type >> \
-              -repoUrl=<< parameters.repo_url >> \
-              -defaultBranch=<< parameters.default_branch >> \
-              -delimiters=<< parameters.delimiters >> \
-              -commitUrlTemplate=<< parameters.commit_url_template >> \
-              -hunkUrlTemplate=<< parameters.hunk_url_template >> \
-              -repoName=${CIRCLE_PROJECT_REPONAME} \
-              -updateSequenceId=${CIRCLE_BUILD_NUM} \
-              -dir=/repo
+              --debug=<< parameters.debug >> \
+              --accessToken=<< parameters.access_token >> \
+              --projKey=<< parameters.proj_key >> \
+              --exclude=<< parameters.exclude >> \
+              --ignoreServiceErrors=<< parameters.ignore_service_errors >> \
+              --contextLines=<< parameters.context_lines >> \
+              --baseUri=<< parameters.base_uri >> \
+              --repoType=<< parameters.repo_type >> \
+              --repoUrl=<< parameters.repo_url >> \
+              --defaultBranch=<< parameters.default_branch >> \
+              --delimiters=<< parameters.delimiters >> \
+              --commitUrlTemplate=<< parameters.commit_url_template >> \
+              --hunkUrlTemplate=<< parameters.hunk_url_template >> \
+              --repoName=${CIRCLE_PROJECT_REPONAME} \
+              --updateSequenceId=${CIRCLE_BUILD_NUM} \
+              --dir=/repo

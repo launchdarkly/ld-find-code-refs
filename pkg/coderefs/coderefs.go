@@ -6,7 +6,6 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -48,13 +47,13 @@ type fileSearchResults struct {
 type branch struct {
 	Name             string
 	Head             string
-	UpdateSequenceId *int64
+	UpdateSequenceId *int
 	SyncTime         int64
 	SearchResults    searchResultLines
 }
 
 func Scan() {
-	dir := o.Dir.Value()
+	dir := o.Dir
 	absPath, err := validation.NormalizeAndValidatePath(dir)
 	if err != nil {
 		log.Error.Fatalf("could not validate directory option: %s", err)
@@ -71,7 +70,7 @@ func Scan() {
 		log.Error.Fatalf("%s", err)
 	}
 
-	projKey := o.ProjKey.Value()
+	projKey := o.ProjKey
 
 	// Check for potential sdk keys or access tokens provided as the project key
 	if len(projKey) > maxProjKeyLength {
@@ -82,19 +81,19 @@ func Scan() {
 		}
 	}
 
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken, BaseUri: o.BaseUri, ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
 	repoParams := ld.RepoParams{
-		Type:              o.RepoType.Value(),
-		Name:              o.RepoName.Value(),
-		Url:               o.RepoUrl.Value(),
-		CommitUrlTemplate: o.CommitUrlTemplate.Value(),
-		HunkUrlTemplate:   o.HunkUrlTemplate.Value(),
-		DefaultBranch:     o.DefaultBranch.Value(),
+		Type:              o.RepoType,
+		Name:              o.RepoName,
+		Url:               o.RepoUrl,
+		CommitUrlTemplate: o.CommitUrlTemplate,
+		HunkUrlTemplate:   o.HunkUrlTemplate,
+		DefaultBranch:     o.DefaultBranch,
 	}
 
-	isDryRun := o.DryRun.Value()
+	isDryRun := o.DryRun
 
-	ignoreServiceErrors := o.IgnoreServiceErrors.Value()
+	ignoreServiceErrors := o.IgnoreServiceErrors
 	if !isDryRun {
 		err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 		if err != nil {
@@ -121,15 +120,15 @@ func Scan() {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
-	aliases, err := generateAliases(filteredFlags, o.Aliases)
+	aliases, err := generateAliases(filteredFlags, nil)
 	if err != nil {
 		log.Error.Fatalf("failed to create flag key aliases: %v", err)
 	}
 
-	ctxLines := o.ContextLines.Value()
-	var updateId *int64
-	if o.UpdateSequenceId.Value() >= 0 {
-		updateIdOption := o.UpdateSequenceId.Value()
+	ctxLines := o.ContextLines
+	var updateId *int
+	if o.UpdateSequenceId >= 0 {
+		updateIdOption := o.UpdateSequenceId
 		updateId = &updateIdOption
 	}
 	b := &branch{
@@ -139,9 +138,7 @@ func Scan() {
 		Head:             gitClient.GitSha,
 	}
 
-	// exclude option has already been validated as regex in options.go
-	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := findReferences(searchClient, filteredFlags, aliases, ctxLines, excludeRegex)
+	refs, err := findReferences(searchClient, filteredFlags, aliases, ctxLines)
 	if err != nil {
 		log.Fatal.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -151,7 +148,7 @@ func Scan() {
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
 
-	outDir := o.OutDir.Value()
+	outDir := o.OutDir
 	if outDir != "" {
 		outPath, err := branchRep.WriteToCSV(outDir, projKey, repoParams.Name, gitClient.GitSha)
 		if err != nil {
@@ -160,7 +157,7 @@ func Scan() {
 		log.Info.Printf("wrote code references to %s", outPath)
 	}
 
-	if o.Debug.Value() {
+	if o.Debug {
 		branchRep.PrintReferenceCountTable()
 	}
 
@@ -258,38 +255,13 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func generateReferences(aliases map[string][]string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
-	references := []searchResultLine{}
-
-	for _, r := range searchResult {
-		path := r[1]
-		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
-			continue
-		}
-		contextContainsFlagKey := r[2] == ":"
-		lineNumber := r[3]
-		lineText := r[4]
-		lineNum, err := strconv.Atoi(lineNumber)
-		if err != nil {
-			log.Fatal.Fatalf("encountered an unexpected error generating flag references: %s", err)
-		}
-		ref := searchResultLine{Path: path, LineNum: lineNum}
-		if contextContainsFlagKey {
-			ref.FlagKeys = findReferencedFlags(lineText, aliases, delims)
-		}
-		if ctxLines >= 0 {
-			ref.LineText = lineText
-		}
-		references = append(references, ref)
-	}
-
-	return references
-}
-
 func findReferencedFlags(ref string, aliases map[string][]string, delims string) map[string][]string {
 	ret := make(map[string][]string, len(aliases))
 	for key, flagAliases := range aliases {
-		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, regexp.QuoteMeta(key), delims))
+		matcher := regexp.MustCompile(regexp.QuoteMeta(key))
+		if len(delims) > 0 {
+			matcher = regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, regexp.QuoteMeta(key), delims))
+		}
 		if matcher.MatchString(ref) {
 			ret[key] = make([]string, 0, len(flagAliases))
 		}

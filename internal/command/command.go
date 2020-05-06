@@ -42,12 +42,12 @@ func FlagKeyCost(key string) int {
 	return len(key) + strings.Count(key, ".")
 }
 
-func DelimCost(delims []rune) int {
+func DelimCost(delims []byte) int {
 	return len(delims) * 2
 }
 
 type Searcher interface {
-	SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error)
+	SearchForFlags(flags []string, ctxLines int, delimiters []byte) ([][]string, error)
 }
 
 type AgClient struct {
@@ -66,7 +66,7 @@ func NewAgClient(path string) (*AgClient, error) {
 	return &AgClient{workspace: path}, nil
 }
 
-func (c *AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
+func (c *AgClient) SearchForFlags(flags []string, ctxLines int, delimiters []byte) ([][]string, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
 	ignoreFileName := ".ldignore"
 	pathToIgnore := filepath.Join(c.workspace, ignoreFileName)
@@ -117,7 +117,7 @@ func generateFlagRegex(flags []string) string {
 	return strings.Join(flagRegexes, "|")
 }
 
-func generateDelimiterRegex(delimiters []rune) (lookBehind, lookAhead string) {
+func generateDelimiterRegex(delimiters []byte) (lookBehind, lookAhead string) {
 	if len(delimiters) == 0 {
 		return "", ""
 	}
@@ -127,7 +127,7 @@ func generateDelimiterRegex(delimiters []rune) (lookBehind, lookAhead string) {
 	return lookBehind, lookAhead
 }
 
-func generateSearchPattern(flags []string, delimiters []rune, padPattern bool) string {
+func generateSearchPattern(flags []string, delimiters []byte, padPattern bool) string {
 	flagRegex := generateFlagRegex(flags)
 	lookBehind, lookAhead := generateDelimiterRegex(delimiters)
 	if padPattern {

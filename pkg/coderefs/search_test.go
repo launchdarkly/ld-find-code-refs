@@ -15,7 +15,7 @@ type MockClient struct {
 	pages   [][]string
 }
 
-func (c *MockClient) SearchForFlags(flags []string, ctxLines int, delimiters []rune) ([][]string, error) {
+func (c *MockClient) SearchForFlags(flags []string, ctxLines int, delimiters []byte) ([][]string, error) {
 	c.pages = append(c.pages, flags)
 	return c.results, c.err
 }
@@ -73,7 +73,7 @@ func Test_paginatedSearch(t *testing.T) {
 				[]string{"flag1", "flag2"},
 				tt.maxSumFlagKeyLength,
 				0,
-				[]rune{'"'},
+				[]byte{'"'},
 			)
 			assert.Equal(t, tt.expectedPages, client.pages)
 			assert.Equal(t, tt.expectedResults, res)

@@ -5,19 +5,29 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 	"github.com/launchdarkly/ld-find-code-refs/pkg/coderefs"
+	"github.com/spf13/cobra"
 )
 
+var rootCmd = &cobra.Command{
+	Use: "ld-find-code-refs",
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		return o.ValidateOptions()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		log.Init(o.Debug)
+		coderefs.Scan()
+	},
+	Version: version.Version,
+}
+
 func main() {
-	err, cb := o.Init()
+	err := o.Init(rootCmd)
 	if err != nil {
-		log.Init(false)
-		log.Error.Printf("could not validate configuration: %s", err)
-		if cb != nil {
-			cb()
-		}
+		panic(err)
+	}
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
-	log.Init(o.Debug.Value())
-	coderefs.Scan()
 }

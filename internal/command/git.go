@@ -51,8 +51,8 @@ func NewGitClient(path string) (GitClient, error) {
 func (c GitClient) branchName() (string, error) {
 	// Some CI systems leave the repository in a detached HEAD state. To support those, this logic allows
 	// users to pass the branch name in by hand as an option.
-	if o.Branch.Value() != "" {
-		return o.Branch.Value(), nil
+	if o.Branch != "" {
+		return o.Branch, nil
 	}
 
 	/* #nosec */

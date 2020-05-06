@@ -89,7 +89,7 @@ func (a Alias) Generate(flag string) ([]string, error) {
 		/* #nosec */
 		cmd := exec.CommandContext(ctx, name, args...)
 		cmd.Stdin = strings.NewReader(flag)
-		cmd.Dir = Dir.Value()
+		cmd.Dir = Dir
 		stdout, err := cmd.Output()
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute alias command: %w", err)
@@ -213,7 +213,7 @@ func (a *Alias) ProcessFileContent(idx int) error {
 
 	paths := []string{}
 	for _, glob := range a.Paths {
-		absGlob := filepath.Join(Dir.Value(), glob)
+		absGlob := filepath.Join(Dir, glob)
 		matches, err := filepath.Glob(absGlob)
 		if err != nil {
 			return fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
@@ -252,9 +252,9 @@ func (o *YamlOptions) IsValid() error {
 }
 
 func Yaml() (*YamlOptions, error) {
-	pathToYaml := filepath.Join(Dir.Value(), ".launchdarkly/coderefs.yaml")
+	pathToYaml := filepath.Join(Dir, ".launchdarkly/coderefs.yaml")
 	if !validation.FileExists(pathToYaml) {
-		pathToYaml = filepath.Join(Dir.Value(), ".launchdarkly/coderefs.yml")
+		pathToYaml = filepath.Join(Dir, ".launchdarkly/coderefs.yml")
 		if !validation.FileExists(pathToYaml) {
 			return nil, nil
 		}
