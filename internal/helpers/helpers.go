@@ -13,6 +13,9 @@ func Dedupe(s []string) []string {
 }
 
 func MaskAccessToken(s string) string {
+	if len(s) < 4 {
+		return ""
+	}
 	rs := []rune(s)
 	for i := 0; i < len(rs)-4; i++ {
 		rs[i] = '*'
