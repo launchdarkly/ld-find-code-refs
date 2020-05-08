@@ -6,7 +6,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ### Added
 
-- Most command line options can now be specified in a YAML file located in the `.launchdarkly/coderefs.yaml` subdirectory of your repository. The following options must be set using the command line or as environment variables:
+- Most command line flags can now be specified in a YAML file located in the `.launchdarkly/coderefs.yaml` subdirectory of your repository. The following options must be set using the command line or as environment variables:
   - `--dir` / `LD_DIR`
   - `--accessToken` / `LD_ACCESS_TOKEN`
 - The default delimiters (single/double quotes and backticks) can now be disabled by setting the following YAML option in `.launchdarkly/coderefs.yaml`:
@@ -14,6 +14,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
   delimiters:
     defaultsDisabled: true
   ```
+- All command line flags can now be specified as environment variables.
 
 ### Changed
 

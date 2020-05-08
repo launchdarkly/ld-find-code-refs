@@ -3,25 +3,28 @@ package options
 // Option values, set to their default
 
 type Options struct {
-	AccessToken         string     `mapstructure:"accessToken"`
-	Aliases             []Alias    `mapstructure:"aliases"`
-	BaseUri             string     `mapstructure:"baseUri"`
-	Branch              string     `mapstructure:"branch"`
-	CommitUrlTemplate   string     `mapstructure:"commitUrlTemplate"`
-	ContextLines        int        `mapstructure:"contextLines"`
-	DefaultBranch       string     `mapstructure:"defaultBranch"`
-	Debug               bool       `mapstructure:"debug"`
-	Delimiters          Delimiters `mapstructure:"delimiters"`
-	Dir                 string     `mapstructure:"dir" yaml:"-"`
-	DryRun              bool       `mapstructure:"dryRun"`
-	HunkUrlTemplate     string     `mapstructure:"hunkUrlTemplate"`
-	IgnoreServiceErrors bool       `mapstructure:"ignoreServiceErrors"`
-	OutDir              string     `mapstructure:"outDir"`
-	ProjKey             string     `mapstructure:"projkey"`
-	RepoName            string     `mapstructure:"repoName"`
-	RepoType            string     `mapstructure:"repoType"`
-	RepoUrl             string     `mapstructure:"repoUrl"`
-	UpdateSequenceId    int        `mapstructure:"updateSequenceId"`
+	AccessToken         string `mapstructure:"accessToken"`
+	BaseUri             string `mapstructure:"baseUri"`
+	Branch              string `mapstructure:"branch"`
+	CommitUrlTemplate   string `mapstructure:"commitUrlTemplate"`
+	DefaultBranch       string `mapstructure:"defaultBranch"`
+	Dir                 string `mapstructure:"dir" yaml:"-"`
+	HunkUrlTemplate     string `mapstructure:"hunkUrlTemplate"`
+	OutDir              string `mapstructure:"outDir"`
+	ProjKey             string `mapstructure:"projkey"`
+	RepoName            string `mapstructure:"repoName"`
+	RepoType            string `mapstructure:"repoType"`
+	RepoUrl             string `mapstructure:"repoUrl"`
+	ContextLines        int    `mapstructure:"contextLines"`
+	UpdateSequenceId    int    `mapstructure:"updateSequenceId"`
+	Debug               bool   `mapstructure:"debug"`
+	DryRun              bool   `mapstructure:"dryRun"`
+	IgnoreServiceErrors bool   `mapstructure:"ignoreServiceErrors"`
+
+	// The following options can only be configured via YAML configuration
+
+	Aliases    []Alias    `mapstructure:"aliases"`
+	Delimiters Delimiters `mapstructure:"delimiters"`
 }
 
 type Delimiters struct {

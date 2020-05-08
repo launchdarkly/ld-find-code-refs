@@ -152,7 +152,7 @@ func (o Options) Validate() error {
 	// match all non-control ASCII characters
 	validDelims := regexp.MustCompile("^[\x20-\x7E]$")
 	for i, d := range o.Delimiters.Additional {
-		if !validDelims.MatchString(string(d)) {
+		if !validDelims.MatchString(d) {
 			return fmt.Errorf(`invalid value %q for "delimiters.additional[%d]": each delimiter must be a valid non-control ASCII character`, d, i)
 		}
 	}
