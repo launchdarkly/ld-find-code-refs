@@ -33,21 +33,6 @@ examples:
                 proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
                 context_lines: 3
 
-  exclude_files:
-    description: "The above configuration, with the `vendor/` directory and all `css` files ignored by the scanner. The `exclude` parameter may be configuration as any regular expression that matches the files and directories you'd like to ignore for your repository"
-    usage:
-      version: 2.1
-      orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.4.0
-      workflows:
-        main:
-          jobs:
-            - launchdarkly/find-code-references:
-                debug: true
-                access_token: "${LD_ACCESS_TOKEN}"
-                proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
-                context_lines: 3
-                exclude: 'vendor/|\.css'
 
   standard_configuration:
     description: "A configuration with the the `repoType` set to GitHub, and the `repuUrl` set to a GitHub URL. We recommend configuring these parameters so LaunchDarkly is able to generate reference links to your source code"
@@ -102,10 +87,6 @@ jobs:
         description: The number of context lines above and below a code reference for the job to send to LaunchDarkly. By default, the flag finder will not send any context lines to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.
         type: integer
         default: 2
-      exclude:
-        description: "A regular expression (PCRE) defining the files, file types, and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `\\.css`, `vendor/|\\.css`"
-        type: string
-        default: ""
       repo_type:
         description: "The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI."
         type: enum
@@ -152,7 +133,6 @@ jobs:
               --debug=<< parameters.debug >> \
               --accessToken=<< parameters.access_token >> \
               --projKey=<< parameters.proj_key >> \
-              --exclude=<< parameters.exclude >> \
               --ignoreServiceErrors=<< parameters.ignore_service_errors >> \
               --contextLines=<< parameters.context_lines >> \
               --baseUri=<< parameters.base_uri >> \
