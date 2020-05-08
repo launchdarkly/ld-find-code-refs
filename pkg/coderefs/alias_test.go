@@ -1,7 +1,6 @@
 package coderefs
 
 import (
-	"fmt"
 	"testing"
 
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
@@ -78,7 +77,7 @@ func Test_generateAliases(t *testing.T) {
 
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
-			aliases, err := generateAliases(tt.flags, tt.aliases)
+			aliases, err := generateAliases(tt.flags, tt.aliases, "")
 			assert.Equal(t, tt.want, aliases)
 			assert.Equal(t, tt.wantErr, err)
 		})
@@ -112,8 +111,8 @@ func literal(flags []string) o.Alias {
 func filePattern(flag string) o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
+	a.Paths = []string{"testdata/alias_test.txt"}
 	a.Patterns = []string{pattern}
-	a.AllFileContents = []byte(fmt.Sprintf("SOME_FLAG = '%s'", flag))
 	return a
 }
 

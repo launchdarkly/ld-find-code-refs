@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
 type GitClient struct {
@@ -18,9 +17,9 @@ type GitClient struct {
 	GitSha    string
 }
 
-func NewGitClient(path string) (GitClient, error) {
+func NewGitClient(path string, branch string) (GitClient, error) {
 	if !filepath.IsAbs(path) {
-		log.Fatal.Fatalf("expected an absolute path but received a relative path: %s", path)
+		log.Error.Fatalf("expected an absolute path but received a relative path: %s", path)
 	}
 
 	client := GitClient{workspace: path}
@@ -30,11 +29,14 @@ func NewGitClient(path string) (GitClient, error) {
 		return client, errors.New("git is a required dependency, but was not found in the system PATH")
 	}
 
-	currBranch, err := client.branchName()
-	if err != nil {
-		return client, fmt.Errorf("error parsing git branch name: %s", err)
-	} else if currBranch == "" {
-		return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
+	var currBranch = branch
+	if branch == "" {
+		currBranch, err = client.branchName()
+		if err != nil {
+			return client, fmt.Errorf("error parsing git branch name: %s", err)
+		} else if currBranch == "" {
+			return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
+		}
 	}
 	log.Info.Printf("git branch: %s", currBranch)
 	client.GitBranch = currBranch
@@ -49,12 +51,6 @@ func NewGitClient(path string) (GitClient, error) {
 }
 
 func (c GitClient) branchName() (string, error) {
-	// Some CI systems leave the repository in a detached HEAD state. To support those, this logic allows
-	// users to pass the branch name in by hand as an option.
-	if o.Branch != "" {
-		return o.Branch, nil
-	}
-
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.CombinedOutput()

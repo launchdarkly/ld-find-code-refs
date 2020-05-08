@@ -10,10 +10,10 @@ require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/oauth2 v0.0.0-20181120190819-8f65e3013eba // indirect
 	google.golang.org/appengine v1.3.0 // indirect
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

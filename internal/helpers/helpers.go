@@ -11,3 +11,11 @@ func Dedupe(s []string) []string {
 	}
 	return ret
 }
+
+func MaskAccessToken(s string) string {
+	rs := []rune(s)
+	for i := 0; i < len(rs)-4; i++ {
+		rs[i] = '*'
+	}
+	return string(rs)
+}

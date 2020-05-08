@@ -10,24 +10,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
+var cmd = &cobra.Command{
 	Use: "ld-find-code-refs",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return o.ValidateOptions()
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Init(o.Debug)
-		coderefs.Scan()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		err := o.InitYAML()
+		if err != nil {
+			return err
+		}
+
+		opts, err := o.GetOptions()
+		if err != nil {
+			return err
+		}
+		log.Init(opts.Debug)
+		coderefs.Scan(opts)
+		return nil
 	},
 	Version: version.Version,
 }
 
 func main() {
-	err := o.Init(rootCmd)
+	err := o.Init(cmd.PersistentFlags())
 	if err != nil {
 		panic(err)
 	}
-	if err := rootCmd.Execute(); err != nil {
+	err = cmd.Execute()
+	if err != nil {
 		os.Exit(1)
 	}
 }

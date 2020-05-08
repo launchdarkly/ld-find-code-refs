@@ -3,11 +3,9 @@ package coderefs
 import (
 	"errors"
 	"strconv"
-	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/command"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
 var NoSearchPatternErr = errors.New("failed to generate a valid search pattern")
@@ -89,11 +87,10 @@ func paginatedSearch(cmd command.Searcher, flags []string, maxSumFlagKeyLength, 
 	return results, nil
 }
 
-func findReferences(cmd command.Searcher, flags []string, aliases map[string][]string, ctxLines int) (searchResultLines, error) {
-	delims := strings.Join(o.Delimiters, "")
-	log.Info.Printf("finding code references with delimiters: %s", delims)
+func findReferences(cmd command.Searcher, flags []string, aliases map[string][]string, ctxLines int, delimiters string) (searchResultLines, error) {
+	log.Info.Printf("finding code references with delimiters: %s", delimiters)
 	paginationCharCount := command.SafePaginationCharCount()
-	results, err := paginatedSearch(cmd, flags, paginationCharCount, ctxLines, []byte(delims))
+	results, err := paginatedSearch(cmd, flags, paginationCharCount, ctxLines, []byte(delimiters))
 	if err != nil {
 		return searchResultLines{}, err
 	}
@@ -106,7 +103,7 @@ func findReferences(cmd command.Searcher, flags []string, aliases map[string][]s
 		return searchResultLines{}, err
 	}
 	results = append(results, aliasResults...)
-	return generateReferences(aliases, results, ctxLines, string(delims)), nil
+	return generateReferences(aliases, results, ctxLines, delimiters), nil
 }
 
 func generateReferences(aliases map[string][]string, searchResult [][]string, ctxLines int, delims string) []searchResultLine {
@@ -119,7 +116,7 @@ func generateReferences(aliases map[string][]string, searchResult [][]string, ct
 		lineText := r[4]
 		lineNum, err := strconv.Atoi(lineNumber)
 		if err != nil {
-			log.Fatal.Fatalf("encountered an unexpected error generating flag references: %s", err)
+			log.Error.Fatalf("encountered an unexpected error generating flag references: %s", err)
 		}
 		ref := searchResultLine{Path: path, LineNum: lineNum}
 		if contextContainsFlagKey {

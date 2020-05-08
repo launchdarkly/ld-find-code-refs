@@ -56,7 +56,7 @@ type AgClient struct {
 
 func NewAgClient(path string) (*AgClient, error) {
 	if !filepath.IsAbs(path) {
-		log.Fatal.Fatalf("expected an absolute path but received a relative path: %s", path)
+		log.Error.Fatalf("expected an absolute path but received a relative path: %s", path)
 	}
 	_, err := exec.LookPath("ag")
 	if err != nil {

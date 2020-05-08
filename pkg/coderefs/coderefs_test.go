@@ -174,7 +174,6 @@ func Test_generateReferences(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.NoError(t, err)
 			got := generateReferences(tt.flags, tt.searchResult, tt.ctxLines, `"'`)
 			require.Equal(t, tt.want, got)
 		})

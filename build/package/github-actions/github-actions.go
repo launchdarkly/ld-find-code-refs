@@ -2,12 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
@@ -16,59 +14,54 @@ import (
 )
 
 func main() {
-	debug, err := o.GetDebugOptionFromEnv()
-	// init logging before checking error because we need to log the error if there is one
-	log.Init(debug)
+	log.Init(false)
+	dir := os.Getenv("GITHUB_WORKSPACE")
+	opts, err := o.GetWrapperOptions(dir, mergeGithubOptions)
 	if err != nil {
-		log.Error.Fatalf("error parsing debug option: %s", err)
+		log.Error.Fatal(err)
 	}
+	log.Init(opts.Debug)
+	coderefs.Scan(opts)
+}
 
+// mergeGithubOptions sets inferred options from the github actions environment, when available
+func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	log.Info.Printf("Setting GitHub action env vars")
 	ghRepo := strings.Split(os.Getenv("GITHUB_REPOSITORY"), "/")
-	if len(ghRepo) < 2 {
-		log.Error.Fatalf("unable to validate GitHub repository name: %s", ghRepo)
+	repoName := ""
+	if len(ghRepo) > 1 {
+		repoName = ghRepo[1]
+	} else {
+		log.Error.Printf("unable to validate GitHub repository name: %v", ghRepo)
 	}
+
 	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
 	if err != nil {
-		log.Error.Fatalf("error parsing GITHUB_REF: %s", err)
+		log.Error.Printf("error parsing GITHUB_REF: %v", err)
 	}
+
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
-		log.Error.Fatalf("error parsing GitHub event payload at %s: %s", os.Getenv("GITHUB_EVENT_PATH"), err)
+		log.Error.Printf("error parsing GitHub event payload at %q: %v", os.Getenv("GITHUB_EVENT_PATH"), err)
 	}
 
-	options := map[string]string{
-		"branch":           ghBranch,
-		"repoType":         "github",
-		"repoName":         ghRepo[1],
-		"dir":              os.Getenv("GITHUB_WORKSPACE"),
-		"updateSequenceId": strconv.FormatInt(event.Repo.PushedAt*1000, 10), // seconds to milliseconds
-		"defaultBranch":    event.Repo.DefaultBranch,
-		"repoUrl":          event.Repo.Url,
-	}
-	ldOptions, err := o.GetLDOptionsFromEnv()
-	if err != nil {
-		log.Error.Fatalf("Error setting options: %s", err)
-	}
-	for k, v := range ldOptions {
-		options[k] = v
+	repoUrl := ""
+	defaultBranch := ""
+	updateSequenceId := -1
+	if event != nil {
+		repoUrl = event.Repo.Url
+		defaultBranch = event.Repo.DefaultBranch
+		updateSequenceId = int(event.Repo.PushedAt * 1000) // seconds to ms
 	}
 
-	err = o.Populate()
-	if err != nil {
-		log.Error.Fatalf("could not set options: %v", err)
-	}
-	for k, v := range options {
-		err := flag.Set(k, v)
-		if err != nil {
-			log.Error.Fatalf("could not set option %s: %s", k, err)
-		}
-	}
-	// Don't log ld access token
-	optionsForLog := options
-	optionsForLog["accessToken"] = ""
-	log.Info.Printf("starting repo parsing program with options:\n %+v\n", options)
-	coderefs.Scan()
+	opts.RepoType = "github"
+	opts.RepoName = repoName
+	opts.RepoUrl = repoUrl
+	opts.DefaultBranch = defaultBranch
+	opts.Branch = ghBranch
+	opts.UpdateSequenceId = updateSequenceId
+
+	return opts, opts.Validate()
 }
 
 type Event struct {
@@ -110,7 +103,7 @@ func parseBranch(ref string) (string, error) {
 	results := re.FindStringSubmatch(ref)
 
 	if results == nil {
-		return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %s", ref)
+		return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %q", ref)
 	}
 
 	return results[1], nil
