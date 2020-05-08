@@ -18,11 +18,11 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Changed
 
 - The underlying command line package has been changed for improved ergonomics when configuring options using the command line. Some existing configurations may be invalid, see `ld-find-code-refs --help` for details.
-- Additional delimiters. To reduce the number of "false positive" code references, specify the `--delimiters` option.
 
 ### Removed
 
 - The `exclude` command-line option has been removed. Use the `.ldignore` file instead.
+- Additional delimiters can no longer be specified using command line flags or environment variables. If you use additional delimiters, or would like to disable delimiters completely, use the YAML configuration described above.
 
 ## [1.5.0] - prerelease
 
