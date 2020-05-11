@@ -2,11 +2,11 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [1.5.0] - prerelease
+## [1.5.0] - 2020-05-11
 
 ### Added
 
-- Added the ability to configure flag alias detection using a YAML configuration. See [https://github.com/launchdarkly/ld-find-code-refs#configuring-aliases](the README) for instructions.
+- Added the ability to configure flag alias detection using a YAML configuration. See [the README](https://github.com/launchdarkly/ld-find-code-refs#configuring-aliases) for instructions.
 
 ### Fixed
 
@@ -22,7 +22,6 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Changed
 
 - ld-find-code-refs now requires go1.13 to build.
-
 
 ## [1.3.1] - 2019-09-24
 
