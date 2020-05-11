@@ -44,7 +44,7 @@ aliases:
 
 ## Search files for a specific pattern
 
-You can specify a number of files (`paths`) using [glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) to search. Be as specific as possible with your path globs to minimize the number of files searched for aliases.
+You can specify a number of files (`paths`) using [glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) to search. To achieve the best performance, be as specific as possible with your path globs to minimize the number of files searched for aliases.
 
 You must also specify at least one regular expression (`pattern`) containing a capture group to match aliases. The pattern must contain the the text `FLAG_KEY`, which will be interpolated with flag keys.
 
