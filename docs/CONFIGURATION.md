@@ -6,7 +6,7 @@ If options are defined multiple times across configuration methods, they will be
 
 flags > env > yaml
 
-In addition, [ignore files]() may be defined to exclude files and directories from being scanned by `ld-find-code-refs`.
+In addition, [ignore files](#ignoring-files-and-directories) may be defined to improve performance and exclude files and directories from being scanned by `ld-find-code-refs`.
 
 ## Required arguments
 
