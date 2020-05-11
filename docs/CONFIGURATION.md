@@ -66,7 +66,7 @@ Flags:
 
 ## Environment variables
 
-All command line flags are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `accessToken` may be set as an environment variable
+All command line flags are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `accessToken` may be set as an environment variable e.g. `export LD_ACCESS_TOKEN = 'myTestToken'`.  
 
 ## YAML
 
