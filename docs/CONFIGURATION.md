@@ -106,7 +106,7 @@ delimiters:
     - '>'
 ```
 
-### Ignoring files and directories
+## Ignoring files and directories
 
 All dotfiles and patterns in `.gitignore` and `.ignore` will be excluded by default.
 
