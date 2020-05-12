@@ -39,10 +39,10 @@ We recommend ingraining `ld-find-code-refs` into your CI/CD build process. `ld-f
 
 `ld-find-code-refs` has two dependencies, which need to be installed in the system path:
 
-| Dependency | Version Tested |
-| ---------- | -------------- |
-| git        | 2.21.0         |
-| ag         | 2.2.0          |
+| Dependency                                                                | Version Tested |
+| ------------------------------------------------------------------------- | -------------- |
+| git                                                                       | 2.21.0         |
+| [ag (the_silver_searcher)](https://github.com/ggreer/the_silver_searcher) | 2.2.0          |
 
 All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
 
