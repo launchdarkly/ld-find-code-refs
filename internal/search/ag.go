@@ -14,6 +14,33 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
+// Code reference search using ag (the silver searcher): https://github.com/ggreer/the_silver_searcher
+// We configure ag to run with the following flags:
+// --case-sensitive  as feature flags and aliases are case sensitive
+// --nogroup         for cleanlier parsing of output
+// --path-to-ignore  for ignore files in .ldignore
+// -C                for providing context lines
+
+/* example
+$ ag --nogroup --case-sensitive -C1 ${search.go#generateSearchPattern} ${dir}
+> test/flags.go:5-        AnotherFlag = "another-flag"
+> test/flags.go:6:        MyFlag = "my-flag"
+> test/flags.go:7-        YetAnotherFlag = "yet-another-flag"
+>
+> test/index.ts:2-// export my flag
+> test/index.ts:3:export const isMyFlagEnabled = flagPredicate('my-flag');
+> test/index.ts:4-console.log('exported my flag');
+*/
+
+/*
+agSearchRegex splits search result lines into groups. See the above example to compare these groups to real output
+Group 1: File path.
+Group 2: Separator. A colon indicates a match, a hyphen indicates a context line
+Group 3: Line number
+Group 4: Line contents
+*/
+var agSearchRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
+
 type AgClient struct {
 	workspace string
 }
@@ -29,15 +56,6 @@ func NewAgClient(path string) (*AgClient, error) {
 
 	return &AgClient{workspace: path}, nil
 }
-
-/*
-agSearchRegex splits search result lines into groups
-Group 1: File path.
-Group 2: Separator. A colon indicates a match, a hyphen indicates a context lines
-Group 3: Line number
-Group 4: Line contents
-*/
-var agSearchRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
 func (c *AgClient) searchForRefs(searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) (SearchResultLines, error) {
 	args := []string{"--nogroup", "--case-sensitive"}

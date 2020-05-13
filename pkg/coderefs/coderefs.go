@@ -43,7 +43,13 @@ func Scan(opts options.Options) {
 	}
 
 	log.Info.Printf("absolute directory path: %s", absPath)
-	searchClient, err := search.NewAgClient(absPath)
+
+	var searchClient search.SearchClient
+	if opts.SearchTool == "rg" {
+		searchClient, err = search.NewRgClient(absPath)
+	} else { // only other valid option
+		searchClient, err = search.NewAgClient(absPath)
+	}
 	if err != nil {
 		log.Error.Fatalf("%s", err)
 	}

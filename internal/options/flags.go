@@ -125,6 +125,11 @@ LaunchDarkly UI. Aceptable values: github|bitbucket|custom.`,
 bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.`,
 	},
 	{
+		name:         "searchTool",
+		defaultValue: "rg",
+		usage:        `The underlying tool used to search for code references. Supported values are 'rg' (ripgrep) and 'ag' (silver searcher)`,
+	},
+	{
 		name:         "updateSequenceId",
 		short:        "s",
 		defaultValue: -1,
