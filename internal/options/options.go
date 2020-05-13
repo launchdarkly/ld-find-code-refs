@@ -15,6 +15,37 @@ import (
 	"github.com/spf13/viper"
 )
 
+type Options struct {
+	AccessToken         string `mapstructure:"accessToken"`
+	BaseUri             string `mapstructure:"baseUri"`
+	Branch              string `mapstructure:"branch"`
+	CommitUrlTemplate   string `mapstructure:"commitUrlTemplate"`
+	DefaultBranch       string `mapstructure:"defaultBranch"`
+	Dir                 string `mapstructure:"dir" yaml:"-"`
+	HunkUrlTemplate     string `mapstructure:"hunkUrlTemplate"`
+	OutDir              string `mapstructure:"outDir"`
+	ProjKey             string `mapstructure:"projkey"`
+	RepoName            string `mapstructure:"repoName"`
+	RepoType            string `mapstructure:"repoType"`
+	RepoUrl             string `mapstructure:"repoUrl"`
+	ContextLines        int    `mapstructure:"contextLines"`
+	UpdateSequenceId    int    `mapstructure:"updateSequenceId"`
+	Debug               bool   `mapstructure:"debug"`
+	DryRun              bool   `mapstructure:"dryRun"`
+	IgnoreServiceErrors bool   `mapstructure:"ignoreServiceErrors"`
+
+	// The following options can only be configured via YAML configuration
+
+	Aliases    []Alias    `mapstructure:"aliases"`
+	Delimiters Delimiters `mapstructure:"delimiters"`
+}
+
+type Delimiters struct {
+	// If set to `true`, the default delimiters (single-quote, double-qoute, and backtick) will not be used unless provided as `additional` delimiters
+	DisableDefaults bool     `mapstructure:"disableDefaults"`
+	Additional      []string `mapstructure:"additional"`
+}
+
 func Init(flagSet *pflag.FlagSet) error {
 	for _, f := range flags {
 		usage := strings.ReplaceAll(f.usage, "\n", " ")
