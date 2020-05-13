@@ -30,76 +30,16 @@ func NewAgClient(path string) (*AgClient, error) {
 	return &AgClient{workspace: path}, nil
 }
 
-func (c *AgClient) FindReferences(flags []string, aliases map[string][]string, ctxLines int, delimiters string) (SearchResultLines, error) {
-	log.Info.Printf("finding code references with delimiters: %s", delimiters)
-	paginationCharCount := SafePaginationCharCount()
-	results, err := c.paginatedSearch(flags, paginationCharCount, ctxLines, []byte(delimiters))
-	if err != nil {
-		return SearchResultLines{}, err
-	}
-	flattenedAliases := make([]string, 0, len(flags))
-	for _, flagAliases := range aliases {
-		flattenedAliases = append(flattenedAliases, flagAliases...)
-	}
-	aliasResults, err := c.paginatedSearch(flattenedAliases, paginationCharCount, ctxLines, nil)
-	if err != nil {
-		return SearchResultLines{}, err
-	}
-	results = append(results, aliasResults...)
-	return c.generateReferences(aliases, results, ctxLines, delimiters), nil
-}
+/*
+agSearchRegex splits search result lines into groups
+Group 1: File path.
+Group 2: Separator. A colon indicates a match, a hyphen indicates a context lines
+Group 3: Line number
+Group 4: Line contents
+*/
+var agSearchRegex = regexp.MustCompile("([^:]+)(:|-)([0-9]+)[:-](.*)")
 
-// paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
-func (c *AgClient) paginatedSearch(flags []string, maxSumFlagKeyLength, ctxLines int, delims []byte) ([][]string, error) {
-	searchType := "flags"
-	if delims == nil {
-		searchType = "aliases"
-	}
-
-	if maxSumFlagKeyLength == 0 {
-		return nil, NoSearchPatternErr
-	}
-
-	var results [][]string
-	nextSearchKeys := []string{}
-
-	totalKeyLength := DelimCost(delims)
-	from := 0
-	for to, key := range flags {
-		totalKeyLength += FlagKeyCost(key)
-		nextSearchKeys = append(nextSearchKeys, key)
-
-		// if we've reached the end of the loop, or the current page has reached maximum length
-		if to == len(flags)-1 || totalKeyLength+FlagKeyCost(flags[to+1]) > maxSumFlagKeyLength {
-
-			log.Debug.Printf("searching for %s in group: [%d, %d]", searchType, from, to)
-			result, err := c.searchForFlags(nextSearchKeys, ctxLines, delims)
-			if err != nil {
-				if err == SearchTooLargeErr {
-					// we expect all search implementations to complete successfully
-					// if pagination fails unexpectedly, repeat the search with a smaller page size
-					log.Debug.Printf("encountered an error paginating group [%d, %d], trying again with a lower page size", from, to)
-					remainder, err := c.paginatedSearch(flags[from:], maxSumFlagKeyLength/2, ctxLines, delims)
-					if err != nil {
-						return nil, err
-					}
-					return append(results, remainder...), nil
-				}
-				return nil, err
-			}
-
-			results = append(results, result...)
-
-			// loop bookkeeping
-			nextSearchKeys = make([]string, 0, len(nextSearchKeys))
-			totalKeyLength = DelimCost(delims)
-			from = to + 1
-		}
-	}
-	return results, nil
-}
-
-func (c *AgClient) searchForFlags(flags []string, ctxLines int, delimiters []byte) ([][]string, error) {
+func (c *AgClient) searchForRefs(searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) (SearchResultLines, error) {
 	args := []string{"--nogroup", "--case-sensitive"}
 	pathToIgnore := filepath.Join(c.workspace, ignoreFileName)
 	if validation.FileExists(pathToIgnore) {
@@ -110,7 +50,7 @@ func (c *AgClient) searchForFlags(flags []string, ctxLines int, delimiters []byt
 		args = append(args, fmt.Sprintf("-C%d", ctxLines))
 	}
 
-	searchPattern := generateSearchPattern(flags, delimiters, runtime.GOOS == windows)
+	searchPattern := generateSearchPattern(searchTerms, delimiters, runtime.GOOS == windows)
 	/* #nosec */
 	cmd := exec.Command("ag", args...)
 	cmd.Args = append(cmd.Args, searchPattern, c.workspace)
@@ -119,14 +59,14 @@ func (c *AgClient) searchForFlags(flags []string, ctxLines int, delimiters []byt
 	if err != nil {
 		if err.Error() == "exit status 1" {
 			return nil, nil
-		} else if strings.Contains(res, SearchTooLargeErr.Error()) ||
+		} else if strings.Contains(res, searchTooLargeErr.Error()) ||
 			(runtime.GOOS == windows && strings.Contains(err.Error(), windowsSearchTooLargeErr.Error())) {
-			return nil, SearchTooLargeErr
+			return nil, searchTooLargeErr
 		}
 		return nil, errors.New(res)
 	}
 
-	searchRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.workspace) + "/)" + searchRegex.String())
+	searchRegexWithFilteredPath, err := regexp.Compile("(?:" + regexp.QuoteMeta(c.workspace) + "/)" + agSearchRegex.String())
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +77,8 @@ func (c *AgClient) searchForFlags(flags []string, ctxLines int, delimiters []byt
 	}
 
 	ret := searchRegexWithFilteredPath.FindAllStringSubmatch(output, -1)
-	return ret, err
+
+	return c.generateReferences(aliases, ret, ctxLines, string(delimiters)), err
 }
 
 func (c *AgClient) generateReferences(aliases map[string][]string, searchResult [][]string, ctxLines int, delims string) []SearchResultLine {

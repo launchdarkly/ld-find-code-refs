@@ -129,7 +129,7 @@ func Scan(opts options.Options) {
 	delims = append(delims, opts.Delimiters.Additional...)
 	delimString := strings.Join(helpers.Dedupe(delims), "")
 
-	refs, err := searchClient.FindReferences(filteredFlags, aliases, ctxLines, delimString)
+	refs, err := search.FindReferences(searchClient, filteredFlags, aliases, ctxLines, delimString)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}

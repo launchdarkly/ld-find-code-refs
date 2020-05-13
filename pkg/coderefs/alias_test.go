@@ -18,7 +18,11 @@ var allNamingConventions = []o.Alias{
 
 var allSomeFlagNamingConventionAliases = slice("anyKindOfKey", "AnyKindOfKey", "any_kind.of_key", "ANY_KIND.OF_KEY", "any-kind.of-key", "any.kind.of.key")
 
-const testFlagAliasKey = "AnyKind.of_key"
+const (
+	testFlagKey      = "someFlag"
+	testFlagKey2     = "anotherFlag"
+	testFlagAliasKey = "AnyKind.of_key"
+)
 
 func Test_generateAliases(t *testing.T) {
 	specs := []struct {
