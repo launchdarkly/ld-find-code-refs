@@ -39,10 +39,10 @@ We recommend ingraining `ld-find-code-refs` into your CI/CD build process. `ld-f
 
 `ld-find-code-refs` has two dependencies, which need to be installed in the system path:
 
-| Dependency | Version Tested |
-| ---------- | -------------- |
-| git        | 2.21.0         |
-| ag         | 2.2.0          |
+| Dependency                                                                | Version Tested |
+| ------------------------------------------------------------------------- | -------------- |
+| git                                                                       | 2.21.0         |
+| [ag (the_silver_searcher)](https://github.com/ggreer/the_silver_searcher) | 2.2.0          |
 
 All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
 
@@ -79,7 +79,11 @@ dpkg -i ld-find-code-refs.amd64.deb
 
 #### Windows
 
-A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). The following Chocolatey command may be used to install the required dependency, `ag`. If you do not have Chocolatey installed, see `ag`'s documentation for [installation instructions](https://github.com/ggreer/the_silver_searcher#windows).
+**Note**: The underlying dependency used for search, `ag`, has known performance issues when built for Windows. Unofficial Windows builds are available for `ag` from various forks on GitHub, although correctness and performance cannot be guaranteed. If you are experiencing issues running `ld-find-code-refs` on Windows, we recommend using the [Docker image](#docker) instead.
+
+A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). 
+
+The following Chocolatey command may be used to install the required dependency, `ag`. If you do not have Chocolatey installed, see `ag`'s documentation for [installation instructions](https://github.com/ggreer/the_silver_searcher#windows).
 
 ```powershell
 choco install ag
