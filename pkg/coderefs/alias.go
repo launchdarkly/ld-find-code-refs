@@ -106,7 +106,7 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 func processFileContent(aliases []options.Alias, dir string) (map[string][]byte, error) {
 	allFileContents := map[string][]byte{}
 	for idx, a := range aliases {
-		if a.Type != options.FilePattern {
+		if a.Type.Canonical() != options.FilePattern {
 			continue
 		}
 
