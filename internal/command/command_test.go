@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var defaultDelims = []rune{'"', '\'', '`'}
+var defaultDelims = []byte{'"', '\'', '`'}
 
 func TestGenerateFlagRegex(t *testing.T) {
 	specs := []struct {
@@ -45,7 +45,7 @@ func TestGenerateFlagRegex(t *testing.T) {
 func TestGenerateDelimiterRegex(t *testing.T) {
 	specs := []struct {
 		name               string
-		delimiters         []rune
+		delimiters         []byte
 		expectedLookBehind string
 		expectedLookAhead  string
 	}{

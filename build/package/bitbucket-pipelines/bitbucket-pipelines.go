@@ -1,8 +1,8 @@
 package main
 
 import (
-	"flag"
 	"os"
+	"strconv"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
@@ -10,40 +10,25 @@ import (
 )
 
 func main() {
-	debug, err := o.GetDebugOptionFromEnv()
-	// init logging before checking error because we need to log the error if there is one
-	log.Init(debug)
+	log.Init(false)
+	dir := os.Getenv("BITBUCKET_CLONE_DIR")
+	opts, err := o.GetWrapperOptions(dir, mergeBitbucketOptions)
 	if err != nil {
-		log.Error.Fatalf("error parsing debug option: %s", err)
+		log.Error.Fatal(err)
 	}
+	log.Init(opts.Debug)
+	coderefs.Scan(opts)
+}
 
-	log.Info.Printf("setting Bitbucket Pipelines env vars")
-	options := map[string]string{
-		"repoType":         "bitbucket",
-		"repoName":         os.Getenv("BITBUCKET_REPO_SLUG"),
-		"dir":              os.Getenv("BITBUCKET_CLONE_DIR"),
-		"repoUrl":          os.Getenv("BITBUCKET_GIT_HTTP_ORIGIN"),
-		"updateSequenceId": os.Getenv("BITBUCKET_BUILD_NUMBER"),
-	}
-	ldOptions, err := o.GetLDOptionsFromEnv()
+func mergeBitbucketOptions(opts o.Options) (o.Options, error) {
+	log.Info.Printf("Setting Bitbucket Pipelines env vars")
+	opts.RepoType = "bitbucket"
+	opts.RepoName = os.Getenv("BITBUCKET_REPO_SLUG")
+	opts.RepoUrl = os.Getenv("BITBUCKET_GIT_HTTP_ORIGIN")
+	updateSequenceId, err := strconv.Atoi(os.Getenv("BITBUCKET_BUILD_NUMBER"))
 	if err != nil {
-		log.Error.Fatalf("Error setting options %s", err)
+		updateSequenceId = -1
 	}
-	for k, v := range ldOptions {
-		options[k] = v
-	}
-
-	err = o.Populate()
-	if err != nil {
-		log.Error.Fatalf("could not set options: %v", err)
-	}
-	for k, v := range options {
-		err := flag.Set(k, v)
-		if err != nil {
-			log.Error.Fatalf("error setting option %s: %s", k, err)
-		}
-	}
-	log.Info.Printf("starting repo parsing program with options:\n %+v\n", options)
-
-	coderefs.Scan()
+	opts.UpdateSequenceId = updateSequenceId
+	return opts, opts.Validate()
 }

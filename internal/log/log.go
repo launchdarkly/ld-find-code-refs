@@ -12,8 +12,6 @@ var (
 	Info    *log.Logger
 	Warning *log.Logger
 	Error   *log.Logger
-	Fatal   *log.Logger
-	Stdout  *log.Logger
 )
 
 // Init overrides the default loggers that write to stdout
@@ -37,9 +35,5 @@ func Init(debug bool) {
 
 	Error = log.New(os.Stderr,
 		"ERROR: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
-
-	Fatal = log.New(os.Stderr,
-		"FATAL Please file an issue at https://github.com/launchdarkly/ld-find-code-refs: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 }

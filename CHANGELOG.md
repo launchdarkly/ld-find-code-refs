@@ -2,6 +2,29 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.0] - prerelease
+
+### Added
+
+- Most command line flags can now be specified in a YAML file located in the `.launchdarkly/coderefs.yaml` subdirectory of your repository. The following options must be set using the command line or as environment variables:
+  - `--dir` / `LD_DIR`
+  - `--accessToken` / `LD_ACCESS_TOKEN`
+- The default delimiters (single/double quotes and backticks) can now be disabled by setting the following YAML option in `.launchdarkly/coderefs.yaml`:
+  ```yaml
+  delimiters:
+    defaultsDisabled: true
+  ```
+- All command line flags can now be specified as environment variables.
+
+### Changed
+
+- The underlying command line package has been changed for improved ergonomics when configuring options using the command line. Some existing configurations may be invalid, see `ld-find-code-refs --help` for details.
+
+### Removed
+
+- The `exclude` command-line option has been removed. Use the `.ldignore` file instead.
+- Additional delimiters can no longer be specified using command line flags or environment variables. If you use additional delimiters, or would like to disable delimiters completely, use the YAML configuration described above.
+
 ## [1.5.0] - prerelease
 
 ### Added
@@ -22,7 +45,6 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Changed
 
 - ld-find-code-refs now requires go1.13 to build.
-
 
 ## [1.3.1] - 2019-09-24
 

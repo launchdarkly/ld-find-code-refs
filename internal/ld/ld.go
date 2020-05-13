@@ -395,7 +395,7 @@ type BranchCollection struct {
 type BranchRep struct {
 	Name             string              `json:"name"`
 	Head             string              `json:"head"`
-	UpdateSequenceId *int64              `json:"updateSequenceId,omitempty"`
+	UpdateSequenceId *int                `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
 }

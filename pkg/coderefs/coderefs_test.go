@@ -3,7 +3,6 @@ package coderefs
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -67,7 +66,6 @@ func Test_generateReferences(t *testing.T) {
 		searchResult [][]string
 		ctxLines     int
 		want         []searchResultLine
-		exclude      string
 	}{
 		{
 			name:         "succeeds",
@@ -75,14 +73,6 @@ func Test_generateReferences(t *testing.T) {
 			searchResult: [][]string{testResult},
 			ctxLines:     0,
 			want:         []searchResultLine{testWant},
-		},
-		{
-			name:         "succeeds with exclude",
-			flags:        twoFlags,
-			searchResult: [][]string{testResult},
-			ctxLines:     0,
-			want:         []searchResultLine{},
-			exclude:      ".*",
 		},
 		{
 			name:         "succeeds with no LineText lines",
@@ -184,9 +174,7 @@ func Test_generateReferences(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ex, err := regexp.Compile(tt.exclude)
-			require.NoError(t, err)
-			got := generateReferences(tt.flags, tt.searchResult, tt.ctxLines, `"'`, ex)
+			got := generateReferences(tt.flags, tt.searchResult, tt.ctxLines, `"'`)
 			require.Equal(t, tt.want, got)
 		})
 	}

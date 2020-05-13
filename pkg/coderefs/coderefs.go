@@ -6,7 +6,6 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -14,7 +13,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 )
@@ -48,13 +47,18 @@ type fileSearchResults struct {
 type branch struct {
 	Name             string
 	Head             string
-	UpdateSequenceId *int64
+	UpdateSequenceId *int
 	SyncTime         int64
 	SearchResults    searchResultLines
 }
 
-func Scan() {
-	dir := o.Dir.Value()
+func Scan(opts options.Options) {
+	// Don't log ld access token
+	optionsForLog := opts
+	optionsForLog.AccessToken = helpers.MaskAccessToken(optionsForLog.AccessToken)
+	log.Debug.Printf("starting ld-find-code-refs with options:\n %+v\n", optionsForLog)
+
+	dir := opts.Dir
 	absPath, err := validation.NormalizeAndValidatePath(dir)
 	if err != nil {
 		log.Error.Fatalf("could not validate directory option: %s", err)
@@ -66,12 +70,12 @@ func Scan() {
 		log.Error.Fatalf("%s", err)
 	}
 
-	gitClient, err := command.NewGitClient(absPath)
+	gitClient, err := command.NewGitClient(absPath, opts.Branch)
 	if err != nil {
 		log.Error.Fatalf("%s", err)
 	}
 
-	projKey := o.ProjKey.Value()
+	projKey := opts.ProjKey
 
 	// Check for potential sdk keys or access tokens provided as the project key
 	if len(projKey) > maxProjKeyLength {
@@ -82,19 +86,19 @@ func Scan() {
 		}
 	}
 
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: o.AccessToken.Value(), BaseUri: o.BaseUri.Value(), ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
 	repoParams := ld.RepoParams{
-		Type:              o.RepoType.Value(),
-		Name:              o.RepoName.Value(),
-		Url:               o.RepoUrl.Value(),
-		CommitUrlTemplate: o.CommitUrlTemplate.Value(),
-		HunkUrlTemplate:   o.HunkUrlTemplate.Value(),
-		DefaultBranch:     o.DefaultBranch.Value(),
+		Type:              opts.RepoType,
+		Name:              opts.RepoName,
+		Url:               opts.RepoUrl,
+		CommitUrlTemplate: opts.CommitUrlTemplate,
+		HunkUrlTemplate:   opts.HunkUrlTemplate,
+		DefaultBranch:     opts.DefaultBranch,
 	}
 
-	isDryRun := o.DryRun.Value()
+	isDryRun := opts.DryRun
 
-	ignoreServiceErrors := o.IgnoreServiceErrors.Value()
+	ignoreServiceErrors := opts.IgnoreServiceErrors
 	if !isDryRun {
 		err = ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 		if err != nil {
@@ -121,15 +125,15 @@ func Scan() {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
-	aliases, err := generateAliases(filteredFlags, o.Aliases)
+	aliases, err := generateAliases(filteredFlags, opts.Aliases, dir)
 	if err != nil {
 		log.Error.Fatalf("failed to create flag key aliases: %v", err)
 	}
 
-	ctxLines := o.ContextLines.Value()
-	var updateId *int64
-	if o.UpdateSequenceId.Value() >= 0 {
-		updateIdOption := o.UpdateSequenceId.Value()
+	ctxLines := opts.ContextLines
+	var updateId *int
+	if opts.UpdateSequenceId >= 0 {
+		updateIdOption := opts.UpdateSequenceId
 		updateId = &updateIdOption
 	}
 	b := &branch{
@@ -139,11 +143,17 @@ func Scan() {
 		Head:             gitClient.GitSha,
 	}
 
-	// exclude option has already been validated as regex in options.go
-	excludeRegex, _ := regexp.Compile(o.Exclude.Value())
-	refs, err := findReferences(searchClient, filteredFlags, aliases, ctxLines, excludeRegex)
+	// Configure delimiters
+	delims := []string{`"`, `'`, "`"}
+	if opts.Delimiters.DisableDefaults {
+		delims = []string{}
+	}
+	delims = append(delims, opts.Delimiters.Additional...)
+	delimString := strings.Join(helpers.Dedupe(delims), "")
+
+	refs, err := findReferences(searchClient, filteredFlags, aliases, ctxLines, delimString)
 	if err != nil {
-		log.Fatal.Fatalf("error searching for flag key references: %s", err)
+		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
 
 	b.SearchResults = refs
@@ -151,16 +161,16 @@ func Scan() {
 
 	branchRep := b.makeBranchRep(projKey, ctxLines)
 
-	outDir := o.OutDir.Value()
+	outDir := opts.OutDir
 	if outDir != "" {
 		outPath, err := branchRep.WriteToCSV(outDir, projKey, repoParams.Name, gitClient.GitSha)
 		if err != nil {
-			log.Fatal.Fatalf("error writing code references to csv: %s", err)
+			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
 		log.Info.Printf("wrote code references to %s", outPath)
 	}
 
-	if o.Debug.Value() {
+	if opts.Debug {
 		branchRep.PrintReferenceCountTable()
 	}
 
@@ -258,38 +268,13 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 	return flags, nil
 }
 
-func generateReferences(aliases map[string][]string, searchResult [][]string, ctxLines int, delims string, exclude *regexp.Regexp) []searchResultLine {
-	references := []searchResultLine{}
-
-	for _, r := range searchResult {
-		path := r[1]
-		if exclude != nil && exclude.String() != "" && exclude.MatchString(path) {
-			continue
-		}
-		contextContainsFlagKey := r[2] == ":"
-		lineNumber := r[3]
-		lineText := r[4]
-		lineNum, err := strconv.Atoi(lineNumber)
-		if err != nil {
-			log.Fatal.Fatalf("encountered an unexpected error generating flag references: %s", err)
-		}
-		ref := searchResultLine{Path: path, LineNum: lineNum}
-		if contextContainsFlagKey {
-			ref.FlagKeys = findReferencedFlags(lineText, aliases, delims)
-		}
-		if ctxLines >= 0 {
-			ref.LineText = lineText
-		}
-		references = append(references, ref)
-	}
-
-	return references
-}
-
 func findReferencedFlags(ref string, aliases map[string][]string, delims string) map[string][]string {
 	ret := make(map[string][]string, len(aliases))
 	for key, flagAliases := range aliases {
-		matcher := regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, regexp.QuoteMeta(key), delims))
+		matcher := regexp.MustCompile(regexp.QuoteMeta(key))
+		if len(delims) > 0 {
+			matcher = regexp.MustCompile(fmt.Sprintf("[%s]%s[%s]", delims, regexp.QuoteMeta(key), delims))
+		}
 		if matcher.MatchString(ref) {
 			ret[key] = make([]string, 0, len(flagAliases))
 		}
@@ -401,7 +386,7 @@ func (fsr *fileSearchResults) addSearchResult(searchResult searchResultLine) *li
 		// should always return search results sorted by line number. We sanity check
 		// that lines are sorted _just in case_ since the downstream hunking algorithm
 		// only works on sorted lines.
-		log.Fatal.Fatalf("search results returned out of order")
+		log.Error.Fatalf("search results returned out of order")
 	}
 
 	return fsr.fileSearchResultLines.PushBack(searchResult)
@@ -547,8 +532,6 @@ func fatalServiceError(err error, ignoreServiceErrors bool) {
 			os.Exit(0)
 		}
 		err = fmt.Errorf("%w\n Add the --ignoreServiceErrors flag to ignore this error", err)
-		// Error is transient, so don't show the "please file an issue" prompt
-		log.Error.Fatal(err)
 	}
-	log.Fatal.Fatal(err)
+	log.Error.Fatal(err)
 }

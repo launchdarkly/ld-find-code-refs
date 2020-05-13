@@ -33,21 +33,6 @@ examples:
                 proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
                 context_lines: 3
 
-  exclude_files:
-    description: "The above configuration, with the `vendor/` directory and all `css` files ignored by the scanner. The `exclude` parameter may be configuration as any regular expression that matches the files and directories you'd like to ignore for your repository"
-    usage:
-      version: 2.1
-      orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.4.0
-      workflows:
-        main:
-          jobs:
-            - launchdarkly/find-code-references:
-                debug: true
-                access_token: "${LD_ACCESS_TOKEN}"
-                proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
-                context_lines: 3
-                exclude: 'vendor/|\.css'
 
   standard_configuration:
     description: "A configuration with the the `repoType` set to GitHub, and the `repuUrl` set to a GitHub URL. We recommend configuring these parameters so LaunchDarkly is able to generate reference links to your source code"
@@ -66,22 +51,6 @@ examples:
                 repo_url: 'YOUR_REPO_URL'
                 context_lines: 3
 
-  flag_key_delimiters:
-    description: "The standard configuration, with left and right carets specified as flag key delimiters"
-    usage:
-      version: 2.1
-      orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.4.0
-      workflows:
-        main:
-          jobs:
-            - launchdarkly/find-code-references:
-                debug: true
-                access_token: "${LD_ACCESS_TOKEN}"
-                proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
-                repo_type: 'github'
-                repo_url: 'YOUR_REPO_URL'
-                context_lines: 3
 
 jobs:
   find-code-references:
@@ -102,10 +71,6 @@ jobs:
         description: The number of context lines above and below a code reference for the job to send to LaunchDarkly. By default, the flag finder will not send any context lines to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided.
         type: integer
         default: 2
-      exclude:
-        description: "A regular expression (PCRE) defining the files, file types, and directories which the job should exclude. Partial matches are allowed. Examples: `vendor/`, `\\.css`, `vendor/|\\.css`"
-        type: string
-        default: ""
       repo_type:
         description: "The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI."
         type: enum
@@ -119,10 +84,6 @@ jobs:
         description: "The git default branch. The LaunchDarkly UI will default to display code references for this branch."
         type: string
         default: "master"
-      delimiters:
-        description: Specifies additional delimiters used to match flag keys. Must be a non-control ASCII character. If more than one character is provided in `delimiters`, each character will be treated as a separate delimiter. Will only match flag keys with surrounded by any of the specified delimeters. This option may also be specified multiple times for multiple delimiters. By default, only flags delimited by single-quotes, double-quotes, and backticks will be matched.
-        type: string
-        default: ""
       commit_url_template:
         description: "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types."
         type: string
@@ -149,19 +110,17 @@ jobs:
           name: Find flag references
           command: |
             ld-find-code-refs \
-              -debug=<< parameters.debug >> \
-              -accessToken=<< parameters.access_token >> \
-              -projKey=<< parameters.proj_key >> \
-              -exclude=<< parameters.exclude >> \
-              -ignoreServiceErrors=<< parameters.ignore_service_errors >> \
-              -contextLines=<< parameters.context_lines >> \
-              -baseUri=<< parameters.base_uri >> \
-              -repoType=<< parameters.repo_type >> \
-              -repoUrl=<< parameters.repo_url >> \
-              -defaultBranch=<< parameters.default_branch >> \
-              -delimiters=<< parameters.delimiters >> \
-              -commitUrlTemplate=<< parameters.commit_url_template >> \
-              -hunkUrlTemplate=<< parameters.hunk_url_template >> \
-              -repoName=${CIRCLE_PROJECT_REPONAME} \
-              -updateSequenceId=${CIRCLE_BUILD_NUM} \
-              -dir=/repo
+              --debug=<< parameters.debug >> \
+              --accessToken=<< parameters.access_token >> \
+              --projKey=<< parameters.proj_key >> \
+              --ignoreServiceErrors=<< parameters.ignore_service_errors >> \
+              --contextLines=<< parameters.context_lines >> \
+              --baseUri=<< parameters.base_uri >> \
+              --repoType=<< parameters.repo_type >> \
+              --repoUrl=<< parameters.repo_url >> \
+              --defaultBranch=<< parameters.default_branch >> \
+              --commitUrlTemplate=<< parameters.commit_url_template >> \
+              --hunkUrlTemplate=<< parameters.hunk_url_template >> \
+              --repoName=${CIRCLE_PROJECT_REPONAME} \
+              --updateSequenceId=${CIRCLE_BUILD_NUM} \
+              --dir=/repo
