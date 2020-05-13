@@ -36,7 +36,7 @@ define publish_docker
 	test $(1) || (echo "Please provide tag"; exit 1)
 	docker build -t launchdarkly/$(3):$(1) build/package/$(4)
 	docker push launchdarkly/$(3):$(1)
-	test $(2) && (echo "Not pushing latest tag for prerelease")
+	# test $(2) && (echo "Not pushing latest tag for prerelease")
 	test $(2) || docker tag launchdarkly/$(3):$(1) launchdarkly/$(3):latest
 	test $(2) || docker push launchdarkly/$(3):latest
 endef

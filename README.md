@@ -54,8 +54,8 @@ The second dependency is a grep-like search tool. We currently support [ripgrep 
 | Dependency | Version Tested |
 | ---------- | -------------- |
 | git        | 2.21.0         |
-| ag         | 2.2.0          |
 | rg         | 12.1.0         |
+| ag         | 2.2.0          |
 
 All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
 
