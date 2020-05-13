@@ -41,16 +41,21 @@ We provide turnkey support for common trigger mechanisms and CI / CD providers. 
 
 The command line program may be run manually, and executed in an environment of your choosing. The program requires your `git` repo to be cloned locally, and the currently checked out branch will be scanned for code references.
 
-We recommend ingraining `ld-find-code-refs` into your CI/CD build process. `ld-find-code-refs` should run whenever a commit is pushed to your repository.
+We recommend incorporating `ld-find-code-refs` into your CI/CD build process. `ld-find-code-refs` should run whenever a commit is pushed to your repository.
 
 ### Prerequisites
 
-`ld-find-code-refs` has two dependencies, which need to be installed in the system path:
+`ld-find-code-refs` has two dependencies, which need to be installed in the system path. 
+
+The first dependency is git, which is used to infer your repositories branch name and version hash.
+
+The second dependency is a grep-like search tool. We currently support [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) or [the silver searcher (ag)](https://github.com/ggreer/the_silver_searcher). The following installation documentation will assume you are using ripgrep.
 
 | Dependency | Version Tested |
 | ---------- | -------------- |
 | git        | 2.21.0         |
 | ag         | 2.2.0          |
+| rg         | 12.1.0         |
 
 All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
 
@@ -74,7 +79,7 @@ We do not yet have repositories set up for our linux packages, but we do upload 
 This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
 
 ```bash
-apt-get install silversearcher-ag
+apt-get install ripgrep
 
 wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/latest \
 	| grep "browser_download_url" \
@@ -87,10 +92,10 @@ dpkg -i ld-find-code-refs.amd64.deb
 
 #### Windows
 
-A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). The following Chocolatey command may be used to install the required dependency, `ag`. If you do not have Chocolatey installed, see `ag`'s documentation for [installation instructions](https://github.com/ggreer/the_silver_searcher#windows).
+A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). The following Chocolatey command may be used to install the required dependency for search, rigrep (`rg`). If you do not have Chocolatey installed, see `rg`'s documentation for [installation instructions](https://github.com/BurntSushi/ripgrep#installation).
 
 ```powershell
-choco install ag
+choco install ripgrep
 ```
 
 #### Docker

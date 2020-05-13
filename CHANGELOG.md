@@ -15,10 +15,12 @@ All notable changes to the ld-find-code-refs program will be documented in this 
     defaultsDisabled: true
   ```
 - All command line flags can now be specified as environment variables.
+- A new option `searchTool` or `LD_SEARCH_TOOL` (as an environment variable) to specify the underlying tool used for search. Ripgrep (rg) and Silver Searcher (ag) are currently supported.
 
 ### Changed
 
 - The underlying command line package has been changed for improved ergonomics when configuring options using the command line. Some existing configurations may be invalid, see `ld-find-code-refs --help` for details.
+- Ripgrep (rg) is now the default search tool. Ripgrep will need to be installed in the system path, or the `searchTool` option set to `ag` for `ld-find-code-refs` to continue to work.
 
 ### Removed
 
