@@ -51,6 +51,7 @@ brew:
 
   dependencies:
     - "ag"
+    - "ripgrep"
 
   install: |
     bin.install "ld-find-code-refs"
