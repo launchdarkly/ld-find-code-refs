@@ -2,6 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.5.1] - 2020-05-22
+
+### Added
+
+- Added support for specifying a custom default branch for the GitHub actions and Bitbucket pipes wrappers.
+
 ## [1.5.0] - 2020-05-11
 
 ### Added
