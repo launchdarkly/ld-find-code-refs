@@ -299,6 +299,7 @@ func GetLDOptionsFromEnv() (map[string]string, error) {
 		"exclude":             os.Getenv("LD_EXCLUDE"),
 		"contextLines":        os.Getenv("LD_CONTEXT_LINES"),
 		"baseUri":             os.Getenv("LD_BASE_URI"),
+		"defaultBranch":       os.Getenv("LD_DEFAULT_BRANCH"),
 		"debug":               os.Getenv("LD_DEBUG"),
 		"delimiters":          os.Getenv("LD_DELIMITERS"),
 		"ignoreServiceErrors": os.Getenv("LD_IGNORE_SERVICE_ERRORS"),

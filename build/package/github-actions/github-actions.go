@@ -43,7 +43,6 @@ func main() {
 		"repoName":         ghRepo[1],
 		"dir":              os.Getenv("GITHUB_WORKSPACE"),
 		"updateSequenceId": strconv.FormatInt(event.Repo.PushedAt*1000, 10), // seconds to milliseconds
-		"defaultBranch":    event.Repo.DefaultBranch,
 		"repoUrl":          event.Repo.Url,
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
@@ -52,6 +51,10 @@ func main() {
 	}
 	for k, v := range ldOptions {
 		options[k] = v
+	}
+
+	if options["defaultBranch"] == "" {
+		options["defaultBranch"] = event.Repo.DefaultBranch
 	}
 
 	err = o.Populate()
