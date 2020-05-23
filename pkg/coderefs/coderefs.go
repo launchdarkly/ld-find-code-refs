@@ -44,16 +44,6 @@ func Scan(opts options.Options) {
 
 	log.Info.Printf("absolute directory path: %s", absPath)
 
-	var searchClient search.SearchClient
-	if opts.SearchTool == "rg" {
-		searchClient, err = search.NewRgClient(absPath)
-	} else { // only other valid option
-		searchClient, err = search.NewAgClient(absPath)
-	}
-	if err != nil {
-		log.Error.Fatalf("%s", err)
-	}
-
 	gitClient, err := git.NewClient(absPath, opts.Branch)
 	if err != nil {
 		log.Error.Fatalf("%s", err)
@@ -134,8 +124,11 @@ func Scan(opts options.Options) {
 	}
 	delims = append(delims, opts.Delimiters.Additional...)
 	delimString := strings.Join(helpers.Dedupe(delims), "")
+	startTime := time.Now()
+	fmt.Println("start", 0)
 
-	refs, err := search.FindReferences(searchClient, filteredFlags, aliases, ctxLines, delimString)
+	refs, err := search.SearchForRefs(absPath, filteredFlags, aliases, ctxLines, []byte(delimString))
+	fmt.Println("end", time.Now().Sub(startTime).Milliseconds())
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}

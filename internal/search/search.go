@@ -3,9 +3,7 @@ package search
 import (
 	"container/list"
 	"errors"
-	"fmt"
-	"regexp"
-	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
@@ -14,8 +12,6 @@ import (
 )
 
 const (
-	ignoreFileName = ".ldignore"
-
 	// These are defensive limits intended to prevent corner cases stemming from
 	// large repos, false positives, etc. The goal is a) to prevent the program
 	// from taking a very long time to run and b) to prevent the program from
@@ -27,97 +23,7 @@ const (
 	maxHunkedLinesPerFileAndFlagCount = 500   // Maximum number of lines per flag in a file
 )
 
-var searchTooLargeErr = errors.New("regular expression is too large")
 var noSearchPatternErr = errors.New("failed to generate a valid search pattern")
-
-type SearchClient interface {
-	searchForRefs(searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) (SearchResultLines, error)
-}
-
-// FindReferences uses the Searcher to find references for both flags and aliases
-func FindReferences(c SearchClient, flags []string, aliases map[string][]string, ctxLines int, delimiters string) (SearchResultLines, error) {
-	log.Info.Printf("finding code references with delimiters: %s", delimiters)
-	paginationCharCount := safePaginationCharCount()
-	results, err := paginatedSearch(c, "flags", flags, aliases, paginationCharCount, ctxLines, []byte(delimiters))
-	if err != nil {
-		return SearchResultLines{}, err
-	}
-	flattenedAliases := make([]string, 0, len(flags))
-	for _, flagAliases := range aliases {
-		flattenedAliases = append(flattenedAliases, flagAliases...)
-	}
-	aliasResults, err := paginatedSearch(c, "aliases", flattenedAliases, aliases, paginationCharCount, ctxLines, nil)
-	if err != nil {
-		return SearchResultLines{}, err
-	}
-	return append(results, aliasResults...), nil
-}
-
-// paginatedSearch uses approximations to decide the number of flags to scan for at once using maxSumFlagKeyLength as an upper bound
-func paginatedSearch(c SearchClient, searchNoun string, searchTerms []string, aliases map[string][]string, maxSumFlagKeyLength, ctxLines int, delims []byte) (SearchResultLines, error) {
-	if maxSumFlagKeyLength == 0 {
-		return nil, noSearchPatternErr
-	}
-
-	var results SearchResultLines
-	nextSearchKeys := []string{}
-
-	totalKeyLength := delimCost(delims)
-	from := 0
-	for to, key := range searchTerms {
-		totalKeyLength += flagKeyCost(key)
-		nextSearchKeys = append(nextSearchKeys, key)
-
-		// if we've reached the end of the loop, or the current page has reached maximum length
-		if to == len(searchTerms)-1 || totalKeyLength+flagKeyCost(searchTerms[to+1]) > maxSumFlagKeyLength {
-			log.Debug.Printf("searching for %s in group: [%d, %d]", searchNoun, from, to)
-			result, err := c.searchForRefs(nextSearchKeys, aliases, ctxLines, delims)
-			if err != nil {
-				if err == searchTooLargeErr {
-					// we expect all search implementations to complete successfully
-					// if pagination fails unexpectedly, repeat the search with a smaller page size
-					log.Debug.Printf("encountered an error paginating group [%d, %d], trying again with a lower page size", from, to)
-					remainder, err := paginatedSearch(c, searchNoun, searchTerms[from:], aliases, maxSumFlagKeyLength/2, ctxLines, delims)
-					if err != nil {
-						return nil, err
-					}
-					return append(results, remainder...), nil
-				}
-				return nil, err
-			}
-
-			results = append(results, result...)
-
-			// loop bookkeeping
-			nextSearchKeys = make([]string, 0, len(nextSearchKeys))
-			totalKeyLength = delimCost(delims)
-			from = to + 1
-		}
-	}
-	return results, nil
-}
-
-// safePaginationCharCount determines the maximum sum of flag key lengths to be used in a single smart paginated search.
-// Safely bounded under the 2^16 limit of pcre_compile() with the parameters set by our underlying search tool (ag)
-// https://github.com/vmg/pcre/blob/master/pcre_internal.h#L436
-func safePaginationCharCount() int {
-	if runtime.GOOS == windows {
-		// workaround win32 limitation on maximum command length
-		// https://support.microsoft.com/en-us/help/830473/command-prompt-cmd-exe-command-line-string-limitation
-		return 30000
-	}
-
-	return 60000
-}
-
-func flagKeyCost(key string) int {
-	// periods need to be escaped, so they count as 2 characters
-	return len(key) + strings.Count(key, ".")
-}
-
-func delimCost(delims []byte) int {
-	return len(delims) * 2
-}
 
 type SearchResultLine struct {
 	Path     string
@@ -194,8 +100,8 @@ type FileSearchResults struct {
 	flagReferenceMap
 }
 
-// Assumes invariant: SearchResultLines will already be sorted by path.
 func (g SearchResultLines) aggregateByPath() []FileSearchResults {
+	sort.Sort(g)
 	allFileResults := []FileSearchResults{}
 
 	if len(g) == 0 {
@@ -234,37 +140,6 @@ func (g SearchResultLines) aggregateByPath() []FileSearchResults {
 	allFileResults = append(allFileResults, currentFileResults)
 
 	return allFileResults
-}
-
-func generateFlagRegex(flags []string) string {
-	flagRegexes := []string{}
-	for _, v := range flags {
-		escapedFlag := regexp.QuoteMeta(v)
-		flagRegexes = append(flagRegexes, escapedFlag)
-	}
-	return strings.Join(flagRegexes, "|")
-}
-
-func generateDelimiterRegex(delimiters []byte) (lookBehind, lookAhead string) {
-	if len(delimiters) == 0 {
-		return "", ""
-	}
-	delims := string(delimiters)
-	lookBehind = fmt.Sprintf("(?<=[%s])", delims)
-	lookAhead = fmt.Sprintf("(?=[%s])", delims)
-	return lookBehind, lookAhead
-}
-
-func generateSearchPattern(searchTerms []string, delimiters []byte, padPattern bool) string {
-	flagRegex := generateFlagRegex(searchTerms)
-	lookBehind, lookAhead := generateDelimiterRegex(delimiters)
-	if padPattern {
-		// Padding the left-most and right-most search terms with the "a^" regular expression, which never matches anything. This is done to work-around strange behavior causing the left-most and right-most items to be ignored by ag on windows
-		// example: (?<=[\"'\`])(a^|flag1|flag2|flag3|a^)(?=[\"'\`])"
-		return lookBehind + "(a^|" + flagRegex + "|a^)" + lookAhead
-	}
-	// example: (?<=[\"'\`])(flag1|flag2|flag3)(?=[\"'\`])"
-	return lookBehind + "(" + flagRegex + ")" + lookAhead
 }
 
 func (fsr *FileSearchResults) addSearchResult(searchResult SearchResultLine) *list.Element {

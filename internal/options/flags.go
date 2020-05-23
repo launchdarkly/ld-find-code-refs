@@ -41,7 +41,7 @@ LaunchDarkly will automatically generate links to the repository for each commit
 	},
 	{
 		name:         "contextLines",
-		short:        "c",
+		short:        "C",
 		defaultValue: 2,
 		usage: `The number of context lines to send to LaunchDarkly. If < 0, no
 source code will be sent to LaunchDarkly. If 0, only the lines containing

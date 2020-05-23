@@ -8,6 +8,7 @@ require (
 	github.com/launchdarkly/api-client-go v0.0.0-20181031211650-fe4f1d017b6e
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
 	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/monochromegane/go-gitignore v0.0.0-20160105113617-38717d0a108c
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
