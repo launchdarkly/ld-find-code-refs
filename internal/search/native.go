@@ -3,16 +3,18 @@ package search
 import (
 	"bufio"
 	"errors"
-	"math"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/monochromegane/go-gitignore"
+	"golang.org/x/tools/godoc/util"
+	"golang.org/x/tools/godoc/vfs"
 )
 
 type ignore struct {
@@ -47,62 +49,97 @@ type file struct {
 	lines []string
 }
 
-func (f file) toSearchResultLines(aliases map[string][]string, ctxLines int, delimiters []byte) SearchResultLines {
-	path := f.path
-	lines := f.lines
-	ret := SearchResultLines{}
-	for lineNum, line := range f.lines {
-		matchFlagKeys := map[string][]string{}
-		for flagKey, flagAliases := range aliases {
-			rgxp := regexp.MustCompile("[" + string(delimiters) + "]" + regexp.QuoteMeta(flagKey) + "[" + string(delimiters) + "]")
-			if rgxp.MatchString(line) {
-				matchFlagKeys[flagKey] = []string{}
+func (f file) linesIfMatch(aliases map[string][]string, aliasToFlag map[string]string, matchLineNum, ctxLines int, match, key, delimiters string) SearchResultLines {
+	if !strings.Contains(match, key) {
+		return nil
+	}
+	startingLineNum := matchLineNum - ctxLines
+	context := f.lines[startingLineNum : matchLineNum+ctxLines+1]
+	linesForMatch := make([]SearchResultLine, 0, len(context))
+	flagKey := key
+	_, isFlagKey := aliases[key]
+	if isFlagKey && !matchHasDelimiters(match, flagKey, delimiters) {
+		return nil
+	} else if !isFlagKey {
+		flagKey = aliasToFlag[key]
+	}
+
+	for i, line := range context {
+		srl := SearchResultLine{
+			Path:     f.path,
+			LineNum:  startingLineNum + i,
+			LineText: strings.TrimSuffix(line, "\n"),
+		}
+		if i == ctxLines {
+			if srl.FlagKeys[flagKey] == nil {
+				srl.FlagKeys = map[string][]string{flagKey: {}}
 			}
-			for _, alias := range flagAliases {
-				rgxp := regexp.MustCompile(regexp.QuoteMeta(alias))
-				if rgxp.MatchString(line) {
-					_, ok := matchFlagKeys[flagKey]
-					if !ok {
-						matchFlagKeys[flagKey] = []string{}
-					}
-					matchFlagKeys[flagKey] = append(matchFlagKeys[flagKey], alias)
-				}
+			if !isFlagKey {
+				srl.FlagKeys[flagKey] = append(srl.FlagKeys[flagKey], key)
 			}
 		}
+		linesForMatch = append(linesForMatch, srl)
+	}
+	return linesForMatch
+}
 
-		if len(matchFlagKeys) > 0 {
-			startingContextLine := int(math.Max(float64(lineNum-ctxLines), 0))
-			endingContextLine := int(math.Min(float64(len(lines)), float64(lineNum+ctxLines))) + 1
-			matchLines := lines[startingContextLine:endingContextLine]
-			linesForMatch := make([]SearchResultLine, 0, len(matchLines))
-			for i, line := range matchLines {
-				srl := SearchResultLine{
-					Path:     path,
-					LineNum:  startingContextLine + i + 1,
-					LineText: strings.TrimSuffix(line, "\n"),
-				}
-				if startingContextLine+i == lineNum {
-					srl.FlagKeys = matchFlagKeys
-				}
-				linesForMatch = append(linesForMatch, srl)
+func matchHasDelimiters(match string, flagKey string, delimiters string) bool {
+	for _, left := range delimiters {
+		for _, right := range delimiters {
+			if strings.Contains(match, string(left)+flagKey+string(right)) {
+				return true
 			}
-			ret = append(ret, linesForMatch...)
 		}
 	}
+	return false
+}
+
+func (f file) toSearchResultLines(projKey string, aliases map[string][]string, ctxLines int, delimiters string) SearchResultLines {
+	ret := SearchResultLines{}
+
+	ctxLinesString := ""
+	for i := 0; i <= ctxLines; i++ {
+		ctxLinesString = ctxLinesString + ".*\\n?"
+	}
+	flagKeys := []string{}
+	flattenedAliases := []string{}
+	aliasToFlag := map[string]string{}
+	for flagKey, flagAliases := range aliases {
+		flagKeys = append(flagKeys, regexp.QuoteMeta(flagKey))
+		for _, alias := range flagAliases {
+			flattenedAliases = append(flattenedAliases, regexp.QuoteMeta(alias))
+			aliasToFlag[alias] = flagKey
+		}
+	}
+	for _, key := range append(flagKeys, flattenedAliases...) {
+		for i, line := range f.lines {
+			match := f.linesIfMatch(aliases, aliasToFlag, i, ctxLines, line, key, delimiters)
+			if match != nil {
+				ret = append(ret, match...)
+			}
+		}
+	}
+
 	if len(ret) == 0 {
 		return nil
 	}
 	return ret
 }
 
-func SearchForRefs(workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) (SearchResultLines, error) {
+type opener struct{}
+
+func (o opener) Open(name string) (vfs.ReadSeekCloser, error) {
+	return os.Open(name)
+}
+
+func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) (SearchResultLines, error) {
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
-	maxConcurrency := runtime.NumCPU()
+	// maxConcurrency := runtime.NumCPU()
 
-	files := make(chan file, maxConcurrency)
-	references := make(chan SearchResultLines, maxConcurrency)
-
+	fullStartTime := time.Now()
+	files := make(chan file, 100000)
+	references := make(chan SearchResultLines)
 	// Start a workers to process files asynchronously
 	go func() {
 		w := new(sync.WaitGroup)
@@ -110,7 +147,7 @@ func SearchForRefs(workspace string, searchTerms []string, aliases map[string][]
 			file := file
 			w.Add(1)
 			go func() {
-				reference := file.toSearchResultLines(aliases, ctxLines, delimiters)
+				reference := file.toSearchResultLines(projKey, aliases, ctxLines, string(delimiters))
 				if reference != nil {
 					references <- reference
 				}
@@ -118,9 +155,12 @@ func SearchForRefs(workspace string, searchTerms []string, aliases map[string][]
 			}()
 		}
 		w.Wait()
+		delta := time.Now().Sub(fullStartTime).Milliseconds()
+		fmt.Println("done with refs", delta)
 		close(references)
 	}()
 
+	fileWg := sync.WaitGroup{}
 	readFile := func(path string, info os.FileInfo, err error) error {
 		isDir := info.IsDir()
 		if strings.HasPrefix(info.Name(), ".") || allIgnores.Match(path, isDir) {
@@ -132,19 +172,33 @@ func SearchForRefs(workspace string, searchTerms []string, aliases map[string][]
 			return nil
 		}
 
-		lines, err := readFileLines(path)
-		if err != nil {
-			return err
-		}
-		files <- file{path: strings.TrimPrefix(path, workspace+"/"), lines: lines}
+		fileWg.Add(1)
+		go func() error {
+			defer fileWg.Done()
+			lines, err := readFileLines(path)
+			if err != nil {
+				return err
+			}
+
+			if !util.IsText([]byte(strings.Join(lines, "\n"))) {
+				return nil
+			}
+
+			files <- file{path: strings.TrimPrefix(path, workspace+"/"), lines: lines}
+			return nil
+		}()
 		return nil
 	}
 
 	err := filepath.Walk(workspace, readFile)
-	close(files)
 	if err != nil {
 		return nil, err
 	}
+	fileWg.Wait()
+	close(files)
+
+	delta := time.Now().Sub(fullStartTime).Milliseconds()
+	fmt.Println("done reading files", delta)
 
 	ret := SearchResultLines{}
 	for reference := range references {

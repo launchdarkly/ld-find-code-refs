@@ -127,7 +127,7 @@ func Scan(opts options.Options) {
 	startTime := time.Now()
 	fmt.Println("start", 0)
 
-	refs, err := search.SearchForRefs(absPath, filteredFlags, aliases, ctxLines, []byte(delimString))
+	refs, err := search.SearchForRefs(projKey, absPath, filteredFlags, aliases, ctxLines, []byte(delimString))
 	fmt.Println("end", time.Now().Sub(startTime).Milliseconds())
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
