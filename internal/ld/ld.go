@@ -472,6 +472,16 @@ type HunkRep struct {
 	Aliases            []string `json:"aliases,omitempty"`
 }
 
+// Returns the number of lines overlapping between the receiver (h) and the parameter (hr) hunkreps
+// The return value will be negative if the hunks do not overlap
+func (h HunkRep) Overlap(hr HunkRep) int {
+	return h.StartingLineNumber + h.NumLines() - hr.StartingLineNumber
+}
+
+func (h HunkRep) NumLines() int {
+	return strings.Count(h.Lines, "\n") + 1
+}
+
 type tableData [][]string
 
 func (t tableData) Len() int {

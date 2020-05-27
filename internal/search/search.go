@@ -21,10 +21,9 @@ const (
 	// from taking a very long time to run and b) to prevent the program from
 	// PUTing a massive json payload. These limits will likely be tweaked over
 	// time. The LaunchDarkly backend will also apply limits.
-	maxFileCount                      = 10000 // Maximum number of files containing code references
-	maxHunkCount                      = 25000 // Maximum number of total code references
-	maxLineCharCount                  = 500   // Maximum number of characters per line
-	maxHunkedLinesPerFileAndFlagCount = 500   // Maximum number of lines per flag in a file
+	maxFileCount     = 10000 // Maximum number of files containing code references
+	maxHunkCount     = 25000 // Maximum number of total code references
+	maxLineCharCount = 500   // Maximum number of characters per line
 )
 
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.
@@ -33,13 +32,12 @@ const (
 func truncateLine(line string) string {
 	// len(line) returns number of bytes, not num. characters, but it's a close enough
 	// approximation for our purposes
-	if len(line) > maxLineCharCount {
-		// convert to rune slice so that we don't truncate multibyte unicode characters
-		runes := []rune(line)
-		return string(runes[0:maxLineCharCount]) + "…"
-	} else {
+	if len(line) <= maxLineCharCount {
 		return line
 	}
+	// convert to rune slice so that we don't truncate multibyte unicode characters
+	runes := []rune(line)
+	return string(runes[0:maxLineCharCount]) + "…"
 }
 
 type ignore struct {
@@ -69,12 +67,23 @@ func (m ignore) Match(path string, isDir bool) bool {
 	return false
 }
 
+func matchDelimiters(match string, flagKey string, delimiters string) bool {
+	for _, left := range delimiters {
+		for _, right := range delimiters {
+			if strings.Contains(match, string(left)+flagKey+string(right)) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 type file struct {
 	path  string
 	lines []string
 }
 
-func (f file) linesIfMatch(projKey string, aliases []string, matchLineNum, ctxLines int, line, flagKey, delimiters string) *ld.HunkRep {
+func (f file) linesIfMatch(projKey, flagKey, line string, aliases []string, matchLineNum, ctxLines int, delimiters string) *ld.HunkRep {
 	matchedFlag := false
 	aliasMatches := []string{}
 
@@ -105,6 +114,9 @@ func (f file) linesIfMatch(projKey string, aliases []string, matchLineNum, ctxLi
 	}
 
 	context := f.lines[startingLineNum:endingLineNum]
+	for i, line := range context {
+		context[i] = truncateLine(line)
+	}
 
 	ret := ld.HunkRep{ProjKey: projKey, FlagKey: flagKey, StartingLineNumber: startingLineNum + 1, Lines: strings.Join(context, "\n")}
 	for _, alias := range aliasMatches {
@@ -112,65 +124,6 @@ func (f file) linesIfMatch(projKey string, aliases []string, matchLineNum, ctxLi
 	}
 
 	return &ret
-}
-
-func matchDelimiters(match string, flagKey string, delimiters string) bool {
-	for _, left := range delimiters {
-		for _, right := range delimiters {
-			if strings.Contains(match, string(left)+flagKey+string(right)) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func consolidateHunks(hunks []ld.HunkRep, ctxLines int) []ld.HunkRep {
-	if ctxLines < 0 {
-		return hunks
-	}
-
-	combinedHunks := make([]ld.HunkRep, 0, len(hunks))
-	// Continually iterate over the slice of hunks, combining overlapping hunks
-	// until a pass is made with no overlaps
-	for combinedInLast := true; combinedInLast; {
-		combinedInLast = false
-		if len(hunks) <= 1 {
-			return hunks
-		}
-		for i, hunk := range hunks[1:] {
-			prevHunk := hunks[i]
-			if prevHunk.StartingLineNumber+2*ctxLines >= hunk.StartingLineNumber {
-				combinedHunks = append(combinedHunks, combineHunks(prevHunk, hunk, ctxLines))
-				combinedInLast = true
-			} else {
-				combinedHunks = append(combinedHunks, prevHunk)
-				// on the last iteration and the last hunk was not combined
-				if i == len(hunks)-1 {
-					combinedHunks = append(combinedHunks, hunk)
-				}
-			}
-		}
-
-		// Reset hunk slices for the next pass
-		hunks = combinedHunks
-		combinedHunks = make([]ld.HunkRep, 0, len(hunks))
-	}
-	return hunks
-}
-
-// combineHunks assumes the startingLineNumber of a is less than b
-func combineHunks(a, b ld.HunkRep, ctxLines int) ld.HunkRep {
-	aLines := strings.Split(a.Lines, "\n")
-	bLines := strings.Split(b.Lines, "\n")
-	combinedLines := append(aLines, bLines...)
-	return ld.HunkRep{
-		StartingLineNumber: a.StartingLineNumber,
-		Lines:              strings.Join(helpers.Dedupe(combinedLines), "\n"),
-		ProjKey:            a.ProjKey,
-		FlagKey:            a.FlagKey,
-		Aliases:            helpers.Dedupe(append(a.Aliases, b.Aliases...)),
-	}
 }
 
 func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int, delimiters string) *ld.ReferenceHunksRep {
@@ -183,19 +136,65 @@ func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int,
 	for flagKey := range aliases {
 		hunksForFlag := []ld.HunkRep{}
 		for i, line := range f.lines {
-			match := f.linesIfMatch(projKey, aliases[flagKey], i, ctxLines, line, flagKey, delimiters)
+			match := f.linesIfMatch(projKey, flagKey, line, aliases[flagKey], i, ctxLines, delimiters)
 			if match != nil {
 				hunksForFlag = append(hunksForFlag, *match)
 			}
 		}
 
-		hunks = append(hunks, hunksForFlag...)
+		hunks = append(hunks, consolidateHunks(hunksForFlag, ctxLines)...)
 	}
 
 	if len(hunks) == 0 {
 		return nil
 	}
 	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
+}
+
+// consolidateHunks recursively combines overlapping and adjacent hunks
+func consolidateHunks(hunks []ld.HunkRep, ctxLines int) []ld.HunkRep {
+	if ctxLines < 0 || len(hunks) <= 1 {
+		return hunks
+	}
+	for i, hunk := range hunks[1:] {
+		prevHunk := hunks[i]
+		if prevHunk.Overlap(hunk) >= 0 {
+			remainingHunks := append(mergeHunks(prevHunk, hunk, ctxLines), hunks[i+2:]...)
+			return append(hunks[:i], consolidateHunks(remainingHunks, ctxLines)...)
+		}
+	}
+	return hunks
+}
+
+// mergeHunks combines the lines and aliases of two hunks together for a given file
+// if the hunks do not overlap, returns each hunk separately
+// assumes the startingLineNumber of a is less than b and there is some overlap between the two
+func mergeHunks(a, b ld.HunkRep, ctxLines int) []ld.HunkRep {
+	if a.StartingLineNumber > b.StartingLineNumber {
+		a, b = b, a
+	}
+
+	aLines := strings.Split(a.Lines, "\n")
+	bLines := strings.Split(b.Lines, "\n")
+	overlap := a.Overlap(b)
+	// no overlap
+	if ctxLines < 0 || overlap < 0 {
+		return []ld.HunkRep{a, b}
+	} else if overlap >= len(bLines) {
+		// subset hunk
+		return []ld.HunkRep{a}
+	}
+
+	combinedLines := append(aLines, bLines[overlap:]...)
+	return []ld.HunkRep{
+		{
+			StartingLineNumber: a.StartingLineNumber,
+			Lines:              strings.Join(combinedLines, "\n"),
+			ProjKey:            a.ProjKey,
+			FlagKey:            a.FlagKey,
+			Aliases:            helpers.Dedupe(append(a.Aliases, b.Aliases...)),
+		},
+	}
 }
 
 // processFiles starts goroutines to process files individually. When all files have completed processing, the references channel is closed to signal completion.
@@ -216,15 +215,32 @@ func processFiles(files chan file, references chan ld.ReferenceHunksRep, projKey
 	close(references)
 }
 
-func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
+func readFileLines(path string) ([]string, error) {
+	if !validation.FileExists(path) {
+		return nil, errors.New("file does not exist")
+	}
+
+	file, err := os.Open(path)
+	defer file.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	return lines, nil
+}
+
+func readFiles(files chan file, workspace string) error {
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
-
-	files := make(chan file)
-	references := make(chan ld.ReferenceHunksRep)
-
-	// Start workers to process files asynchronously
-	go processFiles(files, references, projKey, aliases, ctxLines, delimiters)
 
 	fileWg := sync.WaitGroup{}
 	readFile := func(path string, info os.FileInfo, err error) error {
@@ -248,6 +264,7 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 				return err
 			}
 
+			// only read text files
 			if !util.IsText([]byte(strings.Join(lines, "\n"))) {
 				return nil
 			}
@@ -260,12 +277,24 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 
 	err := filepath.Walk(workspace, readFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	fileWg.Wait()
 	close(files)
+	return nil
+}
+
+func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
+	files := make(chan file)
+	references := make(chan ld.ReferenceHunksRep)
+
+	// Start workers to process files asynchronously
+	go processFiles(files, references, projKey, aliases, ctxLines, delimiters)
+
+	readFiles(files, workspace)
 
 	ret := []ld.ReferenceHunksRep{}
+	totalHunks := 0
 	for reference := range references {
 		ret = append(ret, reference)
 
@@ -273,29 +302,11 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 		if len(ret) >= maxFileCount {
 			return ret, nil
 		}
+		totalHunks += len(reference.Hunks)
+		// Reached maximum number of hunks across all files
+		if totalHunks > maxHunkCount {
+			return ret, nil
+		}
 	}
 	return ret, nil
-}
-
-func readFileLines(path string) ([]string, error) {
-	if !validation.FileExists(path) {
-		return nil, errors.New("file does not exist")
-	}
-
-	file, err := os.Open(path)
-	defer file.Close()
-
-	if err != nil {
-		return nil, err
-	}
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	var txtlines []string
-
-	for scanner.Scan() {
-		txtlines = append(txtlines, scanner.Text())
-	}
-
-	return txtlines, nil
 }
