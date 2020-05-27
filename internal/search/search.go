@@ -100,6 +100,7 @@ func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int,
 			match := f.linesIfMatch(projKey, flagKey, line, aliases[flagKey], i, ctxLines, delimiters)
 			if match != nil {
 				lastHunkIdx := len(hunksForFlag) - 1
+				// If the previous hunk overlaps or is adjacent to the current hunk, merge them together
 				if lastHunkIdx >= 0 && hunksForFlag[lastHunkIdx].Overlap(*match) >= 0 {
 					hunksForFlag = append(hunksForFlag[:lastHunkIdx], mergeHunks(hunksForFlag[lastHunkIdx], *match, ctxLines)...)
 				} else {
