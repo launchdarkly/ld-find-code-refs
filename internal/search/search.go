@@ -94,11 +94,6 @@ func (f file) linesIfMatch(projKey, flagKey, line string, aliases []string, matc
 
 func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int, delimiters string) *ld.ReferenceHunksRep {
 	hunks := []ld.HunkRep{}
-
-	ctxLinesString := ""
-	for i := 0; i <= ctxLines; i++ {
-		ctxLinesString = ctxLinesString + ".*\\n?"
-	}
 	for flagKey := range aliases {
 		hunksForFlag := []ld.HunkRep{}
 		for i, line := range f.lines {
