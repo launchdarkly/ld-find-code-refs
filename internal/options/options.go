@@ -38,7 +38,6 @@ type Options struct {
 
 	Aliases    []Alias    `mapstructure:"aliases"`
 	Delimiters Delimiters `mapstructure:"delimiters"`
-	SearchTool string     `mapstructure:"searchTool"`
 }
 
 type Delimiters struct {
@@ -206,10 +205,6 @@ func (o Options) Validate() error {
 		if err != nil {
 			return err
 		}
-	}
-
-	if o.SearchTool != "rg" && o.SearchTool != "ag" {
-		return fmt.Errorf(`invalid value %q for "searchTool": must be "rg" or "ag"`, o.SearchTool)
 	}
 
 	return nil

@@ -45,19 +45,9 @@ We recommend incorporating `ld-find-code-refs` into your CI/CD build process. `l
 
 ### Prerequisites
 
-`ld-find-code-refs` has two dependencies, which need to be installed in the system path. 
+`ld-find-code-refs` requires git (tested with version 2.21.0) to be installed on the system path.
 
-The first dependency is git, which is used to infer your repositories branch name and version hash.
-
-The second dependency is a grep-like search tool. We currently support [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) or [the silver searcher (ag)](https://github.com/ggreer/the_silver_searcher). The following installation documentation will assume you are using ripgrep.
-
-| Dependency | Version Tested |
-| ---------- | -------------- |
-| git        | 2.21.0         |
-| rg         | 12.1.0         |
-| ag         | 2.2.0          |
-
-All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
+All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with git preinstalled.
 
 ### Installing
 
@@ -79,8 +69,6 @@ We do not yet have repositories set up for our linux packages, but we do upload 
 This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
 
 ```bash
-apt-get install ripgrep
-
 wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/latest \
 	| grep "browser_download_url" \
 	| grep "amd64.deb" \
@@ -92,11 +80,7 @@ dpkg -i ld-find-code-refs.amd64.deb
 
 #### Windows
 
-A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). The following Chocolatey command may be used to install the required dependency for search, rigrep (`rg`). If you do not have Chocolatey installed, see `rg`'s documentation for [installation instructions](https://github.com/BurntSushi/ripgrep#installation).
-
-```powershell
-choco install ripgrep
-```
+A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). 
 
 #### Docker
 
