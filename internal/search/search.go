@@ -99,32 +99,22 @@ func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int,
 		for i, line := range f.lines {
 			match := f.linesIfMatch(projKey, flagKey, line, aliases[flagKey], i, ctxLines, delimiters)
 			if match != nil {
-				hunksForFlag = append(hunksForFlag, *match)
+				lastHunkIdx := len(hunksForFlag) - 1
+				if lastHunkIdx >= 0 && hunksForFlag[lastHunkIdx].Overlap(*match) >= 0 {
+					hunksForFlag = append(hunksForFlag[:lastHunkIdx], mergeHunks(hunksForFlag[lastHunkIdx], *match, ctxLines)...)
+				} else {
+					hunksForFlag = append(hunksForFlag, *match)
+				}
 			}
 		}
 
-		hunks = append(hunks, consolidateHunks(hunksForFlag, ctxLines)...)
+		hunks = append(hunks, hunksForFlag...)
 	}
 
 	if len(hunks) == 0 {
 		return nil
 	}
 	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
-}
-
-// consolidateHunks recursively combines overlapping and adjacent hunks
-func consolidateHunks(hunks []ld.HunkRep, ctxLines int) []ld.HunkRep {
-	if ctxLines < 0 || len(hunks) <= 1 {
-		return hunks
-	}
-	for i, hunk := range hunks[1:] {
-		prevHunk := hunks[i]
-		if prevHunk.Overlap(hunk) >= 0 {
-			remainingHunks := append(mergeHunks(prevHunk, hunk, ctxLines), hunks[i+2:]...)
-			return append(hunks[:i], consolidateHunks(remainingHunks, ctxLines)...)
-		}
-	}
-	return hunks
 }
 
 // mergeHunks combines the lines and aliases of two hunks together for a given file

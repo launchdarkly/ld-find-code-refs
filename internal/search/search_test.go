@@ -77,88 +77,89 @@ func Test_truncateLine(t *testing.T) {
 	}
 }
 
-func Test_consolidateHunks(t *testing.T) {
-	tests := []struct {
-		name     string
-		ctxLines int
-		hunks    []ld.HunkRep
-		want     []ld.HunkRep
-	}{
-		{
-			name:     "does not combine any hunks when there are no overlaps",
-			ctxLines: 1,
-			hunks: []ld.HunkRep{
-				makeHunk(1, "a", "b", "c"),
-				makeHunk(5, "e", "f", "g"),
-				makeHunk(9, "i", "j", "k"),
-			},
-			want: []ld.HunkRep{
-				makeHunk(1, "a", "b", "c"),
-				makeHunk(5, "e", "f", "g"),
-				makeHunk(9, "i", "j", "k"),
-			},
-		},
-		{
-			name:     "combines adjacent hunks",
-			ctxLines: 0,
-			hunks: []ld.HunkRep{
-				makeHunk(1, "a"),
-				makeHunk(2, "b"),
-				makeHunk(3, "c"),
-			},
-			want: []ld.HunkRep{
-				makeHunk(1, "a", "b", "c"),
-			},
-		},
-		{
-			name:     "does not combine when there are no context lines",
-			ctxLines: -1,
-			hunks: []ld.HunkRep{
-				makeHunk(1, "a"),
-				makeHunk(2, "b"),
-				makeHunk(3, "c"),
-			},
-			want: []ld.HunkRep{
-				makeHunk(1, "a"),
-				makeHunk(2, "b"),
-				makeHunk(3, "c"),
-			},
-		},
-		{
-			name:     "combines overlapping hunks",
-			ctxLines: 1,
-			hunks: []ld.HunkRep{
-				makeHunk(1, "a", "b", "c"),
-				makeHunk(3, "c", "d", "e"),
-				makeHunk(5, "e", "f", "g"),
-			},
-			want: []ld.HunkRep{
-				makeHunk(1, "a", "b", "c", "d", "e", "f", "g"),
-			},
-		},
-		{
-			name:     "combines multiple types of overlaps",
-			ctxLines: 1,
-			hunks: []ld.HunkRep{
-				makeHunk(1, "a", "b", "c"),
-				makeHunk(4, "d", "e", "f"),
-				makeHunk(6, "f", "g", "h"),
-				makeHunk(10, "j", "k", "l"),
-			},
-			want: []ld.HunkRep{
-				makeHunk(1, "a", "b", "c", "d", "e", "f", "g", "h"),
-				makeHunk(10, "j", "k", "l"),
-			},
-		},
-	}
+// TODO: convert to toHunks test
+// func Test_consolidateHunks(t *testing.T) {
+// 	tests := []struct {
+// 		name     string
+// 		ctxLines int
+// 		hunks    []ld.HunkRep
+// 		want     []ld.HunkRep
+// 	}{
+// 		{
+// 			name:     "does not combine any hunks when there are no overlaps",
+// 			ctxLines: 1,
+// 			hunks: []ld.HunkRep{
+// 				makeHunk(1, "a", "b", "c"),
+// 				makeHunk(5, "e", "f", "g"),
+// 				makeHunk(9, "i", "j", "k"),
+// 			},
+// 			want: []ld.HunkRep{
+// 				makeHunk(1, "a", "b", "c"),
+// 				makeHunk(5, "e", "f", "g"),
+// 				makeHunk(9, "i", "j", "k"),
+// 			},
+// 		},
+// 		{
+// 			name:     "combines adjacent hunks",
+// 			ctxLines: 0,
+// 			hunks: []ld.HunkRep{
+// 				makeHunk(1, "a"),
+// 				makeHunk(2, "b"),
+// 				makeHunk(3, "c"),
+// 			},
+// 			want: []ld.HunkRep{
+// 				makeHunk(1, "a", "b", "c"),
+// 			},
+// 		},
+// 		{
+// 			name:     "does not combine when there are no context lines",
+// 			ctxLines: -1,
+// 			hunks: []ld.HunkRep{
+// 				makeHunk(1, "a"),
+// 				makeHunk(2, "b"),
+// 				makeHunk(3, "c"),
+// 			},
+// 			want: []ld.HunkRep{
+// 				makeHunk(1, "a"),
+// 				makeHunk(2, "b"),
+// 				makeHunk(3, "c"),
+// 			},
+// 		},
+// 		{
+// 			name:     "combines overlapping hunks",
+// 			ctxLines: 1,
+// 			hunks: []ld.HunkRep{
+// 				makeHunk(1, "a", "b", "c"),
+// 				makeHunk(3, "c", "d", "e"),
+// 				makeHunk(5, "e", "f", "g"),
+// 			},
+// 			want: []ld.HunkRep{
+// 				makeHunk(1, "a", "b", "c", "d", "e", "f", "g"),
+// 			},
+// 		},
+// 		{
+// 			name:     "combines multiple types of overlaps",
+// 			ctxLines: 1,
+// 			hunks: []ld.HunkRep{
+// 				makeHunk(1, "a", "b", "c"),
+// 				makeHunk(4, "d", "e", "f"),
+// 				makeHunk(6, "f", "g", "h"),
+// 				makeHunk(10, "j", "k", "l"),
+// 			},
+// 			want: []ld.HunkRep{
+// 				makeHunk(1, "a", "b", "c", "d", "e", "f", "g", "h"),
+// 				makeHunk(10, "j", "k", "l"),
+// 			},
+// 		},
+// 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := consolidateHunks(tt.hunks, tt.ctxLines)
-			require.Equal(t, tt.want, got)
-		})
-	}
-}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			got := consolidateHunks(tt.hunks, tt.ctxLines)
+// 			require.Equal(t, tt.want, got)
+// 		})
+// 	}
+// }
 
 func Test_mergeHunks(t *testing.T) {
 	tests := []struct {
