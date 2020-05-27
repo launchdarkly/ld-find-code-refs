@@ -49,10 +49,6 @@ brew:
 
   url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
-  dependencies:
-    - "ag"
-    - "ripgrep"
-
   install: |
     bin.install "ld-find-code-refs"
 

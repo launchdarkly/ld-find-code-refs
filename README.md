@@ -29,13 +29,13 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the ld-find-code-refs utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
 
-| System           | Status                                                                            |
-| ---------------- | --------------------------------------------------------------------------------- |
-| GitHub Actions   | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions)               |
-| CircleCI Orbs    | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs)                |
-| Bitbucket Pipes  | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipes-coderefs)     |
-| GitLab CI        | [Supported](https://docs.launchdarkly.com/integrations/git-code-references/gitlab-ci)
-| Manually via CLI | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli) |
+| System           | Status                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| GitHub Actions   | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions)                   |
+| CircleCI Orbs    | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs)                    |
+| Bitbucket Pipes  | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipes-coderefs)         |
+| GitLab CI        | [Supported](https://docs.launchdarkly.com/integrations/git-code-references/gitlab-ci) |
+| Manually via CLI | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli)     |
 
 ## Execution via CLI
 
@@ -96,7 +96,7 @@ docker run \
 
 #### Manual
 
-Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`
+Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`.
 
 ### CLI Configuration
 

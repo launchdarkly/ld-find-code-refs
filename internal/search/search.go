@@ -77,10 +77,13 @@ type file struct {
 func (f file) linesIfMatch(projKey string, aliases []string, matchLineNum, ctxLines int, line, flagKey, delimiters string) *ld.HunkRep {
 	matchedFlag := false
 	aliasMatches := []string{}
-	if matchHasDelimiters(line, flagKey, delimiters) {
+
+	// Match flag keys with delimiters
+	if matchDelimiters(line, flagKey, delimiters) {
 		matchedFlag = true
 	}
 
+	// Match all aliases for the flag key
 	for _, alias := range aliases {
 		if strings.Contains(line, alias) {
 			aliasMatches = append(aliasMatches, alias)
@@ -111,7 +114,7 @@ func (f file) linesIfMatch(projKey string, aliases []string, matchLineNum, ctxLi
 	return &ret
 }
 
-func matchHasDelimiters(match string, flagKey string, delimiters string) bool {
+func matchDelimiters(match string, flagKey string, delimiters string) bool {
 	for _, left := range delimiters {
 		for _, right := range delimiters {
 			if strings.Contains(match, string(left)+flagKey+string(right)) {
@@ -195,7 +198,25 @@ func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int,
 	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
 }
 
-func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) ([]ld.ReferenceHunksRep, error) {
+// processFiles starts goroutines to process files individually. When all files have completed processing, the references channel is closed to signal completion.
+func processFiles(files chan file, references chan ld.ReferenceHunksRep, projKey string, aliases map[string][]string, ctxLines int, delimiters string) {
+	w := new(sync.WaitGroup)
+	for file := range files {
+		file := file
+		w.Add(1)
+		go func() {
+			reference := file.toHunks(projKey, aliases, ctxLines, delimiters)
+			if reference != nil {
+				references <- *reference
+			}
+			w.Done()
+		}()
+	}
+	w.Wait()
+	close(references)
+}
+
+func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
 
@@ -203,26 +224,13 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 	references := make(chan ld.ReferenceHunksRep)
 
 	// Start workers to process files asynchronously
-	go func() {
-		w := new(sync.WaitGroup)
-		for file := range files {
-			file := file
-			w.Add(1)
-			go func() {
-				reference := file.toHunks(projKey, aliases, ctxLines, string(delimiters))
-				if reference != nil {
-					references <- *reference
-				}
-				w.Done()
-			}()
-		}
-		w.Wait()
-		close(references)
-	}()
+	go processFiles(files, references, projKey, aliases, ctxLines, delimiters)
 
 	fileWg := sync.WaitGroup{}
 	readFile := func(path string, info os.FileInfo, err error) error {
 		isDir := info.IsDir()
+
+		// Skip directories, hidden files, and ignored files
 		if strings.HasPrefix(info.Name(), ".") || allIgnores.Match(path, isDir) {
 			if isDir {
 				return filepath.SkipDir
@@ -260,6 +268,11 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 	ret := []ld.ReferenceHunksRep{}
 	for reference := range references {
 		ret = append(ret, reference)
+
+		// Reached maximum number of files with code references
+		if len(ret) >= maxFileCount {
+			return ret, nil
+		}
 	}
 	return ret, nil
 }
