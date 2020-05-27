@@ -3,18 +3,16 @@ package search
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
+	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/monochromegane/go-gitignore"
 	"golang.org/x/tools/godoc/util"
-	"golang.org/x/tools/godoc/vfs"
 )
 
 type ignore struct {
@@ -49,38 +47,41 @@ type file struct {
 	lines []string
 }
 
-func (f file) linesIfMatch(aliases map[string][]string, aliasToFlag map[string]string, matchLineNum, ctxLines int, match, key, delimiters string) SearchResultLines {
-	if !strings.Contains(match, key) {
-		return nil
-	}
-	startingLineNum := matchLineNum - ctxLines
-	context := f.lines[startingLineNum : matchLineNum+ctxLines+1]
-	linesForMatch := make([]SearchResultLine, 0, len(context))
-	flagKey := key
-	_, isFlagKey := aliases[key]
-	if isFlagKey && !matchHasDelimiters(match, flagKey, delimiters) {
-		return nil
-	} else if !isFlagKey {
-		flagKey = aliasToFlag[key]
+func (f file) linesIfMatch(projKey string, aliases []string, matchLineNum, ctxLines int, line, flagKey, delimiters string) *ld.HunkRep {
+	matchedFlag := false
+	aliasMatches := []string{}
+	if matchHasDelimiters(line, flagKey, delimiters) {
+		matchedFlag = true
 	}
 
-	for i, line := range context {
-		srl := SearchResultLine{
-			Path:     f.path,
-			LineNum:  startingLineNum + i,
-			LineText: strings.TrimSuffix(line, "\n"),
+	for _, alias := range aliases {
+		if strings.Contains(line, alias) {
+			aliasMatches = append(aliasMatches, alias)
 		}
-		if i == ctxLines {
-			if srl.FlagKeys[flagKey] == nil {
-				srl.FlagKeys = map[string][]string{flagKey: {}}
-			}
-			if !isFlagKey {
-				srl.FlagKeys[flagKey] = append(srl.FlagKeys[flagKey], key)
-			}
-		}
-		linesForMatch = append(linesForMatch, srl)
 	}
-	return linesForMatch
+
+	if !matchedFlag && len(aliasMatches) == 0 {
+		return nil
+	}
+
+	startingLineNum := matchLineNum - ctxLines
+	if startingLineNum < 0 {
+		startingLineNum = 0
+	}
+
+	endingLineNum := matchLineNum + ctxLines + 1
+	if endingLineNum >= len(f.lines) {
+		endingLineNum = len(f.lines) - 1
+	}
+
+	context := f.lines[startingLineNum:endingLineNum]
+
+	ret := ld.HunkRep{ProjKey: projKey, FlagKey: flagKey, StartingLineNumber: startingLineNum + 1, Lines: strings.Join(context, "\n")}
+	for _, alias := range aliasMatches {
+		ret.Aliases = []string{alias}
+	}
+
+	return &ret
 }
 
 func matchHasDelimiters(match string, flagKey string, delimiters string) bool {
@@ -94,69 +95,101 @@ func matchHasDelimiters(match string, flagKey string, delimiters string) bool {
 	return false
 }
 
-func (f file) toSearchResultLines(projKey string, aliases map[string][]string, ctxLines int, delimiters string) SearchResultLines {
-	ret := SearchResultLines{}
+func consolidateHunks(hunks []ld.HunkRep, ctxLines int) []ld.HunkRep {
+	if ctxLines < 0 {
+		return hunks
+	}
+
+	combinedHunks := make([]ld.HunkRep, 0, len(hunks))
+	// Continually iterate over the slice of hunks, combining overlapping hunks
+	// until a pass is made with no overlaps
+	for combinedInLast := true; combinedInLast; {
+		combinedInLast = false
+		if len(hunks) <= 1 {
+			return hunks
+		}
+		for i, hunk := range hunks[1:] {
+			prevHunk := hunks[i]
+			if prevHunk.StartingLineNumber+2*ctxLines >= hunk.StartingLineNumber {
+				combinedHunks = append(combinedHunks, combineHunks(prevHunk, hunk, ctxLines))
+				combinedInLast = true
+			} else {
+				combinedHunks = append(combinedHunks, prevHunk)
+				// on the last iteration and the last hunk was not combined
+				if i == len(hunks)-1 {
+					combinedHunks = append(combinedHunks, hunk)
+				}
+			}
+		}
+
+		// Reset hunk slices for the next pass
+		hunks = combinedHunks
+		combinedHunks = make([]ld.HunkRep, 0, len(hunks))
+	}
+	return hunks
+}
+
+// combineHunks assumes the startingLineNumber of a is less than b
+func combineHunks(a, b ld.HunkRep, ctxLines int) ld.HunkRep {
+	aLines := strings.Split(a.Lines, "\n")
+	bLines := strings.Split(b.Lines, "\n")
+	combinedLines := append(aLines, bLines...)
+	return ld.HunkRep{
+		StartingLineNumber: a.StartingLineNumber,
+		Lines:              strings.Join(helpers.Dedupe(combinedLines), "\n"),
+		ProjKey:            a.ProjKey,
+		FlagKey:            a.FlagKey,
+		Aliases:            helpers.Dedupe(append(a.Aliases, b.Aliases...)),
+	}
+}
+
+func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int, delimiters string) *ld.ReferenceHunksRep {
+	hunks := []ld.HunkRep{}
 
 	ctxLinesString := ""
 	for i := 0; i <= ctxLines; i++ {
 		ctxLinesString = ctxLinesString + ".*\\n?"
 	}
-	flagKeys := []string{}
-	flattenedAliases := []string{}
-	aliasToFlag := map[string]string{}
-	for flagKey, flagAliases := range aliases {
-		flagKeys = append(flagKeys, regexp.QuoteMeta(flagKey))
-		for _, alias := range flagAliases {
-			flattenedAliases = append(flattenedAliases, regexp.QuoteMeta(alias))
-			aliasToFlag[alias] = flagKey
-		}
-	}
-	for _, key := range append(flagKeys, flattenedAliases...) {
+	for flagKey := range aliases {
+		hunksForFlag := []ld.HunkRep{}
 		for i, line := range f.lines {
-			match := f.linesIfMatch(aliases, aliasToFlag, i, ctxLines, line, key, delimiters)
+			match := f.linesIfMatch(projKey, aliases[flagKey], i, ctxLines, line, flagKey, delimiters)
 			if match != nil {
-				ret = append(ret, match...)
+				hunksForFlag = append(hunksForFlag, *match)
 			}
 		}
+
+		hunks = append(hunks, hunksForFlag...)
 	}
 
-	if len(ret) == 0 {
+	if len(hunks) == 0 {
 		return nil
 	}
-	return ret
+	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
 }
 
-type opener struct{}
-
-func (o opener) Open(name string) (vfs.ReadSeekCloser, error) {
-	return os.Open(name)
-}
-
-func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) (SearchResultLines, error) {
+func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters []byte) ([]ld.ReferenceHunksRep, error) {
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
-	// maxConcurrency := runtime.NumCPU()
 
-	fullStartTime := time.Now()
-	files := make(chan file, 100000)
-	references := make(chan SearchResultLines)
-	// Start a workers to process files asynchronously
+	files := make(chan file)
+	references := make(chan ld.ReferenceHunksRep)
+
+	// Start workers to process files asynchronously
 	go func() {
 		w := new(sync.WaitGroup)
 		for file := range files {
 			file := file
 			w.Add(1)
 			go func() {
-				reference := file.toSearchResultLines(projKey, aliases, ctxLines, string(delimiters))
+				reference := file.toHunks(projKey, aliases, ctxLines, string(delimiters))
 				if reference != nil {
-					references <- reference
+					references <- *reference
 				}
 				w.Done()
 			}()
 		}
 		w.Wait()
-		delta := time.Now().Sub(fullStartTime).Milliseconds()
-		fmt.Println("done with refs", delta)
 		close(references)
 	}()
 
@@ -197,12 +230,9 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 	fileWg.Wait()
 	close(files)
 
-	delta := time.Now().Sub(fullStartTime).Milliseconds()
-	fmt.Println("done reading files", delta)
-
-	ret := SearchResultLines{}
+	ret := []ld.ReferenceHunksRep{}
 	for reference := range references {
-		ret = append(ret, reference...)
+		ret = append(ret, reference)
 	}
 	return ret, nil
 }

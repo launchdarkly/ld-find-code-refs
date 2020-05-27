@@ -3,7 +3,6 @@ package coderefs
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
@@ -21,14 +20,6 @@ const (
 	minFlagKeyLen    = 3  // Minimum flag key length helps reduce the number of false positives
 	maxProjKeyLength = 20 // Maximum project key length
 )
-
-type branch struct {
-	Name             string
-	Head             string
-	UpdateSequenceId *int
-	SyncTime         int64
-	SearchResults    search.SearchResultLines
-}
 
 func Scan(opts options.Options) {
 	// Don't log ld access token
@@ -110,12 +101,6 @@ func Scan(opts options.Options) {
 		updateIdOption := opts.UpdateSequenceId
 		updateId = &updateIdOption
 	}
-	b := &branch{
-		Name:             gitClient.GitBranch,
-		UpdateSequenceId: updateId,
-		SyncTime:         makeTimestamp(),
-		Head:             gitClient.GitSha,
-	}
 
 	// Configure delimiters
 	delims := []string{`"`, `'`, "`"}
@@ -133,14 +118,17 @@ func Scan(opts options.Options) {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
 
-	b.SearchResults = refs
-	sort.Sort(b.SearchResults)
-
-	branchRep := b.makeBranchRep(projKey, ctxLines)
+	branch := ld.BranchRep{
+		Name:             strings.TrimPrefix(gitClient.GitBranch, "refs/heads/"),
+		Head:             gitClient.GitSha,
+		UpdateSequenceId: updateId,
+		SyncTime:         makeTimestamp(),
+		References:       refs,
+	}
 
 	outDir := opts.OutDir
 	if outDir != "" {
-		outPath, err := branchRep.WriteToCSV(outDir, projKey, repoParams.Name, gitClient.GitSha)
+		outPath, err := branch.WriteToCSV(outDir, projKey, repoParams.Name, gitClient.GitSha)
 		if err != nil {
 			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
@@ -148,32 +136,32 @@ func Scan(opts options.Options) {
 	}
 
 	if opts.Debug {
-		branchRep.PrintReferenceCountTable()
+		branch.PrintReferenceCountTable()
 	}
 
 	if isDryRun {
 		log.Info.Printf(
 			"dry run found %d code references across %d flags and %d files",
-			branchRep.TotalHunkCount(),
+			branch.TotalHunkCount(),
 			len(filteredFlags),
-			len(branchRep.References),
+			len(branch.References),
 		)
 		return
 	}
 
 	log.Info.Printf(
 		"sending %d code references across %d flags and %d files to LaunchDarkly for project: %s",
-		branchRep.TotalHunkCount(),
+		branch.TotalHunkCount(),
 		len(filteredFlags),
-		len(branchRep.References),
+		len(branch.References),
 		projKey,
 	)
 
-	err = ldApi.PutCodeReferenceBranch(branchRep, repoParams.Name)
+	err = ldApi.PutCodeReferenceBranch(branch, repoParams.Name)
 	switch {
 	case err == ld.BranchUpdateSequenceIdConflictErr:
-		if b.UpdateSequenceId != nil {
-			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *b.UpdateSequenceId)
+		if branch.UpdateSequenceId != nil {
+			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *branch.UpdateSequenceId)
 		}
 	case err == ld.EntityTooLargeErr:
 		log.Error.Fatalf("code reference payload too large for LaunchDarkly API - consider excluding more files with .ldignore")
@@ -243,16 +231,6 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 		return nil, err
 	}
 	return flags, nil
-}
-
-func (b *branch) makeBranchRep(projKey string, ctxLines int) ld.BranchRep {
-	return ld.BranchRep{
-		Name:             strings.TrimPrefix(b.Name, "refs/heads/"),
-		Head:             b.Head,
-		UpdateSequenceId: b.UpdateSequenceId,
-		SyncTime:         b.SyncTime,
-		References:       b.SearchResults.MakeReferenceHunksReps(projKey, ctxLines),
-	}
 }
 
 func makeTimestamp() int64 {
