@@ -185,9 +185,10 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 	files := make(chan file)
 	references := make(chan ld.ReferenceHunksRep)
 
-	// Start workers to process files asynchronously
+	// Start workers to process files asynchronously as they are written to the files channel
 	go processFiles(files, references, projKey, aliases, ctxLines, delimiters)
 
+	// Blocks until all files have been read, but not necessarily processed
 	readFiles(files, workspace)
 
 	ret := []ld.ReferenceHunksRep{}
