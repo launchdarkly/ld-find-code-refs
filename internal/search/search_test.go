@@ -2,6 +2,7 @@ package search
 
 import (
 	"os"
+	"sort"
 	"strings"
 	"testing"
 
@@ -278,11 +279,18 @@ func Test_mergeHunks(t *testing.T) {
 
 func Test_toHunks(t *testing.T) {
 	f := testFile
-	got := f.toHunks("default", aliases, 0, "")
 	want := ld.ReferenceHunksRep{
 		Path:  "fileWithRefs",
 		Hunks: testResultHunks,
 	}
+	got := f.toHunks("default", aliases, 0, "")
+
+	sort.SliceStable(got.Hunks, func(i, j int) bool {
+		return got.Hunks[i].FlagKey < got.Hunks[j].FlagKey
+	})
+	sort.SliceStable(want.Hunks, func(i, j int) bool {
+		return want.Hunks[i].FlagKey < want.Hunks[j].FlagKey
+	})
 	require.Equal(t, &want, got)
 	// no hunks should generate no references
 	require.Nil(t, f.toHunks("default", nil, 0, ""))
