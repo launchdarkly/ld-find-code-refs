@@ -99,12 +99,9 @@ func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum, ct
 		FlagKey:            flagKey,
 		StartingLineNumber: startingLineNum + 1,
 		Lines:              strings.Join(context, "\n"),
-		Aliases:            []string{}}
-	for _, alias := range aliasMatches {
-		ret.Aliases = append(ret.Aliases, alias)
+		Aliases:            []string{},
 	}
-	ret.Aliases = helpers.Dedupe(ret.Aliases)
-
+	ret.Aliases = helpers.Dedupe(append(ret.Aliases, aliasMatches...))
 	return &ret
 }
 

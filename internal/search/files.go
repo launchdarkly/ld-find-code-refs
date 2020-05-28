@@ -45,12 +45,12 @@ func readFileLines(path string) ([]string, error) {
 		return nil, errors.New("file does not exist")
 	}
 
+	/* #nosec */
 	file, err := os.Open(path)
-	defer file.Close()
-
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
