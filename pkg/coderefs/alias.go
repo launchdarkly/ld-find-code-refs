@@ -59,7 +59,7 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 		// Concatenate the contents of all files into a single byte array to be matched by specified patterns
 		fileContents := []byte{}
 		for _, path := range a.Paths {
-			pathFileContents := allFileContents[path]
+			pathFileContents := allFileContents[filepath.Join(dir, path)]
 			fileContents = append(fileContents, pathFileContents...)
 		}
 
