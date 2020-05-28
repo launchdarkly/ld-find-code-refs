@@ -1,6 +1,7 @@
 package search
 
 import (
+	"sort"
 	"strings"
 	"sync"
 
@@ -33,10 +34,14 @@ func truncateLine(line string) string {
 	return string(runes[0:maxLineCharCount]) + "…"
 }
 
-func matchDelimiters(match string, flagKey string, delimiters string) bool {
+// matchDelimiters returns true if the given line contains the flag key surrounded by any delimiters
+func matchDelimiters(line string, flagKey string, delimiters string) bool {
+	if delimiters == "" && strings.Contains(line, flagKey) {
+		return true
+	}
 	for _, left := range delimiters {
 		for _, right := range delimiters {
-			if strings.Contains(match, string(left)+flagKey+string(right)) {
+			if strings.Contains(line, string(left)+flagKey+string(right)) {
 				return true
 			}
 		}
@@ -49,10 +54,11 @@ type file struct {
 	lines []string
 }
 
-func (f file) linesIfMatch(projKey, flagKey, line string, aliases []string, matchLineNum, ctxLines int, delimiters string) *ld.HunkRep {
+// hunkForLine returns a matching code reference for a given flag key on a line
+func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum, ctxLines int, delimiters string) *ld.HunkRep {
 	matchedFlag := false
 	aliasMatches := []string{}
-
+	line := f.lines[lineNum]
 	// Match flag keys with delimiters
 	if matchDelimiters(line, flagKey, delimiters) {
 		matchedFlag = true
@@ -69,20 +75,21 @@ func (f file) linesIfMatch(projKey, flagKey, line string, aliases []string, matc
 		return nil
 	}
 
-	startingLineNum := matchLineNum
+	startingLineNum := lineNum
 	var context []string
 	if ctxLines >= 0 {
 		startingLineNum -= ctxLines
 		if startingLineNum < 0 {
 			startingLineNum = 0
 		}
-		endingLineNum := matchLineNum + ctxLines + 1
+		endingLineNum := lineNum + ctxLines + 1
 		if endingLineNum >= len(f.lines) {
 			context = f.lines[startingLineNum:]
 		} else {
 			context = f.lines[startingLineNum:endingLineNum]
 		}
 	}
+
 	for i, line := range context {
 		context[i] = truncateLine(line)
 	}
@@ -94,10 +101,29 @@ func (f file) linesIfMatch(projKey, flagKey, line string, aliases []string, matc
 		Lines:              strings.Join(context, "\n"),
 		Aliases:            []string{}}
 	for _, alias := range aliasMatches {
-		ret.Aliases = []string{alias}
+		ret.Aliases = append(ret.Aliases, alias)
 	}
+	ret.Aliases = helpers.Dedupe(ret.Aliases)
 
 	return &ret
+}
+
+// aggregateHunksForFlag finds all references in a file, and combines matches if their context lines overlap
+func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []string, ctxLines int, delimiters string) []ld.HunkRep {
+	hunksForFlag := []ld.HunkRep{}
+	for i := range f.lines {
+		match := f.hunkForLine(projKey, flagKey, flagAliases, i, ctxLines, delimiters)
+		if match != nil {
+			lastHunkIdx := len(hunksForFlag) - 1
+			// If the previous hunk overlaps or is adjacent to the current hunk, merge them together
+			if lastHunkIdx >= 0 && hunksForFlag[lastHunkIdx].Overlap(*match) >= 0 {
+				hunksForFlag = append(hunksForFlag[:lastHunkIdx], mergeHunks(hunksForFlag[lastHunkIdx], *match)...)
+			} else {
+				hunksForFlag = append(hunksForFlag, *match)
+			}
+		}
+	}
+	return hunksForFlag
 }
 
 func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int, delimiters string) *ld.ReferenceHunksRep {
@@ -111,28 +137,10 @@ func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int,
 	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
 }
 
-// aggregateHunksForFlag finds all references in a file, and combines matches into hunks if their context lines overlap
-func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []string, ctxLines int, delimiters string) []ld.HunkRep {
-	hunksForFlag := []ld.HunkRep{}
-	for i, line := range f.lines {
-		match := f.linesIfMatch(projKey, flagKey, line, flagAliases, i, ctxLines, delimiters)
-		if match != nil {
-			lastHunkIdx := len(hunksForFlag) - 1
-			// If the previous hunk overlaps or is adjacent to the current hunk, merge them together
-			if lastHunkIdx >= 0 && hunksForFlag[lastHunkIdx].Overlap(*match) >= 0 {
-				hunksForFlag = append(hunksForFlag[:lastHunkIdx], mergeHunks(hunksForFlag[lastHunkIdx], *match, ctxLines)...)
-			} else {
-				hunksForFlag = append(hunksForFlag, *match)
-			}
-		}
-	}
-	return hunksForFlag
-}
-
 // mergeHunks combines the lines and aliases of two hunks together for a given file
 // if the hunks do not overlap, returns each hunk separately
 // assumes the startingLineNumber of a is less than b and there is some overlap between the two
-func mergeHunks(a, b ld.HunkRep, ctxLines int) []ld.HunkRep {
+func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 	if a.StartingLineNumber > b.StartingLineNumber {
 		a, b = b, a
 	}
@@ -141,7 +149,7 @@ func mergeHunks(a, b ld.HunkRep, ctxLines int) []ld.HunkRep {
 	bLines := strings.Split(b.Lines, "\n")
 	overlap := a.Overlap(b)
 	// no overlap
-	if ctxLines < 0 || overlap < 0 {
+	if overlap < 0 || len(a.Lines) == 0 && len(b.Lines) == 0 {
 		return []ld.HunkRep{a, b}
 	} else if overlap >= len(bLines) {
 		// subset hunk
@@ -178,7 +186,7 @@ func processFiles(files chan file, references chan ld.ReferenceHunksRep, projKey
 	close(references)
 }
 
-func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
+func SearchForRefs(projKey, workspace string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
 	files := make(chan file)
 	references := make(chan ld.ReferenceHunksRep)
 
@@ -186,9 +194,17 @@ func SearchForRefs(projKey, workspace string, searchTerms []string, aliases map[
 	go processFiles(files, references, projKey, aliases, ctxLines, delimiters)
 
 	// Blocks until all files have been read, but not necessarily processed
-	readFiles(files, workspace)
+	err := readFiles(files, workspace)
+	if err != nil {
+		return nil, err
+	}
 
 	ret := []ld.ReferenceHunksRep{}
+
+	defer sort.SliceStable(ret, func(i, j int) bool {
+		return ret[i].Path < ret[j].Path
+	})
+
 	totalHunks := 0
 	for reference := range references {
 		ret = append(ret, reference)

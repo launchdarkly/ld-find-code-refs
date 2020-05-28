@@ -109,10 +109,7 @@ func Scan(opts options.Options) {
 	}
 	delims = append(delims, opts.Delimiters.Additional...)
 	delimString := strings.Join(helpers.Dedupe(delims), "")
-	startTime := time.Now()
-	fmt.Println("start", 0)
-	refs, err := search.SearchForRefs(projKey, absPath, filteredFlags, aliases, ctxLines, delimString)
-	fmt.Println("end", time.Now().Sub(startTime).Milliseconds())
+	refs, err := search.SearchForRefs(projKey, absPath, aliases, ctxLines, delimString)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}

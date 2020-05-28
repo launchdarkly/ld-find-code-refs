@@ -39,6 +39,7 @@ func (m ignore) Match(path string, isDir bool) bool {
 
 	return false
 }
+
 func readFileLines(path string) ([]string, error) {
 	if !validation.FileExists(path) {
 		return nil, errors.New("file does not exist")
