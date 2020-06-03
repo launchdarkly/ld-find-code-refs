@@ -10,7 +10,7 @@ import (
 
 func Test_readFiles(t *testing.T) {
 	files := make(chan file, 8)
-	err := readFiles(context.Background(), func() {}, files, "testdata")
+	err := readFiles(context.Background(), files, "testdata")
 	require.NoError(t, err)
 	got := []file{}
 	for file := range files {

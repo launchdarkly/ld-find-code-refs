@@ -172,13 +172,13 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w := sync.WaitGroup{}
 	for f := range files {
 		if ctx.Err() != nil {
-			// context cancelled, don't process any more files
-			return
+			// context cancelled, stop processing files, but let the waitgroup finish organically
+			continue
 		}
 		w.Add(1)
 		go func(f file) {
 			reference := f.toHunks(projKey, aliases, ctxLines, delimiters)
-			if reference != nil && ctx.Err() == nil {
+			if reference != nil {
 				references <- *reference
 			}
 			w.Done()
@@ -189,14 +189,14 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 
 func SearchForRefs(projKey, workspace string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	files := make(chan file)
 	references := make(chan ld.ReferenceHunksRep)
 
 	// Start workers to process files asynchronously as they are written to the files channel
 	go processFiles(ctx, files, references, projKey, aliases, ctxLines, delimiters)
 
-	// Blocks until all files have been read, but not necessarily processed
-	err := readFiles(ctx, cancel, files, workspace)
+	err := readFiles(ctx, files, workspace)
 	if err != nil {
 		return nil, err
 	}
@@ -213,13 +213,11 @@ func SearchForRefs(projKey, workspace string, aliases map[string][]string, ctxLi
 
 		// Reached maximum number of files with code references
 		if len(ret) >= maxFileCount {
-			cancel()
 			return ret, nil
 		}
 		totalHunks += len(reference.Hunks)
 		// Reached maximum number of hunks across all files
 		if totalHunks > maxHunkCount {
-			cancel()
 			return ret, nil
 		}
 	}

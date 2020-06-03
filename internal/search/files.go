@@ -10,7 +10,6 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/monochromegane/go-gitignore"
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/tools/godoc/util"
 )
 
@@ -64,18 +63,13 @@ func readFileLines(path string) ([]string, error) {
 	return lines, nil
 }
 
-func readFiles(ctx context.Context, cancel context.CancelFunc, files chan<- file, workspace string) error {
+func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	defer close(files)
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
 
-	g, fileCtx := errgroup.WithContext(ctx)
 	readFile := func(path string, info os.FileInfo, err error) error {
-		if fileCtx.Err() != nil {
-			// potential error reading files, cancel the global context too
-			cancel()
-			return nil
-		} else if ctx.Err() != nil {
+		if ctx.Err() != nil {
 			// global context cancelled, don't read any more files
 			return nil
 		}
@@ -92,26 +86,19 @@ func readFiles(ctx context.Context, cancel context.CancelFunc, files chan<- file
 			return nil
 		}
 
-		g.Go(func() error {
-			lines, err := readFileLines(path)
-			if err != nil {
-				return err
-			}
+		lines, err := readFileLines(path)
+		if err != nil {
+			return err
+		}
 
-			// only read text files
-			if !util.IsText([]byte(strings.Join(lines, "\n"))) {
-				return nil
-			}
-
-			files <- file{path: strings.TrimPrefix(path, workspace+"/"), lines: lines}
+		// only read text files
+		if !util.IsText([]byte(strings.Join(lines, "\n"))) {
 			return nil
-		})
+		}
+
+		files <- file{path: strings.TrimPrefix(path, workspace+"/"), lines: lines}
 		return nil
 	}
 
-	err := filepath.Walk(workspace, readFile)
-	if err != nil {
-		return err
-	}
-	return g.Wait()
+	return filepath.Walk(workspace, readFile)
 }
