@@ -172,6 +172,7 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w := sync.WaitGroup{}
 	for f := range files {
 		if ctx.Err() != nil {
+			// context cancelled, don't process any more files
 			return
 		}
 		w.Add(1)
@@ -184,7 +185,6 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 		}(f)
 	}
 	w.Wait()
-	return
 }
 
 func SearchForRefs(projKey, workspace string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
