@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"sort"
 	"strings"
 	"sync"
@@ -166,9 +167,13 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 }
 
 // processFiles starts goroutines to process files individually. When all files have completed processing, the references channel is closed to signal completion.
-func processFiles(files chan file, references chan ld.ReferenceHunksRep, projKey string, aliases map[string][]string, ctxLines int, delimiters string) {
-	w := new(sync.WaitGroup)
+func processFiles(ctx context.Context, files <-chan file, references chan<- ld.ReferenceHunksRep, projKey string, aliases map[string][]string, ctxLines int, delimiters string) {
+	defer close(references)
+	w := sync.WaitGroup{}
 	for f := range files {
+		if ctx.Err() != nil {
+			return
+		}
 		w.Add(1)
 		go func(f file) {
 			reference := f.toHunks(projKey, aliases, ctxLines, delimiters)
@@ -179,18 +184,19 @@ func processFiles(files chan file, references chan ld.ReferenceHunksRep, projKey
 		}(f)
 	}
 	w.Wait()
-	close(references)
+	return
 }
 
 func SearchForRefs(projKey, workspace string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
+	ctx, cancel := context.WithCancel(context.Background())
 	files := make(chan file)
 	references := make(chan ld.ReferenceHunksRep)
 
 	// Start workers to process files asynchronously as they are written to the files channel
-	go processFiles(files, references, projKey, aliases, ctxLines, delimiters)
+	go processFiles(ctx, files, references, projKey, aliases, ctxLines, delimiters)
 
 	// Blocks until all files have been read, but not necessarily processed
-	err := readFiles(files, workspace)
+	err := readFiles(ctx, cancel, files, workspace)
 	if err != nil {
 		return nil, err
 	}
@@ -207,11 +213,13 @@ func SearchForRefs(projKey, workspace string, aliases map[string][]string, ctxLi
 
 		// Reached maximum number of files with code references
 		if len(ret) >= maxFileCount {
+			cancel()
 			return ret, nil
 		}
 		totalHunks += len(reference.Hunks)
 		// Reached maximum number of hunks across all files
 		if totalHunks > maxHunkCount {
+			cancel()
 			return ret, nil
 		}
 	}
