@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 
 func Test_readFiles(t *testing.T) {
 	files := make(chan file, 8)
-	err := readFiles(files, "testdata")
+	err := readFiles(context.Background(), func() {}, files, "testdata")
 	require.NoError(t, err)
 	got := []file{}
 	for file := range files {

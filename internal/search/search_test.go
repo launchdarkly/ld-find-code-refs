@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -295,7 +296,7 @@ func Test_processFiles(t *testing.T) {
 	files <- f2
 	files <- file{path: "no-refs"}
 	close(files)
-	go processFiles(files, references, "default", aliases, 0, "")
+	go processFiles(context.Background(), files, references, "default", aliases, 0, "")
 	totalRefs := 0
 	totalHunks := 0
 	for reference := range references {

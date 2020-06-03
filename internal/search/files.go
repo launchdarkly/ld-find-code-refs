@@ -2,14 +2,15 @@ package search
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/monochromegane/go-gitignore"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/tools/godoc/util"
 )
 
@@ -63,12 +64,22 @@ func readFileLines(path string) ([]string, error) {
 	return lines, nil
 }
 
-func readFiles(files chan file, workspace string) error {
+func readFiles(ctx context.Context, cancel context.CancelFunc, files chan<- file, workspace string) error {
+	defer close(files)
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
 
-	fileWg := sync.WaitGroup{}
+	g, fileCtx := errgroup.WithContext(ctx)
 	readFile := func(path string, info os.FileInfo, err error) error {
+		if fileCtx.Err() != nil {
+			// potential error reading files, cancel the global context too
+			cancel()
+			return nil
+		} else if ctx.Err() != nil {
+			// context cancelled, don't read any more files
+			return nil
+		}
+
 		isDir := info.IsDir()
 
 		// Skip directories, hidden files, and ignored files
@@ -81,9 +92,7 @@ func readFiles(files chan file, workspace string) error {
 			return nil
 		}
 
-		fileWg.Add(1)
-		go func() error {
-			defer fileWg.Done()
+		g.Go(func() error {
 			lines, err := readFileLines(path)
 			if err != nil {
 				return err
@@ -96,7 +105,7 @@ func readFiles(files chan file, workspace string) error {
 
 			files <- file{path: strings.TrimPrefix(path, workspace+"/"), lines: lines}
 			return nil
-		}()
+		})
 		return nil
 	}
 
@@ -104,7 +113,5 @@ func readFiles(files chan file, workspace string) error {
 	if err != nil {
 		return err
 	}
-	fileWg.Wait()
-	close(files)
-	return nil
+	return g.Wait()
 }
