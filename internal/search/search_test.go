@@ -287,8 +287,10 @@ func Test_toHunks(t *testing.T) {
 
 func Test_processFiles(t *testing.T) {
 	f := testFile
-	f2 := testFile
-	f2.path = f2.path + "2"
+	linesCopy := make([]string, len(f.lines))
+	copy(linesCopy, f.lines)
+	f2 := file{path: f.path + "2", lines: linesCopy}
+
 	files := make(chan file, 3)
 	references := make(chan ld.ReferenceHunksRep, 3)
 	files <- f

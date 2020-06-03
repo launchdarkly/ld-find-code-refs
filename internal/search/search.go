@@ -76,7 +76,7 @@ func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum, ct
 	}
 
 	startingLineNum := lineNum
-	var context []string
+	var hunkLines []string
 	if ctxLines >= 0 {
 		startingLineNum -= ctxLines
 		if startingLineNum < 0 {
@@ -84,21 +84,21 @@ func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum, ct
 		}
 		endingLineNum := lineNum + ctxLines + 1
 		if endingLineNum >= len(f.lines) {
-			context = f.lines[startingLineNum:]
+			hunkLines = f.lines[startingLineNum:]
 		} else {
-			context = f.lines[startingLineNum:endingLineNum]
+			hunkLines = f.lines[startingLineNum:endingLineNum]
 		}
 	}
 
-	for i, line := range context {
-		context[i] = truncateLine(line)
+	for i, line := range hunkLines {
+		hunkLines[i] = truncateLine(line)
 	}
 
 	ret := ld.HunkRep{
 		ProjKey:            projKey,
 		FlagKey:            flagKey,
 		StartingLineNumber: startingLineNum + 1,
-		Lines:              strings.Join(context, "\n"),
+		Lines:              strings.Join(hunkLines, "\n"),
 		Aliases:            []string{},
 	}
 	ret.Aliases = helpers.Dedupe(append(ret.Aliases, aliasMatches...))
@@ -168,16 +168,15 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 // processFiles starts goroutines to process files individually. When all files have completed processing, the references channel is closed to signal completion.
 func processFiles(files chan file, references chan ld.ReferenceHunksRep, projKey string, aliases map[string][]string, ctxLines int, delimiters string) {
 	w := new(sync.WaitGroup)
-	for file := range files {
-		file := file
+	for f := range files {
 		w.Add(1)
-		go func() {
-			reference := file.toHunks(projKey, aliases, ctxLines, delimiters)
+		go func(f file) {
+			reference := f.toHunks(projKey, aliases, ctxLines, delimiters)
 			if reference != nil {
 				references <- *reference
 			}
 			w.Done()
-		}()
+		}(f)
 	}
 	w.Wait()
 	close(references)
