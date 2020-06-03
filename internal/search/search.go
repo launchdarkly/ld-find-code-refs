@@ -178,7 +178,7 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 		w.Add(1)
 		go func(f file) {
 			reference := f.toHunks(projKey, aliases, ctxLines, delimiters)
-			if reference != nil {
+			if reference != nil && ctx.Err() == nil {
 				references <- *reference
 			}
 			w.Done()
