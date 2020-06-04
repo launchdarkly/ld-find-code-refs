@@ -69,7 +69,7 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	allIgnores := newIgnore(workspace, ignoreFiles)
 
 	readFile := func(path string, info os.FileInfo, err error) error {
-		if ctx.Err() != nil {
+		if err != nil || ctx.Err() != nil {
 			// global context cancelled, don't read any more files
 			return nil
 		}
