@@ -337,8 +337,6 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 				return res, EntityTooLargeErr
 			case "":
 				// do nothing
-			default:
-				return res, fmt.Errorf("%s, %s", ldErr.Code, ldErr.Message)
 			}
 		}
 		// The LaunchDarkly API should guarantee that we never have to fallback to these generic error messages, but we have them as a safeguard
