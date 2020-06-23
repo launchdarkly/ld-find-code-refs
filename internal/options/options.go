@@ -10,9 +10,10 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 type Options struct {
@@ -105,11 +106,6 @@ func validateYAMLPreconditions() error {
 func GetOptions() (Options, error) {
 	var opts Options
 	err := viper.Unmarshal(&opts)
-	if err != nil {
-		return opts, err
-	}
-
-	err = opts.Validate()
 	return opts, err
 }
 

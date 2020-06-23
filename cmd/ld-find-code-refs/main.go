@@ -3,11 +3,12 @@ package main
 import (
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 	"github.com/launchdarkly/ld-find-code-refs/pkg/coderefs"
-	"github.com/spf13/cobra"
 )
 
 var cmd = &cobra.Command{
@@ -22,6 +23,11 @@ var cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		err = opts.Validate()
+		if err != nil {
+			return err
+		}
+
 		log.Init(opts.Debug)
 		coderefs.Scan(opts)
 		return nil
