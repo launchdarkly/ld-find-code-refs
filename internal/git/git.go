@@ -1,4 +1,4 @@
-package command
+package git
 
 import (
 	"errors"
@@ -11,18 +11,18 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
-type GitClient struct {
+type Client struct {
 	workspace string
 	GitBranch string
 	GitSha    string
 }
 
-func NewGitClient(path string, branch string) (GitClient, error) {
+func NewClient(path string, branch string) (Client, error) {
 	if !filepath.IsAbs(path) {
 		log.Error.Fatalf("expected an absolute path but received a relative path: %s", path)
 	}
 
-	client := GitClient{workspace: path}
+	client := Client{workspace: path}
 
 	_, err := exec.LookPath("git")
 	if err != nil {
@@ -50,7 +50,7 @@ func NewGitClient(path string, branch string) (GitClient, error) {
 	return client, nil
 }
 
-func (c GitClient) branchName() (string, error) {
+func (c Client) branchName() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -65,7 +65,7 @@ func (c GitClient) branchName() (string, error) {
 	return ret, nil
 }
 
-func (c GitClient) headSha() (string, error) {
+func (c Client) headSha() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -77,7 +77,7 @@ func (c GitClient) headSha() (string, error) {
 	return ret, nil
 }
 
-func (c GitClient) RemoteBranches() (map[string]bool, error) {
+func (c Client) RemoteBranches() (map[string]bool, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "ls-remote", "--quiet", "--heads")
 	out, err := cmd.CombinedOutput()

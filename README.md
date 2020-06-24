@@ -29,30 +29,25 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the ld-find-code-refs utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
 
-| System           | Status                                                                            |
-| ---------------- | --------------------------------------------------------------------------------- |
-| GitHub Actions   | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions)               |
-| CircleCI Orbs    | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs)                |
-| Bitbucket Pipes  | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipes-coderefs)     |
-| GitLab CI        | [Supported](https://docs.launchdarkly.com/integrations/git-code-references/gitlab-ci)
-| Manually via CLI | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli) |
+| System           | Status                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| GitHub Actions   | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions)                   |
+| CircleCI Orbs    | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs)                    |
+| Bitbucket Pipes  | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipes-coderefs)         |
+| GitLab CI        | [Supported](https://docs.launchdarkly.com/integrations/git-code-references/gitlab-ci) |
+| Manually via CLI | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli)     |
 
 ## Execution via CLI
 
 The command line program may be run manually, and executed in an environment of your choosing. The program requires your `git` repo to be cloned locally, and the currently checked out branch will be scanned for code references.
 
-We recommend ingraining `ld-find-code-refs` into your CI/CD build process. `ld-find-code-refs` should run whenever a commit is pushed to your repository.
+We recommend incorporating `ld-find-code-refs` into your CI/CD build process. `ld-find-code-refs` should run whenever a commit is pushed to your repository.
 
 ### Prerequisites
 
-`ld-find-code-refs` has two dependencies, which need to be installed in the system path:
+`ld-find-code-refs` requires git (tested with version 2.21.0) to be installed on the system path.
 
-| Dependency                                                                | Version Tested |
-| ------------------------------------------------------------------------- | -------------- |
-| git                                                                       | 2.21.0         |
-| [ag (the_silver_searcher)](https://github.com/ggreer/the_silver_searcher) | 2.2.0          |
-
-All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with these dependencies preinstalled.
+All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with git preinstalled.
 
 ### Installing
 
@@ -74,8 +69,6 @@ We do not yet have repositories set up for our linux packages, but we do upload 
 This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
 
 ```bash
-apt-get install silversearcher-ag
-
 wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/latest \
 	| grep "browser_download_url" \
 	| grep "amd64.deb" \
@@ -87,15 +80,7 @@ dpkg -i ld-find-code-refs.amd64.deb
 
 #### Windows
 
-**Note**: The underlying dependency used for search, `ag`, has known performance issues when built for Windows. Unofficial Windows builds are available for `ag` from various forks on GitHub, although correctness and performance cannot be guaranteed. If you are experiencing issues running `ld-find-code-refs` on Windows, we recommend using the [Docker image](#docker) instead.
-
 A Windows executable of `ld-find-code-refs` is available on the [releases page](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). 
-
-The following Chocolatey command may be used to install the required dependency, `ag`. If you do not have Chocolatey installed, see `ag`'s documentation for [installation instructions](https://github.com/ggreer/the_silver_searcher#windows).
-
-```powershell
-choco install ag
-```
 
 #### Docker
 
@@ -111,7 +96,7 @@ docker run \
 
 #### Manual
 
-Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`
+Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`.
 
 ### CLI Configuration
 
