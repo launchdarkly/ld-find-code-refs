@@ -6,6 +6,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.5.0
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/launchdarkly/api-client-go v0.0.0-20181031211650-fe4f1d017b6e
+	github.com/launchdarkly/go-gitignore v0.0.0-20200624214657-874ce7a4ceba
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20160105113617-38717d0a108c

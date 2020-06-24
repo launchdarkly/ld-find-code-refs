@@ -6,11 +6,13 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
-	"github.com/monochromegane/go-gitignore"
 	"golang.org/x/tools/godoc/util"
+
+	"github.com/launchdarkly/go-gitignore"
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 type ignore struct {
@@ -68,6 +70,11 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
 
+	shouldCleanPath := runtime.GOOS == "windows"
+	if shouldCleanPath {
+		workspace = cleanPath(workspace)
+	}
+
 	readFile := func(path string, info os.FileInfo, err error) error {
 		if err != nil || ctx.Err() != nil {
 			// global context cancelled, don't read any more files
@@ -75,6 +82,10 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 		}
 
 		isDir := info.IsDir()
+
+		if shouldCleanPath {
+			path = cleanPath(path)
+		}
 
 		// Skip directories, hidden files, and ignored files
 		if strings.HasPrefix(info.Name(), ".") || allIgnores.Match(path, isDir) {
@@ -101,4 +112,9 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	}
 
 	return filepath.Walk(workspace, readFile)
+}
+
+// cleanPath replaces all back-slashes with forward-slashes
+func cleanPath(path string) string {
+	return strings.Replace(path, "\\", "/", -1)
 }
