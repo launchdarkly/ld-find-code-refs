@@ -6,7 +6,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"golang.org/x/tools/godoc/util"
@@ -69,11 +68,7 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	defer close(files)
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
-
-	shouldCleanPath := runtime.GOOS == "windows"
-	if shouldCleanPath {
-		workspace = cleanPath(workspace)
-	}
+	workspace = filepath.ToSlash(workspace)
 
 	readFile := func(path string, info os.FileInfo, err error) error {
 		if err != nil || ctx.Err() != nil {
@@ -82,10 +77,7 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 		}
 
 		isDir := info.IsDir()
-
-		if shouldCleanPath {
-			path = cleanPath(path)
-		}
+		path = filepath.ToSlash(path)
 
 		// Skip directories, hidden files, and ignored files
 		if strings.HasPrefix(info.Name(), ".") || allIgnores.Match(path, isDir) {
@@ -112,9 +104,4 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	}
 
 	return filepath.Walk(workspace, readFile)
-}
-
-// cleanPath replaces all back-slashes with forward-slashes
-func cleanPath(path string) string {
-	return strings.Replace(path, "\\", "/", -1)
 }
