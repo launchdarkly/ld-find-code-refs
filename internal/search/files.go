@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/monochromegane/go-gitignore"
 	"golang.org/x/tools/godoc/util"
 
-	"github.com/launchdarkly/go-gitignore"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
