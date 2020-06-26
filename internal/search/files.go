@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/monochromegane/go-gitignore"
 	"golang.org/x/tools/godoc/util"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
 type ignore struct {
@@ -67,6 +68,7 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	defer close(files)
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
+	workspace = filepath.ToSlash(workspace)
 
 	readFile := func(path string, info os.FileInfo, err error) error {
 		if err != nil || ctx.Err() != nil {
@@ -75,6 +77,7 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 		}
 
 		isDir := info.IsDir()
+		path = filepath.ToSlash(path)
 
 		// Skip directories, hidden files, and ignored files
 		if strings.HasPrefix(info.Name(), ".") || allIgnores.Match(path, isDir) {
