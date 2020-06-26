@@ -125,6 +125,12 @@ LaunchDarkly UI. Aceptable values: github|bitbucket|custom.`,
 bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.`,
 	},
 	{
+		name:         "revision",
+		short:        "R",
+		defaultValue: "",
+		usage:        `The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. Use this option to scan non-git codebases`,
+	},
+	{
 		name:         "updateSequenceId",
 		short:        "s",
 		defaultValue: -1,

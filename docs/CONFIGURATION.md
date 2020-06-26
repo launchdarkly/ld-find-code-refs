@@ -61,6 +61,8 @@ Flags:
 
   -u, --repoUrl string             The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.
 
+  -R, --revision string            The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. Use this option to scan non-git codebases
+
   -s, --updateSequenceId int       An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp. (default -1)
 ```
 
