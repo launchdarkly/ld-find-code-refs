@@ -15,6 +15,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
     defaultsDisabled: true
   ```
 - All command line flags can now be specified as environment variables.
+- When flags with no code references are detected, `ld-find-code-refs` will search Git commit history to detect when the last reference was removed. Use the `--lookback` command line flag to configure how far back to search.
 
 ### Fixed
 
