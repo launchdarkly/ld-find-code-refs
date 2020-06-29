@@ -11,20 +11,21 @@ test: lint
 lint:
 	pre-commit run -a --verbose golangci-lint
 
+BUILD_FLAGS = ldflags="-s -w"
 compile-macos-binary:
-	GOOS=darwin GOARCH=amd64 go build -o out/ld-find-code-refs ./cmd/ld-find-code-refs
+	GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o out/ld-find-code-refs ./cmd/ld-find-code-refs
 
 compile-windows-binary:
-	GOOS=windows GOARCH=amd64 go build -o out/ld-find-code-refs.exe ./cmd/ld-find-code-refs
+	GOOS=windows GOARCH=amd64 go build ${BUILD_FLAGS} -o out/ld-find-code-refs.exe ./cmd/ld-find-code-refs
 
 compile-linux-binary:
-	GOOS=linux GOARCH=amd64 go build -o build/package/cmd/ld-find-code-refs ./cmd/ld-find-code-refs
+	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/cmd/ld-find-code-refs ./cmd/ld-find-code-refs
 
 compile-github-actions-binary:
-	GOOS=linux GOARCH=amd64 go build -o build/package/github-actions/ld-find-code-refs-github-action ./build/package/github-actions
+	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/github-actions/ld-find-code-refs-github-action ./build/package/github-actions
 
 compile-bitbucket-pipelines-binary:
-	GOOS=linux GOARCH=amd64 go build -o build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline ./build/package/bitbucket-pipelines
+	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline ./build/package/bitbucket-pipelines
 
 # Get the lines added to the most recent changelog update (minus the first 2 lines)
 RELEASE_NOTES=<(GIT_EXTERNAL_DIFF='bash -c "diff --unchanged-line-format=\"\" $$2 $$5" || true' git log --ext-diff -1 --pretty= -p CHANGELOG.md)
