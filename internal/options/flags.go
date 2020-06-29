@@ -91,6 +91,13 @@ links to the repository for each code reference.`,
 LaunchDarkly API is unreachable or returns an unexpected response.`,
 	},
 	{
+		name:         "lookback",
+		short:        "l",
+		defaultValue: 10,
+		usage: `Sets the number of Git commits to search in history for
+whether a feature flag was removed from code. Setting this option to a high value will increase search time.`,
+	},
+	{
 		name:         "outDir",
 		short:        "o",
 		defaultValue: "",

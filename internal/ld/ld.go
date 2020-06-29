@@ -480,6 +480,13 @@ func (h HunkRep) NumLines() int {
 	return strings.Count(h.Lines, "\n") + 1
 }
 
+type LastRemovedRep struct {
+	Sha     string `json:"sha"`
+	Message string `json:"message"`
+	Time    int64  `json:"time"`
+	FlagKey string `json:"flagKey"`
+}
+
 type tableData [][]string
 
 func (t tableData) Len() int {
@@ -498,15 +505,23 @@ func (t tableData) Swap(i, j int) {
 
 const maxFlagKeysDisplayed = 50
 
-func (b BranchRep) PrintReferenceCountTable() {
-	data := tableData{}
+func (b BranchRep) CountByFlag(flags []string) map[string]int64 {
 	refCountByFlag := map[string]int64{}
+	for _, flag := range flags {
+		refCountByFlag[flag] = 0
+	}
 	for _, ref := range b.References {
 		for _, hunk := range ref.Hunks {
 			refCountByFlag[hunk.FlagKey]++
 		}
 	}
-	for k, v := range refCountByFlag {
+	return refCountByFlag
+}
+
+func (b BranchRep) PrintReferenceCountTable() {
+	data := tableData{}
+
+	for k, v := range b.CountByFlag(nil) {
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)

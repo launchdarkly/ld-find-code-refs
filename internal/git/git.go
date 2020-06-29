@@ -3,12 +3,18 @@ package git
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	git "github.com/go-git/go-git/v5"
+	object "github.com/go-git/go-git/v5/plumbing/object"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/internal/search"
 )
 
 type Client struct {
@@ -94,4 +100,81 @@ func (c Client) RemoteBranches() (map[string]bool, error) {
 	// the current branch should be in the list of remote branches
 	ret[c.GitBranch] = true
 	return ret, nil
+}
+
+type CommitData struct {
+	commit *object.Commit
+	tree   *object.Tree
+}
+
+// LastRemoved searches commit history for flags that had references removed recently
+func (c Client) LastRemoved(flags []string, delimiters string, lookback int) ([]ld.LastRemovedRep, error) {
+	repo, err := git.PlainOpen(c.workspace)
+	if err != nil {
+		return nil, err
+	}
+	logResult, err := repo.Log(&git.LogOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	commits := []CommitData{}
+	for i := 0; i < lookback; i++ {
+		commit, err := logResult.Next()
+		if err != nil {
+			// reached end of commit tree
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		tree, err := commit.Tree()
+		if err != nil {
+			return nil, err
+		}
+		commits = append(commits, CommitData{commit, tree})
+	}
+
+	ret := []ld.LastRemovedRep{}
+	for i, c := range commits[:len(commits)-1] {
+		changes, err := commits[i+1].tree.Diff(c.tree)
+		if err != nil {
+			return nil, err
+		}
+		patch, err := changes.Patch()
+		if err != nil {
+			return nil, err
+		}
+		patchLines := strings.Split(patch.String(), "\n")
+		nextFlags := flags
+		for _, flag := range flags {
+			removalCount := 0
+			for _, patchLine := range patchLines {
+				delta := 0
+				if strings.HasPrefix(patchLine, "-") {
+					delta = 1
+				} else if strings.HasPrefix(patchLine, "+") {
+					delta = -1
+				}
+
+				if delta != 0 && search.MatchDelimiters(patchLine, flag, delimiters) {
+					removalCount += delta
+				}
+			}
+			if removalCount > 0 {
+				ret = append(ret, ld.LastRemovedRep{
+					Sha:     c.commit.Hash.String(),
+					Message: c.commit.Message,
+					Time:    c.commit.Author.When.Unix() * 1000,
+					FlagKey: flag,
+				})
+			} else {
+				// this flag was not removed in the current commit, so check for it again in the next commit
+				nextFlags = append(nextFlags)
+			}
+		}
+		flags = nextFlags
+	}
+
+	return ret, err
 }

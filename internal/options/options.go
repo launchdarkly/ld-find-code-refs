@@ -30,6 +30,7 @@ type Options struct {
 	RepoType            string `mapstructure:"repoType"`
 	RepoUrl             string `mapstructure:"repoUrl"`
 	ContextLines        int    `mapstructure:"contextLines"`
+	Lookback            int    `mapstructure:"lookback"`
 	UpdateSequenceId    int    `mapstructure:"updateSequenceId"`
 	Debug               bool   `mapstructure:"debug"`
 	DryRun              bool   `mapstructure:"dryRun"`

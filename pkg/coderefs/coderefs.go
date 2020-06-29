@@ -145,6 +145,25 @@ func Scan(opts options.Options) {
 		return
 	}
 
+	missingFlags := []string{}
+	for flag, count := range branch.CountByFlag(filteredFlags) {
+		if count == 0 {
+			missingFlags = append(missingFlags, flag)
+		}
+	}
+	lookback := opts.Lookback
+
+	if lookback > 0 {
+		log.Info.Printf("checking if %d flags without references were removed in the last %d commits", len(missingFlags), opts.Lookback)
+		removedFlags, err := gitClient.LastRemoved(missingFlags, delimString, lookback+1)
+
+		if err != nil {
+			log.Warning.Printf("unable to generate last removed references: %s", err)
+		} else {
+			log.Info.Printf("found %d removed flags", len(removedFlags))
+		}
+	}
+
 	log.Info.Printf(
 		"sending %d code references across %d flags and %d files to LaunchDarkly for project: %s",
 		branch.TotalHunkCount(),
