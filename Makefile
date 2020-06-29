@@ -11,6 +11,7 @@ test: lint
 lint:
 	pre-commit run -a --verbose golangci-lint
 
+# Strip debug informatino from production builds
 BUILD_FLAGS = -ldflags="-s -w"
 
 compile-macos-binary:
