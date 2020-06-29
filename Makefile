@@ -11,7 +11,8 @@ test: lint
 lint:
 	pre-commit run -a --verbose golangci-lint
 
-BUILD_FLAGS = ldflags="-s -w"
+BUILD_FLAGS = -ldflags="-s -w"
+
 compile-macos-binary:
 	GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o out/ld-find-code-refs ./cmd/ld-find-code-refs
 
