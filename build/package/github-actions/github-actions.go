@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
@@ -28,13 +29,18 @@ func main() {
 	if len(ghRepo) < 2 {
 		log.Error.Fatalf("unable to validate GitHub repository name: %s", ghRepo)
 	}
-	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
-	if err != nil {
-		log.Error.Fatalf("error parsing GITHUB_REF: %s", err)
-	}
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
 		log.Error.Fatalf("error parsing GitHub event payload at %s: %s", os.Getenv("GITHUB_EVENT_PATH"), err)
+	}
+	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
+	if err != nil {
+		// The GITHUB_REF wasn't valid, so check if it's a pull request and use the pull request ref instead
+		if event.Pull != nil {
+			ghBranch = event.Pull.Head.Ref
+		} else {
+			log.Error.Fatalf("error parsing GITHUB_REF: %s", err)
+		}
 	}
 
 	options := map[string]string{
@@ -42,7 +48,7 @@ func main() {
 		"repoType":         "github",
 		"repoName":         ghRepo[1],
 		"dir":              os.Getenv("GITHUB_WORKSPACE"),
-		"updateSequenceId": strconv.FormatInt(event.Repo.PushedAt*1000, 10), // seconds to milliseconds
+		"updateSequenceId": strconv.FormatInt(time.Now().Unix()*1000, 10), // seconds to milliseconds
 		"repoUrl":          event.Repo.Url,
 	}
 	ldOptions, err := o.GetLDOptionsFromEnv()
@@ -76,13 +82,19 @@ func main() {
 
 type Event struct {
 	Repo   `json:"repository"`
+	*Pull  `json:"pull_request,omitempty"`
 	Sender `json:"sender"`
 }
 
 type Repo struct {
 	Url           string `json:"html_url"`
 	DefaultBranch string `json:"default_branch"`
-	PushedAt      int64  `json:"pushed_at"`
+}
+
+type Pull struct {
+	Head struct {
+		Ref string `json:"ref"`
+	} `json:"head"`
 }
 
 type Sender struct {
