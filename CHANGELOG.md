@@ -2,6 +2,37 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.0] - prerelease
+
+### Added
+
+- Most command line flags can now be specified in a YAML file located in the `.launchdarkly/coderefs.yaml` subdirectory of your repository. The following options must be set using the command line or as environment variables:
+  - `--dir` / `LD_DIR`
+  - `--accessToken` / `LD_ACCESS_TOKEN`
+- The default delimiters (single/double quotes and backticks) can now be disabled by setting the following YAML option in `.launchdarkly/coderefs.yaml`:
+  ```yaml
+  delimiters:
+    defaultsDisabled: true
+  ```
+- All command line flags can now be specified as environment variables.
+- Added support for scanning non-git repositories. Use the `--revision` flag to specify your repository version number.
+- Added the `prune` sub-command to delete stale code reference data from LaunchDarkly manually by providing a list of branch names as arguments. example: `ld-find-code-refs prune [flags] "branch1" "branch2"`
+- The GitHub actions wrapper now supports the `pull_request` event
+
+### Fixed
+
+- Exclude negations in `.ldignore` (lines beginning with an exlamation mark) now correctly include files.
+
+### Changed
+
+- The command line tool has been changed for improved ergonomics when configuring options using the command line. Some existing configurations may be invalid, see `ld-find-code-refs --help` for details.
+
+### Removed
+
+- The `exclude` command-line option has been removed. Use the `.ldignore` file instead.
+- Additional delimiters can no longer be specified using command line flags or environment variables. If you use additional delimiters, or would like to disable delimiters completely, use the YAML configuration described above.
+- `ld-find-code-refs` no longer requires the silver searcher (ag) as a runtime dependency.
+
 ## [1.5.1] - 2020-05-22
 
 ### Added

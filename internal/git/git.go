@@ -1,4 +1,4 @@
-package command
+package git
 
 import (
 	"errors"
@@ -9,52 +9,48 @@ import (
 	"strings"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 )
 
-type GitClient struct {
+type Client struct {
 	workspace string
 	GitBranch string
 	GitSha    string
 }
 
-func NewGitClient(path string) (GitClient, error) {
+func NewClient(path string, branch string) (*Client, error) {
 	if !filepath.IsAbs(path) {
-		log.Fatal.Fatalf("expected an absolute path but received a relative path: %s", path)
+		log.Error.Fatalf("expected an absolute path but received a relative path: %s", path)
 	}
 
-	client := GitClient{workspace: path}
+	client := Client{workspace: path}
 
 	_, err := exec.LookPath("git")
 	if err != nil {
-		return client, errors.New("git is a required dependency, but was not found in the system PATH")
+		return &client, errors.New("git is a required dependency, but was not found in the system PATH")
 	}
 
-	currBranch, err := client.branchName()
-	if err != nil {
-		return client, fmt.Errorf("error parsing git branch name: %s", err)
-	} else if currBranch == "" {
-		return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
+	var currBranch = branch
+	if branch == "" {
+		currBranch, err = client.branchName()
+		if err != nil {
+			return &client, fmt.Errorf("error parsing git branch name: %s", err)
+		} else if currBranch == "" {
+			return &client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
+		}
 	}
 	log.Info.Printf("git branch: %s", currBranch)
 	client.GitBranch = currBranch
 
 	head, err := client.headSha()
 	if err != nil {
-		return client, fmt.Errorf("error parsing current commit sha: %s", err)
+		return &client, fmt.Errorf("error parsing current commit sha: %s", err)
 	}
 	client.GitSha = head
 
-	return client, nil
+	return &client, nil
 }
 
-func (c GitClient) branchName() (string, error) {
-	// Some CI systems leave the repository in a detached HEAD state. To support those, this logic allows
-	// users to pass the branch name in by hand as an option.
-	if o.Branch.Value() != "" {
-		return o.Branch.Value(), nil
-	}
-
+func (c *Client) branchName() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -69,7 +65,7 @@ func (c GitClient) branchName() (string, error) {
 	return ret, nil
 }
 
-func (c GitClient) headSha() (string, error) {
+func (c *Client) headSha() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -81,7 +77,7 @@ func (c GitClient) headSha() (string, error) {
 	return ret, nil
 }
 
-func (c GitClient) RemoteBranches() (map[string]bool, error) {
+func (c *Client) RemoteBranches() (map[string]bool, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "ls-remote", "--quiet", "--heads")
 	out, err := cmd.CombinedOutput()
