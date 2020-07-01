@@ -213,7 +213,7 @@ func (o Options) Validate() error {
 	}
 
 	if o.Revision != "" && o.Branch == "" {
-		return fmt.Errorf(`"branch" opton is required when "revision" option is set`)
+		return fmt.Errorf(`"branch" option is required when "revision" option is set`)
 	}
 
 	return nil
