@@ -16,7 +16,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
   ```
 - All command line flags can now be specified as environment variables.
 - Added support for scanning non-git repositories. Use the `--revision` flag to specify your repository version number.
-- Added the `prune` sub-command to delete stale code reference data from LaunchDarkly manually by providing a list of branch names as arguments. example: `ld-find-code-refs prune [flags] branch1 branch2`
+- Added the `prune` sub-command to delete stale code reference data from LaunchDarkly manually by providing a list of branch names as arguments. example: `ld-find-code-refs prune [flags] "branch1" "branch2"`
 
 ### Fixed
 
