@@ -39,3 +39,30 @@ ld-find-code-refs \
   --repoType="github"
   --repoUrl="$YOUR_REPOSITORY_URL" # example: https://github.com/launchdarkly/ld-find-code-refs
 ```
+## Scanning non-git repositories
+
+By default, `ld-find-code-refs` will attempt to infer repository metadata from a git configuration. If you are scanning a codebase with a version control system other than git, you must use the `--revision` and `--branch` options to manually provide information about your codebase.
+
+```bash
+ld-find-code-refs \
+  --accessToken=$YOUR_LAUNCHDARKLY_ACCESS_TOKEN \ # example: api-xxxx
+  --projKey=$YOUR_LAUNCHDARKLY_PROJECT_KEY \ # example: my-project
+  --repoName=$YOUR_REPOSITORY_NAME \ # example: my-repo
+  --dir="/path/to/git/repo" \
+  --revision="REPO_REVISION_STRING" \ # e.g. a version hash
+  --branch="dev"
+```
+
+### Branch garbage collection for non-git repositories
+
+When scanning a non-git repository, automatic [branch garbage collection](../README.md#branch-garbage-collection) is disabled. The `prune` sub-command may be used to manually delete code references for stale branches.
+
+The following example instructs the `prune` command to delete code references for the branches named "branch1" and "branch2":
+```bash
+ld-find-code-refs prune \
+  --accessToken=$YOUR_LAUNCHDARKLY_ACCESS_TOKEN \ # example: api-xxxx
+  --projKey=$YOUR_LAUNCHDARKLY_PROJECT_KEY \ # example: my-project
+  --repoName=$YOUR_REPOSITORY_NAME \ # example: my-repo
+  --dir="/path/to/git/repo" \
+  "branch1" "branch2"
+```

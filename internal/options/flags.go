@@ -25,7 +25,7 @@ var flags = []flag{
 		name:         "branch",
 		short:        "b",
 		defaultValue: "",
-		usage: `The currently checked out git branch. If not provided, branch
+		usage: `The currently checked out branch. If not provided, branch
 name will be auto-detected. Provide this option when using CI systems that
 leave the repository in a detached HEAD state.`,
 	},
@@ -33,7 +33,7 @@ leave the repository in a detached HEAD state.`,
 		name:         "commitUrlTemplate",
 		defaultValue: "",
 		usage: `If provided, LaunchDarkly will attempt to generate links to
-your Git service provider per commit.
+your VCS service provider per commit.
 Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}.
 Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is
 not provided, but repoUrl is provided and repoType is not custom,
@@ -58,14 +58,14 @@ may be provided.`,
 		name:         "defaultBranch",
 		short:        "B",
 		defaultValue: "master",
-		usage: `The git default branch. The LaunchDarkly UI will default to this branch.
+		usage: `The default branch. The LaunchDarkly UI will default to this branch.
 If not provided, will fallback to 'master'.`,
 	},
 	{
 		name:         "dir",
 		short:        "d",
 		defaultValue: "",
-		usage:        "Path to existing checkout of the git repo.",
+		usage:        "Path to existing checkout of the repository.",
 	},
 	{
 		name:         "dryRun",
@@ -77,7 +77,7 @@ LaunchDarkly. Combine with the outDir option to output code references to a CSV.
 		name:         "hunkUrlTemplate",
 		defaultValue: "",
 		usage: `If provided, LaunchDarkly will attempt to generate links to 
-your Git service provider per code reference. 
+your VCS service provider per code reference. 
 Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}.
 Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided, 
 but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate
@@ -107,7 +107,7 @@ the project to this directory.`,
 		name:         "repoName",
 		short:        "r",
 		defaultValue: "",
-		usage: `Git repo name. Will be displayed in LaunchDarkly. Case insensitive.
+		usage: `Repository name. Will be displayed in LaunchDarkly. Case insensitive.
 Repo names must only contain letters, numbers, '.', '_' or '-'."`,
 	},
 	{
@@ -123,6 +123,12 @@ LaunchDarkly UI. Aceptable values: github|bitbucket|custom.`,
 		defaultValue: "",
 		usage: `The display url for the repository. If provided for a github or
 bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.`,
+	},
+	{
+		name:         "revision",
+		short:        "R",
+		defaultValue: "",
+		usage:        `Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.`,
 	},
 	{
 		name:         "updateSequenceId",
