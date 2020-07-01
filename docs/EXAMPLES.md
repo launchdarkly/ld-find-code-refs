@@ -48,7 +48,7 @@ ld-find-code-refs \
   --accessToken=$YOUR_LAUNCHDARKLY_ACCESS_TOKEN \ # example: api-xxxx
   --projKey=$YOUR_LAUNCHDARKLY_PROJECT_KEY \ # example: my-project
   --repoName=$YOUR_REPOSITORY_NAME \ # example: my-repo
-  --dir="/path/to/git/repo"
+  --dir="/path/to/git/repo" \
   --revision="REPO_REVISION_STRING" \ # e.g. a version hash
   --branch="dev"
 ```
@@ -63,6 +63,6 @@ ld-find-code-refs prune \
   --accessToken=$YOUR_LAUNCHDARKLY_ACCESS_TOKEN \ # example: api-xxxx
   --projKey=$YOUR_LAUNCHDARKLY_PROJECT_KEY \ # example: my-project
   --repoName=$YOUR_REPOSITORY_NAME \ # example: my-repo
-  --dir="/path/to/git/repo"
+  --dir="/path/to/git/repo" \
   "branch1" "branch2"
 ```
