@@ -329,6 +329,8 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 
 		if err == nil {
 			switch ldErr.Code {
+			case "invalid_request":
+				return res, errors.New(ldErr.Message)
 			case "updateSequenceId_conflict":
 				return res, BranchUpdateSequenceIdConflictErr
 			case "not_found":

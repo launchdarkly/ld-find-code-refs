@@ -45,7 +45,7 @@ We recommend incorporating `ld-find-code-refs` into your CI/CD build process. `l
 
 ### Prerequisites
 
-`ld-find-code-refs` requires git (tested with version 2.21.0) to be installed on the system path.
+If you are scanning a git repository, `ld-find-code-refs` requires git (tested with version 2.21.0) to be installed on the system path.
 
 All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with git preinstalled.
 
@@ -84,12 +84,12 @@ A Windows executable of `ld-find-code-refs` is available on the [releases page](
 
 #### Docker
 
-`ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs). The image provides an entrypoint for `ld-find-code-refs`, to which command line arguments may be passed. If using the entrypoint, your git repository to be scanned should be mounted as a volume. Otherwise, you may override the entrypoint and access `ld-find-code-refs` directly from the shell.
+`ld-find-code-refs` is available as a [docker image](https://hub.docker.com/r/launchdarkly/ld-find-code-refs). The image provides an entrypoint for `ld-find-code-refs`, to which command line arguments may be passed. If using the entrypoint, your repository to be scanned should be mounted as a volume. Otherwise, you may override the entrypoint and access `ld-find-code-refs` directly from the shell.
 
 ```bash
 docker pull launchdarkly/ld-find-code-refs
 docker run \
-  -v /path/to/git/repo:/repo \
+  -v /path/to/your/repo:/repo \
   launchdarkly/ld-find-code-refs \
   --dir="/repo"
 ```
@@ -114,5 +114,7 @@ Configuration options include, but are not limited to:
 ### Branch garbage collection
 
 After scanning has completed, `ld-find-code-refs` will search for and prune code reference data for stale branches. A branch is considered stale if it has references in LaunchDarkly, but no longer exists on the Git remote. As a consequence of this behavior, any code references on local branches or branches belonging only to a remote other than the default one will be removed the next time `ld-find-code-refs` is run on a different branch.
+
+Stale branches may also be removed manually with the `ld-find-code-refs prune` subcommand.
 
 This operation requires your environment to be authenticated for remote access to your repository. Branch cleanup is not currently supported when running `ld-find-code-refs` with Bitbucket pipelines.
