@@ -30,7 +30,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 - The `exclude` command-line option has been removed. Use the `.ldignore` file instead.
 - Additional delimiters can no longer be specified using command line flags or environment variables. If you use additional delimiters, or would like to disable delimiters completely, use the YAML configuration described above.
-- `ld_find_code_refs` no longer requires the silver searcher (ag) as a runtime dependency.
+- `ld-find-code-refs` no longer requires the silver searcher (ag) as a runtime dependency.
 
 ## [1.5.0] - 2020-05-11
 
