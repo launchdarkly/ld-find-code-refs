@@ -20,7 +20,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ### Fixed
 
-- Exlude negations in `.ldignore` (lines beginning with an exlamation mark) now correctly include files.
+- Exclude negations in `.ldignore` (lines beginning with an exlamation mark) now correctly include files.
 
 ### Changed
 
