@@ -41,7 +41,7 @@ ld-find-code-refs \
 ```
 ## Scanning non-git repositories
 
-By default, `ld-find-code-refs` will attempt to infer repository metadata from a git configuration. If you are scanning codebase a version control system other than git, you may use the `--revision` and `--branch` options to manually provide information about your codebase.
+By default, `ld-find-code-refs` will attempt to infer repository metadata from a git configuration. If you are scanning a codebase with a version control system other than git, you must use the `--revision` and `--branch` options to manually provide information about your codebase.
 
 ```bash
 ld-find-code-refs \
