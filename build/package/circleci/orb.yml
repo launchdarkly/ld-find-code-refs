@@ -9,7 +9,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.4.0
+        launchdarkly: launchdarkly/ld-find-code-refs@1.5.1
       workflows:
         main:
           jobs:
@@ -23,7 +23,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.4.0
+        launchdarkly: launchdarkly/ld-find-code-refs@1.5.1
       workflows:
         main:
           jobs:
@@ -33,13 +33,12 @@ examples:
                 proj_key: 'YOUR_LAUNCHDARKLY_PROJECT_KEY'
                 context_lines: 3
 
-
   standard_configuration:
     description: "A configuration with the the `repoType` set to GitHub, and the `repuUrl` set to a GitHub URL. We recommend configuring these parameters so LaunchDarkly is able to generate reference links to your source code"
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.4.0
+        launchdarkly: launchdarkly/ld-find-code-refs@1.5.1
       workflows:
         main:
           jobs:
@@ -50,7 +49,6 @@ examples:
                 repo_type: 'github'
                 repo_url: 'YOUR_REPO_URL'
                 context_lines: 3
-
 
 jobs:
   find-code-references:
@@ -101,7 +99,7 @@ jobs:
         type: boolean
         default: false
     docker:
-      - image: launchdarkly/ld-find-code-refs:1.4.0
+      - image: launchdarkly/ld-find-code-refs:2.0.0-preview1
         entrypoint: sh
     steps:
       - checkout:

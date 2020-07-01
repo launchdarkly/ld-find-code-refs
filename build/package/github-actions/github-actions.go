@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
@@ -34,15 +35,13 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	} else {
 		log.Error.Printf("unable to validate GitHub repository name: %v", ghRepo)
 	}
-
-	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
-	if err != nil {
-		log.Error.Printf("error parsing GITHUB_REF: %v", err)
-	}
-
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
 		log.Error.Printf("error parsing GitHub event payload at %q: %v", os.Getenv("GITHUB_EVENT_PATH"), err)
+	}
+	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"), event)
+	if err != nil {
+		log.Error.Fatalf("error detecting git branch: %s", err)
 	}
 
 	repoUrl := ""
@@ -51,7 +50,7 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	if event != nil {
 		repoUrl = event.Repo.Url
 		defaultBranch = event.Repo.DefaultBranch
-		updateSequenceId = int(event.Repo.PushedAt * 1000) // seconds to ms
+		updateSequenceId = int(time.Now().Unix() * 1000) // seconds to ms
 	}
 
 	opts.RepoType = "github"
@@ -66,13 +65,21 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 
 type Event struct {
 	Repo   `json:"repository"`
+	*Pull  `json:"pull_request,omitempty"`
 	Sender `json:"sender"`
 }
 
 type Repo struct {
 	Url           string `json:"html_url"`
 	DefaultBranch string `json:"default_branch"`
-	PushedAt      int64  `json:"pushed_at"`
+}
+
+type Pull struct {
+	Head `json:"head"`
+}
+
+type Head struct {
+	Ref string `json:"ref"`
 }
 
 type Sender struct {
@@ -98,13 +105,17 @@ func parseEvent(path string) (*Event, error) {
 	return &evt, err
 }
 
-func parseBranch(ref string) (string, error) {
+func parseBranch(ref string, event *Event) (string, error) {
 	re := regexp.MustCompile(`^refs/heads/(.+)$`)
 	results := re.FindStringSubmatch(ref)
 
 	if results == nil {
-		return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %q", ref)
+		// The GITHUB_REF wasn't valid, so check if it's a pull request and use the pull request ref instead
+		if event != nil && event.Pull != nil {
+			return event.Pull.Head.Ref, nil
+		} else {
+			return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %s", ref)
+		}
 	}
-
 	return results[1], nil
 }
