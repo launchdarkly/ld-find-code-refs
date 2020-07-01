@@ -128,7 +128,7 @@ bitbucket repository, LaunchDarkly will attempt to automatically generate source
 		name:         "revision",
 		short:        "R",
 		defaultValue: "",
-		usage:        `The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. Use this option to scan non-git codebases`,
+		usage:        `Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.`,
 	},
 	{
 		name:         "updateSequenceId",

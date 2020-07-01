@@ -13,7 +13,7 @@ import (
 
 var prune = &cobra.Command{
 	Use:     "prune [flags] branches...",
-	Example: "ld-find-code-refs prune branch1 branch2 # prunes branch1 and branch2",
+	Example: "ld-find-code-refs prune \"branch1\" \"branch2\" # prunes branch1 and branch2",
 	Short:   "Delete stale code reference data stored in LaunchDarkly. Accepts stale branch names as arguments",
 	Args:    cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
