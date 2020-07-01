@@ -33,14 +33,9 @@ func main() {
 	if err != nil {
 		log.Error.Fatalf("error parsing GitHub event payload at %s: %s", os.Getenv("GITHUB_EVENT_PATH"), err)
 	}
-	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"))
+	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"), event)
 	if err != nil {
-		// The GITHUB_REF wasn't valid, so check if it's a pull request and use the pull request ref instead
-		if event.Pull != nil {
-			ghBranch = event.Pull.Head.Ref
-		} else {
-			log.Error.Fatalf("error parsing GITHUB_REF: %s", err)
-		}
+		log.Error.Fatalf("error detecting git branch: %s", err)
 	}
 
 	options := map[string]string{
@@ -92,9 +87,11 @@ type Repo struct {
 }
 
 type Pull struct {
-	Head struct {
-		Ref string `json:"ref"`
-	} `json:"head"`
+	Head `json:"head"`
+}
+
+type Head struct {
+	Ref string `json:"ref"`
 }
 
 type Sender struct {
@@ -120,13 +117,17 @@ func parseEvent(path string) (*Event, error) {
 	return &evt, err
 }
 
-func parseBranch(ref string) (string, error) {
+func parseBranch(ref string, event *Event) (string, error) {
 	re := regexp.MustCompile(`^refs/heads/(.+)$`)
 	results := re.FindStringSubmatch(ref)
 
 	if results == nil {
-		return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %s", ref)
+		// The GITHUB_REF wasn't valid, so check if it's a pull request and use the pull request ref instead
+		if event != nil && event.Pull != nil {
+			return event.Pull.Head.Ref, nil
+		} else {
+			return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %s", ref)
+		}
 	}
-
 	return results[1], nil
 }
