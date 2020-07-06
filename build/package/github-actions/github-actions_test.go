@@ -10,6 +10,7 @@ func TestParseBranch(t *testing.T) {
 	specs := []struct {
 		name        string
 		in          string
+		event       *Event
 		expectedOut string
 		expectError bool
 	}{
@@ -43,10 +44,16 @@ func TestParseBranch(t *testing.T) {
 			expectedOut: "",
 			expectError: true,
 		},
+		{
+			name:        "returns the event branch name for an invalid GITHUB_REF",
+			in:          "refs/pull/1",
+			expectedOut: "master",
+			event:       &Event{Pull: &Pull{Head: Head{Ref: "master"}}},
+		},
 	}
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
-			out, err := parseBranch(tt.in)
+			out, err := parseBranch(tt.in, tt.event)
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {

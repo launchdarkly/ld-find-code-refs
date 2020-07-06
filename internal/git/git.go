@@ -24,7 +24,7 @@ type Client struct {
 	GitSha    string
 }
 
-func NewClient(path string, branch string) (Client, error) {
+func NewClient(path string, branch string) (*Client, error) {
 	if !filepath.IsAbs(path) {
 		log.Error.Fatalf("expected an absolute path but received a relative path: %s", path)
 	}
@@ -33,16 +33,16 @@ func NewClient(path string, branch string) (Client, error) {
 
 	_, err := exec.LookPath("git")
 	if err != nil {
-		return client, errors.New("git is a required dependency, but was not found in the system PATH")
+		return &client, errors.New("git is a required dependency, but was not found in the system PATH")
 	}
 
 	var currBranch = branch
 	if branch == "" {
 		currBranch, err = client.branchName()
 		if err != nil {
-			return client, fmt.Errorf("error parsing git branch name: %s", err)
+			return &client, fmt.Errorf("error parsing git branch name: %s", err)
 		} else if currBranch == "" {
-			return client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
+			return &client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
 		}
 	}
 	log.Info.Printf("git branch: %s", currBranch)
@@ -50,14 +50,14 @@ func NewClient(path string, branch string) (Client, error) {
 
 	head, err := client.headSha()
 	if err != nil {
-		return client, fmt.Errorf("error parsing current commit sha: %s", err)
+		return &client, fmt.Errorf("error parsing current commit sha: %s", err)
 	}
 	client.GitSha = head
 
-	return client, nil
+	return &client, nil
 }
 
-func (c Client) branchName() (string, error) {
+func (c *Client) branchName() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "--abbrev-ref", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -72,7 +72,7 @@ func (c Client) branchName() (string, error) {
 	return ret, nil
 }
 
-func (c Client) headSha() (string, error) {
+func (c *Client) headSha() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "HEAD")
 	out, err := cmd.CombinedOutput()
@@ -84,7 +84,7 @@ func (c Client) headSha() (string, error) {
 	return ret, nil
 }
 
-func (c Client) RemoteBranches() (map[string]bool, error) {
+func (c *Client) RemoteBranches() (map[string]bool, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "ls-remote", "--quiet", "--heads")
 	out, err := cmd.CombinedOutput()

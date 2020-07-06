@@ -35,9 +35,16 @@ func Scan(opts options.Options) {
 
 	log.Info.Printf("absolute directory path: %s", absPath)
 
-	gitClient, err := git.NewClient(absPath, opts.Branch)
-	if err != nil {
-		log.Error.Fatalf("%s", err)
+	branchName := opts.Branch
+	revision := opts.Revision
+	var gitClient *git.Client
+	if revision == "" {
+		gitClient, err = git.NewClient(absPath, branchName)
+		if err != nil {
+			log.Error.Fatalf("%s", err)
+		}
+		branchName = gitClient.GitBranch
+		revision = gitClient.GitSha
 	}
 
 	projKey := opts.ProjKey
@@ -76,11 +83,6 @@ func Scan(opts options.Options) {
 		fatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
 	}
 
-	if len(flags) == 0 {
-		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
-		os.Exit(0)
-	}
-
 	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
 	if len(filteredFlags) == 0 {
 		log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
@@ -115,8 +117,8 @@ func Scan(opts options.Options) {
 	}
 
 	branch := ld.BranchRep{
-		Name:             strings.TrimPrefix(gitClient.GitBranch, "refs/heads/"),
-		Head:             gitClient.GitSha,
+		Name:             strings.TrimPrefix(branchName, "refs/heads/"),
+		Head:             revision,
 		UpdateSequenceId: updateId,
 		SyncTime:         makeTimestamp(),
 		References:       refs,
@@ -124,7 +126,7 @@ func Scan(opts options.Options) {
 
 	outDir := opts.OutDir
 	if outDir != "" {
-		outPath, err := branch.WriteToCSV(outDir, projKey, repoParams.Name, gitClient.GitSha)
+		outPath, err := branch.WriteToCSV(outDir, projKey, repoParams.Name, revision)
 		if err != nil {
 			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
@@ -185,15 +187,25 @@ func Scan(opts options.Options) {
 		fatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), ignoreServiceErrors)
 	}
 
-	log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
-	remoteBranches, err := gitClient.RemoteBranches()
-	if err != nil {
-		log.Warning.Printf("unable to retrieve branch list from remote, skipping code reference pruning: %s", err)
-	} else {
-		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
+	if gitClient != nil {
+		log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
+		remoteBranches, err := gitClient.RemoteBranches()
 		if err != nil {
-			fatalServiceError(fmt.Errorf("failed to mark old branches for code reference pruning: %w", err), ignoreServiceErrors)
+			log.Warning.Printf("unable to retrieve branch list from remote, skipping code reference pruning: %s", err)
+		} else {
+			err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
+			if err != nil {
+				fatalServiceError(fmt.Errorf("failed to mark old branches for code reference pruning: %w", err), ignoreServiceErrors)
+			}
 		}
+	}
+}
+
+func Prune(opts options.Options, branches []string) {
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: opts.ProjKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+	err := ldApi.PostDeleteBranchesTask(opts.RepoName, branches)
+	if err != nil {
+		fatalServiceError(err, opts.IgnoreServiceErrors)
 	}
 }
 

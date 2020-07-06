@@ -29,6 +29,7 @@ type Options struct {
 	RepoName            string `mapstructure:"repoName"`
 	RepoType            string `mapstructure:"repoType"`
 	RepoUrl             string `mapstructure:"repoUrl"`
+	Revision            string `mapstructure:"revision"`
 	ContextLines        int    `mapstructure:"contextLines"`
 	Lookback            int    `mapstructure:"lookback"`
 	UpdateSequenceId    int    `mapstructure:"updateSequenceId"`
@@ -141,8 +142,7 @@ func GetWrapperOptions(dir string, merge func(Options) (Options, error)) (Option
 	return merge(opts)
 }
 
-// Validate ensures all options have been set to a valid value
-func (o Options) Validate() error {
+func (o Options) ValidateRequired() error {
 	missingRequiredOptions := []string{}
 	if o.AccessToken == "" {
 		missingRequiredOptions = append(missingRequiredOptions, "accessToken")
@@ -158,6 +158,15 @@ func (o Options) Validate() error {
 	}
 	if len(missingRequiredOptions) > 0 {
 		return fmt.Errorf("missing required option(s): %v", missingRequiredOptions)
+	}
+	return nil
+}
+
+// Validate ensures all options have been set to a valid value
+func (o Options) Validate() error {
+	err := o.ValidateRequired()
+	if err != nil {
+		return err
 	}
 
 	maxContextLines := 5
@@ -185,7 +194,7 @@ func (o Options) Validate() error {
 		}
 	}
 
-	_, err := validation.NormalizeAndValidatePath(o.Dir)
+	_, err = validation.NormalizeAndValidatePath(o.Dir)
 	if err != nil {
 		return fmt.Errorf(`invalid value for "dir": %+v`, err)
 	}
@@ -202,6 +211,10 @@ func (o Options) Validate() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if o.Revision != "" && o.Branch == "" {
+		return fmt.Errorf(`"branch" option is required when "revision" option is set`)
 	}
 
 	return nil
