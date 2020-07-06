@@ -48,15 +48,7 @@ func Scan(opts options.Options) {
 	}
 
 	projKey := opts.ProjKey
-
-	// Check for potential sdk keys or access tokens provided as the project key
-	if len(projKey) > maxProjKeyLength {
-		if strings.HasPrefix(projKey, "sdk-") {
-			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
-		} else if strings.HasPrefix(projKey, "api-") {
-			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
-		}
-	}
+	checkProjKey(projKey)
 
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
 	repoParams := ld.RepoParams{
@@ -155,10 +147,9 @@ func Scan(opts options.Options) {
 	}
 	lookback := opts.Lookback
 
-	if lookback > 0 {
+	if lookback > 0 && gitClient != nil {
 		log.Info.Printf("checking if %d flags without references were removed in the last %d commits", len(missingFlags), opts.Lookback)
 		removedFlags, err := gitClient.LastRemoved(missingFlags, delimString, lookback+1)
-
 		if err != nil {
 			log.Warning.Printf("unable to generate last removed references: %s", err)
 		} else {
@@ -263,6 +254,17 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+// checkProjKey logs a warning if potential sdk keys or access tokens provided as the project key
+func checkProjKey(projKey string) {
+	if len(projKey) > maxProjKeyLength {
+		if strings.HasPrefix(projKey, "sdk-") {
+			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+		} else if strings.HasPrefix(projKey, "api-") {
+			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+		}
+	}
 }
 
 func fatalServiceError(err error, ignoreServiceErrors bool) {
