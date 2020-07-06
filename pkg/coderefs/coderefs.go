@@ -162,6 +162,7 @@ func Scan(opts options.Options) {
 		} else {
 			log.Info.Printf("found %d removed flags", len(removedFlags))
 		}
+		branch.Removed = removedFlags
 	}
 
 	log.Info.Printf(

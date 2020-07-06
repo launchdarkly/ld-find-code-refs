@@ -13,6 +13,7 @@ import (
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/internal/search"
 )
@@ -146,7 +147,7 @@ func (c Client) LastRemoved(flags []string, delimiters string, lookback int) ([]
 			return nil, err
 		}
 		patchLines := strings.Split(patch.String(), "\n")
-		nextFlags := flags
+		nextFlags := make([]string, 0, len(flags))
 		for _, flag := range flags {
 			removalCount := 0
 			for _, patchLine := range patchLines {
@@ -161,7 +162,7 @@ func (c Client) LastRemoved(flags []string, delimiters string, lookback int) ([]
 					removalCount += delta
 				}
 			}
-			if removalCount > 0 {
+			if removalCount == 0 {
 				ret = append(ret, ld.LastRemovedRep{
 					Sha:     c.commit.Hash.String(),
 					Message: c.commit.Message,
