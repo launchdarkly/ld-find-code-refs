@@ -15,7 +15,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
     defaultsDisabled: true
   ```
 - All command line flags can now be specified as environment variables.
-- When flags with no code references are detected, `ld-find-code-refs` will search Git commit history to detect when the last reference was removed. Use the `--lookback` command line flag to configure how far back to search.
+- When flags with no code references are detected, `ld-find-code-refs` will search Git commit history to detect when the last reference to a feature flag was removed. Use the `--lookback` command line flag to configure how far back to search.
 - Added support for scanning non-git repositories. Use the `--revision` flag to specify your repository version number.
 - Added the `prune` sub-command to delete stale code reference data from LaunchDarkly manually by providing a list of branch names as arguments. example: `ld-find-code-refs prune [flags] "branch1" "branch2"`
 - The GitHub actions wrapper now supports the `pull_request` event

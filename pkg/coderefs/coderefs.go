@@ -139,25 +139,6 @@ func Scan(opts options.Options) {
 		return
 	}
 
-	missingFlags := []string{}
-	for flag, count := range branch.CountByFlag(filteredFlags) {
-		if count == 0 {
-			missingFlags = append(missingFlags, flag)
-		}
-	}
-	lookback := opts.Lookback
-
-	if lookback > 0 && gitClient != nil {
-		log.Info.Printf("checking if %d flags without references were removed in the last %d commits", len(missingFlags), opts.Lookback)
-		removedFlags, err := gitClient.LastRemoved(missingFlags, delimString, lookback+1)
-		if err != nil {
-			log.Warning.Printf("unable to generate last removed references: %s", err)
-		} else {
-			log.Info.Printf("found %d removed flags", len(removedFlags))
-		}
-		branch.Removed = removedFlags
-	}
-
 	log.Info.Printf(
 		"sending %d code references across %d flags and %d files to LaunchDarkly for project: %s",
 		branch.TotalHunkCount(),
@@ -165,7 +146,6 @@ func Scan(opts options.Options) {
 		len(branch.References),
 		projKey,
 	)
-
 	err = ldApi.PutCodeReferenceBranch(branch, repoParams.Name)
 	switch {
 	case err == ld.BranchUpdateSequenceIdConflictErr:
@@ -179,6 +159,29 @@ func Scan(opts options.Options) {
 	}
 
 	if gitClient != nil {
+		lookback := opts.Lookback
+		if lookback > 0 {
+			missingFlags := []string{}
+			for flag, count := range branch.CountByFlag(filteredFlags) {
+				if count == 0 {
+					missingFlags = append(missingFlags, flag)
+				}
+
+			}
+			log.Info.Printf("checking if %d flags without references were removed in the last %d commits", len(missingFlags), opts.Lookback)
+			removedFlags, err := gitClient.FindExtinctions(projKey, missingFlags, delimString, lookback+1)
+			if err != nil {
+				log.Warning.Printf("unable to generate flag extinctions: %s", err)
+			} else {
+				log.Info.Printf("found %d removed flags", len(removedFlags))
+			}
+			if len(removedFlags) > 0 {
+				err = ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
+				if err != nil {
+					log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
+				}
+			}
+		}
 		log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
 		remoteBranches, err := gitClient.RemoteBranches()
 		if err != nil {

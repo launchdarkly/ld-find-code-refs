@@ -278,6 +278,25 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 	return nil
 }
 
+func (c ApiClient) PostExtinctionEvents(extinctions []ExtinctionRep, repoName, branchName string) error {
+	data, err := json.Marshal(extinctions)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s%s/%s/branches/%s/extinction-events", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branchName))
+	req, err := h.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+
+	_, err = c.do(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c ApiClient) PostDeleteBranchesTask(repoName string, branches []string) error {
 	body, err := json.Marshal(branches)
 	if err != nil {
@@ -307,6 +326,7 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", c.Options.UserAgent)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
+	req.Header.Set("LD-API-Version", "beta")
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -398,7 +418,6 @@ type BranchRep struct {
 	UpdateSequenceId *int                `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
-	Removed          []LastRemovedRep    `json:"removed,omitempty"`
 }
 
 func (b BranchRep) TotalHunkCount() int {
@@ -483,11 +502,12 @@ func (h HunkRep) NumLines() int {
 	return strings.Count(h.Lines, "\n") + 1
 }
 
-type LastRemovedRep struct {
-	Sha     string `json:"sha"`
-	Message string `json:"message"`
-	Time    int64  `json:"time"`
-	FlagKey string `json:"flagKey"`
+type ExtinctionRep struct {
+	Revision string `json:"revision"`
+	Message  string `json:"message"`
+	Time     int64  `json:"time"`
+	ProjKey  string `json:"projKey"`
+	FlagKey  string `json:"flagKey"`
 }
 
 type tableData [][]string

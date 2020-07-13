@@ -108,8 +108,8 @@ type CommitData struct {
 	tree   *object.Tree
 }
 
-// LastRemoved searches commit history for flags that had references removed recently
-func (c Client) LastRemoved(flags []string, delimiters string, lookback int) ([]ld.LastRemovedRep, error) {
+// FindExtinctions searches commit history for flags that had references removed recently
+func (c Client) FindExtinctions(projKey string, flags []string, delimiters string, lookback int) ([]ld.ExtinctionRep, error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func (c Client) LastRemoved(flags []string, delimiters string, lookback int) ([]
 		commits = append(commits, CommitData{commit, tree})
 	}
 
-	ret := []ld.LastRemovedRep{}
+	ret := []ld.ExtinctionRep{}
 	for i, c := range commits[:len(commits)-1] {
 		changes, err := commits[i+1].tree.Diff(c.tree)
 		if err != nil {
@@ -162,12 +162,13 @@ func (c Client) LastRemoved(flags []string, delimiters string, lookback int) ([]
 					removalCount += delta
 				}
 			}
-			if removalCount == 0 {
-				ret = append(ret, ld.LastRemovedRep{
-					Sha:     c.commit.Hash.String(),
-					Message: c.commit.Message,
-					Time:    c.commit.Author.When.Unix() * 1000,
-					FlagKey: flag,
+			if removalCount > 0 {
+				ret = append(ret, ld.ExtinctionRep{
+					Revision: c.commit.Hash.String(),
+					Message:  c.commit.Message,
+					Time:     c.commit.Author.When.Unix() * 1000,
+					ProjKey:  projKey,
+					FlagKey:  flag,
 				})
 			} else {
 				// this flag was not removed in the current commit, so check for it again in the next commit
