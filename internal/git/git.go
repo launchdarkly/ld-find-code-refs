@@ -138,6 +138,7 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 
 	ret := []ld.ExtinctionRep{}
 	for i, c := range commits[:len(commits)-1] {
+		flags := flags
 		changes, err := commits[i+1].tree.Diff(c.tree)
 		if err != nil {
 			return nil, err
@@ -152,9 +153,10 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 			removalCount := 0
 			for _, patchLine := range patchLines {
 				delta := 0
-				if strings.HasPrefix(patchLine, "-") {
+				// Is a change line and not a metadata line
+				if strings.HasPrefix(patchLine, "-") && !strings.HasPrefix(patchLine, "---") {
 					delta = 1
-				} else if strings.HasPrefix(patchLine, "+") {
+				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
 					delta = -1
 				}
 
