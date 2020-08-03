@@ -278,6 +278,25 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 	return nil
 }
 
+func (c ApiClient) PostExtinctionEvents(extinctions []ExtinctionRep, repoName, branchName string) error {
+	data, err := json.Marshal(extinctions)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s%s/%s/branches/%s/extinction-events", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branchName))
+	req, err := h.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+
+	_, err = c.do(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c ApiClient) PostDeleteBranchesTask(repoName string, branches []string) error {
 	body, err := json.Marshal(branches)
 	if err != nil {
@@ -307,6 +326,7 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", c.Options.UserAgent)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
+	req.Header.Set("LD-API-Version", "beta")
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -482,6 +502,14 @@ func (h HunkRep) NumLines() int {
 	return strings.Count(h.Lines, "\n") + 1
 }
 
+type ExtinctionRep struct {
+	Revision string `json:"revision"`
+	Message  string `json:"message"`
+	Time     int64  `json:"time"`
+	ProjKey  string `json:"projKey"`
+	FlagKey  string `json:"flagKey"`
+}
+
 type tableData [][]string
 
 func (t tableData) Len() int {
@@ -500,15 +528,23 @@ func (t tableData) Swap(i, j int) {
 
 const maxFlagKeysDisplayed = 50
 
-func (b BranchRep) PrintReferenceCountTable() {
-	data := tableData{}
+func (b BranchRep) CountByFlag(flags []string) map[string]int64 {
 	refCountByFlag := map[string]int64{}
+	for _, flag := range flags {
+		refCountByFlag[flag] = 0
+	}
 	for _, ref := range b.References {
 		for _, hunk := range ref.Hunks {
 			refCountByFlag[hunk.FlagKey]++
 		}
 	}
-	for k, v := range refCountByFlag {
+	return refCountByFlag
+}
+
+func (b BranchRep) PrintReferenceCountTable() {
+	data := tableData{}
+
+	for k, v := range b.CountByFlag(nil) {
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)

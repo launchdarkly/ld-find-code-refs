@@ -9,3 +9,4 @@ build/package/cmd/ld-find-code-refs
 /bin/
 .idea/
 *.csv
+/internal/git/testdata/repo

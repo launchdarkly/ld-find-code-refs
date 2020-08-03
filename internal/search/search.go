@@ -35,8 +35,8 @@ func truncateLine(line string) string {
 	return string(runes[0:maxLineCharCount]) + "…"
 }
 
-// matchDelimiters returns true if the given line contains the flag key surrounded by any delimiters
-func matchDelimiters(line string, flagKey string, delimiters string) bool {
+// MatchDelimiters returns true if the given line contains the flag key surrounded by any delimiters
+func MatchDelimiters(line, flagKey, delimiters string) bool {
 	if delimiters == "" && strings.Contains(line, flagKey) {
 		return true
 	}
@@ -61,7 +61,7 @@ func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum, ct
 	aliasMatches := []string{}
 	line := f.lines[lineNum]
 	// Match flag keys with delimiters
-	if matchDelimiters(line, flagKey, delimiters) {
+	if MatchDelimiters(line, flagKey, delimiters) {
 		matchedFlag = true
 	}
 

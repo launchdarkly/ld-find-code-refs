@@ -48,15 +48,7 @@ func Scan(opts options.Options) {
 	}
 
 	projKey := opts.ProjKey
-
-	// Check for potential sdk keys or access tokens provided as the project key
-	if len(projKey) > maxProjKeyLength {
-		if strings.HasPrefix(projKey, "sdk-") {
-			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
-		} else if strings.HasPrefix(projKey, "api-") {
-			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
-		}
-	}
+	checkProjKey(projKey)
 
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
 	repoParams := ld.RepoParams{
@@ -81,11 +73,6 @@ func Scan(opts options.Options) {
 	flags, err := getFlags(ldApi)
 	if err != nil {
 		fatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
-	}
-
-	if len(flags) == 0 {
-		log.Info.Printf("no flag keys found for project: %s, exiting early", projKey)
-		os.Exit(0)
 	}
 
 	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
@@ -159,7 +146,6 @@ func Scan(opts options.Options) {
 		len(branch.References),
 		projKey,
 	)
-
 	err = ldApi.PutCodeReferenceBranch(branch, repoParams.Name)
 	switch {
 	case err == ld.BranchUpdateSequenceIdConflictErr:
@@ -173,6 +159,29 @@ func Scan(opts options.Options) {
 	}
 
 	if gitClient != nil {
+		lookback := opts.Lookback
+		if lookback > 0 {
+			missingFlags := []string{}
+			for flag, count := range branch.CountByFlag(filteredFlags) {
+				if count == 0 {
+					missingFlags = append(missingFlags, flag)
+				}
+
+			}
+			log.Info.Printf("checking if %d flags without references were removed in the last %d commits", len(missingFlags), opts.Lookback)
+			removedFlags, err := gitClient.FindExtinctions(projKey, missingFlags, delimString, lookback+1)
+			if err != nil {
+				log.Warning.Printf("unable to generate flag extinctions: %s", err)
+			} else {
+				log.Info.Printf("found %d removed flags", len(removedFlags))
+			}
+			if len(removedFlags) > 0 {
+				err = ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
+				if err != nil {
+					log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
+				}
+			}
+		}
 		log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
 		remoteBranches, err := gitClient.RemoteBranches()
 		if err != nil {
@@ -248,6 +257,17 @@ func getFlags(ldApi ld.ApiClient) ([]string, error) {
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+// checkProjKey logs a warning if potential sdk keys or access tokens provided as the project key
+func checkProjKey(projKey string) {
+	if len(projKey) > maxProjKeyLength {
+		if strings.HasPrefix(projKey, "sdk-") {
+			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+		} else if strings.HasPrefix(projKey, "api-") {
+			log.Warning.Printf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+		}
+	}
 }
 
 func fatalServiceError(err error, ignoreServiceErrors bool) {
