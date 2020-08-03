@@ -326,7 +326,6 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", c.Options.UserAgent)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
-	req.Header.Set("LD-API-Version", "beta")
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
