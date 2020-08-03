@@ -9,7 +9,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.5.1
+        launchdarkly: launchdarkly/ld-find-code-refs@2.0.0
       workflows:
         main:
           jobs:
@@ -23,7 +23,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.5.1
+        launchdarkly: launchdarkly/ld-find-code-refs@2.0.0
       workflows:
         main:
           jobs:
@@ -38,7 +38,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@1.5.1
+        launchdarkly: launchdarkly/ld-find-code-refs@2.0.0
       workflows:
         main:
           jobs:
@@ -59,7 +59,7 @@ jobs:
         type: string
         default: "${LD_ACCESS_TOKEN}"
       proj_key:
-        description: LaunchDarkly project key
+        description: LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard.
         type: string
       base_uri:
         description: Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly.
@@ -98,8 +98,13 @@ jobs:
         description: "If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response."
         type: boolean
         default: false
+      lookback:
+        description: "Sets the number of Git commits to search in history for
+whether a feature flag was removed from code. Setting this option to a high value will increase search time."
+        type: integer
+        default: 10
     docker:
-      - image: launchdarkly/ld-find-code-refs:2.0.0-preview1
+      - image: launchdarkly/ld-find-code-refs:2.0.0
         entrypoint: sh
     steps:
       - checkout:
@@ -112,6 +117,7 @@ jobs:
               --accessToken=<< parameters.access_token >> \
               --projKey=<< parameters.proj_key >> \
               --ignoreServiceErrors=<< parameters.ignore_service_errors >> \
+              --lookback=<< parameters.lookback >> \
               --contextLines=<< parameters.context_lines >> \
               --baseUri=<< parameters.base_uri >> \
               --repoType=<< parameters.repo_type >> \

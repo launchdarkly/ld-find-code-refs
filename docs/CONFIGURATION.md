@@ -28,47 +28,53 @@ ld-find-code-refs [flags]
 ```
 
 Flags:
-
-```
+``
   -t, --accessToken string         LaunchDarkly personal access token with write-level access.
 
   -U, --baseUri string             LaunchDarkly base URI. (default "https://app.launchdarkly.com")
 
-  -b, --branch string              The currently checked out git branch. If not provided, branch name will be auto-detected. Provide this option when using CI systems that leave the repository in a detached HEAD state.
+  -b, --branch string              The currently checked out branch. If not provided, branch name will be auto-detected. Provide this option when using CI systems that leave the repository in a detached HEAD state.
 
-      --commitUrlTemplate string   If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}. Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate links to the repository for each commit.
+      --commitUrlTemplate string   If provided, LaunchDarkly will attempt to generate links to your VCS service provider per commit. Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}. Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate links to the repository for each commit.
 
-  -c, --contextLines int           The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. (default 2)
+  -C, --contextLines int           The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. (default 2)
+
       --debug                      Enables verbose debug logging
 
-  -B, --defaultBranch string       The git default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to 'master'. (default "master")
+  -B, --defaultBranch string       The default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to 'master'. (default "master")
 
-  -d, --dir string                 Path to existing checkout of the git repo.
+  -d, --dir string                 Path to existing checkout of the repository.
+
       --dryRun                     If enabled, the scanner will run without sending code references to LaunchDarkly. Combine with the outDir option to output code references to a CSV.
 
   -h, --help                       help for ld-find-code-refs
-      --hunkUrlTemplate string     If provided, LaunchDarkly will attempt to generate links to  your Git service provider per code reference.  Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}. Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided,  but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.
+
+      --hunkUrlTemplate string     If provided, LaunchDarkly will attempt to generate links to  your VCS service provider per code reference.  Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}. Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided,  but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.
 
   -i, --ignoreServiceErrors        If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response.
 
+  -l, --lookback int               Sets the number of Git commits to search in history for whether a feature flag was removed from code. Setting this option to a high value will increase search time. (default 10)
+
   -o, --outDir string              If provided, will output a csv file containing all code references for the project to this directory.
 
-  -p, --projKey string             LaunchDarkly project key.
+  -p, --projKey string             LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard.
 
-  -r, --repoName string            Git repo name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."
+  -r, --repoName string            Repository name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."
 
   -T, --repoType string            The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|custom. (default "custom")
 
   -u, --repoUrl string             The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.
 
-  -R, --revision string            `Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.
+  -R, --revision string            Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.
 
   -s, --updateSequenceId int       An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp. (default -1)
+
+  -v, --version                    version for ld-find-code-refs
 ```
 
 ## Environment variables
 
-All command line flags are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `accessToken` may be set as an environment variable e.g. `export LD_ACCESS_TOKEN = 'myTestToken'`.  
+All command line flags are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `accessToken` may be set as an environment variable e.g. `export LD_ACCESS_TOKEN = 'myTestToken'`.
 
 ## YAML
 

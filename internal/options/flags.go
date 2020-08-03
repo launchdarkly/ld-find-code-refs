@@ -108,7 +108,7 @@ the project to this directory.`,
 		name:         "projKey",
 		short:        "p",
 		defaultValue: "",
-		usage:        `LaunchDarkly project key.`,
+		usage:        `LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard.`,
 	},
 	{
 		name:         "repoName",
