@@ -138,7 +138,6 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 
 	ret := []ld.ExtinctionRep{}
 	for i, c := range commits[:len(commits)-1] {
-		flags := flags
 		changes, err := commits[i+1].tree.Diff(c.tree)
 		if err != nil {
 			return nil, err
@@ -174,7 +173,7 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 				})
 			} else {
 				// this flag was not removed in the current commit, so check for it again in the next commit
-				nextFlags = append(nextFlags)
+				nextFlags = append(nextFlags, flag)
 			}
 		}
 		flags = nextFlags
