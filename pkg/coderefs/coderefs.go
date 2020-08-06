@@ -22,11 +22,6 @@ const (
 )
 
 func Scan(opts options.Options) {
-	// Don't log ld access token
-	optionsForLog := opts
-	optionsForLog.AccessToken = helpers.MaskAccessToken(optionsForLog.AccessToken)
-	log.Debug.Printf("starting ld-find-code-refs with options:\n %+v\n", optionsForLog)
-
 	dir := opts.Dir
 	absPath, err := validation.NormalizeAndValidatePath(dir)
 	if err != nil {
