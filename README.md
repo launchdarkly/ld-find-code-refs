@@ -106,7 +106,7 @@ Configuration options include, but are not limited to:
 
 <!-- Headers are used here to maintain historic section links -->
 - ##### Ignoring files and directories
-- ##### Searching for flag key aliases, such as keys stored in constant variables
+- ##### Searching for flag key aliases, such as keys stored in variables or evaluated in an SDK wrapper
 - ##### Providing flag key delimiters to reduce false positives and false negatives
 - ##### Customizing the amount of data stored and displayed by LaunchDarkly
 - ##### Exporting code references as a CSV file
