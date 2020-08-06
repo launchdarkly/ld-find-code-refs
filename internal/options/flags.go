@@ -95,7 +95,7 @@ LaunchDarkly API is unreachable or returns an unexpected response.`,
 		short:        "l",
 		defaultValue: 10,
 		usage: `Sets the number of Git commits to search in history for
-whether a feature flag was removed from code. Setting this option to a high value will increase search time.`,
+whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time.`,
 	},
 	{
 		name:         "outDir",

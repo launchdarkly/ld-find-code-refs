@@ -53,7 +53,7 @@ Flags:
 
   -i, --ignoreServiceErrors        If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response.
 
-  -l, --lookback int               Sets the number of Git commits to search in history for whether a feature flag was removed from code. Setting this option to a high value will increase search time. (default 10)
+  -l, --lookback int               Sets the number of Git commits to search in history for whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time. (default 10)
 
   -o, --outDir string              If provided, will output a csv file containing all code references for the project to this directory.
 
