@@ -111,6 +111,10 @@ Configuration options include, but are not limited to:
 - ##### Customizing the amount of data stored and displayed by LaunchDarkly
 - ##### Exporting code references as a CSV file
 
+### Searching for unused flags (extinctions)
+
+After scanning has completed, `ld-find-code-refs` will search the Git commit history for flags that have become extinct. A flag is considered extinct in a repository if there were code references for the flag at some point in time that were removed. This behavior can be configured to disable or control how many commits will be searched for extinct flags using the [lookback](docs/CONFIGURATION.md#command-line) argument.
+
 ### Branch garbage collection
 
 After scanning has completed, `ld-find-code-refs` will search for and prune code reference data for stale branches. A branch is considered stale if it has references in LaunchDarkly, but no longer exists on the Git remote. As a consequence of this behavior, any code references on local branches or branches belonging only to a remote other than the default one will be removed the next time `ld-find-code-refs` is run on a different branch.
@@ -118,3 +122,4 @@ After scanning has completed, `ld-find-code-refs` will search for and prune code
 Stale branches may also be removed manually with the `ld-find-code-refs prune` subcommand.
 
 This operation requires your environment to be authenticated for remote access to your repository. Branch cleanup is not currently supported when running `ld-find-code-refs` with Bitbucket pipelines.
+
