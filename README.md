@@ -23,7 +23,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
   - [Aliases](docs/ALIASES.md)
   - [Delimiters](docs/CONFIGURATION.md#delimiters)
   - [Ignoring files and directories](docs/CONFIGURATION.md#ignoring-files-and-directories)
-- [Searching for unused flags](#searching-for-unused-flags-(extinctions))
+- [Searching for unused flags](#searching-for-unused-flags-extinctions)
 - [Branch garbage collection](#branch-garbage-collection)
 
 ## Turn-key Configuration options
