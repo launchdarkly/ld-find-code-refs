@@ -1,6 +1,11 @@
-# Configuring aliases
 
-Flag key aliases may be defined using a YAML file stored in your repository at `.launchdarkly/coderefs.yaml`. Configuration types may be used in conjunction and defined more than once for comprehensive alias coverage.
+# Feature flag aliases
+
+Aliases may be generated to find indirect references to feature flags, such as flag keys stored in variables or wrapped SDK code. Once aliases are generated, `ld-find-code-refs` will automatically scan for aliases in addition to flag keys, and surface them in the LaunchDarkly dashboard.
+
+To generate aliases for your flag keys, you may use any combination of the patterns described below. Configuration types may be used in conjunction and defined more than once for comprehensive alias coverage.
+
+Aliase patterns are defined using a YAML file stored in your repository at `.launchdarkly/coderefs.yaml`.
 
 ## Hardcoded map of flag keys to aliases
 
@@ -61,7 +66,7 @@ aliases:
 
 ## Execute a command script
 
-For more control over your aliases, you can write a script to generate aliases. The script will receive a flag key as standard input. `ld-find-code-refs` expects a valid JSON array of flag keys output to stdout.
+For more control over your aliases, you can write a script to generate aliases. The script will receive a flag key as standard input. `ld-find-code-refs` expects a valid JSON array of flag keys output to standard output.
 
 Here's an example of a bash script which returns the the flag key as it's own alias:
 

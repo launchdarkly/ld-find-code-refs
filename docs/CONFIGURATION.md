@@ -28,7 +28,7 @@ ld-find-code-refs [flags]
 ```
 
 Flags:
-``
+```
   -t, --accessToken string         LaunchDarkly personal access token with write-level access.
 
   -U, --baseUri string             LaunchDarkly base URI. (default "https://app.launchdarkly.com")
