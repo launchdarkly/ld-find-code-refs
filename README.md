@@ -23,6 +23,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
   - [Aliases](docs/ALIASES.md)
   - [Delimiters](docs/CONFIGURATION.md#delimiters)
   - [Ignoring files and directories](docs/CONFIGURATION.md#ignoring-files-and-directories)
+- [Searching for unused flags](#searching-for-unused-flags-(extinctions))
 - [Branch garbage collection](#branch-garbage-collection)
 
 ## Turn-key Configuration options
@@ -113,7 +114,7 @@ Configuration options include, but are not limited to:
 
 ### Searching for unused flags (extinctions)
 
-After scanning has completed, `ld-find-code-refs` will search the Git commit history for flags that have become extinct. A flag is considered extinct in a repository if there were code references for the flag at some point in time that were removed. This behavior can be configured to disable or control how many commits will be searched for extinct flags using the [lookback](docs/CONFIGURATION.md#command-line) argument.
+After scanning has completed, `ld-find-code-refs` will search the Git commit history for flags that have become extinct. A flag is considered extinct in a repository if there were code references for the flag at some point in time that were removed. This behavior can be configured to disable or control how many commits will be searched for extinct flags using the [lookback](docs/CONFIGURATION.md#command-line) argument. Extinct flags will be surfaced in the LaunchDarkly UI.
 
 ### Branch garbage collection
 
