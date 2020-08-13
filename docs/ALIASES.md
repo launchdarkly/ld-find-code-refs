@@ -5,9 +5,33 @@ Aliases may be generated to find indirect references to feature flags, such as f
 
 To generate aliases for your flag keys, you may use any combination of the patterns described below. Configuration types may be used in conjunction and defined more than once for comprehensive alias coverage.
 
-Aliase patterns are defined using a YAML file stored in your repository at `.launchdarkly/coderefs.yaml`.
+Alias patterns are defined using a YAML file stored in your repository at `.launchdarkly/coderefs.yaml`.
 
-## Hardcoded map of flag keys to aliases
+## Alias scope
+
+⚠️ Aliases are not aware of scope. So, adding aliases may introduce false positives. For best results using Aliases, we recommend not reusing aliases across multiple feature flags
+
+Don't do this:
+```
+var featureFlag = 'first-flag-key';
+
+...
+
+var featureFlag = 'second-flag-key';
+```
+
+Do this instead:
+```
+var firstFeatureFlag = 'first-flag-key'
+
+...
+
+var secondFeatureFlag = 'second-flag-key'
+```
+
+## Configuring aliases
+
+### Hardcoded map of flag keys to aliases
 
 Aliases can be hardcoded using the `literal` type. This is intended to be used for testing aliasing functionality.
 
@@ -24,7 +48,7 @@ aliases:
         - other.flag.alias
 ```
 
-## Flag keys transposed to common casing conventions
+### Flag keys transposed to common casing conventions
 
 Aliases can be generated using any of the following common naming conventions. For more robust patterns, see the other available options below this section.
 
@@ -47,7 +71,7 @@ aliases:
   - type: pascalcase
 ```
 
-## Search files for a specific pattern
+### Search files for a specific pattern
 
 You can specify a number of files (`paths`) using [glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)) to search. To achieve the best performance, be as specific as possible with your path globs to minimize the number of files searched for aliases.
 
@@ -64,7 +88,7 @@ aliases:
       - '(\w+) = "FLAG_KEY"'
 ```
 
-## Execute a command script
+### Execute a command script
 
 For more control over your aliases, you can write a script to generate aliases. The script will receive a flag key as standard input. `ld-find-code-refs` expects a valid JSON array of flag keys output to standard output.
 
