@@ -9,7 +9,7 @@ Alias patterns are defined using a YAML file stored in your repository at `.laun
 
 ## Alias scope
 
-⚠️ Aliases are not aware of scope. So, adding aliases may introduce false positives. For best results using Aliases, we recommend not reusing aliases across multiple feature flags
+⚠️ Aliases are not aware of scope. So, adding aliases may introduce false positives. For the best results, we recommend not reusing aliases across multiple feature flags
 
 Don't do this:
 ```
