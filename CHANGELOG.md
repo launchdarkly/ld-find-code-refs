@@ -2,7 +2,7 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.0.0] <PLACEHOLDER DATE>
+## [2.0.0] - 2020-08-13
 
 ℹ️ This release includes breaking changes to the command line tool. If you experience errors or unexpected behavior after upgrading, be sure to read these changelog notes carefully to make adjustments for any breaking changes.
 
