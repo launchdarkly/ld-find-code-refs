@@ -85,7 +85,7 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 				return filepath.SkipDir
 			}
 			return nil
-		} else if isDir {
+		} else if isDir || info.Mode()&os.ModeSymlink == os.ModeSymlink {
 			return nil
 		}
 
