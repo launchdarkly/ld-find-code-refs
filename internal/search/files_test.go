@@ -22,6 +22,8 @@ func Test_readFiles(t *testing.T) {
 			assert.Equal(t, testFile.lines, file.lines)
 		case "ignoredFiles/included":
 			assert.Equal(t, []string{"IGNORED BUT INCLUDED"}, file.lines)
+		case "symlink":
+			assert.Fail(t, "Should not read symlink contents")
 		default:
 			assert.Fail(t, "Read unexpected file", file)
 		}

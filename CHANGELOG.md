@@ -2,6 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.1] - 2020-10-05
+
+### Fixed
+
+- Fixes a bug causing `ld-find-code-refs` to scan non-regular files, like symlinks. Thanks @d3d-z7n!
+
 ## [2.0.0] - 2020-08-13
 
 ℹ️ This release includes breaking changes to the command line tool. If you experience errors or unexpected behavior after upgrading, be sure to read these changelog notes carefully to make adjustments for any breaking changes.
@@ -13,7 +19,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
     - `--dir` / `LD_DIR`
     - `--accessToken` / `LD_ACCESS_TOKEN`
 - All command line flags can now be specified as environment variables. [docs](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md#environment-variables)
-- When flags with no code references are detected, `ld-find-code-refs` will search Git commit history to detect when the last reference to a feature flag was removed. Use the `--lookback` command line flag to configure the number of commits you would like to search.  The lookback will start at the current commit and will review up to the last n commits to find the last reference of the flag.  The default is 10 commits. 
+- When flags with no code references are detected, `ld-find-code-refs` will search Git commit history to detect when the last reference to a feature flag was removed. Use the `--lookback` command line flag to configure the number of commits you would like to search. The lookback will start at the current commit and will review up to the last n commits to find the last reference of the flag. The default is 10 commits.
 - Added support for scanning non-git repositories. Use the `--revision` flag to specify your repository version number.
 - Added the `prune` sub-command to delete stale code reference data from LaunchDarkly manually by providing a list of branch names as arguments. example: `ld-find-code-refs prune [flags] "branch1" "branch2"`
 - The GitHub actions wrapper now supports the `pull_request` event
