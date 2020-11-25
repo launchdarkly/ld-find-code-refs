@@ -2,6 +2,12 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.0]
+
+### Added
+
+- `ld-find-code-refs` will now scan for archived flags.
+
 ## [2.0.1] - 2020-10-05
 
 ### Fixed
