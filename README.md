@@ -67,7 +67,7 @@ We do not yet have repositories set up for our linux packages, but we do upload 
 
 ##### Ubuntu
 
-This shell script can be used to download and install `ag` and `ld-find-code-refs` on Ubuntu.
+This shell script can be used to download and install `ld-find-code-refs` on Ubuntu.
 
 ```bash
 wget -qO- https://api.github.com/repos/launchdarkly/ld-find-code-refs/releases/latest \
