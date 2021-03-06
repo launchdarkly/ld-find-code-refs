@@ -20,7 +20,7 @@ import (
 	//"github.com/launchdarkly/ld-find-code-refs/options/validation"
 )
 
-func generateAliases(flags []string, aliases []options.Alias, dir string) (map[string][]string, error) {
+func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[string][]string, error) {
 	allFileContents, err := processFileContent(aliases, dir)
 	if err != nil {
 		return nil, err

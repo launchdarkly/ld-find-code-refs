@@ -79,7 +79,7 @@ func Scan(opts options.Options) {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
-	aliases, err := generateAliases(filteredFlags, opts.Aliases, dir)
+	aliases, err := GenerateAliases(filteredFlags, opts.Aliases, dir)
 	if err != nil {
 		log.Error.Fatalf("failed to create flag key aliases: %v", err)
 	}

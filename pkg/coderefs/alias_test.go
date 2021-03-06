@@ -81,7 +81,7 @@ func Test_generateAliases(t *testing.T) {
 
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
-			aliases, err := generateAliases(tt.flags, tt.aliases, "")
+			aliases, err := GenerateAliases(tt.flags, tt.aliases, "")
 			assert.Equal(t, tt.want, aliases)
 			assert.Equal(t, tt.wantErr, err)
 		})
