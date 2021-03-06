@@ -1,4 +1,4 @@
-module github.com/intheclouddan/ld-find-code-refs
+module github.com/InTheCloudDan/ld-find-code-refs
 
 go 1.13
 
