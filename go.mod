@@ -1,4 +1,4 @@
-module github.com/launchdarkly/ld-find-code-refs
+module github.com/intheclouddan/ld-find-code-refs
 
 go 1.13
 
