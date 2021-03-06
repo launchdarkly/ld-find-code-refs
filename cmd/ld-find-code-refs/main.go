@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 	"github.com/launchdarkly/ld-find-code-refs/pkg/coderefs"
+	o "github.com/launchdarkly/ld-find-code-refs/pkg/options"
 )
 
 var prune = &cobra.Command{

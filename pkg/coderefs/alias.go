@@ -14,8 +14,10 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
+	"github.com/launchdarkly/ld-find-code-refs/pkg/options"
+	//"github.com/launchdarkly/ld-find-code-refs/options/option"
+	//"github.com/launchdarkly/ld-find-code-refs/options/validation"
 )
 
 func generateAliases(flags []string, aliases []options.Alias, dir string) (map[string][]string, error) {
@@ -27,7 +29,7 @@ func generateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 	ret := make(map[string][]string, len(flags))
 	for _, flag := range flags {
 		for _, a := range aliases {
-			flagAliases, err := generateAlias(a, flag, dir, allFileContents)
+			flagAliases, err := GenerateAlias(a, flag, dir, allFileContents)
 			if err != nil {
 				return nil, err
 			}
@@ -38,7 +40,7 @@ func generateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 	return ret, nil
 }
 
-func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
+func GenerateAlias(a options.Alias, flag, dir string, aliasConfig map[string][]byte) ([]string, error) {
 	ret := []string{}
 	switch a.Type.Canonical() {
 	case options.Literal:
@@ -59,7 +61,7 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 		// Concatenate the contents of all files into a single byte array to be matched by specified patterns
 		fileContents := []byte{}
 		for _, path := range a.Paths {
-			pathFileContents := allFileContents[filepath.Join(dir, path)]
+			pathFileContents := aliasConfig[filepath.Join(dir, path)]
 			fileContents = append(fileContents, pathFileContents...)
 		}
 
