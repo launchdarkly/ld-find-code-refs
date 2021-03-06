@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
+	"github.com/InTheCloudDan/ld-find-code-refs/internal/validation"
 )
 
 type Options struct {
