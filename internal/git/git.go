@@ -15,7 +15,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/internal/search"
+	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
 type Client struct {

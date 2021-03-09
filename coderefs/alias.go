@@ -14,11 +14,12 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
+	"github.com/launchdarkly/ld-find-code-refs/options"
 )
 
-func generateAliases(flags []string, aliases []options.Alias, dir string) (map[string][]string, error) {
+// GenerateAliases returns a map of flag keys to aliases based on config.
+func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[string][]string, error) {
 	allFileContents, err := processFileContent(aliases, dir)
 	if err != nil {
 		return nil, err

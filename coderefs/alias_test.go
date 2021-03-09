@@ -3,7 +3,7 @@ package coderefs
 import (
 	"testing"
 
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	o "github.com/launchdarkly/ld-find-code-refs/options"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +24,7 @@ const (
 	testFlagAliasKey = "AnyKind.of_key"
 )
 
-func Test_generateAliases(t *testing.T) {
+func Test_GenerateAliases(t *testing.T) {
 	specs := []struct {
 		name    string
 		flags   []string
@@ -81,7 +81,7 @@ func Test_generateAliases(t *testing.T) {
 
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
-			aliases, err := generateAliases(tt.flags, tt.aliases, "")
+			aliases, err := GenerateAliases(tt.flags, tt.aliases, "")
 			assert.Equal(t, tt.want, aliases)
 			assert.Equal(t, tt.wantErr, err)
 		})
