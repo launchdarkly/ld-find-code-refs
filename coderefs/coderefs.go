@@ -21,6 +21,7 @@ const (
 	maxProjKeyLength = 20 // Maximum project key length
 )
 
+// Scan checks the configured directory for flags base on the options configured for Code References.
 func Scan(opts options.Options) {
 	dir := opts.Dir
 	absPath, err := validation.NormalizeAndValidatePath(dir)
