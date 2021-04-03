@@ -1,10 +1,18 @@
 package main
 
 import (
+	"os"
 	"testing"
 
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	log.Init(true)
+	os.Exit(m.Run())
+}
 
 func TestParseBranch(t *testing.T) {
 	specs := []struct {
@@ -62,4 +70,26 @@ func TestParseBranch(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMergeGithubOptions_withCliRepoName(t *testing.T) {
+	os.Setenv("GITHUB_REF", "refs/heads/test")
+	var options o.Options = o.Options{
+		AccessToken: "deaf-beef",
+		ProjKey:     "project-x",
+		RepoName:    "myapp-react",
+	}
+	result, _ := mergeGithubOptions(options)
+	assert.Equal(t, "myapp-react", result.RepoName)
+}
+
+func TestMergeGithubOptions_withGithubRepoName(t *testing.T) {
+	os.Setenv("GITHUB_REPOSITORY", "yusinto/myapp-golang")
+	os.Setenv("GITHUB_REF", "refs/heads/test")
+	var options o.Options = o.Options{
+		AccessToken: "deaf-beef",
+		ProjKey:     "project-x",
+	}
+	result, _ := mergeGithubOptions(options)
+	assert.Equal(t, "myapp-golang", result.RepoName)
 }
