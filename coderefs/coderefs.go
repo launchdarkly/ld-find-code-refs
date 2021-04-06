@@ -10,10 +10,10 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/internal/options"
-	"github.com/launchdarkly/ld-find-code-refs/internal/search"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
+	"github.com/launchdarkly/ld-find-code-refs/options"
+	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
 const (
@@ -21,6 +21,7 @@ const (
 	maxProjKeyLength = 20 // Maximum project key length
 )
 
+// Scan checks the configured directory for flags base on the options configured for Code References.
 func Scan(opts options.Options) {
 	dir := opts.Dir
 	absPath, err := validation.NormalizeAndValidatePath(dir)
@@ -79,7 +80,7 @@ func Scan(opts options.Options) {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
-	aliases, err := generateAliases(filteredFlags, opts.Aliases, dir)
+	aliases, err := GenerateAliases(filteredFlags, opts.Aliases, dir)
 	if err != nil {
 		log.Error.Fatalf("failed to create flag key aliases: %v", err)
 	}

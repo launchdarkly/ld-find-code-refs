@@ -4,9 +4,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/launchdarkly/ld-find-code-refs/coderefs"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
-	"github.com/launchdarkly/ld-find-code-refs/pkg/coderefs"
+	o "github.com/launchdarkly/ld-find-code-refs/options"
 )
 
 func main() {
