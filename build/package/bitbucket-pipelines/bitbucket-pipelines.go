@@ -22,8 +22,10 @@ func main() {
 
 func mergeBitbucketOptions(opts o.Options) (o.Options, error) {
 	log.Info.Printf("Setting Bitbucket Pipelines env vars")
+	if opts.RepoName == "" {
+		opts.RepoName = os.Getenv("BITBUCKET_REPO_SLUG")
+	}
 	opts.RepoType = "bitbucket"
-	opts.RepoName = os.Getenv("BITBUCKET_REPO_SLUG")
 	opts.RepoUrl = os.Getenv("BITBUCKET_GIT_HTTP_ORIGIN")
 	updateSequenceId, err := strconv.Atoi(os.Getenv("BITBUCKET_BUILD_NUMBER"))
 	if err != nil {

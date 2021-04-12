@@ -30,10 +30,15 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	log.Info.Printf("Setting GitHub action env vars")
 	ghRepo := strings.Split(os.Getenv("GITHUB_REPOSITORY"), "/")
 	repoName := ""
-	if len(ghRepo) > 1 {
-		repoName = ghRepo[1]
+
+	if opts.RepoName != "" {
+		repoName = opts.RepoName
 	} else {
-		log.Error.Printf("unable to validate GitHub repository name: %v", ghRepo)
+		if len(ghRepo) > 1 {
+			repoName = ghRepo[1]
+		} else {
+			log.Error.Printf("unable to validate GitHub repository name: %v", ghRepo)
+		}
 	}
 	event, err := parseEvent(os.Getenv("GITHUB_EVENT_PATH"))
 	if err != nil {
