@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/internal/options"
+	o "github.com/launchdarkly/ld-find-code-refs/options"
 	"github.com/stretchr/testify/assert"
 )
 
