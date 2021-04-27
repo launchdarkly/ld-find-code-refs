@@ -2,6 +2,16 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.2.1] - 2021-04-27
+
+### Added
+
+- `repoName` is now a supported configuration option for 
+  [github action](https://docs.launchdarkly.com/home/code/github-actions#additional-configuration-options) 
+  and [bitbucket pipes](https://docs.launchdarkly.com/home/code/bitbucket#pipeline-configuration) 🎉. 
+  This is especially useful for a monorepo where multiple yaml configurations exist, each mapping to its own 
+  LD project key.
+
 ## [2.1.0]
 
 ### Added
