@@ -35,8 +35,8 @@ ld-find-code-refs \
   --projKey="$YOUR_LAUNCHDARKLY_PROJECT_KEY" \
   --repoName="$YOUR_REPOSITORY_NAME" \
   --dir="/path/to/git/repo" \
-  --contextLines=3
-  --repoType="github"
+  --contextLines=3 \
+  --repoType="github" \
   --repoUrl="$YOUR_REPOSITORY_URL" # example: https://github.com/launchdarkly/ld-find-code-refs
 ```
 ## Scanning non-git repositories
@@ -58,6 +58,7 @@ ld-find-code-refs \
 When scanning a non-git repository, automatic [branch garbage collection](../README.md#branch-garbage-collection) is disabled. The `prune` sub-command may be used to manually delete code references for stale branches.
 
 The following example instructs the `prune` command to delete code references for the branches named "branch1" and "branch2":
+
 ```bash
 ld-find-code-refs prune \
   --accessToken=$YOUR_LAUNCHDARKLY_ACCESS_TOKEN \ # example: api-xxxx
