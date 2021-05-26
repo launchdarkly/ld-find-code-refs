@@ -22,6 +22,7 @@ const (
 	testFlagKey      = "someFlag"
 	testFlagKey2     = "anotherFlag"
 	testFlagAliasKey = "AnyKind.of_key"
+	testWildFlagKey  = "wildFlag"
 )
 
 func Test_GenerateAliases(t *testing.T) {
@@ -64,12 +65,20 @@ func Test_GenerateAliases(t *testing.T) {
 			want: map[string][]string{testFlagKey: slice("SomeFlag")},
 		},
 		{
-			name:  "file pattern",
+			name:  "file exact pattern",
 			flags: slice(testFlagKey),
 			aliases: []o.Alias{
-				filePattern(testFlagKey),
+				fileExactPattern(testFlagKey),
 			},
 			want: map[string][]string{testFlagKey: slice("SOME_FLAG")},
+		},
+		{
+			name:  "file wildcard pattern",
+			flags: slice(testFlagKey, testWildFlagKey),
+			aliases: []o.Alias{
+				fileWildPattern(testFlagKey),
+			},
+			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG"), testFlagKey: slice("SOME_FLAG")},
 		},
 		// TODO
 		// {
@@ -112,10 +121,18 @@ func literal(flags []string) o.Alias {
 	return a
 }
 
-func filePattern(flag string) o.Alias {
+func fileExactPattern(flag string) o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
 	a.Paths = []string{"testdata/alias_test.txt"}
+	a.Patterns = []string{pattern}
+	return a
+}
+
+func fileWildPattern(flag string) o.Alias {
+	a := alias(o.FilePattern)
+	pattern := "(\\w+)\\s= 'FLAG_KEY'"
+	a.Paths = []string{"testdata/*/*.txt", "testdata/*.txt"}
 	a.Patterns = []string{pattern}
 	return a
 }
