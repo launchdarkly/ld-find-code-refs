@@ -56,3 +56,23 @@ brew:
     name: LaunchDarklyCI
     email: dev@launchdarkly.com
 
+dockers:
+  -
+    image_templates:
+    - "launchdarkly/ld-find-code-refs:latest"
+    - "launchdarkly/ld-find-code-refs:{{ .Tag }}"
+      
+    dockerfile: build/package/cmd/Dockerfile
+ 
+  -
+    image_templates:
+    - "launchdarkly/ld-find-code-refs-github-action:latest"
+    - "launchdarkly/ld-find-code-refs-github-action:{{ .Tag }}"
+      
+    dockerfile: build/package/github-actions/Dockerfile
+  -
+    image_templates:
+    - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
+    - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Tag }}"
+      
+    dockerfile: build/package/bitbucket-pipelines/Dockerfile
