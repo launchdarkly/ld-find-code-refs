@@ -12,7 +12,7 @@ builds:
       - 386
       - amd64
   -
-    binary: ld-find-code-refs
+    binary: ld-find-code-refs-github-action
     main: ./build/package/github-actions/ld-find-code-refs-github-action
     env:
       - CGO_ENABLED=0
@@ -21,7 +21,7 @@ builds:
     goarch:
       - amd64
   -
-    binary: ld-find-code-refs
+    binary: ld-find-code-refs-bitbucket-pipeline
     main: ./build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
     env:
       - CGO_ENABLED=0
