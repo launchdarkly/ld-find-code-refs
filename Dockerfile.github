@@ -3,7 +3,7 @@ FROM alpine:3.13.5
 RUN apk update
 RUN apk add --no-cache git
 
-COPY dist/ld-find-code-refs-github-action_linux_amd64/ld-find-code-refs-github-action /ld-find-code-refs-github-action
+COPY ld-find-code-refs-github-action /ld-find-code-refs-github-action
 
 LABEL com.github.actions.name="LaunchDarkly Code References"
 LABEL com.github.actions.description="Find references to feature flags in your code."
