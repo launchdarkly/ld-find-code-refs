@@ -35,6 +35,7 @@ builds:
 
 nfpms:
   -
+    id: ld-find-code-refs
     file_name_template: "{{ .ProjectName }}_{{ .Version }}.{{ .Arch }}"
 
     homepage: https://launchdarkly.com/
@@ -52,6 +53,7 @@ nfpms:
 
 brews:
   -
+    id: ld-find-code-refs
     name: ld-find-code-refs
 
     description: Job for finding and sending feature flag code references to LaunchDarkly
