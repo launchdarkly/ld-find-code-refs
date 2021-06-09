@@ -33,49 +33,51 @@ builds:
     goarch:
       - amd64
 
-nfpm:
-  name_template: "{{ .ProjectName }}_{{ .Version }}.{{ .Arch }}"
+nfpms:
+  -
+    name_template: "{{ .ProjectName }}_{{ .Version }}.{{ .Arch }}"
 
-  homepage: https://launchdarkly.com/
-  maintainer: LaunchDarkly <team@launchdarkly.com>
-  description: Job for finding and sending feature flag code references to LaunchDarkly
-  license: Apache 2.0
-  vendor: LaunchDarkly
+    homepage: https://launchdarkly.com/
+    maintainer: LaunchDarkly <team@launchdarkly.com>
+    description: Job for finding and sending feature flag code references to LaunchDarkly
+    license: Apache 2.0
+    vendor: LaunchDarkly
 
-  formats:
-  - deb
-  - rpm
+    formats:
+    - deb
+    - rpm
 
-  replacements:
-    386: i386
+    replacements:
+      386: i386
 
-release:
-  # If set to auto, will mark the release as not ready for production
-  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
-  # If set to true, will mark the release as not ready for production.
-  prerelease: auto
+  release:
+    # If set to auto, will mark the release as not ready for production
+    # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
+    # If set to true, will mark the release as not ready for production.
+    prerelease: auto
 
-brew:
-  name: ld-find-code-refs
+brews:
+  -
+    name: ld-find-code-refs
 
-  description: Job for finding and sending feature flag code references to LaunchDarkly
+    description: Job for finding and sending feature flag code references to LaunchDarkly
 
-  homepage: "https://launchdarkly.com"
+    homepage: "https://launchdarkly.com"
 
-  github:
-    owner: launchdarkly
-    name: homebrew-tap
+    github:
+      owner: launchdarkly
+      name: homebrew-tap
 
-  folder: Formula
+    folder: Formula
 
-  url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
 
-  install: |
-    bin.install "ld-find-code-refs"
+    install: |
+      bin.install "ld-find-code-refs"
 
-  commit_author:
-    name: LaunchDarklyCI
-    email: dev@launchdarkly.com
+    commit_author:
+      name: LaunchDarklyCI
+      email: dev@launchdarkly.com
 
 dockers:
   -
