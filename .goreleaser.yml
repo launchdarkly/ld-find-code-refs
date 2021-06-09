@@ -103,13 +103,13 @@ dockers:
     - "launchdarkly/ld-find-code-refs-github-action:latest"
     - "launchdarkly/ld-find-code-refs-github-action:{{ .Tag }}"
       
-    dockerfile: build/package/github-actions/Dockerfile
+    dockerfile: Dockerfile.github
   -
     goos: linux
 
     # GOARCH of the built binaries/packages that should be used.
     goarch: amd64
-    
+
     image_templates:
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Tag }}"
