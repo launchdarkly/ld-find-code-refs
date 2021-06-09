@@ -35,7 +35,7 @@ builds:
 
 nfpms:
   -
-    name_template: "{{ .ProjectName }}_{{ .Version }}.{{ .Arch }}"
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}.{{ .Arch }}"
 
     homepage: https://launchdarkly.com/
     maintainer: LaunchDarkly <team@launchdarkly.com>
@@ -50,12 +50,6 @@ nfpms:
     replacements:
       386: i386
 
-  release:
-    # If set to auto, will mark the release as not ready for production
-    # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
-    # If set to true, will mark the release as not ready for production.
-    prerelease: auto
-
 brews:
   -
     name: ld-find-code-refs
@@ -64,7 +58,7 @@ brews:
 
     homepage: "https://launchdarkly.com"
 
-    github:
+    tap:
       owner: launchdarkly
       name: homebrew-tap
 
