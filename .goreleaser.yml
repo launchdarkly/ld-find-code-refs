@@ -90,6 +90,8 @@ dockers:
 
     # GOARCH of the built binaries/packages that should be used.
     goarch: amd64
+    ids: 
+    - ld-find-code-refs-github-action
 
     image_templates:
     - "launchdarkly/ld-find-code-refs-github-action:latest"
@@ -100,5 +102,8 @@ dockers:
     image_templates:
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Tag }}"
-      
+     
+    ids: 
+    - ld-find-code-refs-bitbucket-pipeline
+
     dockerfile: build/package/bitbucket-pipelines/Dockerfile
