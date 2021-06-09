@@ -53,7 +53,9 @@ nfpms:
 
 brews:
   -
-    id: ld-find-code-refs
+    ids: 
+    - ld-find-code-refs
+    
     name: ld-find-code-refs
 
     description: Job for finding and sending feature flag code references to LaunchDarkly
