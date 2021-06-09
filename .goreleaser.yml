@@ -33,6 +33,10 @@ builds:
     goarch:
       - amd64
 
+archives:
+  -
+    id: ld-find-code-refs
+
 nfpms:
   -
     id: ld-find-code-refs
