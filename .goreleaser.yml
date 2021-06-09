@@ -15,7 +15,7 @@ builds:
   -
     binary: ld-find-code-refs-github-action
     id: ld-find-code-refs-github-action
-    main: ./build/package/github-actions/ld-find-code-refs-github-action
+    main: ./build/package/github-actions/
     env:
       - CGO_ENABLED=0
     goos:
@@ -25,7 +25,7 @@ builds:
   -
     binary: ld-find-code-refs-bitbucket-pipeline
     id: ld-find-code-refs-bitbucket-pipeline
-    main: ./build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
+    main: ./build/package/bitbucket-pipelines/
     env:
       - CGO_ENABLED=0
     goos:
