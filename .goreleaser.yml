@@ -117,4 +117,4 @@ dockers:
     ids: 
     - ld-find-code-refs-bitbucket-pipeline
 
-    dockerfile: build/package/bitbucket-pipelines/Dockerfile
+    dockerfile: Dockerfile.bitbucket
