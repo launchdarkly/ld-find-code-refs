@@ -38,7 +38,7 @@ archives:
     id: ld-find-code-refs
     builds:
     - ld-find-code-refs
-    
+
 nfpms:
   -
     id: ld-find-code-refs
@@ -105,6 +105,11 @@ dockers:
       
     dockerfile: build/package/github-actions/Dockerfile
   -
+    goos: linux
+
+    # GOARCH of the built binaries/packages that should be used.
+    goarch: amd64
+    
     image_templates:
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Tag }}"
