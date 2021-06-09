@@ -36,7 +36,9 @@ builds:
 archives:
   -
     id: ld-find-code-refs
-
+    builds:
+    - ld-find-code-refs
+    
 nfpms:
   -
     id: ld-find-code-refs
