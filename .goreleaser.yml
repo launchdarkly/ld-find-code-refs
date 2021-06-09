@@ -1,6 +1,7 @@
 builds:
   -
     binary: ld-find-code-refs
+    id: ld-find-code-refs
     main: ./cmd/ld-find-code-refs/
     env:
       - CGO_ENABLED=0
@@ -13,6 +14,7 @@ builds:
       - amd64
   -
     binary: ld-find-code-refs-github-action
+    id: ld-find-code-refs-github-action
     main: ./build/package/github-actions/ld-find-code-refs-github-action
     env:
       - CGO_ENABLED=0
@@ -22,6 +24,7 @@ builds:
       - amd64
   -
     binary: ld-find-code-refs-bitbucket-pipeline
+    id: ld-find-code-refs-bitbucket-pipeline
     main: ./build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
     env:
       - CGO_ENABLED=0
