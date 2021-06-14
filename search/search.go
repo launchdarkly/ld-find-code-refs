@@ -41,8 +41,13 @@ func MatchDelimiters(line, flagKey, delimiters string) bool {
 		return true
 	}
 	for _, left := range delimiters {
+		var sb strings.Builder
+		sb.Grow(len(flagKey) + 2)
+		sb.WriteRune(left)
+		sb.WriteString(flagKey)
 		for _, right := range delimiters {
-			if strings.Contains(line, string(left)+flagKey+string(right)) {
+			sb.WriteRune(right)
+			if strings.Contains(line, sb.String()) {
 				return true
 			}
 		}
