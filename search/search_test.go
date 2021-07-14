@@ -320,7 +320,7 @@ func Test_processFiles(t *testing.T) {
 
 func Test_SearchForRefs(t *testing.T) {
 	want := []ld.ReferenceHunksRep{{Path: testFile.path}}
-	got, err := SearchForRefs("default", "testdata", aliases, 0, defaultDelims, defaultDelimsMap)
+	got, err := SearchForRefs("default", "testdata", aliases, 0, "", defaultDelimsMap)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
 	require.Equal(t, want[0].Path, got[0].Path)
