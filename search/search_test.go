@@ -132,10 +132,9 @@ func Test_hunkForLine(t *testing.T) {
 			ctxLines:     0,
 			lineNum:      0,
 			flagKey:      testFlagKey,
-			delimiters:   defaultDelims,
 			delimiterMap: defaultDelimsMap,
-			lines:        []string{delimitedTestFlagKey + strings.Repeat("a", maxLineCharCount)},
-			want:         makeHunkPtr(1, delimitedTestFlagKey+strings.Repeat("a", maxLineCharCount-len(delimitedTestFlagKey))+"…"),
+			lines:        []string{testFlagKey + strings.Repeat("a", maxLineCharCount)},
+			want:         makeHunkPtr(1, testFlagKey+strings.Repeat("a", maxLineCharCount-len(testFlagKey))+"…"),
 		},
 	}
 
