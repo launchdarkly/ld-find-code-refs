@@ -8,6 +8,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/coderefs"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
+	"github.com/launchdarkly/ld-find-code-refs/matcher"
 	o "github.com/launchdarkly/ld-find-code-refs/options"
 )
 
@@ -55,7 +56,7 @@ var cmd = &cobra.Command{
 		}
 
 		log.Init(opts.Debug)
-		coderefs.Scan(opts)
+		matcher.Scan(opts)
 		return nil
 	},
 	Version: version.Version,

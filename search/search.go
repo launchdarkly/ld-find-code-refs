@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/launchdarkly/ld-find-code-refs/element"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 )
@@ -192,16 +193,16 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w.Wait()
 }
 
-func SearchForRefs(projKey, workspace string, aliases map[string][]string, ctxLines int, delimiters string) ([]ld.ReferenceHunksRep, error) {
+func SearchForRefs(projKey string, matcher element.ElementsMatcher) ([]ld.ReferenceHunksRep, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	files := make(chan file)
 	references := make(chan ld.ReferenceHunksRep)
-
+	firstMatcher := matcher.Elements[0]
 	// Start workers to process files asynchronously as they are written to the files channel
-	go processFiles(ctx, files, references, projKey, aliases, ctxLines, delimiters)
+	go processFiles(ctx, files, references, projKey, firstMatcher.Aliases, matcher.CtxLines, matcher.Delimiters)
 
-	err := readFiles(ctx, files, workspace)
+	err := readFiles(ctx, files, matcher.Directories[0])
 	if err != nil {
 		return nil, err
 	}

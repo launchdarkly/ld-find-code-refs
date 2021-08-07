@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/launchdarkly/ld-find-code-refs/coderefs"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/matcher"
 	o "github.com/launchdarkly/ld-find-code-refs/options"
 )
 
@@ -22,7 +22,7 @@ func main() {
 		log.Error.Fatal(err)
 	}
 	log.Init(opts.Debug)
-	coderefs.Scan(opts)
+	matcher.Scan(opts)
 }
 
 // mergeGithubOptions sets inferred options from the github actions environment, when available

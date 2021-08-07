@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/launchdarkly/ld-find-code-refs/element"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/stretchr/testify/require"
@@ -311,7 +312,15 @@ func Test_processFiles(t *testing.T) {
 
 func Test_SearchForRefs(t *testing.T) {
 	want := []ld.ReferenceHunksRep{{Path: testFile.path}}
-	got, err := SearchForRefs("default", "testdata", aliases, 0, "")
+	matcher := element.ElementsMatcher{
+		Directories: []string{"testdata"},
+		CtxLines:    0,
+		Delimiters:  "",
+	}
+	matcher.Elements = append(matcher.Elements, element.ElementMatcher{
+		Aliases: aliases,
+	})
+	got, err := SearchForRefs("default", matcher)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
 	require.Equal(t, want[0].Path, got[0].Path)

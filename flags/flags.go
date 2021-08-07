@@ -1,9 +1,10 @@
-package coderefs
+package flags
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/launchdarkly/ld-find-code-refs/coderefs"
 	"github.com/launchdarkly/ld-find-code-refs/element"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -47,7 +48,7 @@ func GenerateSearchElements(opts options.Options, repoParams ld.RepoParams) elem
 	}
 	matcher.Elements = filteredFlags
 
-	matcher.Aliases, err = GenerateAliases(filteredFlags, opts.Aliases, opts.Dir)
+	matcher.Aliases, err = coderefs.GenerateAliases(filteredFlags, opts.Aliases, opts.Dir)
 	if err != nil {
 		log.Error.Fatalf("failed to create flag key aliases: %v", err)
 	}
