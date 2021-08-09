@@ -16,10 +16,6 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
-type Elements interface {
-	GenerateSearchElements() []string
-}
-
 func Run(opts options.Options) {
 	dir := opts.Dir
 	absPath, err := validation.NormalizeAndValidatePath(dir)
