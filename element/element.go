@@ -12,7 +12,6 @@ type ElementMatcher struct {
 
 type Matcher struct {
 	Elements   []ElementMatcher
-	Type       string
 	CtxLines   int
 	Delimiters string
 }
