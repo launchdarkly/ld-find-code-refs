@@ -44,9 +44,6 @@ define publish_docker
 	test $(2) || docker push launchdarkly/$(3):latest
 endef
 
-publish-cli-docker: compile-linux-binary
-	$(call publish_docker,$(TAG),$(PRERELEASE),ld-find-code-refs,cmd)
-
 publish-github-actions-docker: compile-github-actions-binary
 	$(call publish_docker,$(TAG),$(PRERELEASE),ld-find-code-refs-github-action,github-actions)
 
@@ -63,7 +60,7 @@ publish-dev-circle-orb: validate-circle-orb
 publish-release-circle-orb: validate-circle-orb
 	circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@$(TAG)
 
-publish-all: publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-release-circle-orb
+publish-all: publish-github-actions-docker publish-bitbucket-pipelines-docker publish-release-circle-orb
 
 clean:
 	rm -rf out/
@@ -71,4 +68,4 @@ clean:
 	rm -f build/package/github-actions/ld-find-code-refs-github-action
 	rm -f build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 
-.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-cli-docker publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all clean
+.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-github-actions-docker publish-bitbucket-pipelines-docker publish-dev-circle-orb publish-release-circle-orb publish-all clean
