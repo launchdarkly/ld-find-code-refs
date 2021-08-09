@@ -109,7 +109,7 @@ type CommitData struct {
 }
 
 // FindExtinctions searches commit history for flags that had references removed recently
-func (c Client) FindExtinctions(projKey string, flags []string, delimiters string, lookback int) ([]ld.ExtinctionRep, error) {
+func (c Client) FindExtinctions(projKey string, flags []string, matcher element.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
 		return nil, err
@@ -157,9 +157,6 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 					delta = 1
 				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
 					delta = -1
-				}
-				matcher := element.Matcher{
-					Delimiters: delimiters,
 				}
 				if delta != 0 && matcher.MatchElement(patchLine, flag) {
 					removalCount += delta

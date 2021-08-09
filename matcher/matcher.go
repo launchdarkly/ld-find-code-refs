@@ -188,7 +188,7 @@ func runExtinctions(opts options.Options, matcher element.Matcher, branch ld.Bra
 
 		}
 		log.Info.Printf("checking if %d flags without references were removed in the last %d commits", len(missingFlags), opts.Lookback)
-		removedFlags, err := gitClient.FindExtinctions(opts.ProjKey, missingFlags, matcher.Delimiters, lookback+1)
+		removedFlags, err := gitClient.FindExtinctions(opts.ProjKey, missingFlags, matcher, lookback+1)
 		if err != nil {
 			log.Warning.Printf("unable to generate flag extinctions: %s", err)
 		} else {
