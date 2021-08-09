@@ -72,10 +72,10 @@ func Run(opts options.Options) {
 }
 
 // Scan checks the configured directory for flags base on the options configured for Code References.
-func Scan(opts options.Options, repoParams ld.RepoParams) (element.ElementsMatcher, []ld.ReferenceHunksRep) {
+func Scan(opts options.Options, repoParams ld.RepoParams) (element.Matcher, []ld.ReferenceHunksRep) {
 	flagMatcher := flags.GenerateSearchElements(opts, repoParams)
 
-	matcher := element.ElementsMatcher{
+	matcher := element.Matcher{
 		Elements: []element.ElementMatcher{flagMatcher},
 		CtxLines: opts.ContextLines,
 	}
@@ -133,7 +133,7 @@ func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]b
 	return staleBranches
 }
 
-func handleOutput(opts options.Options, matcher element.ElementsMatcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
+func handleOutput(opts options.Options, matcher element.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
 	outDir := opts.OutDir
 	if outDir != "" {
 		outPath, err := branch.WriteToCSV(outDir, opts.ProjKey, repoParams.Name, opts.Revision)
@@ -177,7 +177,7 @@ func handleOutput(opts options.Options, matcher element.ElementsMatcher, branch 
 	}
 }
 
-func runExtinctions(opts options.Options, matcher element.ElementsMatcher, branch ld.BranchRep, repoParams ld.RepoParams, gitClient *git.Client, ldApi ld.ApiClient) {
+func runExtinctions(opts options.Options, matcher element.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, gitClient *git.Client, ldApi ld.ApiClient) {
 	lookback := opts.Lookback
 	if lookback > 0 {
 		missingFlags := []string{}

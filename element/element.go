@@ -10,19 +10,19 @@ type ElementMatcher struct {
 	Directory  string
 }
 
-type ElementsMatcher struct {
+type Matcher struct {
 	Elements   []ElementMatcher
 	Type       string
 	CtxLines   int
 	Delimiters string
 }
 
-func (e ElementsMatcher) MatchElement(line, flagKey string) bool {
-	if e.Delimiters == "" && strings.Contains(line, flagKey) {
+func (m Matcher) MatchElement(line, flagKey string) bool {
+	if m.Delimiters == "" && strings.Contains(line, flagKey) {
 		return true
 	}
-	for _, left := range e.Delimiters {
-		for _, right := range e.Delimiters {
+	for _, left := range m.Delimiters {
+		for _, right := range m.Delimiters {
 			var sb strings.Builder
 			sb.Grow(len(flagKey) + 2)
 			sb.WriteRune(left)

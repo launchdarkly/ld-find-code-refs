@@ -158,7 +158,7 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
 					delta = -1
 				}
-				matcher := element.ElementsMatcher{
+				matcher := element.Matcher{
 					Delimiters: delimiters,
 				}
 				if delta != 0 && matcher.MatchElement(patchLine, flag) {
