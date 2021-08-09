@@ -18,7 +18,9 @@ const (
 )
 
 func GenerateSearchElements(opts options.Options, repoParams ld.RepoParams) element.ElementMatcher {
-	matcher := element.ElementMatcher{}
+	matcher := element.ElementMatcher{
+		Directory: opts.Dir,
+	}
 
 	projKey := opts.ProjKey
 
