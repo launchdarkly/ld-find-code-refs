@@ -36,38 +36,19 @@ func truncateLine(line string) string {
 	return string(runes[0:maxLineCharCount]) + "…"
 }
 
-// MatchDelimiters returns true if the given line contains the flag key surrounded by any delimiters
-func MatchDelimiters(line, flagKey, delimiters string) bool {
-	if delimiters == "" && strings.Contains(line, flagKey) {
-		return true
-	}
-	for _, left := range delimiters {
-		for _, right := range delimiters {
-			var sb strings.Builder
-			sb.Grow(len(flagKey) + 2)
-			sb.WriteRune(left)
-			sb.WriteString(flagKey)
-			sb.WriteRune(right)
-			if strings.Contains(line, sb.String()) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 type file struct {
 	path  string
 	lines []string
 }
 
 // hunkForLine returns a matching code reference for a given flag key on a line
-func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum, ctxLines int, delimiters string) *ld.HunkRep {
+func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum int, matcher element.ElementsMatcher) *ld.HunkRep {
 	matchedFlag := false
 	aliasMatches := []string{}
 	line := f.lines[lineNum]
+	ctxLines := matcher.CtxLines
 	// Match flag keys with delimiters
-	if MatchDelimiters(line, flagKey, delimiters) {
+	if matcher.MatchElement(line, flagKey) {
 		matchedFlag = true
 	}
 
@@ -113,10 +94,10 @@ func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum, ct
 }
 
 // aggregateHunksForFlag finds all references in a file, and combines matches if their context lines overlap
-func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []string, ctxLines int, delimiters string) []ld.HunkRep {
+func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []string, matcher element.ElementsMatcher) []ld.HunkRep {
 	hunksForFlag := []ld.HunkRep{}
 	for i := range f.lines {
-		match := f.hunkForLine(projKey, flagKey, flagAliases, i, ctxLines, delimiters)
+		match := f.hunkForLine(projKey, flagKey, flagAliases, i, matcher)
 		if match != nil {
 			lastHunkIdx := len(hunksForFlag) - 1
 			// If the previous hunk overlaps or is adjacent to the current hunk, merge them together
@@ -130,10 +111,11 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []strin
 	return hunksForFlag
 }
 
-func (f file) toHunks(projKey string, aliases map[string][]string, ctxLines int, delimiters string) *ld.ReferenceHunksRep {
+func (f file) toHunks(matcher element.ElementsMatcher) *ld.ReferenceHunksRep {
 	hunks := []ld.HunkRep{}
-	for flagKey, flagAliases := range aliases {
-		hunks = append(hunks, f.aggregateHunksForFlag(projKey, flagKey, flagAliases, ctxLines, delimiters)...)
+	firstElements := matcher.Elements[0]
+	for flagKey, flagAliases := range firstElements.Aliases {
+		hunks = append(hunks, f.aggregateHunksForFlag(firstElements.ProjKey, flagKey, flagAliases, matcher)...)
 	}
 	if len(hunks) == 0 {
 		return nil
@@ -173,7 +155,7 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 }
 
 // processFiles starts goroutines to process files individually. When all files have completed processing, the references channel is closed to signal completion.
-func processFiles(ctx context.Context, files <-chan file, references chan<- ld.ReferenceHunksRep, projKey string, aliases map[string][]string, ctxLines int, delimiters string) {
+func processFiles(ctx context.Context, files <-chan file, references chan<- ld.ReferenceHunksRep, matcher element.ElementsMatcher) {
 	defer close(references)
 	w := sync.WaitGroup{}
 	for f := range files {
@@ -183,7 +165,7 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 		}
 		w.Add(1)
 		go func(f file) {
-			reference := f.toHunks(projKey, aliases, ctxLines, delimiters)
+			reference := f.toHunks(matcher)
 			if reference != nil {
 				references <- *reference
 			}
@@ -193,16 +175,15 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w.Wait()
 }
 
-func SearchForRefs(projKey string, matcher element.ElementsMatcher) ([]ld.ReferenceHunksRep, error) {
+func SearchForRefs(matcher element.ElementsMatcher) ([]ld.ReferenceHunksRep, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	files := make(chan file)
 	references := make(chan ld.ReferenceHunksRep)
-	firstMatcher := matcher.Elements[0]
 	// Start workers to process files asynchronously as they are written to the files channel
-	go processFiles(ctx, files, references, projKey, firstMatcher.Aliases, matcher.CtxLines, matcher.Delimiters)
+	go processFiles(ctx, files, references, matcher)
 
-	err := readFiles(ctx, files, matcher.Directories[0])
+	err := readFiles(ctx, files, matcher.Elements[0].Directory)
 	if err != nil {
 		return nil, err
 	}

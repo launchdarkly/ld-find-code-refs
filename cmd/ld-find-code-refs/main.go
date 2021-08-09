@@ -56,7 +56,7 @@ var cmd = &cobra.Command{
 		}
 
 		log.Init(opts.Debug)
-		matcher.Scan(opts)
+		matcher.Run(opts)
 		return nil
 	},
 	Version: version.Version,

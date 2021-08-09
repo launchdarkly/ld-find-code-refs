@@ -14,8 +14,8 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 
+	"github.com/launchdarkly/ld-find-code-refs/element"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
 type Client struct {
@@ -158,8 +158,10 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
 					delta = -1
 				}
-
-				if delta != 0 && search.MatchDelimiters(patchLine, flag, delimiters) {
+				matcher := element.ElementsMatcher{
+					Delimiters: delimiters,
+				}
+				if delta != 0 && matcher.MatchElement(patchLine, flag) {
 					removalCount += delta
 				}
 			}

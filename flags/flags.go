@@ -56,14 +56,6 @@ func GenerateSearchElements(opts options.Options, repoParams ld.RepoParams) elem
 	return matcher
 }
 
-func Prune(opts options.Options, branches []string) {
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: opts.ProjKey, UserAgent: "LDFindCodeRefs/" + version.Version})
-	err := ldApi.PostDeleteBranchesTask(opts.RepoName, branches)
-	if err != nil {
-		helpers.FatalServiceError(err, opts.IgnoreServiceErrors)
-	}
-}
-
 // Very short flag keys lead to many false positives when searching in code,
 // so we filter them out.
 func filterShortFlagKeys(flags []string) (filtered []string, omitted []string) {

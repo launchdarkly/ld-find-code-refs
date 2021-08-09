@@ -1,4 +1,4 @@
-package coderefs
+package flags
 
 import (
 	"os"
