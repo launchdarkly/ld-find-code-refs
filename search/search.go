@@ -6,7 +6,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/launchdarkly/ld-find-code-refs/element"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 )
@@ -42,7 +41,7 @@ type file struct {
 }
 
 // hunkForLine returns a matching code reference for a given flag key on a line
-func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum int, matcher element.Matcher) *ld.HunkRep {
+func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum int, matcher Matcher) *ld.HunkRep {
 	matchedFlag := false
 	aliasMatches := []string{}
 	line := f.lines[lineNum]
@@ -94,7 +93,7 @@ func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum int
 }
 
 // aggregateHunksForFlag finds all references in a file, and combines matches if their context lines overlap
-func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []string, matcher element.Matcher) []ld.HunkRep {
+func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []string, matcher Matcher) []ld.HunkRep {
 	hunksForFlag := []ld.HunkRep{}
 	for i := range f.lines {
 		match := f.hunkForLine(projKey, flagKey, flagAliases, i, matcher)
@@ -111,7 +110,7 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []strin
 	return hunksForFlag
 }
 
-func (f file) toHunks(matcher element.Matcher) *ld.ReferenceHunksRep {
+func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
 	hunks := []ld.HunkRep{}
 	firstElements := matcher.Elements[0]
 	for flagKey, flagAliases := range firstElements.Aliases {
@@ -155,7 +154,7 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 }
 
 // processFiles starts goroutines to process files individually. When all files have completed processing, the references channel is closed to signal completion.
-func processFiles(ctx context.Context, files <-chan file, references chan<- ld.ReferenceHunksRep, matcher element.Matcher) {
+func processFiles(ctx context.Context, files <-chan file, references chan<- ld.ReferenceHunksRep, matcher Matcher) {
 	defer close(references)
 	w := sync.WaitGroup{}
 	for f := range files {
@@ -175,7 +174,7 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w.Wait()
 }
 
-func SearchForRefs(matcher element.Matcher) ([]ld.ReferenceHunksRep, error) {
+func SearchForRefs(matcher Matcher) ([]ld.ReferenceHunksRep, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	files := make(chan file)

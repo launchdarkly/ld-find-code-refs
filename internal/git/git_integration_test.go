@@ -11,8 +11,8 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/require"
 
-	"github.com/launchdarkly/ld-find-code-refs/element"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
 const (
@@ -76,8 +76,8 @@ func TestFindExtinctions(t *testing.T) {
 
 	c := Client{workspace: repoDir}
 	projKey := "default"
-	matcher := element.Matcher{
-		Elements: []element.ElementMatcher{{
+	matcher := search.Matcher{
+		Elements: []search.ElementMatcher{{
 			Elements: []string{flag1, flag2},
 		}},
 	}

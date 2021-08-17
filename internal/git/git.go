@@ -13,8 +13,8 @@ import (
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/search"
 
-	"github.com/launchdarkly/ld-find-code-refs/element"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 )
 
@@ -109,7 +109,7 @@ type CommitData struct {
 }
 
 // FindExtinctions searches commit history for flags that had references removed recently
-func (c Client) FindExtinctions(projKey string, flags []string, matcher element.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
+func (c Client) FindExtinctions(projKey string, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
 		return nil, err
