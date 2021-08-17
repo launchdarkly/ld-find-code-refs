@@ -20,7 +20,7 @@ defaults:
       - run:
           name: install pre dependencies
           command: |
-            sudo apt-get install -yqq git silversearcher-ag
+            sudo apt-get install -yqq git
       - run: go get -u $COMMON_GO_PACKAGES
       - run: sudo apt-get update
       - run: sudo apt-get install python-pip
