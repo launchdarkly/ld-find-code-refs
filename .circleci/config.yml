@@ -61,7 +61,7 @@ defaults:
 jobs:
   go-test:
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/golang:1.14
         environment:
           <<: *environment
 
@@ -69,7 +69,7 @@ jobs:
 
   test-publish:
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/golang:1.14
     steps:
       - checkout
       - setup_remote_docker
@@ -79,7 +79,7 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/golang:1.14
     steps:
       - checkout
       - setup_remote_docker
