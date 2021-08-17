@@ -61,7 +61,7 @@ defaults:
 jobs:
   go-test:
     docker:
-      - image: cimg/golang:1.14
+      - image: cimg/golang:1.16.7
         environment:
           <<: *environment
 
@@ -69,7 +69,7 @@ jobs:
 
   test-publish:
     docker:
-      - image: cimg/golang:1.14
+      - image: cimg/golang:1.16.7
     steps:
       - checkout
       - setup_remote_docker
@@ -79,7 +79,7 @@ jobs:
 
   publish:
     docker:
-      - image: cimg/golang:1.14
+      - image: cimg/golang:1.16.7
     steps:
       - checkout
       - setup_remote_docker
