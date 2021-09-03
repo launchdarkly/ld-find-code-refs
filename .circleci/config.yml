@@ -23,7 +23,7 @@ defaults:
             sudo apt-get install -yqq git silversearcher-ag
       - run: go get -u $COMMON_GO_PACKAGES
       - run: sudo apt-get update
-      - run: sudo apt-get install python-pip
+      - run: sudo apt-get install python3-pip
       - run: sudo pip install pre-commit
       - run: pre-commit install
       - run: SKIP=go-unit-tests pre-commit run -a
