@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
 const (
@@ -75,7 +76,12 @@ func TestFindExtinctions(t *testing.T) {
 
 	c := Client{workspace: repoDir}
 	projKey := "default"
-	extinctions, err := c.FindExtinctions(projKey, []string{flag1, flag2}, "", 10)
+	matcher := search.Matcher{
+		Elements: []search.ElementMatcher{{
+			Elements: []string{flag1, flag2},
+		}},
+	}
+	extinctions, err := c.FindExtinctions(projKey, []string{flag1, flag2}, matcher, 10)
 	require.NoError(t, err)
 	fmt.Println(commit2, commit3)
 

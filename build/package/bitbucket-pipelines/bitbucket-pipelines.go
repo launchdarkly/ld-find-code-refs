@@ -17,7 +17,7 @@ func main() {
 		log.Error.Fatal(err)
 	}
 	log.Init(opts.Debug)
-	coderefs.Scan(opts)
+	coderefs.Run(opts)
 }
 
 func mergeBitbucketOptions(opts o.Options) (o.Options, error) {

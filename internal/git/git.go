@@ -13,9 +13,9 @@ import (
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/search"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
 type Client struct {
@@ -109,7 +109,7 @@ type CommitData struct {
 }
 
 // FindExtinctions searches commit history for flags that had references removed recently
-func (c Client) FindExtinctions(projKey string, flags []string, delimiters string, lookback int) ([]ld.ExtinctionRep, error) {
+func (c Client) FindExtinctions(projKey string, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
 		return nil, err
@@ -158,8 +158,7 @@ func (c Client) FindExtinctions(projKey string, flags []string, delimiters strin
 				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
 					delta = -1
 				}
-
-				if delta != 0 && search.MatchDelimiters(patchLine, flag, delimiters) {
+				if delta != 0 && matcher.MatchElement(patchLine, flag) {
 					removalCount += delta
 				}
 			}

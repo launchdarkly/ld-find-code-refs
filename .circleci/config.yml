@@ -20,7 +20,7 @@ defaults:
       - run:
           name: install pre dependencies
           command: |
-            sudo apt-get install -yqq git silversearcher-ag
+            sudo apt-get install -yqq git
       - run: go get -u $COMMON_GO_PACKAGES
       - run: sudo apt-get update
       - run: sudo apt-get install python3-pip
@@ -61,7 +61,7 @@ defaults:
 jobs:
   go-test:
     docker:
-      - image: circleci/golang:1.17
+      - image: cimg/go:1.17.1
         environment:
           <<: *environment
 
@@ -69,7 +69,7 @@ jobs:
 
   test-publish:
     docker:
-      - image: circleci/golang:1.17
+      - image: cimg/go:1.17.1
     steps:
       - checkout
       - setup_remote_docker
@@ -79,7 +79,7 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/golang:1.17
+      - image: cimg/go:1.17.1
     steps:
       - checkout
       - setup_remote_docker

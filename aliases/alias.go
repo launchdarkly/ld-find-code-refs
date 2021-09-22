@@ -1,4 +1,4 @@
-package coderefs
+package aliases
 
 import (
 	"context"

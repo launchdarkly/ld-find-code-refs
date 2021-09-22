@@ -16,6 +16,10 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 )
 
+const (
+	maxProjKeyLength = 20 // Maximum project key length
+)
+
 type Options struct {
 	AccessToken         string `mapstructure:"accessToken"`
 	BaseUri             string `mapstructure:"baseUri"`
@@ -159,6 +163,15 @@ func (o Options) ValidateRequired() error {
 	if len(missingRequiredOptions) > 0 {
 		return fmt.Errorf("missing required option(s): %v", missingRequiredOptions)
 	}
+
+	if len(o.ProjKey) > maxProjKeyLength {
+		if strings.HasPrefix(o.ProjKey, "sdk-") {
+			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+		} else if strings.HasPrefix(o.ProjKey, "api-") {
+			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+		}
+	}
+
 	return nil
 }
 
