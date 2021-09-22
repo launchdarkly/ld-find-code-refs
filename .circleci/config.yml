@@ -79,7 +79,7 @@ jobs:
 
   publish:
     docker:
-      - image: cimg/go:1.71.1
+      - image: cimg/go:1.17.1
     steps:
       - checkout
       - setup_remote_docker
