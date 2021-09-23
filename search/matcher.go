@@ -11,11 +11,12 @@ import (
 )
 
 type ElementMatcher struct {
-	Elements   []string
-	Aliases    map[string][]string
-	Delimiters []string
-	ProjKey    string
-	Directory  string
+	Elements       []string
+	Aliases        map[string][]string
+	Delimiters     []string
+	ProjKey        string
+	Directory      string
+	DelimitedFlags map[string][]string
 }
 
 type Matcher struct {
@@ -39,7 +40,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 	// Configure delimiters
 	delims := getDelimiters(opts)
 	matcher.Delimiters = strings.Join(helpers.Dedupe(delims), "")
-
+	flagMatcher.DelimitedFlags = buildDelimiterList(flagMatcher.Elements, matcher.Delimiters)
 	// Begin search for elements.
 	refs, err := SearchForRefs(matcher)
 	if err != nil {
@@ -64,17 +65,39 @@ func (m Matcher) MatchElement(line, flagKey string) bool {
 	if m.Delimiters == "" && strings.Contains(line, flagKey) {
 		return true
 	}
-	for _, left := range m.Delimiters {
-		for _, right := range m.Delimiters {
-			var sb strings.Builder
-			sb.Grow(len(flagKey) + 2)
-			sb.WriteRune(left)
-			sb.WriteString(flagKey)
-			sb.WriteRune(right)
-			if strings.Contains(line, sb.String()) {
+
+	for _, element := range m.Elements {
+		delimitedFlags := element.DelimitedFlags[flagKey]
+
+		for _, delimitedflagKey := range delimitedFlags {
+			if strings.Contains(line, delimitedflagKey) {
 				return true
 			}
 		}
 	}
+
 	return false
+}
+
+func buildDelimiterList(flags []string, delimiters string) map[string][]string {
+	delimiterMap := make(map[string][]string)
+	if delimiters == "" {
+		return delimiterMap
+	}
+	for _, flag := range flags {
+		//flagsDelimited := []string{}
+		tempFlags := []string{}
+		for _, left := range delimiters {
+			for _, right := range delimiters {
+				var sb strings.Builder
+				sb.Grow(len(flag) + 2)
+				sb.WriteRune(left)
+				sb.WriteString(flag)
+				sb.WriteRune(right)
+				tempFlags = append(tempFlags, sb.String())
+			}
+		}
+		delimiterMap[flag] = tempFlags
+	}
+	return delimiterMap
 }
