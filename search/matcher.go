@@ -85,7 +85,6 @@ func buildDelimiterList(flags []string, delimiters string) map[string][]string {
 		return delimiterMap
 	}
 	for _, flag := range flags {
-		//flagsDelimited := []string{}
 		tempFlags := []string{}
 		for _, left := range delimiters {
 			for _, right := range delimiters {
