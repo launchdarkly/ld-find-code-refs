@@ -80,7 +80,8 @@ func Test_hunkForLine(t *testing.T) {
 				CtxLines:   0,
 				Delimiters: defaultDelims,
 				Elements: []ElementMatcher{{
-					Aliases: aliases,
+					Aliases:        aliases,
+					DelimitedFlags: makeKeyMap(delimitedTestFlagKey),
 				}},
 			},
 			lineNum: 0,
@@ -448,4 +449,11 @@ func makeHunk(startingLineNumber int, lines ...string) ld.HunkRep {
 
 func delimit(s string, delim string) string {
 	return delim + s + delim
+}
+
+func makeKeyMap(flagKey string) map[string][]string {
+	keys := make(map[string][]string)
+	mapKey := strings.Trim(flagKey, `"`)
+	keys[mapKey] = []string{flagKey}
+	return keys
 }
