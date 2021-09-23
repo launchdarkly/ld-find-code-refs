@@ -33,7 +33,6 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 	flagMatcher.Elements, flagMatcher.Aliases = flags.GenerateSearchElements(opts, repoParams)
 
 	matcher := Matcher{
-		Elements: []ElementMatcher{flagMatcher},
 		CtxLines: opts.ContextLines,
 	}
 
@@ -42,6 +41,8 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 	matcher.Delimiters = strings.Join(helpers.Dedupe(delims), "")
 	flagMatcher.DelimitedFlags = buildDelimiterList(flagMatcher.Elements, matcher.Delimiters)
 	// Begin search for elements.
+	matcher.Elements = []ElementMatcher{flagMatcher}
+
 	refs, err := SearchForRefs(matcher)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
@@ -68,7 +69,6 @@ func (m Matcher) MatchElement(line, flagKey string) bool {
 
 	for _, element := range m.Elements {
 		delimitedFlags := element.DelimitedFlags[flagKey]
-
 		for _, delimitedflagKey := range delimitedFlags {
 			if strings.Contains(line, delimitedflagKey) {
 				return true
