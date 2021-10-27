@@ -1,0 +1,15 @@
+version: 2
+
+repo:
+  public: ld-relay
+
+jobs:
+  - docker:
+      image: cimg/go:1.17.1
+      copyGitHistory: true
+    template:
+      name: go
+
+publications:
+  - url: https://pkg.go.dev/github.com/launchdarkly/ld-find-code-refs
+    description: documentation

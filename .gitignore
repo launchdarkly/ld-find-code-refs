@@ -6,6 +6,7 @@ build/package/github-actions/ld-find-code-refs-github-action
 build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 build/package/cmd/ld-find-code-refs
 /dist/
+/build/dist/
 /bin/
 .idea/
 *.csv

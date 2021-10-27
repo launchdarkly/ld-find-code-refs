@@ -1,6 +1,10 @@
 # Note: These commands pertain to the development of ld-find-code-refs.
 #       They are not intended for use by the end-users of this program.
 SHELL=/bin/bash
+GORELEASER_VERSION=v0.169.0
+
+build:
+	go build ./cmd/...
 
 init:
 	pre-commit install
@@ -62,4 +66,12 @@ clean:
 	rm -f build/package/github-actions/ld-find-code-refs-github-action
 	rm -f build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 
-.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-dev-circle-orb publish-release-circle-orb publish-all clean
+RELEASE_CMD=curl -sL https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(GORELEASER_VERSION) bash -s -- --rm-dist --release-notes $(RELEASE_NOTES)
+
+publish:
+	$(RELEASE_CMD)
+
+products-for-release:
+	$(RELEASE_CMD) --skip-publish --skip-validate
+
+.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-dev-circle-orb publish-release-circle-orb publish-all clean build
