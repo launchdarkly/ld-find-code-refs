@@ -1,10 +1,5 @@
 #!/bin/bash
 
-VERSION_GO=relay/version/version.go
-VERSION_GO_TEMP=${VERSION_GO}.tmp
-sed "s/const Version =.*/const Version = \"${LD_RELEASE_VERSION}\"/g" ${VERSION_GO} > ${VERSION_GO_TEMP}
-mv ${VERSION_GO_TEMP} ${VERSION_GO}
-
 VERSION_ORB=build/package/circleci/orb.yaml
 VERSION_ORB_TEMP=${VERSION_ORB}.tmp
 sed -i "s#launchdarkly: launchdarkly/ld-find-code-refs@.*#launchdarkly: launchdarkly/ld-find-code-refs@\"${LD_RELEASE_VERSION}\"#g" ${VERSION_ORB}
