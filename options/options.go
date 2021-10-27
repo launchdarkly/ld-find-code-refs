@@ -37,6 +37,7 @@ type Options struct {
 	ContextLines        int    `mapstructure:"contextLines"`
 	Lookback            int    `mapstructure:"lookback"`
 	UpdateSequenceId    int    `mapstructure:"updateSequenceId"`
+	AllowTags           bool   `mapstructure:"allowTags"`
 	Debug               bool   `mapstructure:"debug"`
 	DryRun              bool   `mapstructure:"dryRun"`
 	IgnoreServiceErrors bool   `mapstructure:"ignoreServiceErrors"`

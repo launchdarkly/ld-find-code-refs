@@ -24,7 +24,7 @@ type Client struct {
 	GitSha    string
 }
 
-func NewClient(path string, branch string) (*Client, error) {
+func NewClient(path string, branch string, allowTags bool) (*Client, error) {
 	if !filepath.IsAbs(path) {
 		log.Error.Fatalf("expected an absolute path but received a relative path: %s", path)
 	}
@@ -36,16 +36,12 @@ func NewClient(path string, branch string) (*Client, error) {
 		return &client, errors.New("git is a required dependency, but was not found in the system PATH")
 	}
 
-	var currBranch = branch
-	if branch == "" {
-		currBranch, err = client.branchName()
-		if err != nil {
-			return &client, fmt.Errorf("error parsing git branch name: %s", err)
-		} else if currBranch == "" {
-			return &client, fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", client.workspace)
-		}
+	currBranch, refType, err := client.getRef(branch, allowTags)
+	if err != nil {
+		return &client, err
 	}
-	log.Info.Printf("git branch: %s", currBranch)
+
+	log.Info.Printf("git %s: %s", refType, currBranch)
 	client.GitBranch = currBranch
 
 	head, err := client.headSha()
@@ -55,6 +51,36 @@ func NewClient(path string, branch string) (*Client, error) {
 	client.GitSha = head
 
 	return &client, nil
+}
+
+func (c *Client) getRef(branch string, allowTags bool) (name string, refType string, err error) {
+	if branch != "" {
+		return branch, "branch", nil
+	}
+
+	name, err = c.branchName()
+	if err != nil {
+		return "", "", fmt.Errorf("error parsing git branch name: %s", err)
+	}
+
+	if name != "" {
+		return name, "branch", nil
+	}
+
+	if !allowTags {
+		return "", "", fmt.Errorf("error parsing git branch name: git repo at %s must be checked out to a valid branch or --branch option must be set", c.workspace)
+	}
+
+	name, err = c.tagName()
+	if err != nil {
+		return "", "", fmt.Errorf("error parsing git tag name: %s", err)
+	}
+
+	if name != "" {
+		return name, "tag", nil
+	}
+
+	return "", "", fmt.Errorf("error parsing git tag name: git repo at %s must be checked out to a valid branch or tag, or --branch option must be set", c.workspace)
 }
 
 func (c *Client) branchName() (string, error) {
@@ -69,6 +95,21 @@ func (c *Client) branchName() (string, error) {
 	if ret == "HEAD" {
 		return "", nil
 	}
+	return ret, nil
+}
+
+func (c *Client) tagName() (string, error) {
+	/* #nosec */
+	cmd := exec.Command("git", "-C", c.workspace, "describe", "--tags", "HEAD")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", errors.New(string(out))
+	}
+	ret := strings.TrimSpace(string(out))
+	if ret == "" {
+		return "", nil
+	}
+	log.Debug.Printf("identified tag name: %s", ret)
 	return ret, nil
 }
 
