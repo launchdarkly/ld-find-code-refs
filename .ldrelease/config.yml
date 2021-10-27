@@ -1,7 +1,7 @@
 version: 2
 
 repo:
-  public: ld-relay
+  public: ld-find-code-refs
 
 jobs:
   - docker:
