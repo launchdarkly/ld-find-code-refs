@@ -55,7 +55,6 @@ All turn-key configuration methods (docker images used by services like CircleCI
 #### macOS
 
 ```bash
-brew tap launchdarkly/tap
 brew install ld-find-code-refs
 ```
 
