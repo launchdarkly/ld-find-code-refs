@@ -1,3 +1,4 @@
 #!/bin/bash
 
-go test -v -race ./...
+echo "tests are run in CirleCI"
+exit 0
