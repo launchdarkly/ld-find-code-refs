@@ -9,6 +9,6 @@ $(dirname $0)/run-publish-target.sh products-for-release
 BASE_CODEREFS=ld-find-code-refs
 GH_CODEREFS=ld-find-code-refs-github-action
 BB_CODEREFS=ld-find-code-refs-bitbucket-pipeline
-sudo docker save launchdarkly/${BASE_CODEREFS}:${LD_RELEASE_VERSION} | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${BASE_CODEREFS}.tar.gz
-sudo docker save launchdarkly/${GH_CODEREFS}:${LD_RELEASE_VERSION} | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${GH_CODEREFS}.tar.gz
-sudo docker save launchdarkly/${BB_CODEREFS}:${LD_RELEASE_VERSION} | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${BB_CODEREFS}.tar.gz
+sudo docker save launchdarkly/${BASE_CODEREFS}:${LD_RELEASE_VERSION}:latest | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${BASE_CODEREFS}.tar.gz
+sudo docker save launchdarkly/${GH_CODEREFS}:${LD_RELEASE_VERSION}:latest | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${GH_CODEREFS}.tar.gz
+sudo docker save launchdarkly/${BB_CODEREFS}:${LD_RELEASE_VERSION}:latest | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${BB_CODEREFS}.tar.gz
