@@ -31,6 +31,8 @@ Flags:
 ```
   -t, --accessToken string         LaunchDarkly personal access token with write-level access.
 
+      --allowTags                  Enables storing references for tags. The tag will be listed as a branch.
+
   -U, --baseUri string             LaunchDarkly base URI. (default "https://app.launchdarkly.com")
 
   -b, --branch string              The currently checked out branch. If not provided, branch name will be auto-detected. Provide this option when using CI systems that leave the repository in a detached HEAD state.

@@ -16,6 +16,11 @@ var flags = []flag{
 		usage:        "LaunchDarkly personal access token with write-level access.",
 	},
 	{
+		name:         "allowTags",
+		defaultValue: false,
+		usage:        "Enables storing references for tags. The tag will be listed as a branch.",
+	},
+	{
 		name:         "baseUri",
 		short:        "U",
 		defaultValue: "https://app.launchdarkly.com",
