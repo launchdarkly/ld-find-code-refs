@@ -2,8 +2,9 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
-## [2.3.0] - 2021-09-28
-- Additional performance enhancements for matching flag keys with delimiters.
+## [2.3.0] - 2021-10-29
+### Changed:
+- Performance improvements around searching for flags and aliases in the code base.
 
 ## [2.2.4] - 2021-06-14
 ### Changed

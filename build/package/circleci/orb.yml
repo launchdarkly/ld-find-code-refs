@@ -9,7 +9,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@2.3.0
+        launchdarkly: launchdarkly/ld-find-code-refs@"2.3.0"
       workflows:
         main:
           jobs:
@@ -23,7 +23,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@2.3.0
+        launchdarkly: launchdarkly/ld-find-code-refs@"2.3.0"
       workflows:
         main:
           jobs:
@@ -38,7 +38,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@2.3.0
+        launchdarkly: launchdarkly/ld-find-code-refs@"2.3.0"
       workflows:
         main:
           jobs:
@@ -104,7 +104,7 @@ whether a feature flag was removed from code. May be set to 0 to disabled this f
         type: integer
         default: 10
     docker:
-      - image: launchdarkly/ld-find-code-refs:2.3.0
+      - image: launchdarkly/ld-find-code-refs:"2.3.0"
         entrypoint: sh
     steps:
       - checkout:
