@@ -28,7 +28,7 @@ func Run(opts options.Options) {
 	revision := opts.Revision
 	var gitClient *git.Client
 	if revision == "" {
-		gitClient, err = git.NewClient(absPath, branchName)
+		gitClient, err = git.NewClient(absPath, branchName, opts.AllowTags)
 		if err != nil {
 			log.Error.Fatalf("%s", err)
 		}

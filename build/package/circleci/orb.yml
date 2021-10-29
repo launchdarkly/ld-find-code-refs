@@ -90,6 +90,10 @@ jobs:
         description: "If provided, LaunchDarkly will attempt to generate links to your Git service provider per code reference. Example: `https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}`. Allowed template variables: `sha`, `filePath`, `lineNumber`. If `hunkUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types."
         type: string
         default: ""
+      allow_tags:
+        description: "Enables storing references for tags. The tag will be listed as a branch."
+        type: boolean
+        default: false
       debug:
         description: "Enables verbose debug logging."
         type: boolean
@@ -123,6 +127,7 @@ whether a feature flag was removed from code. May be set to 0 to disabled this f
               --repoType=<< parameters.repo_type >> \
               --repoUrl=<< parameters.repo_url >> \
               --defaultBranch=<< parameters.default_branch >> \
+              --allowTags=<< parameters.allow_tags >> \
               --commitUrlTemplate=<< parameters.commit_url_template >> \
               --hunkUrlTemplate=<< parameters.hunk_url_template >> \
               --repoName=${CIRCLE_PROJECT_REPONAME} \

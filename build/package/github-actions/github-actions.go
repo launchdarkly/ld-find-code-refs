@@ -44,7 +44,7 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	if err != nil {
 		log.Error.Printf("error parsing GitHub event payload at %q: %v", os.Getenv("GITHUB_EVENT_PATH"), err)
 	}
-	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"), event)
+	ghBranch, err := parseBranch(os.Getenv("GITHUB_REF"), event, opts.AllowTags)
 	if err != nil {
 		log.Error.Fatalf("error detecting git branch: %s", err)
 	}
@@ -69,9 +69,10 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 }
 
 type Event struct {
-	Repo   `json:"repository"`
-	*Pull  `json:"pull_request,omitempty"`
-	Sender `json:"sender"`
+	Repo     `json:"repository"`
+	*Pull    `json:"pull_request,omitempty"`
+	*Release `json:"release"`
+	Sender   `json:"sender"`
 }
 
 type Repo struct {
@@ -85,6 +86,10 @@ type Pull struct {
 
 type Head struct {
 	Ref string `json:"ref"`
+}
+
+type Release struct {
+	TagName string `json:"tag_name"`
 }
 
 type Sender struct {
@@ -110,17 +115,26 @@ func parseEvent(path string) (*Event, error) {
 	return &evt, err
 }
 
-func parseBranch(ref string, event *Event) (string, error) {
+func parseBranch(ref string, event *Event, allowTags bool) (string, error) {
+	name_index := 1
 	re := regexp.MustCompile(`^refs/heads/(.+)$`)
+	if allowTags {
+		name_index = 2
+		re = regexp.MustCompile(`^refs/(heads|tags)/(.+)$`)
+	}
 	results := re.FindStringSubmatch(ref)
 
 	if results == nil {
 		// The GITHUB_REF wasn't valid, so check if it's a pull request and use the pull request ref instead
 		if event != nil && event.Pull != nil {
 			return event.Pull.Head.Ref, nil
-		} else {
-			return "", fmt.Errorf("expected branch name starting with refs/heads/, got: %s", ref)
 		}
+
+		if allowTags && event != nil && event.Release != nil {
+			return event.Release.TagName, nil
+		}
+
+		return "", fmt.Errorf("expected ref name starting with refs/heads/ or refs/tags/, got: %s", ref)
 	}
-	return results[1], nil
+	return results[name_index], nil
 }
