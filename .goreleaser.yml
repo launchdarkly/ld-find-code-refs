@@ -87,6 +87,10 @@ brews:
       name: LaunchDarklyCI
       email: dev@launchdarkly.com
 
+release:
+  disable: true # this disables releasing *to GitHub*; it will still push to Docker
+  # (we want Releaser to be responsible for doing all the GitHub release manipulations)
+
 dockers:
   -
     image_templates:

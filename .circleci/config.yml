@@ -77,17 +77,6 @@ jobs:
       - run: sudo apt-get install rpm
       - run: curl -sL https://git.io/goreleaser | VERSION=v0.169.0 bash -s -- --rm-dist --skip-publish --skip-validate --release-notes <(make echo-release-notes)
 
-  publish:
-    docker:
-      - image: cimg/go:1.17.1
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run: sudo apt-get update
-      - run: sudo apt-get install rpm
-      - run: curl -sL https://git.io/goreleaser | VERSION=v0.169.0 bash -s -- --rm-dist --release-notes <(make echo-release-notes)
-
-
 workflows:
   version: 2
   test:
@@ -96,12 +85,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - test-publish
-      - publish:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+      - test-publish:
           requires:
             - go-test
