@@ -402,6 +402,7 @@ func Test_processFiles(t *testing.T) {
 }
 
 func Test_SearchForRefs(t *testing.T) {
+	os.Symlink("testdata/fileWithRefs", "testdata/symlink")
 	want := []ld.ReferenceHunksRep{{Path: testFile.path}}
 	matcher := Matcher{
 		CtxLines:   0,
@@ -412,6 +413,7 @@ func Test_SearchForRefs(t *testing.T) {
 		Directory: "testdata",
 		ProjKey:   "default",
 	})
+	t.Cleanup(func() { os.Remove("testdata/symlink") })
 	got, err := SearchForRefs(matcher)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
