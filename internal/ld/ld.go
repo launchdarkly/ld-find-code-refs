@@ -94,12 +94,29 @@ func InitApiClient(options ApiOptions) ApiClient {
 func (c ApiClient) GetFlagKeyList() ([]string, error) {
 	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
 
-	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, &ldapi.GetFeatureFlagsOpts{Summary: optional.NewBool(true)})
+	// The first environment allows filtering on the server side.
+	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, c.Options.ProjKey)
+	legacyMode := false
+
+	if err != nil {
+		log.Warning.Printf("Unable to retrieve project.")
+	}
+
+	flagOpts := &ldapi.GetFeatureFlagsOpts{Summary: optional.NewBool(true)}
+	archivedOpts := &ldapi.GetFeatureFlagsOpts{Archived: optional.NewBool(true), Summary: optional.NewBool(true)}
+
+	if !legacyMode && len(project.Environments) > 0 {
+		firstEnv := project.Environments[0]
+		flagOpts.Env = optional.NewInterface(firstEnv.Key)
+		archivedOpts.Env = optional.NewInterface(firstEnv.Key)
+	}
+
+	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, flagOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, &ldapi.GetFeatureFlagsOpts{Archived: optional.NewBool(true), Summary: optional.NewBool(true)})
+	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, archivedOpts)
 	if err != nil {
 		return nil, err
 	}
