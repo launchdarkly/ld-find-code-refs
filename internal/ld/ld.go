@@ -94,9 +94,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 func (c ApiClient) GetFlagKeyList() ([]string, error) {
 	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
 
-	// The first environment allows filtering when retrieving flags.
 	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, c.Options.ProjKey)
-
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +103,7 @@ func (c ApiClient) GetFlagKeyList() ([]string, error) {
 	archivedOpts := &ldapi.GetFeatureFlagsOpts{Archived: optional.NewBool(true), Summary: optional.NewBool(true)}
 
 	if len(project.Environments) > 0 {
+		// The first environment allows filtering when retrieving flags.
 		firstEnv := project.Environments[0]
 		flagOpts.Env = optional.NewInterface(firstEnv.Key)
 		archivedOpts.Env = optional.NewInterface(firstEnv.Key)
