@@ -94,12 +94,27 @@ func InitApiClient(options ApiOptions) ApiClient {
 func (c ApiClient) GetFlagKeyList() ([]string, error) {
 	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
 
-	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, &ldapi.GetFeatureFlagsOpts{Summary: optional.NewBool(true)})
+	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, c.Options.ProjKey)
 	if err != nil {
 		return nil, err
 	}
 
-	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, &ldapi.GetFeatureFlagsOpts{Archived: optional.NewBool(true), Summary: optional.NewBool(true)})
+	flagOpts := &ldapi.GetFeatureFlagsOpts{Summary: optional.NewBool(true)}
+	archivedOpts := &ldapi.GetFeatureFlagsOpts{Archived: optional.NewBool(true), Summary: optional.NewBool(true)}
+
+	if len(project.Environments) > 0 {
+		// The first environment allows filtering when retrieving flags.
+		firstEnv := project.Environments[0]
+		flagOpts.Env = optional.NewInterface(firstEnv.Key)
+		archivedOpts.Env = optional.NewInterface(firstEnv.Key)
+	}
+
+	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, flagOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, archivedOpts)
 	if err != nil {
 		return nil, err
 	}
