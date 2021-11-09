@@ -1,6 +1,8 @@
 package aliases
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 
 	o "github.com/launchdarkly/ld-find-code-refs/options"
@@ -93,6 +95,72 @@ func Test_GenerateAliases(t *testing.T) {
 			aliases, err := GenerateAliases(tt.flags, tt.aliases, "")
 			assert.Equal(t, tt.want, aliases)
 			assert.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func Test_processFileContent(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		panic(err)
+	}
+	f, err := ioutil.TempFile(tmpDir, "testalias")
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(tmpDir)
+
+	emptyMap := make(map[string][]byte)
+	tests := []struct {
+		name    string
+		dir     string
+		aliases []o.Alias
+		want    map[string][]byte
+		wantErr bool
+	}{
+		{
+			name: "Existing directory and file",
+			aliases: []o.Alias{
+				{
+					Paths: []string{f.Name()},
+				},
+			},
+			dir:     tmpDir,
+			want:    emptyMap,
+			wantErr: false,
+		},
+		{
+			name: "Non-existent directory",
+			aliases: []o.Alias{
+				{
+					Type:  "filepattern",
+					Paths: []string{"test"},
+				},
+			},
+			dir:     "dirDoesNotExist",
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Non-existent file",
+			aliases: []o.Alias{
+				{
+					Type:  "filepattern",
+					Paths: []string{"fileDoesNotExist"},
+				},
+			},
+			dir:     tmpDir,
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			aliases, err := processFileContent(tt.aliases, tt.dir)
+			assert.Equal(t, tt.want, aliases)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("processFileContent error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }

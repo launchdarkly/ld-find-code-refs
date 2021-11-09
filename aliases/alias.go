@@ -129,7 +129,7 @@ func processFileContent(aliases []options.Alias, dir string) (map[string][]byte,
 		for _, glob := range a.Paths {
 			absGlob := filepath.Join(dir, glob)
 			matches, err := filepath.Glob(absGlob)
-			if err != nil {
+			if matches == nil || err != nil {
 				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
 			}
 			paths = append(paths, matches...)
