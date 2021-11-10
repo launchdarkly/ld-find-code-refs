@@ -3,6 +3,9 @@ package search
 import (
 	"strings"
 
+	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
+
+	"github.com/launchdarkly/ld-find-code-refs/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/flags"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -11,44 +14,68 @@ import (
 )
 
 type ElementMatcher struct {
-	Elements       []string
-	Aliases        map[string][]string
-	Delimiters     []string
-	ProjKey        string
-	Directory      string
-	DelimitedFlags map[string][]string
+	ProjKey  string
+	Elements []string
+
+	allElementAndAliasesMatcher ahocorasick.AhoCorasick
+	matcherByElement            map[string]ahocorasick.AhoCorasick
+	aliasMatcherByElement       map[string]ahocorasick.AhoCorasick
 }
 
 type Matcher struct {
-	Elements   []ElementMatcher
-	CtxLines   int
-	Delimiters string
+	Elements []ElementMatcher
+	ctxLines int
 }
 
 // Scan checks the configured directory for flags base on the options configured for Code References.
 func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.ReferenceHunksRep) {
-	flagMatcher := ElementMatcher{
-		Directory: opts.Dir,
+	flagKeys := flags.GetFlagKeys(opts, repoParams)
+	aliasesByFlagKey, err := aliases.GenerateAliases(flagKeys, opts.Aliases, opts.Dir)
+	if err != nil {
+		log.Error.Fatalf("failed to generate aliases: %s", err)
 	}
-	flagMatcher.Elements, flagMatcher.Aliases = flags.GenerateSearchElements(opts, repoParams)
+	delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
+	flagMatcher := newFlagMatcher(opts.ProjKey, delimiters, flagKeys, aliasesByFlagKey)
 
 	matcher := Matcher{
-		CtxLines: opts.ContextLines,
+		ctxLines: opts.ContextLines,
+		Elements: []ElementMatcher{flagMatcher},
 	}
 
-	// Configure delimiters
-	delims := getDelimiters(opts)
-	matcher.Delimiters = strings.Join(helpers.Dedupe(delims), "")
-	flagMatcher.DelimitedFlags = buildDelimiterList(flagMatcher.Elements, matcher.Delimiters)
-	// Begin search for elements.
-	matcher.Elements = []ElementMatcher{flagMatcher}
-
-	refs, err := SearchForRefs(matcher)
+	refs, err := SearchForRefs(opts.Dir, matcher)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
 
 	return matcher, refs
+}
+
+func newFlagMatcher(projKey string, delimiters string, flagKeys []string, aliasesByFlagKey map[string][]string) ElementMatcher {
+	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true})
+
+	var allFlagPatternsAndAliases []string
+
+	patternsByFlag := buildFlagPatterns(flagKeys, delimiters)
+	flagMatcherByKey := make(map[string]ahocorasick.AhoCorasick, len(patternsByFlag))
+	for flagKey, patterns := range patternsByFlag {
+		flagMatcherByKey[flagKey] = matcherBuilder.Build(patterns)
+		allFlagPatternsAndAliases = append(allFlagPatternsAndAliases, patterns...)
+	}
+
+	aliasMatcherByFlagKey := make(map[string]ahocorasick.AhoCorasick, len(aliasesByFlagKey))
+	for key, aliasesForFlag := range aliasesByFlagKey {
+		aliasMatcherByFlagKey[key] = matcherBuilder.Build(aliasesForFlag)
+		allFlagPatternsAndAliases = append(allFlagPatternsAndAliases, aliasesForFlag...)
+	}
+
+	return ElementMatcher{
+		ProjKey:  projKey,
+		Elements: flagKeys,
+
+		matcherByElement:            flagMatcherByKey,
+		aliasMatcherByElement:       aliasMatcherByFlagKey,
+		allElementAndAliasesMatcher: matcherBuilder.Build(allFlagPatternsAndAliases),
+	}
 }
 
 func getDelimiters(opts options.Options) []string {
@@ -63,14 +90,9 @@ func getDelimiters(opts options.Options) []string {
 }
 
 func (m Matcher) MatchElement(line, flagKey string) bool {
-	if m.Delimiters == "" && strings.Contains(line, flagKey) {
-		return true
-	}
-
 	for _, element := range m.Elements {
-		delimitedFlags := element.DelimitedFlags[flagKey]
-		for _, delimitedflagKey := range delimitedFlags {
-			if strings.Contains(line, delimitedflagKey) {
+		if e, exists := element.matcherByElement[flagKey]; exists {
+			if e.Iter(line).Next() != nil {
 				return true
 			}
 		}
@@ -79,24 +101,26 @@ func (m Matcher) MatchElement(line, flagKey string) bool {
 	return false
 }
 
-func buildDelimiterList(flags []string, delimiters string) map[string][]string {
-	delimiterMap := make(map[string][]string)
-	if delimiters == "" {
-		return delimiterMap
-	}
+func buildFlagPatterns(flags []string, delimiters string) map[string][]string {
+	patternsByFlag := make(map[string][]string, len(flags))
 	for _, flag := range flags {
-		tempFlags := []string{}
-		for _, left := range delimiters {
-			for _, right := range delimiters {
-				var sb strings.Builder
-				sb.Grow(len(flag) + 2)
-				sb.WriteRune(left)
-				sb.WriteString(flag)
-				sb.WriteRune(right)
-				tempFlags = append(tempFlags, sb.String())
+		var patterns []string
+		if delimiters != "" {
+			patterns = make([]string, 0, len(delimiters)*len(delimiters))
+			for _, left := range delimiters {
+				for _, right := range delimiters {
+					var sb strings.Builder
+					sb.Grow(len(flag) + 2)
+					sb.WriteRune(left)
+					sb.WriteString(flag)
+					sb.WriteRune(right)
+					patterns = append(patterns, sb.String())
+				}
 			}
+		} else {
+			patterns = []string{flag}
 		}
-		delimiterMap[flag] = tempFlags
+		patternsByFlag[flag] = patterns
 	}
-	return delimiterMap
+	return patternsByFlag
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/launchdarkly/ld-find-code-refs/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
@@ -16,8 +15,7 @@ const (
 	minFlagKeyLen = 3 // Minimum flag key length helps reduce the number of false positives
 )
 
-func GenerateSearchElements(opts options.Options, repoParams ld.RepoParams) ([]string, map[string][]string) {
-
+func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) []string {
 	projKey := opts.ProjKey
 
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
@@ -45,12 +43,7 @@ func GenerateSearchElements(opts options.Options, repoParams ld.RepoParams) ([]s
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
 
-	aliases, err := aliases.GenerateAliases(filteredFlags, opts.Aliases, opts.Dir)
-	if err != nil {
-		log.Error.Fatalf("failed to create flag key aliases: %v", err)
-	}
-
-	return filteredFlags, aliases
+	return filteredFlags
 }
 
 // Very short flag keys lead to many false positives when searching in code,

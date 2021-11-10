@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_buildDelimiterList(t *testing.T) {
+func Test_buildFlagPatterns(t *testing.T) {
 	testFlagKey := "testflag"
-	delimitedFlag := buildDelimiterList([]string{testFlagKey}, defaultDelims)
+	patterns := buildFlagPatterns([]string{testFlagKey}, defaultDelims)
 	want := map[string][]string{"testflag": []string{"\"testflag\"", "\"testflag'", "\"testflag`", "'testflag\"", "'testflag'", "'testflag`", "`testflag\"", "`testflag'", "`testflag`"}}
-	require.Equal(t, want, delimitedFlag)
+	require.Equal(t, want, patterns)
 }

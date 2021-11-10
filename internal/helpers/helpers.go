@@ -21,6 +21,18 @@ func Dedupe(s []string) []string {
 	return ret
 }
 
+func DedupeInts(ints []int) []int {
+	keys := make(map[int]struct{}, len(ints))
+	ret := make([]int, 0, len(ints))
+	for _, entry := range ints {
+		if _, value := keys[entry]; !value {
+			keys[entry] = struct{}{}
+			ret = append(ret, entry)
+		}
+	}
+	return ret
+}
+
 func MakeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
