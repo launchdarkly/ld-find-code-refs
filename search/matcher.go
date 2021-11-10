@@ -35,7 +35,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 		log.Error.Fatalf("failed to generate aliases: %s", err)
 	}
 	delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
-	flagMatcher := newFlagMatcher(opts.ProjKey, delimiters, flagKeys, aliasesByFlagKey)
+	flagMatcher := NewFlagMatcher(opts.ProjKey, delimiters, flagKeys, aliasesByFlagKey)
 
 	matcher := Matcher{
 		ctxLines: opts.ContextLines,
@@ -50,7 +50,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 	return matcher, refs
 }
 
-func newFlagMatcher(projKey string, delimiters string, flagKeys []string, aliasesByFlagKey map[string][]string) ElementMatcher {
+func NewFlagMatcher(projKey string, delimiters string, flagKeys []string, aliasesByFlagKey map[string][]string) ElementMatcher {
 	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true})
 
 	var allFlagPatternsAndAliases []string
