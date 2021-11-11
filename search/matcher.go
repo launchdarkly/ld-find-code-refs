@@ -20,6 +20,8 @@ type ElementMatcher struct {
 	allElementAndAliasesMatcher ahocorasick.AhoCorasick
 	matcherByElement            map[string]ahocorasick.AhoCorasick
 	aliasMatcherByElement       map[string]ahocorasick.AhoCorasick
+
+	elementsByPatternIndex [][]string
 }
 
 type Matcher struct {
@@ -53,19 +55,34 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 func NewElementMatcher(projKey string, delimiters string, elements []string, aliasesByElement map[string][]string) ElementMatcher {
 	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true})
 
-	var allFlagPatternsAndAliases []string //nolint:prealloc // unknown size
+	allFlagPatternsAndAliases := make([]string, 0)
+	elementsByPatternIndex := make([][]string, 0)
+	patternIndex := make(map[string]int)
+
+	recordPatternsForElement := func(element string, patterns []string) {
+		for _, p := range patterns {
+			index, exists := patternIndex[p]
+			if !exists {
+				allFlagPatternsAndAliases = append(allFlagPatternsAndAliases, p)
+				index = len(elementsByPatternIndex)
+				elementsByPatternIndex = append(elementsByPatternIndex, []string{})
+			}
+			patternIndex[p] = index
+			elementsByPatternIndex[index] = append(elementsByPatternIndex[index], element)
+		}
+	}
 
 	patternsByElement := buildElementPatterns(elements, delimiters)
 	flagMatcherByKey := make(map[string]ahocorasick.AhoCorasick, len(patternsByElement))
 	for element, patterns := range patternsByElement {
 		flagMatcherByKey[element] = matcherBuilder.Build(patterns)
-		allFlagPatternsAndAliases = append(allFlagPatternsAndAliases, patterns...)
+		recordPatternsForElement(element, patterns)
 	}
 
 	aliasMatcherByElement := make(map[string]ahocorasick.AhoCorasick, len(aliasesByElement))
-	for key, aliasesForFlag := range aliasesByElement {
-		aliasMatcherByElement[key] = matcherBuilder.Build(aliasesForFlag)
-		allFlagPatternsAndAliases = append(allFlagPatternsAndAliases, aliasesForFlag...)
+	for element, elementAliases := range aliasesByElement {
+		aliasMatcherByElement[element] = matcherBuilder.Build(elementAliases)
+		recordPatternsForElement(element, elementAliases)
 	}
 
 	return ElementMatcher{
@@ -75,6 +92,8 @@ func NewElementMatcher(projKey string, delimiters string, elements []string, ali
 		matcherByElement:            flagMatcherByKey,
 		aliasMatcherByElement:       aliasMatcherByElement,
 		allElementAndAliasesMatcher: matcherBuilder.Build(allFlagPatternsAndAliases),
+
+		elementsByPatternIndex: elementsByPatternIndex,
 	}
 }
 
@@ -102,15 +121,19 @@ func (m Matcher) MatchElement(line, element string) bool {
 }
 
 func (m Matcher) FindAliases(line, element string) []string {
-	var matches []string //nolint:prealloc // unknown size
+	matches := make([]string, 0)
 	for _, em := range m.Elements {
 		matches = append(matches, em.FindAliases(line, element)...)
 	}
 	return helpers.Dedupe(matches)
 }
 
-func (m ElementMatcher) MatchesLine(line string) bool {
-	return m.allElementAndAliasesMatcher.Iter(line).Next() != nil
+func (m ElementMatcher) FindMatches(line string) []string {
+	patterns := make([]string, 0)
+	for _, match := range m.allElementAndAliasesMatcher.FindAll(line) {
+		patterns = append(patterns, m.elementsByPatternIndex[match.Pattern()]...)
+	}
+	return patterns
 }
 
 func (m ElementMatcher) FindAliases(line, element string) []string {

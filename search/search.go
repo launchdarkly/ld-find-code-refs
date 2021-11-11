@@ -99,11 +99,11 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 }
 
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
-	var hunks []ld.HunkRep //nolint:prealloc // unknown size
+	hunks := make([]ld.HunkRep, 0)
 	firstElementMatcher := matcher.Elements[0]
-	lineNumbers := f.findMatchingLineNumbers(firstElementMatcher)
-	for _, flagKey := range firstElementMatcher.Elements {
-		hunks = append(hunks, f.aggregateHunksForFlag(firstElementMatcher.ProjKey, flagKey, matcher, lineNumbers /* lineNumbersByElement[flagKey] */)...)
+	lineNumbersByElement := f.findMatchingLineNumbersByElement(firstElementMatcher)
+	for element, lineNumbers := range lineNumbersByElement {
+		hunks = append(hunks, f.aggregateHunksForFlag(firstElementMatcher.ProjKey, element, matcher, lineNumbers)...)
 	}
 	if len(hunks) == 0 {
 		return nil
@@ -111,13 +111,14 @@ func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
 	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
 }
 
-func (f file) findMatchingLineNumbers(matcher ElementMatcher) (lineNums []int) {
+func (f file) findMatchingLineNumbersByElement(matcher ElementMatcher) map[string][]int {
+	lineNumbersByElement := make(map[string][]int)
 	for lineNum, line := range f.lines {
-		if matcher.MatchesLine(line) {
-			lineNums = append(lineNums, lineNum)
+		for _, element := range matcher.FindMatches(line) {
+			lineNumbersByElement[element] = append(lineNumbersByElement[element], lineNum)
 		}
 	}
-	return lineNums
+	return lineNumbersByElement
 }
 
 // mergeHunks combines the lines and aliases of two hunks together for a given file
@@ -185,7 +186,7 @@ func SearchForRefs(directory string, matcher Matcher) ([]ld.ReferenceHunksRep, e
 		return nil, err
 	}
 
-	ret := []ld.ReferenceHunksRep{}
+	ret := make([]ld.ReferenceHunksRep, 0, len(references))
 
 	defer sort.SliceStable(ret, func(i, j int) bool {
 		return ret[i].Path < ret[j].Path
