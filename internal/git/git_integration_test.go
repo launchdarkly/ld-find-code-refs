@@ -77,7 +77,7 @@ func TestFindExtinctions(t *testing.T) {
 	projKey := "default"
 	matcher := search.Matcher{
 		Elements: []search.ElementMatcher{
-			search.NewFlagMatcher(projKey, ``, []string{flag1, flag2}, nil),
+			search.NewElementMatcher(projKey, ``, []string{flag1, flag2}, nil),
 		},
 	}
 	extinctions, err := c.FindExtinctions(projKey, []string{flag1, flag2}, matcher, 10)

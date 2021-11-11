@@ -8,7 +8,7 @@ import (
 
 func Test_buildFlagPatterns(t *testing.T) {
 	testFlagKey := "testflag"
-	patterns := buildFlagPatterns([]string{testFlagKey}, defaultDelims)
+	patterns := buildElementPatterns([]string{testFlagKey}, defaultDelims)
 	want := map[string][]string{"testflag": []string{"\"testflag\"", "\"testflag'", "\"testflag`", "'testflag\"", "'testflag'", "'testflag`", "`testflag\"", "`testflag'", "`testflag`"}}
 	require.Equal(t, want, patterns)
 }
