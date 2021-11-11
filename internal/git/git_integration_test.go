@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,7 +82,6 @@ func TestFindExtinctions(t *testing.T) {
 	}
 	extinctions, err := c.FindExtinctions(projKey, []string{flag1, flag2}, matcher, 10)
 	require.NoError(t, err)
-	fmt.Println(commit2, commit3)
 
 	expected := []ld.ExtinctionRep{
 		{

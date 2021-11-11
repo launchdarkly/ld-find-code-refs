@@ -43,17 +43,9 @@ type file struct {
 // hunkForLine returns a matching code reference for a given flag key on a line
 func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher) *ld.HunkRep {
 	line := f.lines[lineNum]
-	var aliasMatches []string
 	ctxLines := matcher.ctxLines
 
-	// Match all aliases for the flag key
-	for _, element := range matcher.Elements {
-		if aliasMatcher, exists := element.aliasMatcherByElement[flagKey]; exists {
-			for _, match := range aliasMatcher.FindAll(line) {
-				aliasMatches = append(aliasMatches, line[match.Start():match.End()])
-			}
-		}
-	}
+	aliasMatches := helpers.Dedupe(matcher.FindAliases(line, flagKey))
 
 	if len(aliasMatches) == 0 && !matcher.MatchElement(line, flagKey) {
 		return nil
@@ -83,16 +75,15 @@ func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher)
 		FlagKey:            flagKey,
 		StartingLineNumber: startingLineNum + 1,
 		Lines:              strings.Join(hunkLines, "\n"),
-		Aliases:            []string{},
+		Aliases:            aliasMatches,
 	}
-	ret.Aliases = helpers.Dedupe(append(ret.Aliases, aliasMatches...))
 	return &ret
 }
 
 // aggregateHunksForFlag finds all references in a file, and combines matches if their context lines overlap
-func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, candidateLineNumbers []int) []ld.HunkRep {
-	hunksForFlag := []ld.HunkRep{}
-	for _, lineNumber := range candidateLineNumbers {
+func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, lineNumbers []int) []ld.HunkRep {
+	var hunksForFlag []ld.HunkRep
+	for _, lineNumber := range lineNumbers {
 		match := f.hunkForLine(projKey, flagKey, lineNumber, matcher)
 		if match != nil {
 			lastHunkIdx := len(hunksForFlag) - 1
@@ -108,14 +99,11 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, ca
 }
 
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
-	hunks := []ld.HunkRep{}
-	firstElements := matcher.Elements[0]
-	candidateLineNumbers := f.findCandidateLineNumbers(firstElements)
-	if len(candidateLineNumbers) == 0 {
-		return nil
-	}
-	for _, flagKey := range firstElements.Elements {
-		hunks = append(hunks, f.aggregateHunksForFlag(firstElements.ProjKey, flagKey, matcher, candidateLineNumbers)...)
+	var hunks []ld.HunkRep
+	firstElementMatcher := matcher.Elements[0]
+	lineNumbers := f.findMatchingLineNumbers(firstElementMatcher)
+	for _, flagKey := range firstElementMatcher.Elements {
+		hunks = append(hunks, f.aggregateHunksForFlag(firstElementMatcher.ProjKey, flagKey, matcher, lineNumbers /* lineNumbersByElement[flagKey] */)...)
 	}
 	if len(hunks) == 0 {
 		return nil
@@ -123,16 +111,13 @@ func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
 	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
 }
 
-func (f file) findCandidateLineNumbers(matcher ElementMatcher) []int {
-	var matchedLineNumbers []int
+func (f file) findMatchingLineNumbers(matcher ElementMatcher) (lineNums []int) {
 	for lineNum, line := range f.lines {
-		if found := matcher.allElementAndAliasesMatcher.FindAll(line); len(found) > 0 {
-			matchedLineNumbers = append(matchedLineNumbers, lineNum)
+		if matcher.MatchesLine(line) {
+			lineNums = append(lineNums, lineNum)
 		}
 	}
-	dedupedLineNumbers := helpers.DedupeInts(matchedLineNumbers)
-	sort.Ints(dedupedLineNumbers)
-	return dedupedLineNumbers
+	return lineNums
 }
 
 // mergeHunks combines the lines and aliases of two hunks together for a given file

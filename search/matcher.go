@@ -101,6 +101,28 @@ func (m Matcher) MatchElement(line, flagKey string) bool {
 	return false
 }
 
+func (m Matcher) FindAliases(line, element string) []string {
+	var matches []string
+	for _, em := range m.Elements {
+		matches = append(matches, em.FindAliases(line, element)...)
+	}
+	return helpers.Dedupe(matches)
+}
+
+func (m ElementMatcher) MatchesLine(line string) bool {
+	return m.allElementAndAliasesMatcher.Iter(line) != nil
+}
+
+func (m ElementMatcher) FindAliases(line, element string) []string {
+	var aliasMatches []string
+	if aliasMatcher, exists := m.aliasMatcherByElement[element]; exists {
+		for _, match := range aliasMatcher.FindAll(line) {
+			aliasMatches = append(aliasMatches, line[match.Start():match.End()])
+		}
+	}
+	return aliasMatches
+}
+
 func buildFlagPatterns(flags []string, delimiters string) map[string][]string {
 	patternsByFlag := make(map[string][]string, len(flags))
 	for _, flag := range flags {
