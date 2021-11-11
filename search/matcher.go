@@ -110,7 +110,7 @@ func (m Matcher) FindAliases(line, element string) []string {
 }
 
 func (m ElementMatcher) MatchesLine(line string) bool {
-	return m.allElementAndAliasesMatcher.Iter(line) != nil
+	return m.allElementAndAliasesMatcher.Iter(line).Next() != nil
 }
 
 func (m ElementMatcher) FindAliases(line, element string) []string {
