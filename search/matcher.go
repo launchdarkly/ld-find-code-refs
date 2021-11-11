@@ -53,7 +53,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 func NewFlagMatcher(projKey string, delimiters string, flagKeys []string, aliasesByFlagKey map[string][]string) ElementMatcher {
 	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true})
 
-	var allFlagPatternsAndAliases []string
+	var allFlagPatternsAndAliases []string //nolint:prealloc // unknown size
 
 	patternsByFlag := buildFlagPatterns(flagKeys, delimiters)
 	flagMatcherByKey := make(map[string]ahocorasick.AhoCorasick, len(patternsByFlag))
@@ -102,7 +102,7 @@ func (m Matcher) MatchElement(line, flagKey string) bool {
 }
 
 func (m Matcher) FindAliases(line, element string) []string {
-	var matches []string
+	var matches []string //nolint:prealloc // unknown size
 	for _, em := range m.Elements {
 		matches = append(matches, em.FindAliases(line, element)...)
 	}

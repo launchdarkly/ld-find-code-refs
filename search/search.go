@@ -99,7 +99,7 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 }
 
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
-	var hunks []ld.HunkRep
+	var hunks []ld.HunkRep //nolint:prealloc // unknown size
 	firstElementMatcher := matcher.Elements[0]
 	lineNumbers := f.findMatchingLineNumbers(firstElementMatcher)
 	for _, flagKey := range firstElementMatcher.Elements {
