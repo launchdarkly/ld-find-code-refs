@@ -45,8 +45,7 @@ func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher)
 	line := f.lines[lineNum]
 	ctxLines := matcher.ctxLines
 
-	aliasMatches := helpers.Dedupe(matcher.FindAliases(line, flagKey))
-
+	aliasMatches := matcher.FindAliases(line, flagKey)
 	if len(aliasMatches) == 0 && !matcher.MatchElement(line, flagKey) {
 		return nil
 	}

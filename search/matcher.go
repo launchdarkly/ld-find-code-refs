@@ -53,7 +53,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 }
 
 func NewElementMatcher(projKey string, delimiters string, elements []string, aliasesByElement map[string][]string) ElementMatcher {
-	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true})
+	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true, MatchKind: ahocorasick.StandardMatch})
 
 	allFlagPatternsAndAliases := make([]string, 0)
 	elementsByPatternIndex := make([][]string, 0)
@@ -130,16 +130,18 @@ func (m Matcher) FindAliases(line, element string) []string {
 
 func (m ElementMatcher) FindMatches(line string) []string {
 	elements := make([]string, 0)
-	for _, match := range m.allElementAndAliasesMatcher.FindAll(line) {
+	iter := m.allElementAndAliasesMatcher.IterOverlapping(line)
+	for match := iter.Next(); match != nil; match = iter.Next() {
 		elements = append(elements, m.elementsByPatternIndex[match.Pattern()]...)
 	}
 	return helpers.Dedupe(elements)
 }
 
 func (m ElementMatcher) FindAliases(line, element string) []string {
-	var aliasMatches []string
+	aliasMatches := make([]string, 0)
 	if aliasMatcher, exists := m.aliasMatcherByElement[element]; exists {
-		for _, match := range aliasMatcher.FindAll(line) {
+		iter := aliasMatcher.IterOverlapping(line)
+		for match := iter.Next(); match != nil; match = iter.Next() {
 			aliasMatches = append(aliasMatches, line[match.Start():match.End()])
 		}
 	}
