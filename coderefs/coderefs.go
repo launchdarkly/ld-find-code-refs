@@ -63,7 +63,7 @@ func Run(opts options.Options) {
 
 	handleOutput(opts, matcher, branch, repoParams, ldApi)
 
-	if gitClient != nil && !opts.DryRun {
+	if gitClient != nil {
 		runExtinctions(opts, matcher, branch, repoParams, gitClient, ldApi)
 	}
 
@@ -152,6 +152,7 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 
 func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, gitClient *git.Client, ldApi ld.ApiClient) {
 	lookback := opts.Lookback
+	dryRun := opts.DryRun
 	if lookback > 0 {
 		missingFlags := []string{}
 		for flag, count := range branch.CountByFlag(matcher.Elements[0].Elements) {
@@ -165,23 +166,29 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 		if err != nil {
 			log.Warning.Printf("unable to generate flag extinctions: %s", err)
 		} else {
-			log.Info.Printf("found %d removed flags", len(removedFlags))
+			msg := fmt.Sprintf("found %d removed flags", len(removedFlags))
+			if dryRun {
+				msg += ", --dryRun flat set, not updating LaunchDarkly"
+			}
+			log.Info.Printf(msg)
 		}
-		if len(removedFlags) > 0 {
+		if len(removedFlags) > 0 && !dryRun {
 			err = ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
 			if err != nil {
 				log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
 			}
 		}
 	}
-	log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
-	remoteBranches, err := gitClient.RemoteBranches()
-	if err != nil {
-		log.Warning.Printf("unable to retrieve branch list from remote, skipping code reference pruning: %s", err)
-	} else {
-		err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
+	if !dryRun {
+		log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
+		remoteBranches, err := gitClient.RemoteBranches()
 		if err != nil {
-			helpers.FatalServiceError(fmt.Errorf("failed to mark old branches for code reference pruning: %w", err), opts.IgnoreServiceErrors)
+			log.Warning.Printf("unable to retrieve branch list from remote, skipping code reference pruning: %s", err)
+		} else {
+			err = deleteStaleBranches(ldApi, repoParams.Name, remoteBranches)
+			if err != nil {
+				helpers.FatalServiceError(fmt.Errorf("failed to mark old branches for code reference pruning: %w", err), opts.IgnoreServiceErrors)
+			}
 		}
 	}
 }
