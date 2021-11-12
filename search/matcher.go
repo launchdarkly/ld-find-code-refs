@@ -129,11 +129,11 @@ func (m Matcher) FindAliases(line, element string) []string {
 }
 
 func (m ElementMatcher) FindMatches(line string) []string {
-	patterns := make([]string, 0)
+	elements := make([]string, 0)
 	for _, match := range m.allElementAndAliasesMatcher.FindAll(line) {
-		patterns = append(patterns, m.elementsByPatternIndex[match.Pattern()]...)
+		elements = append(elements, m.elementsByPatternIndex[match.Pattern()]...)
 	}
-	return patterns
+	return helpers.Dedupe(elements)
 }
 
 func (m ElementMatcher) FindAliases(line, element string) []string {

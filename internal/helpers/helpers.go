@@ -10,21 +10,12 @@ import (
 )
 
 func Dedupe(s []string) []string {
+	if len(s) <= 1 {
+		return s
+	}
 	keys := make(map[string]struct{}, len(s))
 	ret := make([]string, 0, len(s))
 	for _, entry := range s {
-		if _, value := keys[entry]; !value {
-			keys[entry] = struct{}{}
-			ret = append(ret, entry)
-		}
-	}
-	return ret
-}
-
-func DedupeInts(ints []int) []int {
-	keys := make(map[int]struct{}, len(ints))
-	ret := make([]int, 0, len(ints))
-	for _, entry := range ints {
 		if _, value := keys[entry]; !value {
 			keys[entry] = struct{}{}
 			ret = append(ret, entry)
