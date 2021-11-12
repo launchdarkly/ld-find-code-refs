@@ -14,17 +14,48 @@ func Test_buildDelimiterList(t *testing.T) {
 }
 
 func Test_MatchElement(t *testing.T) {
-	matcher := Matcher{
-		Delimiters: defaultDelims,
-		Elements: []ElementMatcher{
-			{
-				Elements:       []string{"testflag"},
-				Aliases:        map[string][]string{"testflag": {}},
-				Delimiters:     []string{"\"", "'", "`"},
-				DelimitedFlags: map[string][]string{"testflag": {"\"testflag\"", "\"testflag'", "\"testflag`", "'testflag\"", "'testflag'", "'testflag`", "`testflag\"", "`testflag'", "`testflag`"}},
-			},
+	const FLAG_KEY = "testflag"
+
+	testFlagDelimitedFlags := map[string][]string{"testflag": {"\"testflag\"", "\"testflag'", "\"testflag`", "'testflag\"", "'testflag'", "'testflag`", "`testflag\"", "`testflag'", "`testflag`"}}
+
+	differentFlagDelimitedFlags := map[string][]string{"different-flag": {"\"different-flag\"", "\"different-flag'", "\"different-flag`", "'different-flag\"", "'different-flag'", "'different-flag`", "`different-flag\"", "`different-flag'", "`different-flag`"}}
+
+	specs := []struct {
+		name     string
+		expected bool
+		line     string
+		matcher  Matcher
+	}{
+		{
+			name:     "match found - no delimiters",
+			expected: true,
+			line:     "var flagKey = 'testflag'",
+			matcher:  Matcher{Delimiters: ""},
+		},
+		{
+			name:     "match found - with delimters",
+			expected: true,
+			line:     "var flagKey = 'testflag'",
+			matcher:  Matcher{Delimiters: defaultDelims, Elements: []ElementMatcher{{DelimitedFlags: differentFlagDelimitedFlags}, {DelimitedFlags: testFlagDelimitedFlags}}},
+		},
+		{
+			name:     "no match found - no delimiters",
+			expected: false,
+			line:     "var flagKey = 'another-flag'",
+			matcher:  Matcher{Delimiters: ""},
+		},
+		{
+			name:     "no match found - with delimiters",
+			expected: false,
+			line:     "var flagKey = 'another-flag'",
+			matcher:  Matcher{Delimiters: defaultDelims, Elements: []ElementMatcher{{DelimitedFlags: differentFlagDelimitedFlags}, {DelimitedFlags: testFlagDelimitedFlags}}},
 		},
 	}
 
-	require.Equal(t, true, matcher.MatchElement("var featureFlag = 'testflag';", "testflag"))
+	for _, tt := range specs {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, tt.matcher.MatchElement(tt.line, FLAG_KEY))
+		})
+	}
 }
