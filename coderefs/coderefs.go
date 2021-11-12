@@ -63,7 +63,7 @@ func Run(opts options.Options) {
 
 	handleOutput(opts, matcher, branch, repoParams, ldApi)
 
-	if gitClient != nil {
+	if gitClient != nil && !opts.DryRun {
 		runExtinctions(opts, matcher, branch, repoParams, gitClient, ldApi)
 	}
 
