@@ -168,7 +168,7 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 		} else {
 			msg := fmt.Sprintf("found %d removed flags", len(removedFlags))
 			if dryRun {
-				msg += ", --dryRun flat set, not updating LaunchDarkly"
+				msg += ", --dryRun flag set, not updating LaunchDarkly"
 			}
 			log.Info.Printf(msg)
 		}
