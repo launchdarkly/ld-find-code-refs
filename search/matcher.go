@@ -3,6 +3,9 @@ package search
 import (
 	"strings"
 
+	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
+
+	"github.com/launchdarkly/ld-find-code-refs/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/flags"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -11,44 +14,87 @@ import (
 )
 
 type ElementMatcher struct {
-	Elements       []string
-	Aliases        map[string][]string
-	Delimiters     []string
-	ProjKey        string
-	Directory      string
-	DelimitedFlags map[string][]string
+	ProjKey  string
+	Elements []string
+
+	allElementAndAliasesMatcher ahocorasick.AhoCorasick
+	matcherByElement            map[string]ahocorasick.AhoCorasick
+	aliasMatcherByElement       map[string]ahocorasick.AhoCorasick
+
+	elementsByPatternIndex [][]string
 }
 
 type Matcher struct {
-	Elements   []ElementMatcher
-	CtxLines   int
-	Delimiters string
+	Elements []ElementMatcher
+	ctxLines int
 }
 
 // Scan checks the configured directory for flags base on the options configured for Code References.
 func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.ReferenceHunksRep) {
-	flagMatcher := ElementMatcher{
-		Directory: opts.Dir,
+	flagKeys := flags.GetFlagKeys(opts, repoParams)
+	aliasesByFlagKey, err := aliases.GenerateAliases(flagKeys, opts.Aliases, opts.Dir)
+	if err != nil {
+		log.Error.Fatalf("failed to generate aliases: %s", err)
 	}
-	flagMatcher.Elements, flagMatcher.Aliases = flags.GenerateSearchElements(opts, repoParams)
+	delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
+	flagMatcher := NewElementMatcher(opts.ProjKey, delimiters, flagKeys, aliasesByFlagKey)
 
 	matcher := Matcher{
-		CtxLines: opts.ContextLines,
+		ctxLines: opts.ContextLines,
+		Elements: []ElementMatcher{flagMatcher},
 	}
 
-	// Configure delimiters
-	delims := getDelimiters(opts)
-	matcher.Delimiters = strings.Join(helpers.Dedupe(delims), "")
-	flagMatcher.DelimitedFlags = buildDelimiterList(flagMatcher.Elements, matcher.Delimiters)
-	// Begin search for elements.
-	matcher.Elements = []ElementMatcher{flagMatcher}
-
-	refs, err := SearchForRefs(matcher)
+	refs, err := SearchForRefs(opts.Dir, matcher)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
 
 	return matcher, refs
+}
+
+func NewElementMatcher(projKey string, delimiters string, elements []string, aliasesByElement map[string][]string) ElementMatcher {
+	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true, MatchKind: ahocorasick.StandardMatch})
+
+	allFlagPatternsAndAliases := make([]string, 0)
+	elementsByPatternIndex := make([][]string, 0)
+	patternIndex := make(map[string]int)
+
+	recordPatternsForElement := func(element string, patterns []string) {
+		for _, p := range patterns {
+			index, exists := patternIndex[p]
+			if !exists {
+				allFlagPatternsAndAliases = append(allFlagPatternsAndAliases, p)
+				index = len(elementsByPatternIndex)
+				elementsByPatternIndex = append(elementsByPatternIndex, []string{})
+			}
+			patternIndex[p] = index
+			elementsByPatternIndex[index] = append(elementsByPatternIndex[index], element)
+		}
+	}
+
+	patternsByElement := buildElementPatterns(elements, delimiters)
+	flagMatcherByKey := make(map[string]ahocorasick.AhoCorasick, len(patternsByElement))
+	for element, patterns := range patternsByElement {
+		flagMatcherByKey[element] = matcherBuilder.Build(patterns)
+		recordPatternsForElement(element, patterns)
+	}
+
+	aliasMatcherByElement := make(map[string]ahocorasick.AhoCorasick, len(aliasesByElement))
+	for element, elementAliases := range aliasesByElement {
+		aliasMatcherByElement[element] = matcherBuilder.Build(elementAliases)
+		recordPatternsForElement(element, elementAliases)
+	}
+
+	return ElementMatcher{
+		ProjKey:  projKey,
+		Elements: elements,
+
+		matcherByElement:            flagMatcherByKey,
+		aliasMatcherByElement:       aliasMatcherByElement,
+		allElementAndAliasesMatcher: matcherBuilder.Build(allFlagPatternsAndAliases),
+
+		elementsByPatternIndex: elementsByPatternIndex,
+	}
 }
 
 func getDelimiters(opts options.Options) []string {
@@ -62,15 +108,10 @@ func getDelimiters(opts options.Options) []string {
 	return delims
 }
 
-func (m Matcher) MatchElement(line, flagKey string) bool {
-	if m.Delimiters == "" && strings.Contains(line, flagKey) {
-		return true
-	}
-
-	for _, element := range m.Elements {
-		delimitedFlags := element.DelimitedFlags[flagKey]
-		for _, delimitedflagKey := range delimitedFlags {
-			if strings.Contains(line, delimitedflagKey) {
+func (m Matcher) MatchElement(line, element string) bool {
+	for _, em := range m.Elements {
+		if e, exists := em.matcherByElement[element]; exists {
+			if e.Iter(line).Next() != nil {
 				return true
 			}
 		}
@@ -79,24 +120,54 @@ func (m Matcher) MatchElement(line, flagKey string) bool {
 	return false
 }
 
-func buildDelimiterList(flags []string, delimiters string) map[string][]string {
-	delimiterMap := make(map[string][]string)
-	if delimiters == "" {
-		return delimiterMap
+func (m Matcher) FindAliases(line, element string) []string {
+	matches := make([]string, 0)
+	for _, em := range m.Elements {
+		matches = append(matches, em.FindAliases(line, element)...)
 	}
-	for _, flag := range flags {
-		tempFlags := []string{}
-		for _, left := range delimiters {
-			for _, right := range delimiters {
-				var sb strings.Builder
-				sb.Grow(len(flag) + 2)
-				sb.WriteRune(left)
-				sb.WriteString(flag)
-				sb.WriteRune(right)
-				tempFlags = append(tempFlags, sb.String())
-			}
+	return helpers.Dedupe(matches)
+}
+
+func (m ElementMatcher) FindMatches(line string) []string {
+	elements := make([]string, 0)
+	iter := m.allElementAndAliasesMatcher.IterOverlapping(line)
+	for match := iter.Next(); match != nil; match = iter.Next() {
+		elements = append(elements, m.elementsByPatternIndex[match.Pattern()]...)
+	}
+	return helpers.Dedupe(elements)
+}
+
+func (m ElementMatcher) FindAliases(line, element string) []string {
+	aliasMatches := make([]string, 0)
+	if aliasMatcher, exists := m.aliasMatcherByElement[element]; exists {
+		iter := aliasMatcher.IterOverlapping(line)
+		for match := iter.Next(); match != nil; match = iter.Next() {
+			aliasMatches = append(aliasMatches, line[match.Start():match.End()])
 		}
-		delimiterMap[flag] = tempFlags
 	}
-	return delimiterMap
+	return aliasMatches
+}
+
+func buildElementPatterns(flags []string, delimiters string) map[string][]string {
+	patternsByFlag := make(map[string][]string, len(flags))
+	for _, flag := range flags {
+		var patterns []string
+		if delimiters != "" {
+			patterns = make([]string, 0, len(delimiters)*len(delimiters))
+			for _, left := range delimiters {
+				for _, right := range delimiters {
+					var sb strings.Builder
+					sb.Grow(len(flag) + 2)
+					sb.WriteRune(left)
+					sb.WriteString(flag)
+					sb.WriteRune(right)
+					patterns = append(patterns, sb.String())
+				}
+			}
+		} else {
+			patterns = []string{flag}
+		}
+		patternsByFlag[flag] = patterns
+	}
+	return patternsByFlag
 }

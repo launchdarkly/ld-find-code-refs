@@ -41,24 +41,12 @@ type file struct {
 }
 
 // hunkForLine returns a matching code reference for a given flag key on a line
-func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum int, matcher Matcher) *ld.HunkRep {
-	matchedFlag := false
-	aliasMatches := []string{}
+func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher) *ld.HunkRep {
 	line := f.lines[lineNum]
-	ctxLines := matcher.CtxLines
-	// Match flag keys with delimiters
-	if matcher.MatchElement(line, flagKey) {
-		matchedFlag = true
-	}
+	ctxLines := matcher.ctxLines
 
-	// Match all aliases for the flag key
-	for _, alias := range aliases {
-		if strings.Contains(line, alias) {
-			aliasMatches = append(aliasMatches, alias)
-		}
-	}
-
-	if !matchedFlag && len(aliasMatches) == 0 {
+	aliasMatches := matcher.FindAliases(line, flagKey)
+	if len(aliasMatches) == 0 && !matcher.MatchElement(line, flagKey) {
 		return nil
 	}
 
@@ -86,17 +74,16 @@ func (f file) hunkForLine(projKey, flagKey string, aliases []string, lineNum int
 		FlagKey:            flagKey,
 		StartingLineNumber: startingLineNum + 1,
 		Lines:              strings.Join(hunkLines, "\n"),
-		Aliases:            []string{},
+		Aliases:            aliasMatches,
 	}
-	ret.Aliases = helpers.Dedupe(append(ret.Aliases, aliasMatches...))
 	return &ret
 }
 
 // aggregateHunksForFlag finds all references in a file, and combines matches if their context lines overlap
-func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []string, matcher Matcher) []ld.HunkRep {
-	hunksForFlag := []ld.HunkRep{}
-	for i := range f.lines {
-		match := f.hunkForLine(projKey, flagKey, flagAliases, i, matcher)
+func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, lineNumbers []int) []ld.HunkRep {
+	var hunksForFlag []ld.HunkRep
+	for _, lineNumber := range lineNumbers {
+		match := f.hunkForLine(projKey, flagKey, lineNumber, matcher)
 		if match != nil {
 			lastHunkIdx := len(hunksForFlag) - 1
 			// If the previous hunk overlaps or is adjacent to the current hunk, merge them together
@@ -111,15 +98,26 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, flagAliases []strin
 }
 
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
-	hunks := []ld.HunkRep{}
-	firstElements := matcher.Elements[0]
-	for flagKey, flagAliases := range firstElements.Aliases {
-		hunks = append(hunks, f.aggregateHunksForFlag(firstElements.ProjKey, flagKey, flagAliases, matcher)...)
+	hunks := make([]ld.HunkRep, 0)
+	firstElementMatcher := matcher.Elements[0]
+	lineNumbersByElement := f.findMatchingLineNumbersByElement(firstElementMatcher)
+	for element, lineNumbers := range lineNumbersByElement {
+		hunks = append(hunks, f.aggregateHunksForFlag(firstElementMatcher.ProjKey, element, matcher, lineNumbers)...)
 	}
 	if len(hunks) == 0 {
 		return nil
 	}
 	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
+}
+
+func (f file) findMatchingLineNumbersByElement(matcher ElementMatcher) map[string][]int {
+	lineNumbersByElement := make(map[string][]int)
+	for lineNum, line := range f.lines {
+		for _, element := range matcher.FindMatches(line) {
+			lineNumbersByElement[element] = append(lineNumbersByElement[element], lineNum)
+		}
+	}
+	return lineNumbersByElement
 }
 
 // mergeHunks combines the lines and aliases of two hunks together for a given file
@@ -174,7 +172,7 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w.Wait()
 }
 
-func SearchForRefs(matcher Matcher) ([]ld.ReferenceHunksRep, error) {
+func SearchForRefs(directory string, matcher Matcher) ([]ld.ReferenceHunksRep, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	files := make(chan file)
@@ -182,12 +180,12 @@ func SearchForRefs(matcher Matcher) ([]ld.ReferenceHunksRep, error) {
 	// Start workers to process files asynchronously as they are written to the files channel
 	go processFiles(ctx, files, references, matcher)
 
-	err := readFiles(ctx, files, matcher.Elements[0].Directory)
+	err := readFiles(ctx, files, directory)
 	if err != nil {
 		return nil, err
 	}
 
-	ret := []ld.ReferenceHunksRep{}
+	ret := make([]ld.ReferenceHunksRep, 0, len(references))
 
 	defer sort.SliceStable(ret, func(i, j int) bool {
 		return ret[i].Path < ret[j].Path

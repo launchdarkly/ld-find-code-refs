@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,9 +8,9 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/stretchr/testify/require"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
@@ -77,13 +76,12 @@ func TestFindExtinctions(t *testing.T) {
 	c := Client{workspace: repoDir}
 	projKey := "default"
 	matcher := search.Matcher{
-		Elements: []search.ElementMatcher{{
-			Elements: []string{flag1, flag2},
-		}},
+		Elements: []search.ElementMatcher{
+			search.NewElementMatcher(projKey, ``, []string{flag1, flag2}, nil),
+		},
 	}
 	extinctions, err := c.FindExtinctions(projKey, []string{flag1, flag2}, matcher, 10)
 	require.NoError(t, err)
-	fmt.Println(commit2, commit3)
 
 	expected := []ld.ExtinctionRep{
 		{
