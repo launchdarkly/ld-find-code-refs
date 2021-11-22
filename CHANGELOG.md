@@ -2,6 +2,17 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.0] - 2021-11-22
+### Changed:
+- Performance improvements around searching for flags and aliases in the code base. Including changing search to use Aho-Corasick algorithm to find flags in file.
+- If `--dryRun` is set, extinctions will not be attempted.
+
+### Added:
+- `--allowTags` which allows Code Refs to run against a tag instead of the branch.
+
+### Fixed:
+- Bug where alias filepattern's were not being validated. This meant `ld-find-code-refs` would run but if that file did not exist no aliases were generated.
+
 ## [2.3.0] - 2021-11-02
 ### Changed:
 - Performance improvements around searching for flags and aliases in the code base.
