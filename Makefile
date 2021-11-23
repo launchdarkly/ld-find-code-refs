@@ -1,7 +1,11 @@
+
 # Note: These commands pertain to the development of ld-find-code-refs.
 #       They are not intended for use by the end-users of this program.
 SHELL=/bin/bash
 GORELEASER_VERSION=v0.169.0
+LD_RELEASE_VERSION ?= 0.0.1-SNAPSHOT
+TAG ?= $(LD_RELEASE_VERSION)
+REPO ?= ld-find-code-refs
 
 build:
 	go build ./cmd/...
@@ -71,7 +75,34 @@ RELEASE_CMD=curl -sL https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(G
 publish:
 	$(RELEASE_CMD)
 
+GIT_COMMAND=git
+GIT_PUSH_COMMAND=git push
+GH_ACTION_REPO=find-code-references
+SED_COMMAND :=
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		SED_COMMAND=sed
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		SED_COMMAND=gsed
+	endif
+
+update-gh-action:
+	$(GIT_COMMAND) clone https://github.com/launchdarkly/$(GH_ACTION_REPO).git || exit 1;
+	cd $(GH_ACTION_REPO); \
+	declare -i VERSION=`cat README.md | grep 'uses: launchdarkly/find-code-references@' | tr -d -c 0-9;`; \
+	VERSION+=1 ;\
+	echo $$VERSION; \
+	$(SED_COMMAND) -i "s#uses: launchdarkly/find-code-references@.*#uses: launchdarkly/find-code-references@v$$VERSION#g" README.md; \
+	$(SED_COMMAND) -i "s#FROM launchdarkly/ld-find-code-refs-github-action:.*#FROM launchdarkly/ld-find-code-refs-github-action:$(LD_RELEASE_VERSION)#g" Dockerfile; \
+	$(GIT_COMMAND) add -u; \
+	$(GIT_COMMAND) commit --allow-empty -m "Version $(LD_RELEASE_VERSION) automatically generated from $(REPO)."; \
+	$(GIT_PUSH_COMMAND) origin $(RELEASE_BRANCH); \
+	$(GIT_COMMAND) tag v$$VERSION; \
+	$(GIT_PUSH_COMMAND) origin v$$VERSION; \
+	cd ..; \
+
 products-for-release:
 	$(RELEASE_CMD) --skip-publish --skip-validate
 
-.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-dev-circle-orb publish-release-circle-orb publish-all clean build
+.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-dev-circle-orb publish-release-circle-orb publish-all clean build update-gh-action
