@@ -28,12 +28,8 @@ func TestElementMatcher_FindMatches(t *testing.T) {
 	})
 }
 
-func Test_MatchElement(t *testing.T) {
+func TestMatcher_MatchElement(t *testing.T) {
 	const FLAG_KEY = "testflag"
-
-	testFlagDelimitedFlags := map[string][]string{"testflag": {"\"testflag\"", "\"testflag'", "\"testflag`", "'testflag\"", "'testflag'", "'testflag`", "`testflag\"", "`testflag'", "`testflag`"}}
-
-	differentFlagDelimitedFlags := map[string][]string{"different-flag": {"\"different-flag\"", "\"different-flag'", "\"different-flag`", "'different-flag\"", "'different-flag'", "'different-flag`", "`different-flag\"", "`different-flag'", "`different-flag`"}}
 
 	specs := []struct {
 		name     string
@@ -42,28 +38,16 @@ func Test_MatchElement(t *testing.T) {
 		matcher  Matcher
 	}{
 		{
-			name:     "match found - no delimiters",
+			name:     "match found",
 			expected: true,
 			line:     "var flagKey = 'testflag'",
-			matcher:  Matcher{Delimiters: ""},
+			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", ",'\"", []string{"testflag"}, map[string][]string{"testflag": {"testFlag"}})}},
 		},
 		{
-			name:     "match found - with delimters",
-			expected: true,
+			name:     "no match found",
+			expected: false,
 			line:     "var flagKey = 'testflag'",
-			matcher:  Matcher{Delimiters: defaultDelims, Elements: []ElementMatcher{{DelimitedFlags: differentFlagDelimitedFlags}, {DelimitedFlags: testFlagDelimitedFlags}}},
-		},
-		{
-			name:     "no match found - no delimiters",
-			expected: false,
-			line:     "var flagKey = 'another-flag'",
-			matcher:  Matcher{Delimiters: ""},
-		},
-		{
-			name:     "no match found - with delimiters",
-			expected: false,
-			line:     "var flagKey = 'another-flag'",
-			matcher:  Matcher{Delimiters: defaultDelims, Elements: []ElementMatcher{{DelimitedFlags: differentFlagDelimitedFlags}, {DelimitedFlags: testFlagDelimitedFlags}}},
+			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", ",'\"", []string{"anotherflag"}, map[string][]string{"anotherflag": {"anotherFlag"}})}},
 		},
 	}
 
