@@ -27,3 +27,34 @@ func TestElementMatcher_FindMatches(t *testing.T) {
 		assert.ElementsMatch(t, []string{"flag", "flag1"}, matcher.FindMatches("flag1"))
 	})
 }
+
+func TestMatcher_MatchElement(t *testing.T) {
+	const FLAG_KEY = "testflag"
+
+	specs := []struct {
+		name     string
+		expected bool
+		line     string
+		matcher  Matcher
+	}{
+		{
+			name:     "match found",
+			expected: true,
+			line:     "var flagKey = 'testflag'",
+			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", ",'\"", []string{"testflag"}, map[string][]string{"testflag": {"testFlag"}})}},
+		},
+		{
+			name:     "no match found",
+			expected: false,
+			line:     "var flagKey = 'testflag'",
+			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", ",'\"", []string{"anotherflag"}, map[string][]string{"anotherflag": {"anotherFlag"}})}},
+		},
+	}
+
+	for _, tt := range specs {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, tt.matcher.MatchElement(tt.line, FLAG_KEY))
+		})
+	}
+}
