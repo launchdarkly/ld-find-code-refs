@@ -16,6 +16,7 @@ import (
 type ElementMatcher struct {
 	Elements                    []string
 	ProjKey                     string
+	Dir                         string
 	allElementAndAliasesMatcher ahocorasick.AhoCorasick
 	matcherByElement            map[string]ahocorasick.AhoCorasick
 	aliasMatcherByElement       map[string]ahocorasick.AhoCorasick
@@ -32,13 +33,18 @@ type Matcher struct {
 func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.ReferenceHunksRep) {
 	flagKeys := flags.GetFlagKeys(opts, repoParams)
 	elements := []ElementMatcher{}
-	for projKey, flags := range flagKeys {
-		aliasesByFlagKey, err := aliases.GenerateAliases(flags, opts.Aliases, opts.Dir)
+
+	for _, project := range opts.Projects {
+		projectFlags := flagKeys[project.ProjectKey]
+		projectAliases := opts.Aliases
+		projectAliases = append(projectAliases, project.Aliases...)
+		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, opts.Dir)
 		if err != nil {
 			log.Error.Fatalf("failed to generate aliases: %s", err)
 		}
+
 		delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
-		elements = append(elements, NewElementMatcher(projKey, delimiters, flags, aliasesByFlagKey))
+		elements = append(elements, NewElementMatcher(project.ProjectKey, project.Dir, delimiters, projectFlags, aliasesByFlagKey))
 	}
 	matcher := Matcher{
 		ctxLines: opts.ContextLines,
@@ -53,7 +59,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 	return matcher, refs
 }
 
-func NewElementMatcher(projKey string, delimiters string, elements []string, aliasesByElement map[string][]string) ElementMatcher {
+func NewElementMatcher(projKey, dir, delimiters string, elements []string, aliasesByElement map[string][]string) ElementMatcher {
 	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true, MatchKind: ahocorasick.StandardMatch})
 
 	allFlagPatternsAndAliases := make([]string, 0)
@@ -89,6 +95,7 @@ func NewElementMatcher(projKey string, delimiters string, elements []string, ali
 	return ElementMatcher{
 		Elements:                    elements,
 		ProjKey:                     projKey,
+		Dir:                         dir,
 		matcherByElement:            flagMatcherByKey,
 		aliasMatcherByElement:       aliasMatcherByElement,
 		allElementAndAliasesMatcher: matcherBuilder.Build(allFlagPatternsAndAliases),

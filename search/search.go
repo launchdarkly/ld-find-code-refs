@@ -99,7 +99,17 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
 	hunks := make([]ld.HunkRep, 0)
+	var filteredMatchers []ElementMatcher
 	for _, elementSearch := range matcher.Elements {
+		if elementSearch.Dir != "" {
+			matchDir := strings.HasPrefix(f.path, elementSearch.Dir)
+			if !matchDir {
+				continue
+			}
+		}
+		filteredMatchers = append(filteredMatchers, elementSearch)
+	}
+	for _, elementSearch := range filteredMatchers {
 		lineNumbersByElement := f.findMatchingLineNumbersByElement(elementSearch)
 		for element, lineNumbers := range lineNumbersByElement {
 			hunks = append(hunks, f.aggregateHunksForFlag(elementSearch.ProjKey, element, matcher, lineNumbers)...)

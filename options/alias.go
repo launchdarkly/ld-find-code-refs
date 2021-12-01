@@ -59,6 +59,9 @@ type Alias struct {
 	// Command
 	Command *string `mapstructure:"command,omitempty"`
 	Timeout *int64  `mapstructure:"timeout,omitempty"`
+
+	// Limit to generating aliases only for specific project keys
+	Projects []string
 }
 
 func (a *Alias) IsValid() error {

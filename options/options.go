@@ -21,8 +21,9 @@ const (
 )
 
 type Project struct {
-	ProjectKey string
-	Dir        string
+	ProjectKey string  `mapstructure:"projectKey"`
+	Dir        string  `mapstructure:"dir"`
+	Aliases    []Alias `mapstructure:"aliases"`
 }
 type Options struct {
 	AccessToken         string `mapstructure:"accessToken"`
