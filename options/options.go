@@ -172,21 +172,18 @@ func (o Options) ValidateRequired() error {
 	}
 
 	if len(o.ProjKey) > 0 && len(o.Projects) > 0 {
-		return fmt.Errorf("projKey cannot be combined with projects in config file.")
+		return fmt.Errorf("`--projKey` cannot be combined with `projects` in configuration")
 	}
 
 	if len(o.ProjKey) > maxProjKeyLength && len(o.Projects) == 0 {
-		if strings.HasPrefix(o.ProjKey, "sdk-") {
-			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
-		} else if strings.HasPrefix(o.ProjKey, "api-") {
-			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
-		}
-	} else if len(o.Projects) == 0 && len(o.Projects) > 0 {
-		for _, proj := range o.Projects {
-			if strings.HasPrefix(proj.ProjectKey, "sdk-") {
-				return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
-			} else if strings.HasPrefix(proj.ProjectKey, "api-") {
-				return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+		return projKeyValidation(o.ProjKey)
+	} else if len(o.ProjKey) == 0 && len(o.Projects) > 0 {
+		for _, project := range o.Projects {
+			if len(project.ProjectKey) > maxProjKeyLength {
+				err := projKeyValidation(project.ProjectKey)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -247,6 +244,16 @@ func (o Options) Validate() error {
 
 	if o.Revision != "" && o.Branch == "" {
 		return fmt.Errorf(`"branch" option is required when "revision" option is set`)
+	}
+
+	return nil
+}
+
+func projKeyValidation(projKey string) error {
+	if strings.HasPrefix(projKey, "sdk-") {
+		return fmt.Errorf("provided project key (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+	} else if strings.HasPrefix(projKey, "api-") {
+		return fmt.Errorf("provided project key (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
 	}
 
 	return nil
