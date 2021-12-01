@@ -19,6 +19,7 @@ const (
 	repoDir = "testdata/repo"
 	flag1   = "flag1"
 	flag2   = "flag2"
+	flag3   = "flag3"
 )
 
 func setupRepo(t *testing.T) *git.Repository {
@@ -44,6 +45,11 @@ func TestFindExtinctions(t *testing.T) {
 	_, err = flagFile.WriteString(flag2)
 	require.NoError(t, err)
 	require.NoError(t, flagFile.Close())
+	flagFile, err = os.Create(filepath.Join(repoDir, "flag3.txt"))
+	require.NoError(t, err)
+	_, err = flagFile.WriteString(flag3)
+	require.NoError(t, err)
+	require.NoError(t, flagFile.Close())
 
 	wt, err := repo.Worktree()
 	require.NoError(t, err)
@@ -52,6 +58,7 @@ func TestFindExtinctions(t *testing.T) {
 
 	wt.Add("flag1.txt")
 	wt.Add("flag2.txt")
+	wt.Add("flag3.txt")
 	_, err = wt.Commit("add flags", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
@@ -74,32 +81,58 @@ func TestFindExtinctions(t *testing.T) {
 	commit3, err := wt.Commit("remove flag2", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
+	err = os.Remove(filepath.Join(repoDir, "flag3.txt"))
+	require.NoError(t, err)
+
+	who.When = who.When.Add(time.Minute)
+	message4 := "remove flag3"
+	commit4, err := wt.Commit("remove flag3", &git.CommitOptions{All: true, Committer: &who, Author: &who})
+	require.NoError(t, err)
+
 	c := Client{workspace: repoDir}
 	projKey := options.Project{
 		ProjectKey: "default",
 	}
+	addProjKey := options.Project{
+		ProjectKey: "otherProject",
+	}
+	projects := []options.Project{projKey, addProjKey}
+	missingFlags := [][]string{{flag1, flag2}, {flag3}}
 	matcher := search.Matcher{
 		Elements: []search.ElementMatcher{
 			search.NewElementMatcher(projKey.ProjectKey, ``, ``, []string{flag1, flag2}, nil),
+			search.NewElementMatcher(addProjKey.ProjectKey, ``, ``, []string{flag3}, nil),
 		},
 	}
-	extinctions, err := c.FindExtinctions(projKey, []string{flag1, flag2}, matcher, 10)
-	require.NoError(t, err)
+
+	extinctions := make([]ld.ExtinctionRep, 0)
+	for i, project := range projects {
+		extinctionsByProject, err := c.FindExtinctions(project, missingFlags[i], matcher, 10)
+		require.NoError(t, err)
+		extinctions = append(extinctions, extinctionsByProject...)
+	}
 
 	expected := []ld.ExtinctionRep{
 		{
 			Revision: commit3.String(),
 			Message:  message3,
-			Time:     who.When.Unix() * 1000,
+			Time:     who.When.Add(-time.Minute).Unix() * 1000,
 			ProjKey:  projKey.ProjectKey,
 			FlagKey:  flag2,
 		},
 		{
 			Revision: commit2.String(),
 			Message:  message2,
-			Time:     who.When.Add(-time.Minute).Unix() * 1000,
+			Time:     who.When.Add(-time.Minute*2).Unix() * 1000,
 			ProjKey:  projKey.ProjectKey,
 			FlagKey:  flag1,
+		},
+		{
+			Revision: commit4.String(),
+			Message:  message4,
+			Time:     who.When.Unix() * 1000,
+			ProjKey:  addProjKey.ProjectKey,
+			FlagKey:  flag3,
 		},
 	}
 	require.Equal(t, expected, extinctions)
