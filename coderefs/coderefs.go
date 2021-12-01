@@ -17,7 +17,7 @@ import (
 func Run(opts options.Options) {
 	if len(opts.ProjKey) > 0 {
 		opts.Projects = append(opts.Projects, options.Project{
-			ProjectKey: opts.ProjKey,
+			Key: opts.ProjKey,
 		})
 	}
 	dir := opts.Dir
@@ -115,7 +115,7 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 	outDir := opts.OutDir
 	projectKeys := make([]string, 1)
 	for _, project := range opts.Projects {
-		projectKeys = append(projectKeys, project.ProjectKey)
+		projectKeys = append(projectKeys, project.Key)
 	}
 
 	if outDir != "" {
@@ -171,13 +171,13 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 		var removedFlags []ld.ExtinctionRep
 		for i, project := range opts.Projects {
 			missingFlags := []string{}
-			for flag, count := range branch.CountByFlag(matcher.Elements[i].Elements, project.ProjectKey) {
+			for flag, count := range branch.CountByFlag(matcher.Elements[i].Elements, project.Key) {
 				if count == 0 {
 					missingFlags = append(missingFlags, flag)
 				}
 
 			}
-			log.Info.Printf("checking if %d flags without references were removed in the last %d commits for project: %s", len(missingFlags), opts.Lookback, project.ProjectKey)
+			log.Info.Printf("checking if %d flags without references were removed in the last %d commits for project: %s", len(missingFlags), opts.Lookback, project.Key)
 			removedFlagsByProject, err := gitClient.FindExtinctions(project, missingFlags, matcher, lookback+1)
 			if err != nil {
 				log.Warning.Printf("unable to generate flag extinctions: %s", err)

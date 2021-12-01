@@ -29,7 +29,7 @@ func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]st
 			}
 		}
 
-		flags, err := getFlags(ldApi, proj.ProjectKey)
+		flags, err := getFlags(ldApi, proj.Key)
 		if err != nil {
 			helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
 		}
@@ -42,7 +42,7 @@ func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]st
 		} else if len(omittedFlags) > 0 {
 			log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 		}
-		flagKeys[proj.ProjectKey] = filteredFlags
+		flagKeys[proj.Key] = filteredFlags
 	}
 
 	return flagKeys

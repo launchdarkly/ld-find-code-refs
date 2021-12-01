@@ -35,7 +35,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 	elements := []ElementMatcher{}
 
 	for _, project := range opts.Projects {
-		projectFlags := flagKeys[project.ProjectKey]
+		projectFlags := flagKeys[project.Key]
 		projectAliases := opts.Aliases
 		projectAliases = append(projectAliases, project.Aliases...)
 		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, opts.Dir)
@@ -44,7 +44,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 		}
 
 		delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
-		elements = append(elements, NewElementMatcher(project.ProjectKey, project.Dir, delimiters, projectFlags, aliasesByFlagKey))
+		elements = append(elements, NewElementMatcher(project.Key, project.Dir, delimiters, projectFlags, aliasesByFlagKey))
 	}
 	matcher := Matcher{
 		ctxLines: opts.ContextLines,

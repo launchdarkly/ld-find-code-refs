@@ -21,9 +21,9 @@ const (
 )
 
 type Project struct {
-	ProjectKey string  `mapstructure:"projectKey"`
-	Dir        string  `mapstructure:"dir"`
-	Aliases    []Alias `mapstructure:"aliases"`
+	Key     string  `mapstructure:"projectKey"`
+	Dir     string  `mapstructure:"dir"`
+	Aliases []Alias `mapstructure:"aliases"`
 }
 type Options struct {
 	AccessToken         string `mapstructure:"accessToken"`
@@ -179,8 +179,8 @@ func (o Options) ValidateRequired() error {
 		return projKeyValidation(o.ProjKey)
 	} else if len(o.ProjKey) == 0 && len(o.Projects) > 0 {
 		for _, project := range o.Projects {
-			if len(project.ProjectKey) > maxProjKeyLength {
-				err := projKeyValidation(project.ProjectKey)
+			if len(project.Key) > maxProjKeyLength {
+				err := projKeyValidation(project.Key)
 				if err != nil {
 					return err
 				}

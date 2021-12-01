@@ -91,17 +91,17 @@ func TestFindExtinctions(t *testing.T) {
 
 	c := Client{workspace: repoDir}
 	projKey := options.Project{
-		ProjectKey: "default",
+		Key: "default",
 	}
 	addProjKey := options.Project{
-		ProjectKey: "otherProject",
+		Key: "otherProject",
 	}
 	projects := []options.Project{projKey, addProjKey}
 	missingFlags := [][]string{{flag1, flag2}, {flag3}}
 	matcher := search.Matcher{
 		Elements: []search.ElementMatcher{
-			search.NewElementMatcher(projKey.ProjectKey, ``, ``, []string{flag1, flag2}, nil),
-			search.NewElementMatcher(addProjKey.ProjectKey, ``, ``, []string{flag3}, nil),
+			search.NewElementMatcher(projKey.Key, ``, ``, []string{flag1, flag2}, nil),
+			search.NewElementMatcher(addProjKey.Key, ``, ``, []string{flag3}, nil),
 		},
 	}
 
@@ -117,21 +117,21 @@ func TestFindExtinctions(t *testing.T) {
 			Revision: commit3.String(),
 			Message:  message3,
 			Time:     who.When.Add(-time.Minute).Unix() * 1000,
-			ProjKey:  projKey.ProjectKey,
+			ProjKey:  projKey.Key,
 			FlagKey:  flag2,
 		},
 		{
 			Revision: commit2.String(),
 			Message:  message2,
 			Time:     who.When.Add(-time.Minute*2).Unix() * 1000,
-			ProjKey:  projKey.ProjectKey,
+			ProjKey:  projKey.Key,
 			FlagKey:  flag1,
 		},
 		{
 			Revision: commit4.String(),
 			Message:  message4,
 			Time:     who.When.Unix() * 1000,
-			ProjKey:  addProjKey.ProjectKey,
+			ProjKey:  addProjKey.Key,
 			FlagKey:  flag3,
 		},
 	}

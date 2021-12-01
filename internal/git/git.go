@@ -218,7 +218,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 						Revision: c.commit.Hash.String(),
 						Message:  c.commit.Message,
 						Time:     c.commit.Author.When.Unix() * 1000,
-						ProjKey:  project.ProjectKey,
+						ProjKey:  project.Key,
 						FlagKey:  flag,
 					})
 				} else {
