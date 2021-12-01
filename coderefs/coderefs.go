@@ -113,16 +113,13 @@ func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]b
 
 func handleOutput(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
 	outDir := opts.OutDir
-	var projects []string
-	if len(opts.Projects) > 0 {
-		for _, proj := range opts.Projects {
-			projects = append(projects, proj.ProjectKey)
-		}
-	} else {
-		projects = append(projects, opts.AccessToken)
+	projectKeys := make([]string, 1)
+	for _, project := range opts.Projects {
+		projectKeys = append(projectKeys, project.ProjectKey)
 	}
+
 	if outDir != "" {
-		outPath, err := branch.WriteToCSV(outDir, repoParams.Name, opts.Revision, projects)
+		outPath, err := branch.WriteToCSV(outDir, repoParams.Name, opts.Revision)
 		if err != nil {
 			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
@@ -152,7 +149,7 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 		branch.TotalHunkCount(),
 		len(matcher.Elements[0].Elements),
 		len(branch.References),
-		projects,
+		projectKeys,
 	)
 	err := ldApi.PutCodeReferenceBranch(branch, repoParams.Name)
 	switch {

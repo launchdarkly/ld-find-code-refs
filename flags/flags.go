@@ -16,18 +16,9 @@ const (
 )
 
 func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
-	var projects []string
 	flagKeys := make(map[string][]string)
-	if len(opts.Projects) > 0 {
-		for _, proj := range opts.Projects {
-			projects = append(projects, proj.ProjectKey)
-		}
-	} else {
-		projects = append(projects, opts.AccessToken)
-	}
-
-	for _, proj := range projects {
-		ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: proj, UserAgent: "LDFindCodeRefs/" + version.Version})
+	for _, proj := range opts.Projects {
+		ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
 		isDryRun := opts.DryRun
 
 		ignoreServiceErrors := opts.IgnoreServiceErrors
@@ -38,20 +29,20 @@ func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]st
 			}
 		}
 
-		flags, err := getFlags(ldApi)
+		flags, err := getFlags(ldApi, proj.ProjectKey)
 		if err != nil {
 			helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
 		}
 
 		filteredFlags, omittedFlags := filterShortFlagKeys(flags)
 		if len(filteredFlags) == 0 {
-			log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
+			log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %v, exiting early",
 				minFlagKeyLen, proj)
 			os.Exit(0)
 		} else if len(omittedFlags) > 0 {
 			log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 		}
-		flagKeys[proj] = filteredFlags
+		flagKeys[proj.ProjectKey] = filteredFlags
 	}
 
 	return flagKeys
@@ -72,8 +63,8 @@ func filterShortFlagKeys(flags []string) (filtered []string, omitted []string) {
 	return filteredFlags, omittedFlags
 }
 
-func getFlags(ldApi ld.ApiClient) ([]string, error) {
-	flags, err := ldApi.GetFlagKeyList()
+func getFlags(ldApi ld.ApiClient, projKey string) ([]string, error) {
+	flags, err := ldApi.GetFlagKeyList(projKey)
 	if err != nil {
 		return nil, err
 	}

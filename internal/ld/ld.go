@@ -91,10 +91,10 @@ func InitApiClient(options ApiOptions) ApiClient {
 	}
 }
 
-func (c ApiClient) GetFlagKeyList() ([]string, error) {
+func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
 	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
 
-	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, c.Options.ProjKey)
+	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, projKey)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +109,12 @@ func (c ApiClient) GetFlagKeyList() ([]string, error) {
 		archivedOpts.Env = optional.NewInterface(firstEnv.Key)
 	}
 
-	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, flagOpts)
+	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey, flagOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, archivedOpts)
+	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey, archivedOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -451,7 +451,7 @@ func (b BranchRep) TotalHunkCount() int {
 	return count
 }
 
-func (b BranchRep) WriteToCSV(outDir, repo, sha string, projects []string) (path string, err error) {
+func (b BranchRep) WriteToCSV(outDir, repo, sha string) (path string, err error) {
 	// Try to create a filename with a shortened sha, but if the sha is too short for some unexpected reason, use the branch name instead
 	var tag string
 	if len(sha) >= 7 {
