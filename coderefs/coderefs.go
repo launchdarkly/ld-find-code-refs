@@ -70,7 +70,7 @@ func Run(opts options.Options) {
 }
 
 func Prune(opts options.Options, branches []string) {
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: opts.ProjKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
 	err := ldApi.PostDeleteBranchesTask(opts.RepoName, branches)
 	if err != nil {
 		helpers.FatalServiceError(err, opts.IgnoreServiceErrors)
