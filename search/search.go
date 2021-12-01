@@ -99,10 +99,11 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
 	hunks := make([]ld.HunkRep, 0)
-	firstElementMatcher := matcher.Elements[0]
-	lineNumbersByElement := f.findMatchingLineNumbersByElement(firstElementMatcher)
-	for element, lineNumbers := range lineNumbersByElement {
-		hunks = append(hunks, f.aggregateHunksForFlag(firstElementMatcher.ProjKey, element, matcher, lineNumbers)...)
+	for _, elementSearch := range matcher.Elements {
+		lineNumbersByElement := f.findMatchingLineNumbersByElement(elementSearch)
+		for element, lineNumbers := range lineNumbersByElement {
+			hunks = append(hunks, f.aggregateHunksForFlag(elementSearch.ProjKey, element, matcher, lineNumbers)...)
+		}
 	}
 	if len(hunks) == 0 {
 		return nil

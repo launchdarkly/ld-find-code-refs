@@ -22,7 +22,7 @@ func Run(opts options.Options) {
 	}
 
 	log.Info.Printf("absolute directory path: %s", absPath)
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: opts.ProjKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
 
 	branchName := opts.Branch
 	revision := opts.Revision
@@ -108,8 +108,16 @@ func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]b
 
 func handleOutput(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
 	outDir := opts.OutDir
+	var projects []string
+	if len(opts.Projects) > 0 {
+		for _, proj := range opts.Projects {
+			projects = append(projects, proj.ProjectKey)
+		}
+	} else {
+		projects = append(projects, opts.AccessToken)
+	}
 	if outDir != "" {
-		outPath, err := branch.WriteToCSV(outDir, opts.ProjKey, repoParams.Name, opts.Revision)
+		outPath, err := branch.WriteToCSV(outDir, repoParams.Name, opts.Revision, projects)
 		if err != nil {
 			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
@@ -121,21 +129,25 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 	}
 
 	if opts.DryRun {
+		totalFlags := 0
+		for _, searchElems := range matcher.Elements {
+			totalFlags += len(searchElems.Elements)
+		}
 		log.Info.Printf(
 			"dry run found %d code references across %d flags and %d files",
 			branch.TotalHunkCount(),
-			len(matcher.Elements[0].Elements),
+			totalFlags,
 			len(branch.References),
 		)
 		return
 	}
 
 	log.Info.Printf(
-		"sending %d code references across %d flags and %d files to LaunchDarkly for project: %s",
+		"sending %d code references across %d flags and %d files to LaunchDarkly for project(s): %s",
 		branch.TotalHunkCount(),
 		len(matcher.Elements[0].Elements),
 		len(branch.References),
-		opts.ProjKey,
+		projects,
 	)
 	err := ldApi.PutCodeReferenceBranch(branch, repoParams.Name)
 	switch {

@@ -451,7 +451,7 @@ func (b BranchRep) TotalHunkCount() int {
 	return count
 }
 
-func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, err error) {
+func (b BranchRep) WriteToCSV(outDir, repo, sha string, projects []string) (path string, err error) {
 	// Try to create a filename with a shortened sha, but if the sha is too short for some unexpected reason, use the branch name instead
 	var tag string
 	if len(sha) >= 7 {
@@ -464,7 +464,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 	if err != nil {
 		return "", fmt.Errorf("invalid outDir '%s': %w", outDir, err)
 	}
-	path = filepath.Join(absPath, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag))
+	path = filepath.Join(absPath, fmt.Sprintf("coderefs_%s_%s.csv", repo, tag))
 
 	f, err := os.Create(path)
 	if err != nil {
@@ -490,7 +490,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 		return false
 	})
 
-	records = append([][]string{{"flagKey", "path", "startingLineNumber", "lines", "aliases"}}, records...)
+	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases"}}, records...)
 	return path, w.WriteAll(records)
 }
 
@@ -502,7 +502,7 @@ type ReferenceHunksRep struct {
 func (r ReferenceHunksRep) toRecords() [][]string {
 	ret := make([][]string, 0, len(r.Hunks))
 	for _, hunk := range r.Hunks {
-		ret = append(ret, []string{hunk.FlagKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " ")})
+		ret = append(ret, []string{hunk.FlagKey, hunk.ProjKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " ")})
 	}
 	return ret
 }
@@ -561,6 +561,7 @@ func (b BranchRep) CountByFlag(flags []string) map[string]int64 {
 			refCountByFlag[hunk.FlagKey]++
 		}
 	}
+
 	return refCountByFlag
 }
 
@@ -568,6 +569,7 @@ func (b BranchRep) PrintReferenceCountTable() {
 	data := tableData{}
 
 	for k, v := range b.CountByFlag(nil) {
+
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)

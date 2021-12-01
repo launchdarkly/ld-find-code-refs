@@ -20,6 +20,10 @@ const (
 	maxProjKeyLength = 20 // Maximum project key length
 )
 
+type Project struct {
+	ProjectKey string
+	Dir        string
+}
 type Options struct {
 	AccessToken         string `mapstructure:"accessToken"`
 	BaseUri             string `mapstructure:"baseUri"`
@@ -46,6 +50,7 @@ type Options struct {
 
 	Aliases    []Alias    `mapstructure:"aliases"`
 	Delimiters Delimiters `mapstructure:"delimiters"`
+	Projects   []Project  `mapstructure:"projects"`
 }
 
 type Delimiters struct {
@@ -155,8 +160,8 @@ func (o Options) ValidateRequired() error {
 	if o.Dir == "" {
 		missingRequiredOptions = append(missingRequiredOptions, "dir")
 	}
-	if o.ProjKey == "" {
-		missingRequiredOptions = append(missingRequiredOptions, "projKey")
+	if o.ProjKey == "" && len(o.Projects) == 0 {
+		missingRequiredOptions = append(missingRequiredOptions, "projKey/projects")
 	}
 	if o.RepoName == "" {
 		missingRequiredOptions = append(missingRequiredOptions, "repoName")
@@ -165,11 +170,23 @@ func (o Options) ValidateRequired() error {
 		return fmt.Errorf("missing required option(s): %v", missingRequiredOptions)
 	}
 
-	if len(o.ProjKey) > maxProjKeyLength {
+	if len(o.ProjKey) > 0 && len(o.Projects) > 0 {
+		return fmt.Errorf("projKey cannot be combined with projects in config file.")
+	}
+
+	if len(o.ProjKey) > maxProjKeyLength && len(o.Projects) == 0 {
 		if strings.HasPrefix(o.ProjKey, "sdk-") {
 			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
 		} else if strings.HasPrefix(o.ProjKey, "api-") {
 			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+		}
+	} else if len(o.Projects) == 0 && len(o.Projects) > 0 {
+		for _, proj := range o.Projects {
+			if strings.HasPrefix(proj.ProjectKey, "sdk-") {
+				return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+			} else if strings.HasPrefix(proj.ProjectKey, "api-") {
+				return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+			}
 		}
 	}
 

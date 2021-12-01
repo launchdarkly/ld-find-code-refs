@@ -15,35 +15,46 @@ const (
 	minFlagKeyLen = 3 // Minimum flag key length helps reduce the number of false positives
 )
 
-func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) []string {
-	projKey := opts.ProjKey
-
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
-	isDryRun := opts.DryRun
-
-	ignoreServiceErrors := opts.IgnoreServiceErrors
-	if !isDryRun {
-		err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
-		if err != nil {
-			helpers.FatalServiceError(err, ignoreServiceErrors)
+func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
+	var projects []string
+	flagKeys := make(map[string][]string)
+	if len(opts.Projects) > 0 {
+		for _, proj := range opts.Projects {
+			projects = append(projects, proj.ProjectKey)
 		}
+	} else {
+		projects = append(projects, opts.AccessToken)
 	}
 
-	flags, err := getFlags(ldApi)
-	if err != nil {
-		helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
+	for _, proj := range projects {
+		ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: proj, UserAgent: "LDFindCodeRefs/" + version.Version})
+		isDryRun := opts.DryRun
+
+		ignoreServiceErrors := opts.IgnoreServiceErrors
+		if !isDryRun {
+			err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
+			if err != nil {
+				helpers.FatalServiceError(err, ignoreServiceErrors)
+			}
+		}
+
+		flags, err := getFlags(ldApi)
+		if err != nil {
+			helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
+		}
+
+		filteredFlags, omittedFlags := filterShortFlagKeys(flags)
+		if len(filteredFlags) == 0 {
+			log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
+				minFlagKeyLen, proj)
+			os.Exit(0)
+		} else if len(omittedFlags) > 0 {
+			log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
+		}
+		flagKeys[proj] = filteredFlags
 	}
 
-	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
-	if len(filteredFlags) == 0 {
-		log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
-			minFlagKeyLen, projKey)
-		os.Exit(0)
-	} else if len(omittedFlags) > 0 {
-		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
-	}
-
-	return filteredFlags
+	return flagKeys
 }
 
 // Very short flag keys lead to many false positives when searching in code,
