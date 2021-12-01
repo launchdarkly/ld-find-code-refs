@@ -563,7 +563,6 @@ func (b BranchRep) CountByFlag(flags []string, project string) map[string]int64 
 			}
 		}
 	}
-
 	return refCountByFlag
 }
 
@@ -571,7 +570,6 @@ func (b BranchRep) PrintReferenceCountTable() {
 	data := tableData{}
 
 	for k, v := range b.CountByFlag(nil, "") {
-
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)

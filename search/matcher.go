@@ -14,8 +14,8 @@ import (
 )
 
 type ElementMatcher struct {
-	Elements                    []string
 	ProjKey                     string
+	Elements                    []string
 	Dir                         string
 	allElementAndAliasesMatcher ahocorasick.AhoCorasick
 	matcherByElement            map[string]ahocorasick.AhoCorasick
