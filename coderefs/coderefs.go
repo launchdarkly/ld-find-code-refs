@@ -15,6 +15,11 @@ import (
 )
 
 func Run(opts options.Options) {
+	if len(opts.ProjKey) > 0 {
+		opts.Projects = append(opts.Projects, options.Project{
+			ProjectKey: opts.ProjKey,
+		})
+	}
 	dir := opts.Dir
 	absPath, err := validation.NormalizeAndValidatePath(dir)
 	if err != nil {

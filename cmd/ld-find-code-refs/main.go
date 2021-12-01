@@ -8,7 +8,6 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/coderefs"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/internal/version"
-	"github.com/launchdarkly/ld-find-code-refs/options"
 	o "github.com/launchdarkly/ld-find-code-refs/options"
 )
 
@@ -32,11 +31,6 @@ var prune = &cobra.Command{
 			return err
 		}
 
-		if len(opts.ProjKey) > 0 {
-			opts.Projects = append(opts.Projects, options.Project{
-				ProjectKey: opts.ProjKey,
-			})
-		}
 		log.Init(opts.Debug)
 		coderefs.Prune(opts, args)
 		return nil
