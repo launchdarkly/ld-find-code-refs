@@ -1,6 +1,7 @@
 package git
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/options"
 	"github.com/launchdarkly/ld-find-code-refs/search"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
@@ -150,7 +152,7 @@ type CommitData struct {
 }
 
 // FindExtinctions searches commit history for flags that had references removed recently
-func (c Client) FindExtinctions(projKey string, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
+func (c Client) FindExtinctions(project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
 		return nil, err
@@ -183,40 +185,49 @@ func (c Client) FindExtinctions(projKey string, flags []string, matcher search.M
 		if err != nil {
 			return nil, err
 		}
-		patch, err := changes.Patch()
+		patch, err := changes.PatchContext(context.Background())
 		if err != nil {
 			return nil, err
 		}
-		patchLines := strings.Split(patch.String(), "\n")
-		nextFlags := make([]string, 0, len(flags))
-		for _, flag := range flags {
-			removalCount := 0
-			for _, patchLine := range patchLines {
-				delta := 0
-				// Is a change line and not a metadata line
-				if strings.HasPrefix(patchLine, "-") && !strings.HasPrefix(patchLine, "---") {
-					delta = 1
-				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
-					delta = -1
-				}
-				if delta != 0 && matcher.MatchElement(patchLine, flag) {
-					removalCount += delta
+		for _, filePatch := range patch.FilePatches() {
+			fromFile, toFile := filePatch.Files()
+			if project.Dir != "" && (toFile == nil || !strings.HasPrefix(toFile.Path(), project.Dir)) {
+				if !strings.HasPrefix(fromFile.Path(), project.Dir) {
+					continue
 				}
 			}
-			if removalCount > 0 {
-				ret = append(ret, ld.ExtinctionRep{
-					Revision: c.commit.Hash.String(),
-					Message:  c.commit.Message,
-					Time:     c.commit.Author.When.Unix() * 1000,
-					ProjKey:  projKey,
-					FlagKey:  flag,
-				})
-			} else {
-				// this flag was not removed in the current commit, so check for it again in the next commit
-				nextFlags = append(nextFlags, flag)
+
+			patchLines := strings.Split(patch.String(), "\n")
+			nextFlags := make([]string, 0, len(flags))
+			for _, flag := range flags {
+				removalCount := 0
+				for _, patchLine := range patchLines {
+					delta := 0
+					// Is a change line and not a metadata line
+					if strings.HasPrefix(patchLine, "-") && !strings.HasPrefix(patchLine, "---") {
+						delta = 1
+					} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
+						delta = -1
+					}
+					if delta != 0 && matcher.MatchElement(patchLine, flag) {
+						removalCount += delta
+					}
+				}
+				if removalCount > 0 {
+					ret = append(ret, ld.ExtinctionRep{
+						Revision: c.commit.Hash.String(),
+						Message:  c.commit.Message,
+						Time:     c.commit.Author.When.Unix() * 1000,
+						ProjKey:  project.ProjectKey,
+						FlagKey:  flag,
+					})
+				} else {
+					// this flag was not removed in the current commit, so check for it again in the next commit
+					nextFlags = append(nextFlags, flag)
+				}
 			}
+			flags = nextFlags
 		}
-		flags = nextFlags
 	}
 
 	return ret, err
