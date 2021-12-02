@@ -21,7 +21,7 @@ const (
 )
 
 type Project struct {
-	Key     string  `mapstructure:"projectKey"`
+	Key     string  `mapstructure:"key"`
 	Dir     string  `mapstructure:"dir"`
 	Aliases []Alias `mapstructure:"aliases"`
 }
