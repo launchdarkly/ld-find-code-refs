@@ -131,16 +131,7 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 	}
 
 	if opts.DryRun {
-		totalFlags := 0
-		for _, searchElems := range matcher.Elements {
-			totalFlags += len(searchElems.Elements)
-		}
-		log.Info.Printf(
-			"dry run found %d code references across %d flags and %d files",
-			branch.TotalHunkCount(),
-			totalFlags,
-			len(branch.References),
-		)
+		dryRunOutput(matcher, branch)
 		return
 	}
 
@@ -168,31 +159,13 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 	lookback := opts.Lookback
 	dryRun := opts.DryRun
 	if lookback > 0 {
-		var removedFlags []ld.ExtinctionRep
-		for i, project := range opts.Projects {
-			missingFlags := []string{}
-			for flag, count := range branch.CountByFlag(matcher.Elements[i].Elements, project.Key) {
-				if count == 0 {
-					missingFlags = append(missingFlags, flag)
-				}
-
-			}
-			log.Info.Printf("checking if %d flags without references were removed in the last %d commits for project: %s", len(missingFlags), opts.Lookback, project.Key)
-			removedFlagsByProject, err := gitClient.FindExtinctions(project, missingFlags, matcher, lookback+1)
-			if err != nil {
-				log.Warning.Printf("unable to generate flag extinctions: %s", err)
-			} else {
-				log.Info.Printf("found %d removed flags", len(removedFlagsByProject))
-			}
-			removedFlags = append(removedFlags, removedFlagsByProject...)
-		}
+		removedFlags := removeFlags(opts.Projects, matcher, branch, gitClient, lookback)
 		if len(removedFlags) > 0 && !dryRun {
 			err := ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
 			if err != nil {
 				log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
 			}
 		}
-
 	}
 	if !dryRun {
 		log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
@@ -206,4 +179,38 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 			}
 		}
 	}
+}
+
+func removeFlags(projects []options.Project, matcher search.Matcher, branch ld.BranchRep, gitClient *git.Client, lookback int) (removedFlags []ld.ExtinctionRep) {
+	for i, project := range projects {
+		missingFlags := []string{}
+		for flag, count := range branch.CountByFlag(matcher.Elements[i].Elements, project.Key) {
+			if count == 0 {
+				missingFlags = append(missingFlags, flag)
+			}
+
+		}
+		log.Info.Printf("checking if %d flags without references were removed in the last %d commits for project: %s", len(missingFlags), lookback, project.Key)
+		removedFlagsByProject, err := gitClient.FindExtinctions(project, missingFlags, matcher, lookback+1)
+		if err != nil {
+			log.Warning.Printf("unable to generate flag extinctions: %s", err)
+		} else {
+			log.Info.Printf("found %d removed flags", len(removedFlagsByProject))
+		}
+		removedFlags = append(removedFlags, removedFlagsByProject...)
+	}
+	return removedFlags
+}
+
+func dryRunOutput(matcher search.Matcher, branch ld.BranchRep) {
+	totalFlags := 0
+	for _, searchElems := range matcher.Elements {
+		totalFlags += len(searchElems.Elements)
+	}
+	log.Info.Printf(
+		"dry run found %d code references across %d flags and %d files",
+		branch.TotalHunkCount(),
+		totalFlags,
+		len(branch.References),
+	)
 }
