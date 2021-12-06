@@ -66,7 +66,7 @@ script:
 ## Support
 If you'd like help with this pipe, or you have an issue or feature request, [submit a request](https://support.launchdarkly.com/hc/en-us/requests/new).
 
-If youâ€™re reporting an issue, please include:
+If you're reporting an issue, please include:
 
 * the version of the pipe
 * relevant logs and error messages
