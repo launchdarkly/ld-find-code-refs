@@ -37,11 +37,11 @@ See [the configuration documentation](https://github.com/launchdarkly/ld-find-co
 | LD_LOOKBACK | Sets the number of Git commits to search in history for whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time. Defaults to 10 |
 
 ## Details
-LaunchDarkly's Code references feature allows you to find source code references to your feature flags within LaunchDarkly. This makes it easy to determine which projects reference your feature flags, and makes cleanup and removal of technical debt easy. For more information, visit our [documentation](https://docs.launchdarkly.com/v2.0/docs/git-code-references). For documentation on the source code of this pipe, see the [source repo](https://github.com/launchdarkly/ld-find-code-refs).
+LaunchDarkly's Code references feature allows you to find source code references to your feature flags within LaunchDarkly. This makes it easy to determine which projects reference your feature flags, and makes cleanup and removal of technical debt easy. For more information, visit our [documentation](https://docs.launchdarkly.com/home/code/code-references). For documentation on the source code of this pipe, see the [source repo](https://github.com/launchdarkly/ld-find-code-refs).
 
 
 ## Prerequisites
-A LaunchDarkly personal access token with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource.
+A LaunchDarkly personal access token with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/home/members/custom-roles) resource.
 
 ## Examples
 Minimal configuration:
@@ -64,9 +64,9 @@ script:
 ```
 
 ## Support
-If youâ€™d like help with this pipe, or you have an issue or feature request, [submit a request](https://support.launchdarkly.com/hc/en-us/requests/new).
+If you'd like help with this pipe, or you have an issue or feature request, [submit a request](https://support.launchdarkly.com/hc/en-us/requests/new).
 
-If youâ€™re reporting an issue, please include:
+If you're reporting an issue, please include:
 
 * the version of the pipe
 * relevant logs and error messages
