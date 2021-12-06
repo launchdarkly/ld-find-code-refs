@@ -8,5 +8,7 @@ git clone git@bitbucket.org:launchdarkly/ld-find-code-refs-pipe.git bitbucketMet
 cp build/metadata/bitbucket/* bitbucketMetadataUpdates/
 cd bitbucketMetadataUpdates
 git add -u
-git commit -m "Update version"
+git commit -m "Release auto update version"
 git push origin master
+
+cd .. && rm -rf bitbucketMetadataUpdates
