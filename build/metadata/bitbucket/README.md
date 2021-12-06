@@ -41,7 +41,7 @@ LaunchDarkly's Code references feature allows you to find source code references
 
 
 ## Prerequisites
-A LaunchDarkly personal access token with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource.
+A LaunchDarkly personal access token with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/home/members/custom-roles) resource.
 
 ## Examples
 Minimal configuration:
