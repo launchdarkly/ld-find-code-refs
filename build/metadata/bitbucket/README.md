@@ -64,7 +64,7 @@ script:
 ```
 
 ## Support
-If youâ€™d like help with this pipe, or you have an issue or feature request, [submit a request](https://support.launchdarkly.com/hc/en-us/requests/new).
+If you'd like help with this pipe, or you have an issue or feature request, [submit a request](https://support.launchdarkly.com/hc/en-us/requests/new).
 
 If youâ€™re reporting an issue, please include:
 
