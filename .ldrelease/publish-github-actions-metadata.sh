@@ -9,5 +9,7 @@ git clone git@github.com:yusinto/find-code-references.git githubActionsMetadataU
 cp build/metadata/github-actions/* githubActionsMetadataUpdates
 cd githubActionsMetadataUpdates
 git add -u
-git commit -m "Update version"
+git commit -m "Release auto update version"
 git push origin master
+
+rm -rf githubActionsMetadataUpdates
