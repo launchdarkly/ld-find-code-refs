@@ -5,7 +5,7 @@ Job for finding and sending feature flag code references to LaunchDarkly
 Add the following snippet to the script section of your `bitbucket-pipelines.yml` file:
 
 ```yaml
-- pipe: - pipe: launchdarkly/ld-find-code-refs-pipe:2.4.0
+- pipe: - pipe: launchdarkly/ld-find-code-refs-pipe:x.x.x
   environment:
     LD_ACCESS_TOKEN: "<string>"
     LD_PROJ_KEY: "<string>"
@@ -47,7 +47,7 @@ A LaunchDarkly personal access token with writer-level access, or access to the 
 Minimal configuration:
 ```yaml
 script:
-  - pipe: - pipe: launchdarkly/ld-find-code-refs-pipe:2.4.0
+  - pipe: - pipe: launchdarkly/ld-find-code-refs-pipe:x.x.x
     environment:
       LD_ACCESS_TOKEN: $LD_ACCESS_TOKEN
       LD_PROJ_KEY: $LD_PROJ_KEY
@@ -56,7 +56,7 @@ script:
 Configuration sending 3 context lines to LaunchDarkly:
 ```yaml
 script:
-  - pipe: - pipe: launchdarkly/ld-find-code-refs-pipe:2.4.0
+  - pipe: - pipe: launchdarkly/ld-find-code-refs-pipe:x.x.x
     environment:
       LD_ACCESS_TOKEN: $LD_ACCESS_TOKEN
       LD_PROJ_KEY: $LD_PROJ_KEY
