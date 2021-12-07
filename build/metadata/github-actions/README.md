@@ -42,6 +42,6 @@ If the action fails, there may be a problem with your configuration. To investig
 
 ## Additional Options
 
-Additional configuration options can be found at the bottom of the [LaunchDarkly GitHub Action documentation](https://docs.launchdarkly.com/docs/github-actions#section-additional-configuration-options).
+Additional configuration options can be found at the bottom of the [LaunchDarkly GitHub Action documentation](https://docs.launchdarkly.com/home/code/github-actions#additional-configuration-options).
 
 For information about the underlying LaunchDarkly Code References command-line tool, take a look at [this repository](https://github.com/launchdarkly/ld-find-code-refs).
