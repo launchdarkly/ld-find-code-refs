@@ -10,7 +10,7 @@ README_TEMP=${README}.tmp
 sed "s#launchdarkly/find-code-references@v.*#launchdarkly/find-code-references@v${RELEASE_VERSION}#g" ${README} > ${README_TEMP}
 mv ${README_TEMP} ${README}
 
-Dockerfile=build/metadata/github-actions/Dockerfile
-Dockerfile_TEMP=${Dockerfile}.tmp
-sed "s#launchdarkly/ld-find-code-refs-github-action:.*#launchdarkly/ld-find-code-refs-github-action:${RELEASE_VERSION}#g" ${Dockerfile} > ${Dockerfile_TEMP}
-mv ${Dockerfile_TEMP} ${Dockerfile}
+DOCKERFILE=build/metadata/github-actions/Dockerfile
+DOCKERFILE_TEMP=${DOCKERFILE}.tmp
+sed "s#launchdarkly/ld-find-code-refs-github-action:.*#launchdarkly/ld-find-code-refs-github-action:${RELEASE_VERSION}#g" ${DOCKERFILE} > ${DOCKERFILE_TEMP}
+mv ${DOCKERFILE_TEMP} ${DOCKERFILE}
