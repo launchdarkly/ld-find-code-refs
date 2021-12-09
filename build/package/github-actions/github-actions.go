@@ -124,17 +124,26 @@ func parseBranch(ref string, event *Event, allowTags bool) (string, error) {
 	}
 	results := re.FindStringSubmatch(ref)
 
-	if results == nil {
-		// The GITHUB_REF wasn't valid, so check if it's a pull request and use the pull request ref instead
-		if event != nil && event.Pull != nil {
-			return event.Pull.Head.Ref, nil
-		}
-
-		if allowTags && event != nil && event.Release != nil {
-			return event.Release.TagName, nil
-		}
-
-		return "", fmt.Errorf("expected ref name starting with refs/heads/ or refs/tags/, got: %s", ref)
+	if results != nil {
+		return results[name_index], nil
 	}
-	return results[name_index], nil
+
+	// The GITHUB_REF wasn't valid, so check if it's a pull request and use the pull request ref instead
+	if event != nil && event.Pull != nil {
+		return event.Pull.Head.Ref, nil
+	}
+
+	// If it's not a pull request, check if it's a Release
+	if allowTags && event != nil && event.Release != nil {
+		return event.Release.TagName, nil
+	}
+
+	addendum := ""
+
+	if allowTags {
+		addendum = " or refs/tags/"
+	}
+
+	return "", fmt.Errorf("expected ref name starting with refs/heads/%s, got: %s", addendum, ref)
+
 }
