@@ -30,9 +30,9 @@ type Matcher struct {
 }
 
 // Scan checks the configured directory for flags base on the options configured for Code References.
-func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.ReferenceHunksRep) {
+func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, []ld.ReferenceHunksRep) {
 	flagKeys := flags.GetFlagKeys(opts, repoParams)
-	aliasesByFlagKey, err := aliases.GenerateAliases(flagKeys, opts.Aliases, opts.Dir)
+	aliasesByFlagKey, err := aliases.GenerateAliases(flagKeys, opts.Aliases, dir)
 	if err != nil {
 		log.Error.Fatalf("failed to generate aliases: %s", err)
 	}
@@ -44,7 +44,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 		Elements: []ElementMatcher{flagMatcher},
 	}
 
-	refs, err := SearchForRefs(opts.Dir, matcher)
+	refs, err := SearchForRefs(dir, matcher)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
