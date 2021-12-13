@@ -208,7 +208,7 @@ func (o Options) Validate() error {
 		}
 	}
 
-	o.Dir, err = validation.NormalizeAndValidatePath(o.Dir)
+	_, err = validation.NormalizeAndValidatePath(o.Dir)
 	if err != nil {
 		return fmt.Errorf(`invalid value for "dir": %+v`, err)
 	}
