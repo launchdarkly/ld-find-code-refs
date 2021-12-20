@@ -175,9 +175,11 @@ func (o Options) ValidateRequired() error {
 		return fmt.Errorf("`--projKey` cannot be combined with `projects` in configuration")
 	}
 
-	if len(o.ProjKey) > maxProjKeyLength && len(o.Projects) == 0 {
+	if len(o.ProjKey) > maxProjKeyLength {
 		return projKeyValidation(o.ProjKey)
-	} else if len(o.ProjKey) == 0 && len(o.Projects) > 0 {
+	}
+
+	if len(o.Projects) > 0 {
 		for _, project := range o.Projects {
 			if len(project.Key) > maxProjKeyLength {
 				err := projKeyValidation(project.Key)
