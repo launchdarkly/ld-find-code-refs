@@ -16,18 +16,19 @@ const (
 )
 
 func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
+	isDryRun := opts.DryRun
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ignoreServiceErrors := opts.IgnoreServiceErrors
+
+	if !isDryRun {
+		err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
+		if err != nil {
+			helpers.FatalServiceError(err, ignoreServiceErrors)
+		}
+	}
+
 	flagKeys := make(map[string][]string)
 	for _, proj := range opts.Projects {
-		ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
-		isDryRun := opts.DryRun
-
-		ignoreServiceErrors := opts.IgnoreServiceErrors
-		if !isDryRun {
-			err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
-			if err != nil {
-				helpers.FatalServiceError(err, ignoreServiceErrors)
-			}
-		}
 
 		flags, err := getFlags(ldApi, proj.Key)
 		if err != nil {
