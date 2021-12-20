@@ -558,7 +558,7 @@ func (b BranchRep) CountByFlag(flags []string, project string) map[string]int64 
 	}
 	for _, ref := range b.References {
 		for _, hunk := range ref.Hunks {
-			if hunk.ProjKey == project || project == "" {
+			if hunk.ProjKey == project {
 				refCountByFlag[hunk.FlagKey]++
 			}
 		}
