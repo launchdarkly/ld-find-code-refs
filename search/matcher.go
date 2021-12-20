@@ -178,3 +178,10 @@ func buildElementPatterns(flags []string, delimiters string) map[string][]string
 	}
 	return patternsByFlag
 }
+
+func (m Matcher) GetElements() (elements [][]string) {
+	for _, element := range m.Elements {
+		elements = append(elements, element.Elements)
+	}
+	return elements
+}

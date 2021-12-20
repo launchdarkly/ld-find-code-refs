@@ -260,3 +260,10 @@ func projKeyValidation(projKey string) error {
 
 	return nil
 }
+
+func (o Options) GetProjectKeys() (projects []string) {
+	for _, project := range o.Projects {
+		projects = append(projects, project.Key)
+	}
+	return projects
+}

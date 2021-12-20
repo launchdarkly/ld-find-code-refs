@@ -551,15 +551,28 @@ func (t tableData) Swap(i, j int) {
 
 const maxFlagKeysDisplayed = 50
 
-func (b BranchRep) CountByFlag(flags []string, project string) map[string]int64 {
-	refCountByFlag := map[string]int64{}
-	for _, flag := range flags {
-		refCountByFlag[flag] = 0
-	}
+func (b BranchRep) CountAll() map[string]int64 {
+	refCount := map[string]int64{}
 	for _, ref := range b.References {
 		for _, hunk := range ref.Hunks {
-			if hunk.ProjKey == project {
-				refCountByFlag[hunk.FlagKey]++
+			refCount[hunk.FlagKey]++
+		}
+	}
+	return refCount
+}
+
+func (b BranchRep) CountByProjectAndFlag(matcher [][]string, projects []string) map[string]map[string]int64 {
+	refCountByFlag := map[string]map[string]int64{}
+	for i, project := range projects {
+		for _, flag := range matcher[i] {
+			refCountByFlag[project] = map[string]int64{}
+			refCountByFlag[project][flag] = 0
+		}
+		for _, ref := range b.References {
+			for _, hunk := range ref.Hunks {
+				if hunk.ProjKey == project {
+					refCountByFlag[project][hunk.FlagKey]++
+				}
 			}
 		}
 	}
@@ -569,7 +582,7 @@ func (b BranchRep) CountByFlag(flags []string, project string) map[string]int64 
 func (b BranchRep) PrintReferenceCountTable() {
 	data := tableData{}
 
-	for k, v := range b.CountByFlag(nil, "") {
+	for k, v := range b.CountAll() {
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)
