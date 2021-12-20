@@ -11,3 +11,4 @@ build/package/cmd/ld-find-code-refs
 .idea/
 *.csv
 /internal/git/testdata/repo
+metadataUpdates/

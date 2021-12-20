@@ -21,7 +21,7 @@ func Run(opts options.Options) {
 		})
 	}
 	dir := opts.Dir
-	absPath, err := validation.NormalizeAndValidatePath(dir)
+	absPath, err := validation.NormalizeAndValidatePath(opts.Dir)
 	if err != nil {
 		log.Error.Fatalf("could not validate directory option: %s", err)
 	}
@@ -50,7 +50,7 @@ func Run(opts options.Options) {
 		DefaultBranch:     opts.DefaultBranch,
 	}
 
-	matcher, refs := search.Scan(opts, repoParams)
+	matcher, refs := search.Scan(opts, repoParams, absPath)
 
 	var updateId *int
 	if opts.UpdateSequenceId >= 0 {
