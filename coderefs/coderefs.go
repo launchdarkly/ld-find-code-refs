@@ -192,7 +192,6 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 				log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
 			}
 		}
-
 	}
 	if !dryRun {
 		log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
