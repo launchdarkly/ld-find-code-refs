@@ -20,7 +20,6 @@ func Run(opts options.Options) {
 			Key: opts.ProjKey,
 		})
 	}
-	dir := opts.Dir
 	absPath, err := validation.NormalizeAndValidatePath(opts.Dir)
 	if err != nil {
 		log.Error.Fatalf("could not validate directory option: %s", err)
