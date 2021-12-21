@@ -248,6 +248,16 @@ func (o Options) Validate() error {
 		return fmt.Errorf(`"branch" option is required when "revision" option is set`)
 	}
 
+	if len(o.Projects) > 0 {
+		for _, project := range o.Projects {
+			err := validation.IsSubDirValid(o.Dir, project.Dir)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
