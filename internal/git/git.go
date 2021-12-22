@@ -55,7 +55,7 @@ func NewClient(path string, branch string, allowTags bool) (*Client, error) {
 
 	timeStamp, err := client.commitTime()
 	if err != nil {
-		return &client, fmt.Errorf("error parsing current commit sha: %s", err)
+		return &client, fmt.Errorf("error parsing current commit timestamp: %s", err)
 	}
 	client.GitTimestamp = timeStamp
 	return &client, nil
