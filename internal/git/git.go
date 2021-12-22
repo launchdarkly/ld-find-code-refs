@@ -21,9 +21,10 @@ import (
 )
 
 type Client struct {
-	workspace string
-	GitBranch string
-	GitSha    string
+	workspace    string
+	GitBranch    string
+	GitSha       string
+	GitTimestamp string
 }
 
 func NewClient(path string, branch string, allowTags bool) (*Client, error) {
@@ -52,6 +53,11 @@ func NewClient(path string, branch string, allowTags bool) (*Client, error) {
 	}
 	client.GitSha = head
 
+	timeStamp, err := client.commitTime()
+	if err != nil {
+		return &client, fmt.Errorf("error parsing current commit sha: %s", err)
+	}
+	client.GitTimestamp = timeStamp
 	return &client, nil
 }
 
@@ -125,6 +131,22 @@ func (c *Client) headSha() (string, error) {
 	ret := strings.TrimSpace(string(out))
 	log.Debug.Printf("identified head sha: %s", ret)
 	return ret, nil
+}
+
+func (c *Client) commitTime() (string, error) {
+	repo, err := git.PlainOpen(c.workspace)
+	if err != nil {
+		return "", err
+	}
+	head, err := repo.Head()
+	if err != nil {
+		return "", err
+	}
+	commit, err := repo.CommitObject(head.Hash())
+	if err != nil {
+		return "", err
+	}
+	return commit.Author.When.String(), nil
 }
 
 func (c *Client) RemoteBranches() (map[string]bool, error) {

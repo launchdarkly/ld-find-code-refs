@@ -441,6 +441,7 @@ type BranchRep struct {
 	UpdateSequenceId *int                `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
+	CommitTime       string              `json:"commitTime,omitempty"`
 }
 
 func (b BranchRep) TotalHunkCount() int {
