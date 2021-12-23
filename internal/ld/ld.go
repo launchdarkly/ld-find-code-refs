@@ -490,7 +490,7 @@ func (b BranchRep) WriteToCSV(outDir, repo, sha string) (path string, err error)
 		return false
 	})
 
-	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases"}}, records...)
+	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases", "contentHash"}}, records...)
 	return path, w.WriteAll(records)
 }
 
