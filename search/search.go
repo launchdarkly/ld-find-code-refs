@@ -95,7 +95,6 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 			if lastHunkIdx >= 0 && hunksForFlag[lastHunkIdx].Overlap(*match) >= 0 {
 				hunksForFlag = append(hunksForFlag[:lastHunkIdx], mergeHunks(hunksForFlag[lastHunkIdx], *match)...)
 			} else {
-				match.ContentHash = getContentHash(match.Lines)
 				hunksForFlag = append(hunksForFlag, *match)
 			}
 		}
