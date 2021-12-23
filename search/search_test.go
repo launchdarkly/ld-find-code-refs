@@ -420,12 +420,14 @@ func makeHunk(startingLineNumber int, lines ...string) ld.HunkRep {
 	if len(lines) != 0 {
 		hunkLines = strings.Join(lines, "\n")
 	}
+
 	return ld.HunkRep{
 		ProjKey:            "default",
 		FlagKey:            testFlagKey,
 		StartingLineNumber: startingLineNumber,
 		Lines:              hunkLines,
 		Aliases:            []string{},
+		ContentHash:        getContentHash(hunkLines),
 	}
 }
 
