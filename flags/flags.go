@@ -15,13 +15,11 @@ const (
 	minFlagKeyLen = 3 // Minimum flag key length helps reduce the number of false positives
 )
 
-func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) []string {
-	projKey := opts.ProjKey
-
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: projKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
 	isDryRun := opts.DryRun
-
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
 	ignoreServiceErrors := opts.IgnoreServiceErrors
+
 	if !isDryRun {
 		err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
 		if err != nil {
@@ -29,21 +27,26 @@ func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) []string {
 		}
 	}
 
-	flags, err := getFlags(ldApi)
-	if err != nil {
-		helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
+	flagKeys := make(map[string][]string)
+	for _, proj := range opts.Projects {
+
+		flags, err := getFlags(ldApi, proj.Key)
+		if err != nil {
+			helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly for project `%s`: %w", proj.Key, err), ignoreServiceErrors)
+		}
+
+		filteredFlags, omittedFlags := filterShortFlagKeys(flags)
+		if len(filteredFlags) == 0 {
+			log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
+				minFlagKeyLen, proj.Key)
+			os.Exit(0)
+		} else if len(omittedFlags) > 0 {
+			log.Warning.Printf("omitting %d flags with keys less than minimum (%d) for project: %s", len(omittedFlags), minFlagKeyLen, proj.Key)
+		}
+		flagKeys[proj.Key] = filteredFlags
 	}
 
-	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
-	if len(filteredFlags) == 0 {
-		log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
-			minFlagKeyLen, projKey)
-		os.Exit(0)
-	} else if len(omittedFlags) > 0 {
-		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
-	}
-
-	return filteredFlags
+	return flagKeys
 }
 
 // Very short flag keys lead to many false positives when searching in code,
@@ -61,8 +64,8 @@ func filterShortFlagKeys(flags []string) (filtered []string, omitted []string) {
 	return filteredFlags, omittedFlags
 }
 
-func getFlags(ldApi ld.ApiClient) ([]string, error) {
-	flags, err := ldApi.GetFlagKeyList()
+func getFlags(ldApi ld.ApiClient, projKey string) ([]string, error) {
+	flags, err := ldApi.GetFlagKeyList(projKey)
 	if err != nil {
 		return nil, err
 	}

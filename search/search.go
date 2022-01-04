@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 )
@@ -69,12 +70,16 @@ func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher)
 		hunkLines[i] = truncateLine(line)
 	}
 
+	lines := strings.Join(hunkLines, "\n")
+	contentHash := getContentHash(lines)
+
 	ret := ld.HunkRep{
 		ProjKey:            projKey,
 		FlagKey:            flagKey,
 		StartingLineNumber: startingLineNum + 1,
-		Lines:              strings.Join(hunkLines, "\n"),
+		Lines:              lines,
 		Aliases:            aliasMatches,
+		ContentHash:        contentHash,
 	}
 	return &ret
 }
@@ -99,10 +104,21 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
 	hunks := make([]ld.HunkRep, 0)
-	firstElementMatcher := matcher.Elements[0]
-	lineNumbersByElement := f.findMatchingLineNumbersByElement(firstElementMatcher)
-	for element, lineNumbers := range lineNumbersByElement {
-		hunks = append(hunks, f.aggregateHunksForFlag(firstElementMatcher.ProjKey, element, matcher, lineNumbers)...)
+	filteredMatchers := make([]ElementMatcher, 0)
+	for _, elementSearch := range matcher.Elements {
+		if elementSearch.Dir != "" {
+			matchDir := strings.HasPrefix(f.path, elementSearch.Dir)
+			if !matchDir {
+				continue
+			}
+		}
+		filteredMatchers = append(filteredMatchers, elementSearch)
+	}
+	for _, elementSearch := range filteredMatchers {
+		lineNumbersByElement := f.findMatchingLineNumbersByElement(elementSearch)
+		for element, lineNumbers := range lineNumbersByElement {
+			hunks = append(hunks, f.aggregateHunksForFlag(elementSearch.ProjKey, element, matcher, lineNumbers)...)
+		}
 	}
 	if len(hunks) == 0 {
 		return nil
@@ -130,6 +146,7 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 
 	aLines := strings.Split(a.Lines, "\n")
 	bLines := strings.Split(b.Lines, "\n")
+
 	overlap := a.Overlap(b)
 	// no overlap
 	if overlap < 0 || len(a.Lines) == 0 && len(b.Lines) == 0 {
@@ -140,13 +157,17 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 	}
 
 	combinedLines := append(aLines, bLines[overlap:]...)
+	lines := strings.Join(combinedLines, "\n")
+	contentHash := getContentHash(lines)
+
 	return []ld.HunkRep{
 		{
 			StartingLineNumber: a.StartingLineNumber,
-			Lines:              strings.Join(combinedLines, "\n"),
+			Lines:              lines,
 			ProjKey:            a.ProjKey,
 			FlagKey:            a.FlagKey,
 			Aliases:            helpers.Dedupe(append(a.Aliases, b.Aliases...)),
+			ContentHash:        contentHash,
 		},
 	}
 }
@@ -206,4 +227,8 @@ func SearchForRefs(directory string, matcher Matcher) ([]ld.ReferenceHunksRep, e
 		}
 	}
 	return ret, nil
+}
+
+func getContentHash(lines string) string {
+	return plumbing.ComputeHash(plumbing.BlobObject, []byte(lines)).String()
 }

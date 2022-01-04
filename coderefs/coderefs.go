@@ -3,6 +3,7 @@ package coderefs
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/git"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
@@ -15,17 +16,23 @@ import (
 )
 
 func Run(opts options.Options) {
+	if len(opts.ProjKey) > 0 {
+		opts.Projects = append(opts.Projects, options.Project{
+			Key: opts.ProjKey,
+		})
+	}
 	absPath, err := validation.NormalizeAndValidatePath(opts.Dir)
 	if err != nil {
 		log.Error.Fatalf("could not validate directory option: %s", err)
 	}
 
 	log.Info.Printf("absolute directory path: %s", absPath)
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: opts.ProjKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
 
 	branchName := opts.Branch
 	revision := opts.Revision
 	var gitClient *git.Client
+	var commitTime *time.Time
 	if revision == "" {
 		gitClient, err = git.NewClient(absPath, branchName, opts.AllowTags)
 		if err != nil {
@@ -33,6 +40,7 @@ func Run(opts options.Options) {
 		}
 		branchName = gitClient.GitBranch
 		revision = gitClient.GitSha
+		commitTime = gitClient.GitTimestamp
 	}
 
 	repoParams := ld.RepoParams{
@@ -58,6 +66,7 @@ func Run(opts options.Options) {
 		UpdateSequenceId: updateId,
 		SyncTime:         helpers.MakeTimestamp(),
 		References:       refs,
+		CommitTime:       commitTime,
 	}
 
 	handleOutput(opts, matcher, branch, repoParams, ldApi)
@@ -69,7 +78,7 @@ func Run(opts options.Options) {
 }
 
 func Prune(opts options.Options, branches []string) {
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, ProjKey: opts.ProjKey, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
 	err := ldApi.PostDeleteBranchesTask(opts.RepoName, branches)
 	if err != nil {
 		helpers.FatalServiceError(err, opts.IgnoreServiceErrors)
@@ -107,8 +116,13 @@ func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]b
 
 func handleOutput(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
 	outDir := opts.OutDir
+	projectKeys := make([]string, 1)
+	for _, project := range opts.Projects {
+		projectKeys = append(projectKeys, project.Key)
+	}
+
 	if outDir != "" {
-		outPath, err := branch.WriteToCSV(outDir, opts.ProjKey, repoParams.Name, opts.Revision)
+		outPath, err := branch.WriteToCSV(outDir, repoParams.Name, opts.Revision)
 		if err != nil {
 			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
@@ -120,21 +134,25 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 	}
 
 	if opts.DryRun {
+		totalFlags := 0
+		for _, searchElems := range matcher.Elements {
+			totalFlags += len(searchElems.Elements)
+		}
 		log.Info.Printf(
 			"dry run found %d code references across %d flags and %d files",
 			branch.TotalHunkCount(),
-			len(matcher.Elements[0].Elements),
+			totalFlags,
 			len(branch.References),
 		)
 		return
 	}
 
 	log.Info.Printf(
-		"sending %d code references across %d flags and %d files to LaunchDarkly for project: %s",
+		"sending %d code references across %d flags and %d files to LaunchDarkly for project(s): %s",
 		branch.TotalHunkCount(),
 		len(matcher.Elements[0].Elements),
 		len(branch.References),
-		opts.ProjKey,
+		projectKeys,
 	)
 	err := ldApi.PutCodeReferenceBranch(branch, repoParams.Name)
 	switch {
@@ -143,7 +161,7 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *branch.UpdateSequenceId)
 		}
 	case err == ld.EntityTooLargeErr:
-		log.Error.Fatalf("code reference payload too large for LaunchDarkly API - consider excluding more files with .ldignore")
+		log.Error.Fatalf("code reference payload too large for LaunchDarkly API - consider excluding more files with .ldignore or using fewer lines of context")
 	case err != nil:
 		helpers.FatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), opts.IgnoreServiceErrors)
 	}
@@ -153,26 +171,28 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 	lookback := opts.Lookback
 	dryRun := opts.DryRun
 	if lookback > 0 {
-		missingFlags := []string{}
-		for flag, count := range branch.CountByFlag(matcher.Elements[0].Elements) {
-			if count == 0 {
-				missingFlags = append(missingFlags, flag)
-			}
+		var removedFlags []ld.ExtinctionRep
 
-		}
-		log.Info.Printf("checking if %d flags without references were removed in the last %d commits", len(missingFlags), opts.Lookback)
-		removedFlags, err := gitClient.FindExtinctions(opts.ProjKey, missingFlags, matcher, lookback+1)
-		if err != nil {
-			log.Warning.Printf("unable to generate flag extinctions: %s", err)
-		} else {
-			msg := fmt.Sprintf("found %d removed flags", len(removedFlags))
-			if dryRun {
-				msg += ", --dryRun flag set, not updating LaunchDarkly"
+		flagCounts := branch.CountByProjectAndFlag(matcher.GetElements(), opts.GetProjectKeys())
+		for _, project := range opts.Projects {
+			missingFlags := []string{}
+			for flag, count := range flagCounts[project.Key] {
+				if count == 0 {
+					missingFlags = append(missingFlags, flag)
+				}
+
 			}
-			log.Info.Printf(msg)
+			log.Info.Printf("checking if %d flags without references were removed in the last %d commits for project: %s", len(missingFlags), opts.Lookback, project.Key)
+			removedFlagsByProject, err := gitClient.FindExtinctions(project, missingFlags, matcher, lookback+1)
+			if err != nil {
+				log.Warning.Printf("unable to generate flag extinctions: %s", err)
+			} else {
+				log.Info.Printf("found %d removed flags", len(removedFlagsByProject))
+			}
+			removedFlags = append(removedFlags, removedFlagsByProject...)
 		}
 		if len(removedFlags) > 0 && !dryRun {
-			err = ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
+			err := ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
 			if err != nil {
 				log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
 			}

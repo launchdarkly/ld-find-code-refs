@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/antihax/optional"
 	h "github.com/hashicorp/go-retryablehttp"
@@ -91,10 +92,10 @@ func InitApiClient(options ApiOptions) ApiClient {
 	}
 }
 
-func (c ApiClient) GetFlagKeyList() ([]string, error) {
+func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
 	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
 
-	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, c.Options.ProjKey)
+	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, projKey)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +110,12 @@ func (c ApiClient) GetFlagKeyList() ([]string, error) {
 		archivedOpts.Env = optional.NewInterface(firstEnv.Key)
 	}
 
-	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, flagOpts)
+	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey, flagOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, c.Options.ProjKey, archivedOpts)
+	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey, archivedOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -441,6 +442,7 @@ type BranchRep struct {
 	UpdateSequenceId *int                `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
+	CommitTime       *time.Time          `json:"commitTime,omitempty"`
 }
 
 func (b BranchRep) TotalHunkCount() int {
@@ -451,7 +453,7 @@ func (b BranchRep) TotalHunkCount() int {
 	return count
 }
 
-func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, err error) {
+func (b BranchRep) WriteToCSV(outDir, repo, sha string) (path string, err error) {
 	// Try to create a filename with a shortened sha, but if the sha is too short for some unexpected reason, use the branch name instead
 	var tag string
 	if len(sha) >= 7 {
@@ -464,7 +466,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 	if err != nil {
 		return "", fmt.Errorf("invalid outDir '%s': %w", outDir, err)
 	}
-	path = filepath.Join(absPath, fmt.Sprintf("coderefs_%s_%s_%s.csv", projKey, repo, tag))
+	path = filepath.Join(absPath, fmt.Sprintf("coderefs_%s_%s.csv", repo, tag))
 
 	f, err := os.Create(path)
 	if err != nil {
@@ -490,7 +492,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 		return false
 	})
 
-	records = append([][]string{{"flagKey", "path", "startingLineNumber", "lines", "aliases"}}, records...)
+	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases", "contentHash"}}, records...)
 	return path, w.WriteAll(records)
 }
 
@@ -502,7 +504,7 @@ type ReferenceHunksRep struct {
 func (r ReferenceHunksRep) toRecords() [][]string {
 	ret := make([][]string, 0, len(r.Hunks))
 	for _, hunk := range r.Hunks {
-		ret = append(ret, []string{hunk.FlagKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " ")})
+		ret = append(ret, []string{hunk.FlagKey, hunk.ProjKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " "), hunk.ContentHash})
 	}
 	return ret
 }
@@ -513,6 +515,7 @@ type HunkRep struct {
 	ProjKey            string   `json:"projKey"`
 	FlagKey            string   `json:"flagKey"`
 	Aliases            []string `json:"aliases,omitempty"`
+	ContentHash        string   `json:"contentHash,omitempty"`
 }
 
 // Returns the number of lines overlapping between the receiver (h) and the parameter (hr) hunkreps
@@ -551,14 +554,29 @@ func (t tableData) Swap(i, j int) {
 
 const maxFlagKeysDisplayed = 50
 
-func (b BranchRep) CountByFlag(flags []string) map[string]int64 {
-	refCountByFlag := map[string]int64{}
-	for _, flag := range flags {
-		refCountByFlag[flag] = 0
-	}
+func (b BranchRep) CountAll() map[string]int64 {
+	refCount := map[string]int64{}
 	for _, ref := range b.References {
 		for _, hunk := range ref.Hunks {
-			refCountByFlag[hunk.FlagKey]++
+			refCount[hunk.FlagKey]++
+		}
+	}
+	return refCount
+}
+
+func (b BranchRep) CountByProjectAndFlag(matcher [][]string, projects []string) map[string]map[string]int64 {
+	refCountByFlag := map[string]map[string]int64{}
+	for i, project := range projects {
+		for _, flag := range matcher[i] {
+			refCountByFlag[project] = map[string]int64{}
+			refCountByFlag[project][flag] = 0
+		}
+		for _, ref := range b.References {
+			for _, hunk := range ref.Hunks {
+				if hunk.ProjKey == project {
+					refCountByFlag[project][hunk.FlagKey]++
+				}
+			}
 		}
 	}
 	return refCountByFlag
@@ -567,7 +585,7 @@ func (b BranchRep) CountByFlag(flags []string) map[string]int64 {
 func (b BranchRep) PrintReferenceCountTable() {
 	data := tableData{}
 
-	for k, v := range b.CountByFlag(nil) {
+	for k, v := range b.CountAll() {
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)

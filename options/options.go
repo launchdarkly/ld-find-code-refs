@@ -20,6 +20,11 @@ const (
 	maxProjKeyLength = 20 // Maximum project key length
 )
 
+type Project struct {
+	Key     string  `mapstructure:"key"`
+	Dir     string  `mapstructure:"dir"`
+	Aliases []Alias `mapstructure:"aliases"`
+}
 type Options struct {
 	AccessToken         string `mapstructure:"accessToken"`
 	BaseUri             string `mapstructure:"baseUri"`
@@ -46,6 +51,7 @@ type Options struct {
 
 	Aliases    []Alias    `mapstructure:"aliases"`
 	Delimiters Delimiters `mapstructure:"delimiters"`
+	Projects   []Project  `mapstructure:"projects"`
 }
 
 type Delimiters struct {
@@ -155,8 +161,8 @@ func (o Options) ValidateRequired() error {
 	if o.Dir == "" {
 		missingRequiredOptions = append(missingRequiredOptions, "dir")
 	}
-	if o.ProjKey == "" {
-		missingRequiredOptions = append(missingRequiredOptions, "projKey")
+	if o.ProjKey == "" && len(o.Projects) == 0 {
+		missingRequiredOptions = append(missingRequiredOptions, "projKey/projects")
 	}
 	if o.RepoName == "" {
 		missingRequiredOptions = append(missingRequiredOptions, "repoName")
@@ -165,11 +171,22 @@ func (o Options) ValidateRequired() error {
 		return fmt.Errorf("missing required option(s): %v", missingRequiredOptions)
 	}
 
+	if len(o.ProjKey) > 0 && len(o.Projects) > 0 {
+		return fmt.Errorf("`--projKey` cannot be combined with `projects` in configuration")
+	}
+
 	if len(o.ProjKey) > maxProjKeyLength {
-		if strings.HasPrefix(o.ProjKey, "sdk-") {
-			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
-		} else if strings.HasPrefix(o.ProjKey, "api-") {
-			return fmt.Errorf("provided projKey (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+		return projKeyValidation(o.ProjKey)
+	}
+
+	if len(o.Projects) > 0 {
+		for _, project := range o.Projects {
+			if len(project.Key) > maxProjKeyLength {
+				err := projKeyValidation(project.Key)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -231,5 +248,32 @@ func (o Options) Validate() error {
 		return fmt.Errorf(`"branch" option is required when "revision" option is set`)
 	}
 
+	if len(o.Projects) > 0 {
+		for _, project := range o.Projects {
+			err := validation.IsSubDirValid(o.Dir, project.Dir)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return nil
+}
+
+func projKeyValidation(projKey string) error {
+	if strings.HasPrefix(projKey, "sdk-") {
+		return fmt.Errorf("provided project key (%s) appears to be a LaunchDarkly SDK key", "sdk-xxxx")
+	} else if strings.HasPrefix(projKey, "api-") {
+		return fmt.Errorf("provided project key (%s) appears to be a LaunchDarkly API access token", "api-xxxx")
+	}
+
+	return nil
+}
+
+func (o Options) GetProjectKeys() (projects []string) {
+	for _, project := range o.Projects {
+		projects = append(projects, project.Key)
+	}
+	return projects
 }

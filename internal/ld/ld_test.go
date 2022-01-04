@@ -167,3 +167,64 @@ func TestGetCodeReferenceRepositoryBranches(t *testing.T) {
 		})
 	}
 }
+
+func TestCountAll(t *testing.T) {
+	flagKey := "testFlag"
+	h := HunkRep{
+		StartingLineNumber: 1,
+		Lines:              "testtest",
+		ProjKey:            "example",
+		FlagKey:            flagKey,
+		Aliases:            []string{},
+	}
+	b := BranchRep{
+		Name:             "",
+		Head:             "",
+		UpdateSequenceId: nil,
+		SyncTime:         0,
+		References: []ReferenceHunksRep{{
+			Hunks: []HunkRep{h},
+		}},
+	}
+	count := b.CountAll()
+	want := make(map[string]int64)
+	want[flagKey] = 1
+	require.Equal(t, count, want)
+
+}
+
+func TestCountByProjectAndFlag(t *testing.T) {
+	flagKey := "testFlag"
+	projectKey := "exampleProject"
+	h := HunkRep{
+		StartingLineNumber: 1,
+		Lines:              "testtest",
+		ProjKey:            projectKey,
+		FlagKey:            flagKey,
+		Aliases:            []string{},
+	}
+	notFound := HunkRep{
+		StartingLineNumber: 1,
+		Lines:              "testtest",
+		ProjKey:            "notfound",
+		FlagKey:            flagKey,
+		Aliases:            []string{},
+	}
+	b := BranchRep{
+		Name:             "",
+		Head:             "",
+		UpdateSequenceId: nil,
+		SyncTime:         0,
+		References: []ReferenceHunksRep{{
+			Hunks: []HunkRep{h, notFound},
+		}},
+	}
+	projects := []string{"exampleProject"}
+	elements := [][]string{{flagKey}}
+	count := b.CountByProjectAndFlag(elements, projects)
+	want := make(map[string]map[string]int64)
+	want[projectKey] = make(map[string]int64)
+	want[projectKey][flagKey] = 1
+	require.Equal(t, count, want)
+
+}

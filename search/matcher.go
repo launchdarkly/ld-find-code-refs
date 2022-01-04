@@ -14,9 +14,9 @@ import (
 )
 
 type ElementMatcher struct {
-	ProjKey  string
-	Elements []string
-
+	ProjKey                     string
+	Elements                    []string
+	Dir                         string
 	allElementAndAliasesMatcher ahocorasick.AhoCorasick
 	matcherByElement            map[string]ahocorasick.AhoCorasick
 	aliasMatcherByElement       map[string]ahocorasick.AhoCorasick
@@ -32,16 +32,23 @@ type Matcher struct {
 // Scan checks the configured directory for flags base on the options configured for Code References.
 func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, []ld.ReferenceHunksRep) {
 	flagKeys := flags.GetFlagKeys(opts, repoParams)
-	aliasesByFlagKey, err := aliases.GenerateAliases(flagKeys, opts.Aliases, dir)
-	if err != nil {
-		log.Error.Fatalf("failed to generate aliases: %s", err)
-	}
-	delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
-	flagMatcher := NewElementMatcher(opts.ProjKey, delimiters, flagKeys, aliasesByFlagKey)
+	elements := []ElementMatcher{}
 
+	for _, project := range opts.Projects {
+		projectFlags := flagKeys[project.Key]
+		projectAliases := opts.Aliases
+		projectAliases = append(projectAliases, project.Aliases...)
+		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, dir)
+		if err != nil {
+			log.Error.Fatalf("failed to generate aliases: %s for project: %s", err, project.Key)
+		}
+
+		delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
+		elements = append(elements, NewElementMatcher(project.Key, project.Dir, delimiters, projectFlags, aliasesByFlagKey))
+	}
 	matcher := Matcher{
 		ctxLines: opts.ContextLines,
-		Elements: []ElementMatcher{flagMatcher},
+		Elements: elements,
 	}
 
 	refs, err := SearchForRefs(dir, matcher)
@@ -52,7 +59,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, 
 	return matcher, refs
 }
 
-func NewElementMatcher(projKey string, delimiters string, elements []string, aliasesByElement map[string][]string) ElementMatcher {
+func NewElementMatcher(projKey, dir, delimiters string, elements []string, aliasesByElement map[string][]string) ElementMatcher {
 	matcherBuilder := ahocorasick.NewAhoCorasickBuilder(ahocorasick.Opts{DFA: true, MatchKind: ahocorasick.StandardMatch})
 
 	allFlagPatternsAndAliases := make([]string, 0)
@@ -86,9 +93,9 @@ func NewElementMatcher(projKey string, delimiters string, elements []string, ali
 	}
 
 	return ElementMatcher{
-		ProjKey:  projKey,
-		Elements: elements,
-
+		Elements:                    elements,
+		ProjKey:                     projKey,
+		Dir:                         dir,
 		matcherByElement:            flagMatcherByKey,
 		aliasMatcherByElement:       aliasMatcherByElement,
 		allElementAndAliasesMatcher: matcherBuilder.Build(allFlagPatternsAndAliases),
@@ -170,4 +177,11 @@ func buildElementPatterns(flags []string, delimiters string) map[string][]string
 		patternsByFlag[flag] = patterns
 	}
 	return patternsByFlag
+}
+
+func (m Matcher) GetElements() (elements [][]string) {
+	for _, element := range m.Elements {
+		elements = append(elements, element.Elements)
+	}
+	return elements
 }
