@@ -75,6 +75,7 @@ brews:
     tap:
       owner: launchdarkly
       name: homebrew-tap
+      token: "{{ .Env.GITHUB_TOKEN }}"
 
     folder: Formula
 
