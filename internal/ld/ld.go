@@ -492,7 +492,7 @@ func (b BranchRep) WriteToCSV(outDir, repo, sha string) (path string, err error)
 		return false
 	})
 
-	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases"}}, records...)
+	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases", "contentHash"}}, records...)
 	return path, w.WriteAll(records)
 }
 
@@ -504,7 +504,7 @@ type ReferenceHunksRep struct {
 func (r ReferenceHunksRep) toRecords() [][]string {
 	ret := make([][]string, 0, len(r.Hunks))
 	for _, hunk := range r.Hunks {
-		ret = append(ret, []string{hunk.FlagKey, hunk.ProjKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " ")})
+		ret = append(ret, []string{hunk.FlagKey, hunk.ProjKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " "), hunk.ContentHash})
 	}
 	return ret
 }
@@ -515,6 +515,7 @@ type HunkRep struct {
 	ProjKey            string   `json:"projKey"`
 	FlagKey            string   `json:"flagKey"`
 	Aliases            []string `json:"aliases,omitempty"`
+	ContentHash        string   `json:"contentHash,omitempty"`
 }
 
 // Returns the number of lines overlapping between the receiver (h) and the parameter (hr) hunkreps
