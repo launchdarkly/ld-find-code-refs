@@ -3,7 +3,8 @@
 # Run this in publish step after all version information have been updated.
 set -ev
 
-brew install circleci
+sudo apt install curl
+curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | sudo bash
 
 # Read 2 arguments from the command line so we can debug this script.
 # Argument 1 is the release version. Defaults to releaser env variable.
