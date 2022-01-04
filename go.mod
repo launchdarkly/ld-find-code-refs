@@ -5,12 +5,12 @@ go 1.17
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/go-git/go-git/v5 v5.1.0
-	github.com/hashicorp/go-retryablehttp v0.5.3
-	github.com/iancoleman/strcase v0.2.0
+	github.com/hashicorp/go-retryablehttp v0.7.0
+  github.com/iancoleman/strcase v0.2.0
 	github.com/launchdarkly/api-client-go v3.9.0+incompatible
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
-	github.com/olekukonko/tablewriter v0.0.1
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
@@ -33,7 +33,7 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
-	github.com/mattn/go-runewidth v0.0.4 // indirect
+	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
