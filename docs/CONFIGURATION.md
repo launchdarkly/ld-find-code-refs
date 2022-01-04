@@ -16,7 +16,7 @@ The following arguments are required to run `ld-find-code-refs`. For a detailed 
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `accessToken` | LaunchDarkly [personal access token](https://docs.launchdarkly.com/docs/api-access-tokens) with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource |
 | `dir`         | Path to existing checkout of the git repo. The currently checked out branch will be scanned for code references.                                                                                                                               |
-| `projKey`     | A LaunchDarkly project key.                                                                                                                                                                                                                    |
+| `projKey`     | A LaunchDarkly project key. Cannot be used with `projects` block.                                                                                                                                                                                                                   |
 | `repoName`    | Git repo name. Will be displayed in LaunchDarkly. Repo names must only contain letters, numbers, '.', '\_' or '-'.                                                                                                                            |
 
 ## Command line
@@ -96,12 +96,25 @@ contextLines: 3
 
 ### Advanced YAML configuration
 
-In addition to all command line options, the `coderefs.yaml` file allows you to configure Code Reference Aliases and custom flag key delimiters.
+In addition to all command line options, the `coderefs.yaml` file allows you to configure Code Reference Aliases, Projects, and custom flag key delimiters.
 
 #### Aliases
 
 Patterns to match aliases for your flag keys may be defined to better suit your implementation of LaunchDarkly. See [ALIASES.md](ALIASES.md) for more information.
 
+#### Projects
+
+Projects allow Code References to scan a monorepo for multiple LaunchDarkly Projects in a single run. If a `dir` is provided Code References will only start looking for that Project's feature flag keys and aliases below that directory.
+
+Each Project block can support an optional list of alias configuration blocks. Any globally defined aliases will be inherited.
+
+```yaml
+projects:
+    - key: example-project
+      dir: subdir/to/start
+      aliases:
+        - type: camelcase
+```
 #### Delimiters
 
 By default, `ld-find-code-refs` will only match flag keys surrounded by single quotes ('), double quotes ("), or backticks (`). This default behavior may be disabled and additional delimiters may be defined to better suit your implementation of LaunchDarkly.
