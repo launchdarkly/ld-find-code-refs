@@ -40,7 +40,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, 
 		projectAliases = append(projectAliases, project.Aliases...)
 		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, dir)
 		if err != nil {
-			log.Error.Fatalf("failed to generate aliases: %s", err)
+			log.Error.Fatalf("failed to generate aliases: %s for project: %s", err, project.Key)
 		}
 
 		delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")

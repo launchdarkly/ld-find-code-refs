@@ -161,7 +161,7 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 			log.Warning.Printf("updateSequenceId (%d) must be greater than previously submitted updateSequenceId", *branch.UpdateSequenceId)
 		}
 	case err == ld.EntityTooLargeErr:
-		log.Error.Fatalf("code reference payload too large for LaunchDarkly API - consider excluding more files with .ldignore")
+		log.Error.Fatalf("code reference payload too large for LaunchDarkly API - consider excluding more files with .ldignore or using fewer lines of context")
 	case err != nil:
 		helpers.FatalServiceError(fmt.Errorf("error sending code references to LaunchDarkly: %w", err), opts.IgnoreServiceErrors)
 	}
