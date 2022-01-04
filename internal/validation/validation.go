@@ -45,3 +45,24 @@ func FileExists(filename string) bool {
 	}
 	return !info.IsDir()
 }
+
+func IsSubDirValid(base, subdir string) error {
+	if prefixExists(subdir) {
+		return fmt.Errorf(`project subdirectory should not start with prefix: %s`, string(subdir[0]))
+	}
+	path := filepath.Join(base, subdir)
+	pathInfo, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	if !pathInfo.IsDir() {
+		return fmt.Errorf(`path: %s is not a directory`, path)
+	}
+
+	return nil
+}
+
+func prefixExists(path string) bool {
+	return path[0] == '\\' || path[0] == '/' || path[0] == '.'
+}

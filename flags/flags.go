@@ -16,31 +16,32 @@ const (
 )
 
 func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
+	isDryRun := opts.DryRun
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ignoreServiceErrors := opts.IgnoreServiceErrors
+
+	if !isDryRun {
+		err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
+		if err != nil {
+			helpers.FatalServiceError(err, ignoreServiceErrors)
+		}
+	}
+
 	flagKeys := make(map[string][]string)
 	for _, proj := range opts.Projects {
-		ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
-		isDryRun := opts.DryRun
-
-		ignoreServiceErrors := opts.IgnoreServiceErrors
-		if !isDryRun {
-			err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
-			if err != nil {
-				helpers.FatalServiceError(err, ignoreServiceErrors)
-			}
-		}
 
 		flags, err := getFlags(ldApi, proj.Key)
 		if err != nil {
-			helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly: %w", err), ignoreServiceErrors)
+			helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly for project `%s`: %w", proj.Key, err), ignoreServiceErrors)
 		}
 
 		filteredFlags, omittedFlags := filterShortFlagKeys(flags)
 		if len(filteredFlags) == 0 {
-			log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %v, exiting early",
-				minFlagKeyLen, proj)
+			log.Info.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s, exiting early",
+				minFlagKeyLen, proj.Key)
 			os.Exit(0)
 		} else if len(omittedFlags) > 0 {
-			log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
+			log.Warning.Printf("omitting %d flags with keys less than minimum (%d) for project: %s", len(omittedFlags), minFlagKeyLen, proj.Key)
 		}
 		flagKeys[proj.Key] = filteredFlags
 	}

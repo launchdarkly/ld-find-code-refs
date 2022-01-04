@@ -30,7 +30,7 @@ type Matcher struct {
 }
 
 // Scan checks the configured directory for flags base on the options configured for Code References.
-func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.ReferenceHunksRep) {
+func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, []ld.ReferenceHunksRep) {
 	flagKeys := flags.GetFlagKeys(opts, repoParams)
 	elements := []ElementMatcher{}
 
@@ -38,9 +38,9 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 		projectFlags := flagKeys[project.Key]
 		projectAliases := opts.Aliases
 		projectAliases = append(projectAliases, project.Aliases...)
-		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, opts.Dir)
+		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, dir)
 		if err != nil {
-			log.Error.Fatalf("failed to generate aliases: %s", err)
+			log.Error.Fatalf("failed to generate aliases: %s for project: %s", err, project.Key)
 		}
 
 		delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
@@ -51,7 +51,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams) (Matcher, []ld.Referen
 		Elements: elements,
 	}
 
-	refs, err := SearchForRefs(opts.Dir, matcher)
+	refs, err := SearchForRefs(dir, matcher)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
@@ -177,4 +177,11 @@ func buildElementPatterns(flags []string, delimiters string) map[string][]string
 		patternsByFlag[flag] = patterns
 	}
 	return patternsByFlag
+}
+
+func (m Matcher) GetElements() (elements [][]string) {
+	for _, element := range m.Elements {
+		elements = append(elements, element.Elements)
+	}
+	return elements
 }

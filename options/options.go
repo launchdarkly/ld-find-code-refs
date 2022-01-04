@@ -175,9 +175,11 @@ func (o Options) ValidateRequired() error {
 		return fmt.Errorf("`--projKey` cannot be combined with `projects` in configuration")
 	}
 
-	if len(o.ProjKey) > maxProjKeyLength && len(o.Projects) == 0 {
+	if len(o.ProjKey) > maxProjKeyLength {
 		return projKeyValidation(o.ProjKey)
-	} else if len(o.ProjKey) == 0 && len(o.Projects) > 0 {
+	}
+
+	if len(o.Projects) > 0 {
 		for _, project := range o.Projects {
 			if len(project.Key) > maxProjKeyLength {
 				err := projKeyValidation(project.Key)
@@ -246,6 +248,16 @@ func (o Options) Validate() error {
 		return fmt.Errorf(`"branch" option is required when "revision" option is set`)
 	}
 
+	if len(o.Projects) > 0 {
+		for _, project := range o.Projects {
+			err := validation.IsSubDirValid(o.Dir, project.Dir)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -257,4 +269,11 @@ func projKeyValidation(projKey string) error {
 	}
 
 	return nil
+}
+
+func (o Options) GetProjectKeys() (projects []string) {
+	for _, project := range o.Projects {
+		projects = append(projects, project.Key)
+	}
+	return projects
 }

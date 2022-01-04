@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/antihax/optional"
 	h "github.com/hashicorp/go-retryablehttp"
@@ -441,6 +442,7 @@ type BranchRep struct {
 	UpdateSequenceId *int                `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
+	CommitTime       *time.Time          `json:"commitTime,omitempty"`
 }
 
 func (b BranchRep) TotalHunkCount() int {
@@ -490,7 +492,7 @@ func (b BranchRep) WriteToCSV(outDir, repo, sha string) (path string, err error)
 		return false
 	})
 
-	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases"}}, records...)
+	records = append([][]string{{"flagKey", "projKey", "path", "startingLineNumber", "lines", "aliases", "contentHash"}}, records...)
 	return path, w.WriteAll(records)
 }
 
@@ -502,7 +504,7 @@ type ReferenceHunksRep struct {
 func (r ReferenceHunksRep) toRecords() [][]string {
 	ret := make([][]string, 0, len(r.Hunks))
 	for _, hunk := range r.Hunks {
-		ret = append(ret, []string{hunk.FlagKey, hunk.ProjKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " ")})
+		ret = append(ret, []string{hunk.FlagKey, hunk.ProjKey, r.Path, strconv.FormatInt(int64(hunk.StartingLineNumber), 10), hunk.Lines, strings.Join(hunk.Aliases, " "), hunk.ContentHash})
 	}
 	return ret
 }
@@ -513,6 +515,7 @@ type HunkRep struct {
 	ProjKey            string   `json:"projKey"`
 	FlagKey            string   `json:"flagKey"`
 	Aliases            []string `json:"aliases,omitempty"`
+	ContentHash        string   `json:"contentHash,omitempty"`
 }
 
 // Returns the number of lines overlapping between the receiver (h) and the parameter (hr) hunkreps
@@ -551,15 +554,28 @@ func (t tableData) Swap(i, j int) {
 
 const maxFlagKeysDisplayed = 50
 
-func (b BranchRep) CountByFlag(flags []string, project string) map[string]int64 {
-	refCountByFlag := map[string]int64{}
-	for _, flag := range flags {
-		refCountByFlag[flag] = 0
-	}
+func (b BranchRep) CountAll() map[string]int64 {
+	refCount := map[string]int64{}
 	for _, ref := range b.References {
 		for _, hunk := range ref.Hunks {
-			if hunk.ProjKey == project || project == "" {
-				refCountByFlag[hunk.FlagKey]++
+			refCount[hunk.FlagKey]++
+		}
+	}
+	return refCount
+}
+
+func (b BranchRep) CountByProjectAndFlag(matcher [][]string, projects []string) map[string]map[string]int64 {
+	refCountByFlag := map[string]map[string]int64{}
+	for i, project := range projects {
+		for _, flag := range matcher[i] {
+			refCountByFlag[project] = map[string]int64{}
+			refCountByFlag[project][flag] = 0
+		}
+		for _, ref := range b.References {
+			for _, hunk := range ref.Hunks {
+				if hunk.ProjKey == project {
+					refCountByFlag[project][hunk.FlagKey]++
+				}
 			}
 		}
 	}
@@ -569,7 +585,7 @@ func (b BranchRep) CountByFlag(flags []string, project string) map[string]int64 
 func (b BranchRep) PrintReferenceCountTable() {
 	data := tableData{}
 
-	for k, v := range b.CountByFlag(nil, "") {
+	for k, v := range b.CountAll() {
 		data = append(data, []string{k, strconv.FormatInt(v, 10)})
 	}
 	sort.Sort(data)

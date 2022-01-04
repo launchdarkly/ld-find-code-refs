@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.1] - 2021-12-17
+### Fixed:
+- Relative paths were not being expanded to an absolute path when used.
+
+### Changed:
+- Find Code References Github Action is moving to semver versioning. Previously it was a major version that was incremented on every release of the underlying command line tool. Now the Github Action version will mirror the command line tooling version. This is moving it from `v14` to `v2.4.1`
+
 ## [2.4.0] - 2021-11-22
 ### Changed:
 - Performance improvements around searching for flags and aliases in the code base. Including changing search to use Aho-Corasick algorithm to find flags in file.
