@@ -18,7 +18,7 @@ var allNamingConventions = []o.Alias{
 	alias(o.DotCase),
 }
 
-var allSomeFlagNamingConventionAliases = slice("anyKindOfKey", "AnyKindOfKey", "any_kind.of_key", "ANY_KIND.OF_KEY", "any-kind.of-key", "any.kind.of.key")
+var allSomeFlagNamingConventionAliases = slice("anyKindOfKey", "AnyKindOfKey", "any_kind_of_key", "ANY_KIND_OF_KEY", "any-kind-of-key", "any.kind.of.key")
 
 const (
 	testFlagKey      = "someFlag"
