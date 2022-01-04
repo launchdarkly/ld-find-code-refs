@@ -67,3 +67,20 @@ ld-find-code-refs prune \
   --dir="/path/to/git/repo" \
   "branch1" "branch2"
 ```
+### Scanning a repository for multiple LaunchDarkly projects
+
+Support for multiple projects is provided through the `coderefs.yaml` configuration file. Starting directories for the project block are relative to the git root directory.
+
+The below configuration is scanning the two different starting subdirectories for different LaunchDarkly projects. The first configuration block is looking for feature flags from the `example-project` LaunchDarkly project.  `subdir/to/start` and is generating camel case based aliases. The second configuration block is looking for feature flags from the `other-project` LaunchDarkly project, starting in the relative directory `subdir/to/other` and generating snake case aliases.
+
+```yaml
+projects:
+    - key: example-project
+      dir: subdir/to/start
+      aliases:
+        - type: camelcase
+    - key: other-project
+      dir: subdir/to/other
+      aliases:
+        - type: snake_case
+```
