@@ -5,18 +5,18 @@ go 1.17
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/go-git/go-git/v5 v5.1.0
-	github.com/hashicorp/go-retryablehttp v0.5.0
-	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
+	github.com/hashicorp/go-retryablehttp v0.5.3
+	github.com/iancoleman/strcase v0.2.0
 	github.com/launchdarkly/api-client-go v3.9.0+incompatible
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
-	github.com/spf13/cobra v1.0.0
+	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d
+	golang.org/x/tools v0.1.5
 )
 
 require (
