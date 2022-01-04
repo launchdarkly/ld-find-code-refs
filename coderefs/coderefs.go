@@ -3,6 +3,7 @@ package coderefs
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/git"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
@@ -31,6 +32,7 @@ func Run(opts options.Options) {
 	branchName := opts.Branch
 	revision := opts.Revision
 	var gitClient *git.Client
+	var commitTime *time.Time
 	if revision == "" {
 		gitClient, err = git.NewClient(absPath, branchName, opts.AllowTags)
 		if err != nil {
@@ -38,6 +40,7 @@ func Run(opts options.Options) {
 		}
 		branchName = gitClient.GitBranch
 		revision = gitClient.GitSha
+		commitTime = gitClient.GitTimestamp
 	}
 
 	repoParams := ld.RepoParams{
@@ -63,6 +66,7 @@ func Run(opts options.Options) {
 		UpdateSequenceId: updateId,
 		SyncTime:         helpers.MakeTimestamp(),
 		References:       refs,
+		CommitTime:       commitTime,
 	}
 
 	handleOutput(opts, matcher, branch, repoParams, ldApi)
