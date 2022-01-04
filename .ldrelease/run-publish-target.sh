@@ -15,6 +15,9 @@ TARGET=$1
 docker_username="$(cat "${LD_RELEASE_SECRETS_DIR}/docker_username")"
 cat "${LD_RELEASE_SECRETS_DIR}/docker_token" | sudo docker login --username "${docker_username}" --password-stdin
 
+# Set github token to be used in releaser
+GITHUB_TOKEN=$(cat ${LD_RELEASE_SECRETS_DIR}/github_token)
+
 sudo PATH=$PATH make $TARGET
 
 # Goreleaser puts all the artifacts in ./dist - copying them to $LD_RELEASE_ARTIFACTS_DIR
