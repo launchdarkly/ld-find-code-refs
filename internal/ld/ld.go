@@ -18,11 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antihax/optional"
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
 
-	ldapi "github.com/launchdarkly/api-client-go"
+	ldapi "github.com/launchdarkly/api-client-go/v7"
 	jsonpatch "github.com/launchdarkly/json-patch"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
@@ -84,8 +83,10 @@ func InitApiClient(options ApiOptions) ApiClient {
 	}
 	return ApiClient{
 		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{
-			BasePath:  options.BaseUri + v2ApiPath,
 			UserAgent: options.UserAgent,
+			Servers: []ldapi.ServerConfiguration{{
+				URL: options.BaseUri,
+			}},
 		}),
 		httpClient: client,
 		Options:    options,
@@ -93,29 +94,32 @@ func InitApiClient(options ApiOptions) ApiClient {
 }
 
 func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
-	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKey, ldapi.APIKey{Key: c.Options.ApiKey})
+	auth := map[string]ldapi.APIKey{
+		"ApiKey": {Key: c.Options.ApiKey},
+	}
+	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKeys, auth)
 
-	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, projKey)
+	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, projKey).Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	flagOpts := &ldapi.GetFeatureFlagsOpts{Summary: optional.NewBool(true)}
-	archivedOpts := &ldapi.GetFeatureFlagsOpts{Archived: optional.NewBool(true), Summary: optional.NewBool(true)}
+	flagReq := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey).Summary(true)
+	archiveReq := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey).Summary(true).Archived(true)
 
 	if len(project.Environments) > 0 {
 		// The first environment allows filtering when retrieving flags.
 		firstEnv := project.Environments[0]
-		flagOpts.Env = optional.NewInterface(firstEnv.Key)
-		archivedOpts.Env = optional.NewInterface(firstEnv.Key)
+		flagReq = flagReq.Env(firstEnv.Key)
+		archiveReq = archiveReq.Env(firstEnv.Key)
 	}
 
-	flags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey, flagOpts)
+	flags, _, err := flagReq.Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	archivedFlags, _, err := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey, archivedOpts)
+	archivedFlags, _, err := archiveReq.Execute()
 	if err != nil {
 		return nil, err
 	}
