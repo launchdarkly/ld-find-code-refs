@@ -4,7 +4,7 @@
 set -ev
 
 sudo apt install curl
-curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh | sudo bash
+./install-circleci
 
 # Read 2 arguments from the command line so we can debug this script.
 # Argument 1 is the release version. Defaults to releaser env variable.
