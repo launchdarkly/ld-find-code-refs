@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	git "github.com/go-git/go-git/v5"
 	object "github.com/go-git/go-git/v5/plumbing/object"
@@ -25,7 +24,7 @@ type Client struct {
 	workspace    string
 	GitBranch    string
 	GitSha       string
-	GitTimestamp *time.Time
+	GitTimestamp int64
 }
 
 func NewClient(path string, branch string, allowTags bool) (*Client, error) {
@@ -134,20 +133,21 @@ func (c *Client) headSha() (string, error) {
 	return ret, nil
 }
 
-func (c *Client) commitTime() (*time.Time, error) {
+func (c *Client) commitTime() (int64, error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	head, err := repo.Head()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	commit, err := repo.CommitObject(head.Hash())
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return &commit.Author.When, nil
+	commitTime := commit.Author.When.Unix() * 1000
+	return commitTime, nil
 }
 
 func (c *Client) RemoteBranches() (map[string]bool, error) {
