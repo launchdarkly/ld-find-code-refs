@@ -3,7 +3,6 @@ package coderefs
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/git"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
@@ -32,7 +31,7 @@ func Run(opts options.Options) {
 	branchName := opts.Branch
 	revision := opts.Revision
 	var gitClient *git.Client
-	var commitTime *time.Time
+	var commitTime int64
 	if revision == "" {
 		gitClient, err = git.NewClient(absPath, branchName, opts.AllowTags)
 		if err != nil {

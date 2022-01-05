@@ -16,7 +16,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
@@ -446,7 +445,7 @@ type BranchRep struct {
 	UpdateSequenceId *int                `json:"updateSequenceId,omitempty"`
 	SyncTime         int64               `json:"syncTime"`
 	References       []ReferenceHunksRep `json:"references,omitempty"`
-	CommitTime       *time.Time          `json:"commitTime,omitempty"`
+	CommitTime       int64               `json:"commitTime,omitempty"`
 }
 
 func (b BranchRep) TotalHunkCount() int {
