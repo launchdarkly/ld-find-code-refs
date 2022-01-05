@@ -48,6 +48,8 @@ define publish_docker
 	test $(2) || docker push launchdarkly/$(3):latest
 endef
 
+# TODO: Remove all circleci publishing targets when we have a github owner token setup.
+# Use ./ldrelease/publish-circleci.sh to publish to circleci orbs registry.
 validate-circle-orb:
 	test $(TAG) || (echo "Please provide tag"; exit 1)
 	circleci orb validate build/package/circleci/orb.yml || (echo "Unable to validate orb"; exit 1)
