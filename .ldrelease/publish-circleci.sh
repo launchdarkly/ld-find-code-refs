@@ -4,7 +4,7 @@
 set -ev
 
 sudo apt install curl
-./install-circleci
+./.ldrelease/install-circleci
 
 # Read 2 arguments from the command line so we can debug this script.
 # Argument 1 is the release version. Defaults to releaser env variable.
@@ -18,7 +18,7 @@ CIRCLECI_CLI_HOST="https://circleci.com"
 circleci orb validate build/package/circleci/orb.yml || (echo "Unable to validate orb"; exit 1)
 
 # dev publish only, not production
-circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@dev:$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
+#circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@dev:$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
 
-# TODO: uncomment this once we have the circleci token in SSM.
-#circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
+# publish to production
+circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
