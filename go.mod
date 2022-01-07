@@ -6,7 +6,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/iancoleman/strcase v0.2.0
-	github.com/launchdarkly/api-client-go/v7 v7.0.0
+	github.com/launchdarkly/api-client-go/v7 v7.1.0
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
 	github.com/olekukonko/tablewriter v0.0.5
