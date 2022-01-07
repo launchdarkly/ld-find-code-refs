@@ -8,7 +8,7 @@ Add the following snippet to the script section of your `bitbucket-pipelines.yml
 - pipe: - pipe: launchdarkly/ld-find-code-refs-pipe:x.x.x
   environment:
     LD_ACCESS_TOKEN: "<string>"
-    LD_PROJ_KEY: "<string>"
+    LD_PROJ_KEY: "<string>" # Required unless using 'projects' block in configuration file then it must be omitted.
     # LD_REPO_NAME: "<string>" # Optional.
     # LD_CONTEXT_LINES: "<integer>" # Optional.
     # LD_BASE_URI: "<string>" # Optional.
@@ -27,7 +27,7 @@ See [the configuration documentation](https://github.com/launchdarkly/ld-find-co
 | Variable                 | Usage |
 | --------------------------- | ----- |
 | LD_ACCESS_TOKEN (*)       | A LaunchDarkly personal access token with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource. Should be provided as a [secured repository variable](https://confluence.atlassian.com/bitbucket/variables-in-pipelines-794502608.html) to secure it. |
-| LD_PROJ_KEY (*)   | A LaunchDarkly project key. The pipewill search this project for code references in this project. |
+| LD_PROJ_KEY (*)   | A LaunchDarkly project key. The pipewill search this project for code references in this project. Cannot be combined with `projects` block in configuration file. |
 | LD_REPO_NAME | Sets the repository name for this project. This is useful if you have a single monorepo containing multiple YAML configurations, each of which maps to its own LD_PROJ_KEY. Each YAML configuration must have a unique LD_PROJ_KEY and LD_REPO_NAME combination so it displays correctly in the LaunchDarkly dashboard. Defaults to the current Bitbucket repository. |
 | LD_CONTEXT_LINES        | The number of context lines above and below a code reference for the flag parser to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. Defaults to 2 |
 | LD_BASE_URI                 | Set the base URL of the LaunchDarkly server for this configuration. Defaults to https://app.launchdarkly.com |

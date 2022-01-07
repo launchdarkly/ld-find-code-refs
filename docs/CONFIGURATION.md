@@ -59,7 +59,7 @@ Flags:
 
   -o, --outDir string              If provided, will output a csv file containing all code references for the project to this directory.
 
-  -p, --projKey string             LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard.
+  -p, --projKey string             LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with `projects` block in configuration file.
 
   -r, --repoName string            Repository name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."
 
