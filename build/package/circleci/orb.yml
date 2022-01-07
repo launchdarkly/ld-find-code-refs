@@ -59,7 +59,7 @@ jobs:
         type: string
         default: "${LD_ACCESS_TOKEN}"
       proj_key:
-        description: LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard.
+        description: LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with `projects` block in configuration file.
         type: string
       base_uri:
         description: Set the base URL of the LaunchDarkly server for this configuration. Only necessary if using a private instance of LaunchDarkly.
