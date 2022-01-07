@@ -3,8 +3,7 @@
 # Run this in publish step after all version information have been updated.
 set -ev
 
-sudo apt install curl
-./.ldrelease/install-circleci
+.ldrelease/install-circleci.sh
 
 # Read 2 arguments from the command line so we can debug this script.
 # Argument 1 is the release version. Defaults to releaser env variable.
