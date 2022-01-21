@@ -104,9 +104,13 @@ Patterns to match aliases for your flag keys may be defined to better suit your 
 
 #### Projects
 
+Supported Version: 2.5.0+
+
 Projects allow Code References to scan a monorepo for multiple LaunchDarkly Projects in a single run. If a `dir` is provided Code References will only start looking for that Project's feature flag keys and aliases below that directory.
 
 Each Project block can support an optional list of alias configuration blocks. Any globally defined aliases will be inherited.
+
+*Upgrading note from a version prior to 2.5.0*: Previous versions of `ld-find-code-refs` required `projKey` parameter to be set, to use `projects` in your configuration you will need to remove the `projKey` parameter.
 
 ```yaml
 projects:
