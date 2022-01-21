@@ -82,8 +82,8 @@ func InitApiClient(options ApiOptions) ApiClient {
 	if options.RetryMax != nil && *options.RetryMax >= 0 {
 		client.RetryMax = *options.RetryMax
 	}
-	client.RetryWaitMin = 1000 * time.Millisecond
-	client.RetryWaitMax = 30000 * time.Millisecond
+	client.RetryWaitMin = 1 * time.Second
+	client.RetryWaitMax = 30 * time.Second
 	client.Backoff = retryablehttp.LinearJitterBackoff
 
 	return ApiClient{
