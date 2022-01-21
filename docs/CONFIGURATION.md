@@ -110,7 +110,7 @@ Projects allow Code References to scan a monorepo for multiple LaunchDarkly Proj
 
 Each Project block can support an optional list of alias configuration blocks. Any globally defined aliases will be inherited.
 
-*Upgrading note from a version prior to 2.5.0*: Previous versions of `ld-find-code-refs` required `projKey` parameter to be set, to use `projects` in your configuration you will need to remove the `projKey` parameter.
+*Upgrading note from a version prior to 2.5.0*: Previous versions of `ld-find-code-refs` required `projKey` parameter to be set. If you want to use 'projects' in your configuration (typically used for monorepos) you will need to remove the `projKey` parameter.
 
 ```yaml
 projects:
