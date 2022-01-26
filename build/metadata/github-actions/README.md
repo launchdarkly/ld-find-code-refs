@@ -39,7 +39,7 @@ Commit this file under a new branch.  Submit as a PR to your code reviewers to b
 As shown in the above example, the workflow should run on the `push` event, and contain an action provided by the [launchdarkly/find-code-references repository](https://github.com/launchdarkly/find-code-references). The `LD_ACCESS_TOKEN` configured in the previous step should be included as a secret, as well as a new environment variable containing your LaunchDarkly project key.
 
 ## Additional Examples
-The below example is the same as above but it also excludes any `dependabot` branches. We suggest excluding any automatically generated branches where flags do not change.
+The below example is the same as first but it also excludes any `dependabot` branches. We suggest excluding any automatically generated branches where flags do not change.
 
 ```yaml
 on:
