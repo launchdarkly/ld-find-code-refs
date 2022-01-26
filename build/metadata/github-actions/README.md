@@ -29,7 +29,7 @@ jobs:
       uses: launchdarkly/find-code-references@vx.x.x
       with:
         accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
-        projKey: YOUR_PROJECT_KEY
+        projKey: LD_PROJECT_KEY
 ```
 
 We strongly recommend that you update the second `uses` attribute value to reference the latest tag in the [launchdarkly/find-code-references repository](https://github.com/launchdarkly/find-code-references). This will pin your workflow to a particular version of the `launchdarkly/find-code-references` action. Also, make sure to change `projKey` to the key of the LaunchDarkly project associated with this repository.
