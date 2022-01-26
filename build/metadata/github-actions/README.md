@@ -64,7 +64,7 @@ jobs:
       uses: launchdarkly/find-code-references@vx.x.x # replace with latest version
       with:
         accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
-        projKey: YOUR_PROJECT_KEY
+        projKey: LD_PROJECT_KEY
 ```
 ## Troubleshooting
 
