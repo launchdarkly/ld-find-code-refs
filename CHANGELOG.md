@@ -2,6 +2,16 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.0] - 2022-02-04
+### Fixed:
+- Snake case aliases we not being correctly generated due to bug in dependency.
+
+### Changed:
+- If new `projects` block is used with CSV output, the first project key is used in the output file name. If still using `projKey` there is no change.
+
+### Added:
+- Monorepo with starting directory support. More info can be read at [Projects](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md#projects).
+
 ## [2.4.1] - 2021-12-17
 ### Fixed:
 - Relative paths were not being expanded to an absolute path when used.
