@@ -121,7 +121,7 @@ func handleOutput(opts options.Options, matcher search.Matcher, branch ld.Branch
 	}
 
 	if outDir != "" {
-		outPath, err := branch.WriteToCSV(outDir, repoParams.Name, opts.Revision)
+		outPath, err := branch.WriteToCSV(outDir, projectKeys[0], repoParams.Name, opts.Revision)
 		if err != nil {
 			log.Error.Fatalf("error writing code references to csv: %s", err)
 		}
