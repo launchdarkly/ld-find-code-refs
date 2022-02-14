@@ -14,6 +14,13 @@ cd bitbucketMetadataUpdates
 git add -u
 git commit -m "Release auto update version"
 git remote add bb-origin "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git"
-git push bb-origin master
+
+if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
+  echo "Live run: will publish pipe to bitbucket."
+  git push bb-origin master
+else
+  echo "Dry run: will not publish pipe to bitbucket."
+  git push bb-origin master --dry-run
+fi
 
 cd .. && rm -rf bitbucketMetadataUpdates

@@ -28,10 +28,17 @@ git commit -m "Release auto update version"
 # tag the commit with the release version
 # GOTCHA: The gha version was non-semver but now we are restarting it to follow the core ld-find-code-refs semvers.
 git tag v$RELEASE_VERSION
-git push origin master --tags
 
-# create a github release with release notes
-gh release create v$RELEASE_VERSION --notes "$RELEASE_NOTES"
+if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
+  echo "Live run: will publish action to github action marketplace."
+  git push origin master --tags
+
+  # create a github release with release notes
+  gh release create v$RELEASE_VERSION --notes "$RELEASE_NOTES"
+else
+  echo "Dry run: will not publish action to github action marketplace."
+  git push origin master --tags --dry-run
+fi
 
 # clean up
 cd .. && rm -rf githubActionsMetadataUpdates

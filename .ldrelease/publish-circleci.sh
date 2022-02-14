@@ -16,8 +16,10 @@ CIRCLECI_CLI_HOST="https://circleci.com"
 # Validate circleci orb config. No publishing done on this step.
 circleci orb validate build/package/circleci/orb.yml || (echo "Unable to validate orb"; exit 1)
 
-# dev publish only, not production
-#circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@dev:$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
-
-# publish to production
-circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
+if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
+  echo "Live run: will publish orb to production circleci repo."
+  circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
+else
+  echo "Dry run: will not publish orb to production. Will publish to circleci dev repo instead."
+  circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@dev:$RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
+fi
