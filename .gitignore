@@ -12,3 +12,4 @@ build/package/cmd/ld-find-code-refs
 *.csv
 /internal/git/testdata/repo
 metadataUpdates/
+bitbucketMetadataUpdates
