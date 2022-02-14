@@ -192,7 +192,7 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 			}
 			removedFlags = append(removedFlags, removedFlagsByProject...)
 		}
-		if len(removedFlags) > 0 {
+		if len(removedFlags) > 0 && !dryRun {
 			err := ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
 			if err != nil {
 				log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
