@@ -8,8 +8,12 @@ RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
 RELEASE_NOTES="$(make echo-release-notes)"
 GITHUB_TOKEN="${LD_RELEASE_SECRETS_DIR}/github_token"
 
-# install gh cli so we can create a release later
-brew install gh
+# install gh cli so we can create a release later https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update
+sudo apt install gh
+
 gh auth login --with-token < $GITHUB_TOKEN
 
 # clone checkout commit and push all metadata changes to gha repo
