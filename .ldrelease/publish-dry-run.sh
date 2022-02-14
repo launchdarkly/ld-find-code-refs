@@ -12,3 +12,8 @@ BB_CODEREFS=ld-find-code-refs-bitbucket-pipeline
 sudo docker save launchdarkly/${BASE_CODEREFS}:latest | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${BASE_CODEREFS}.tar.gz
 sudo docker save launchdarkly/${GH_CODEREFS}:latest | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${GH_CODEREFS}.tar.gz
 sudo docker save launchdarkly/${BB_CODEREFS}:latest | gzip >${LD_RELEASE_ARTIFACTS_DIR}/${BB_CODEREFS}.tar.gz
+
+# dry run logic is built into these publish scripts
+$(dirname $0)/publish-bitbucket-metadata.sh
+$(dirname $0)/publish-circleci.sh
+$(dirname $0)/publish-github-actions-metadata.sh
