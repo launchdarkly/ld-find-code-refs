@@ -69,7 +69,7 @@ func Run(opts options.Options, output bool) {
 	}
 
 	if output {
-		handleOutput(opts, matcher, branch, repoParams, ldApi)
+		generateHunkOutput(opts, matcher, branch, repoParams, ldApi)
 	}
 
 	if gitClient != nil {
@@ -115,7 +115,7 @@ func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]b
 	return staleBranches
 }
 
-func handleOutput(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
+func generateHunkOutput(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
 	outDir := opts.OutDir
 	projectKeys := make([]string, 1)
 	for _, project := range opts.Projects {
