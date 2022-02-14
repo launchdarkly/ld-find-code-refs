@@ -14,7 +14,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
-func Run(opts options.Options) {
+func Run(opts options.Options, output bool) {
 	if len(opts.ProjKey) > 0 {
 		opts.Projects = append(opts.Projects, options.Project{
 			Key: opts.ProjKey,
@@ -68,7 +68,9 @@ func Run(opts options.Options) {
 		CommitTime:       commitTime,
 	}
 
-	handleOutput(opts, matcher, branch, repoParams, ldApi)
+	if output {
+		generateHunkOutput(opts, matcher, branch, repoParams, ldApi)
+	}
 
 	if gitClient != nil {
 		runExtinctions(opts, matcher, branch, repoParams, gitClient, ldApi)
@@ -113,7 +115,7 @@ func calculateStaleBranches(branches []ld.BranchRep, remoteBranches map[string]b
 	return staleBranches
 }
 
-func handleOutput(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
+func generateHunkOutput(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, ldApi ld.ApiClient) {
 	outDir := opts.OutDir
 	projectKeys := make([]string, 1)
 	for _, project := range opts.Projects {
