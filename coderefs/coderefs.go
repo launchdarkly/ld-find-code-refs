@@ -14,7 +14,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/search"
 )
 
-func Run(opts options.Options) {
+func Run(opts options.Options, output bool) {
 	if len(opts.ProjKey) > 0 {
 		opts.Projects = append(opts.Projects, options.Project{
 			Key: opts.ProjKey,
@@ -68,7 +68,9 @@ func Run(opts options.Options) {
 		CommitTime:       commitTime,
 	}
 
-	handleOutput(opts, matcher, branch, repoParams, ldApi)
+	if output {
+		handleOutput(opts, matcher, branch, repoParams, ldApi)
+	}
 
 	if gitClient != nil {
 		runExtinctions(opts, matcher, branch, repoParams, gitClient, ldApi)
@@ -190,7 +192,7 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 			}
 			removedFlags = append(removedFlags, removedFlagsByProject...)
 		}
-		if len(removedFlags) > 0 && !dryRun {
+		if len(removedFlags) > 0 {
 			err := ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
 			if err != nil {
 				log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)

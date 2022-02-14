@@ -37,6 +37,31 @@ var prune = &cobra.Command{
 	},
 }
 
+var extinctions = &cobra.Command{
+	Use:     "extinctions",
+	Example: "ld-find-code-refs extinctions",
+	Short:   "Find and Post extinctions for branch",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		err := o.InitYAML()
+		if err != nil {
+			return err
+		}
+
+		opts, err := o.GetOptions()
+		if err != nil {
+			return err
+		}
+		err = opts.ValidateRequired()
+		if err != nil {
+			return err
+		}
+
+		log.Init(opts.Debug)
+		coderefs.Run(opts, false)
+		return nil
+	},
+}
+
 var cmd = &cobra.Command{
 	Use: "ld-find-code-refs",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -55,7 +80,7 @@ var cmd = &cobra.Command{
 		}
 
 		log.Init(opts.Debug)
-		coderefs.Run(opts)
+		coderefs.Run(opts, true)
 		return nil
 	},
 	Version: version.Version,
@@ -67,6 +92,7 @@ func main() {
 		panic(err)
 	}
 	cmd.AddCommand(prune)
+	cmd.AddCommand(extinctions)
 
 	err = cmd.Execute()
 	if err != nil {

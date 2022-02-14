@@ -576,8 +576,8 @@ func (b BranchRep) CountAll() map[string]int64 {
 func (b BranchRep) CountByProjectAndFlag(matcher [][]string, projects []string) map[string]map[string]int64 {
 	refCountByFlag := map[string]map[string]int64{}
 	for i, project := range projects {
+		refCountByFlag[project] = map[string]int64{}
 		for _, flag := range matcher[i] {
-			refCountByFlag[project] = map[string]int64{}
 			refCountByFlag[project][flag] = 0
 		}
 		for _, ref := range b.References {
