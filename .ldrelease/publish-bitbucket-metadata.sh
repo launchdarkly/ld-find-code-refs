@@ -8,6 +8,8 @@ BITBUCKET_USERNAME=${1:-"${LD_RELEASE_SECRETS_DIR}/bitbucket_username"}
 BITBUCKET_TOKEN=${2:-"${LD_RELEASE_SECRETS_DIR}/bitbucket_token"}
 
 mkdir -p bitbucketMetadataUpdates
+mkdir –m700 ~/.ssh
+mkdir –m444 ~/.ssh/known_hosts
 ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts
 git clone git@bitbucket.org:launchdarkly/ld-find-code-refs-pipe.git bitbucketMetadataUpdates
 cp build/metadata/bitbucket/* bitbucketMetadataUpdates/
