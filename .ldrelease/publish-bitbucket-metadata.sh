@@ -11,8 +11,6 @@ mkdir -p bitbucketMetadataUpdates
 git clone "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git" bitbucketMetadataUpdates
 cp build/metadata/bitbucket/* bitbucketMetadataUpdates/
 cd bitbucketMetadataUpdates
-git config --global user.email "yus@launchdarkly.com"
-git config --global user.name "Yus Ngadiman"
 git add -u
 git commit -m "Release auto update version"
 git remote add bb-origin "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git"

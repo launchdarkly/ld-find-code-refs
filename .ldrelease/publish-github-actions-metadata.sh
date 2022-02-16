@@ -14,9 +14,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githu
 sudo apt update
 sudo apt install gh
 
+# use gh cli to login to github and set up git credentials
 gh auth login --with-token < $GITHUB_TOKEN
-
-# needed to set up auth with git cli
 gh auth setup-git
 
 # clone checkout commit and push all metadata changes to gha repo
@@ -31,12 +30,9 @@ git commit -m "Release auto update version"
 if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
   echo "Live run: will publish action to github action marketplace."
 
-  # tag the commit with the release version
-  # GOTCHA: The gha version was non-semver but now we are restarting it to follow the core ld-find-code-refs semvers.
+  # tag the commit with the release version and create release
   git tag v$RELEASE_VERSION
   git push origin master --tags
-
-  # create a github release with release notes
   gh release create v$RELEASE_VERSION --notes "$RELEASE_NOTES"
 else
   echo "Dry run: will not publish action to github action marketplace."
