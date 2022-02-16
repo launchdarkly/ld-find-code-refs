@@ -10,7 +10,7 @@ sudo .ldrelease/install-circleci.sh
 RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
 
 # Argument 2 is the circleci token. Defaults releaser circleci secret.
-CIRCLECI_CLI_TOKEN=${2:-"${LD_RELEASE_SECRETS_DIR}/circleci_token"}
+CIRCLECI_CLI_TOKEN=${2:-"$(cat ${LD_RELEASE_SECRETS_DIR}/circleci_token)"}
 CIRCLECI_CLI_HOST="https://circleci.com"
 
 # Validate circleci orb config. No publishing done on this step.

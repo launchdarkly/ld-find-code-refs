@@ -4,8 +4,8 @@
 set -ev
 
 # Read username and password from the command line so we can debug this script. Defaults to releaser env variable.
-BITBUCKET_USERNAME=${1:-"${LD_RELEASE_SECRETS_DIR}/bitbucket_username"}
-BITBUCKET_TOKEN=${2:-"${LD_RELEASE_SECRETS_DIR}/bitbucket_token"}
+BITBUCKET_USERNAME=${1:-"$(cat ${LD_RELEASE_SECRETS_DIR}/bitbucket_username)"}
+BITBUCKET_TOKEN=${2:-"$(cat ${LD_RELEASE_SECRETS_DIR}/bitbucket_token)"}
 
 mkdir -p bitbucketMetadataUpdates
 git clone git@bitbucket.org:launchdarkly/ld-find-code-refs-pipe.git bitbucketMetadataUpdates
