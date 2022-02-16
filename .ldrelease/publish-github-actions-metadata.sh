@@ -5,7 +5,7 @@ set -ev
 
 # Read from the command line so we can debug this script. Defaults to releaser env variable.
 RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
-GITHUB_TOKEN=${2:-"$(cat ${LD_RELEASE_SECRETS_DIR}/github_token)"}
+GITHUB_TOKEN=${2:-"${LD_RELEASE_SECRETS_DIR}/github_token"}
 RELEASE_NOTES="$(make echo-release-notes)"
 
 # install gh cli so we can create a release later https://github.com/cli/cli/blob/trunk/docs/install_linux.md
