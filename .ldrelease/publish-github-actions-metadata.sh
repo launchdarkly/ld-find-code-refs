@@ -16,6 +16,11 @@ sudo apt install gh
 
 gh auth login --with-token < $GITHUB_TOKEN
 
+mkdir –m700 ~/.ssh
+touch ~/.ssh/known_hosts
+chmod 644 ~/.ssh/known_hosts
+ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
 # clone checkout commit and push all metadata changes to gha repo
 rm -rf githubActionsMetadataUpdates
 mkdir -p githubActionsMetadataUpdates
