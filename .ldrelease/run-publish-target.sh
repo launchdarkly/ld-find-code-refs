@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Called from publish.sh or publish-dry-run.sh - parameter is the Makefile target to run
 TARGET=$1
 
