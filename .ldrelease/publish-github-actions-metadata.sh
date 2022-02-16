@@ -19,7 +19,7 @@ gh auth login --with-token < $GITHUB_TOKEN
 # clone checkout commit and push all metadata changes to gha repo
 rm -rf githubActionsMetadataUpdates
 mkdir -p githubActionsMetadataUpdates
-git clone git@github.com:launchdarkly/find-code-references.git githubActionsMetadataUpdates
+gh repo clone launchdarkly/find-code-references githubActionsMetadataUpdates
 cp build/metadata/github-actions/* githubActionsMetadataUpdates
 cd githubActionsMetadataUpdates
 git add -u

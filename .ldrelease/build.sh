@@ -2,4 +2,5 @@
 
 set -ue
 
-make build
+# TODO: Uncomment when done debugging release process
+#make build
