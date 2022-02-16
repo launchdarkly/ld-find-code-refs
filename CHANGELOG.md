@@ -2,6 +2,16 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.4] - 2022-02-16
+### Fixed
+- Only a single flag per run was being searched for extinctions
+
+### Added 
+- `extinctions` command that will only generate and send extinctions using the `lookback` parameter
+
+### Changed 
+- Added additional examples for Github Action repo on how to configure the action
+
 ## [2.5.3] - 2022-02-16
 ### Fixed
 - Only a single flag per run was being searched for extinctions
