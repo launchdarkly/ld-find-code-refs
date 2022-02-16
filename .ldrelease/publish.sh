@@ -1,7 +1,8 @@
 #!/bin/bash
 
+# TEST: Disable docker publish steps to debug bitbucket and github issue quicker
 # the "publish" makefile target pushes the image to Docker
-$(dirname $0)/run-publish-target.sh publish
+#$(dirname $0)/run-publish-target.sh publish
 
 # publish to github actions, bitbucket and circleci marketplaces
 $(dirname $0)/publish-bitbucket-metadata.sh
