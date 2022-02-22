@@ -1,7 +1,7 @@
 # Note: These commands pertain to the development of ld-find-code-refs.
 #       They are not intended for use by the end-users of this program.
 SHELL=/bin/bash
-GORELEASER_VERSION=v0.169.0
+GORELEASER_VERSION=v1.5.0
 
 build:
 	go build ./cmd/...
