@@ -33,7 +33,11 @@ func truncateLine(line string) string {
 	}
 	// convert to rune slice so that we don't truncate multibyte unicode characters
 	runes := []rune(line)
-	return string(runes[0:maxLineCharCount]) + "…"
+	maxLength := maxLineCharCount
+	if lenRunes := len(runes); lenRunes < maxLineCharCount {
+		maxLength = lenRunes
+	}
+	return string(runes[0:maxLength]) + "…"
 }
 
 type file struct {
