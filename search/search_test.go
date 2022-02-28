@@ -400,6 +400,46 @@ func Test_SearchForRefs(t *testing.T) {
 	require.Equal(t, want[0].Path, got[0].Path)
 }
 
+func Test_truncateLine(t *testing.T) {
+	tests := []struct {
+		name         string
+		line         string
+		maxCharCount int
+		want         string
+	}{
+		{
+			name: "line equal to max character count returns line",
+			// len(line) = 8
+			// rune count = 5
+			line:         "one 🐜",
+			maxCharCount: 5,
+			want:         "one 🐜",
+		},
+		{
+			name: "line less than max character count returns line",
+			// len(line) = 8
+			// rune count = 5
+			line:         "one 🐜",
+			maxCharCount: 8,
+			want:         "one 🐜",
+		},
+		{
+			name: "line more than max character count returns truncated",
+			// len(line) = 8
+			// rune count = 5
+			line:         "one 🐜",
+			maxCharCount: 4,
+			want:         "one …",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := truncateLine(tt.line, tt.maxCharCount)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func withAliases(hunk *ld.HunkRep, aliases ...string) *ld.HunkRep {
 	hunk.Aliases = aliases
 	return hunk

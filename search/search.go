@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"unicode/utf8"
 
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
@@ -25,19 +26,13 @@ const (
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.
 // NOTE: We may end up truncating a valid flag key reference. We accept this risk
 //       and will handle hunks missing flag key references on the frontend.
-func truncateLine(line string) string {
-	// len(line) returns number of bytes, not num. characters, but it's a close enough
-	// approximation for our purposes
-	if len(line) <= maxLineCharCount {
+func truncateLine(line string, maxCharCount int) string {
+	if utf8.RuneCountInString(line) <= maxCharCount {
 		return line
 	}
 	// convert to rune slice so that we don't truncate multibyte unicode characters
 	runes := []rune(line)
-	maxLength := maxLineCharCount
-	if lenRunes := len(runes); lenRunes < maxLineCharCount {
-		maxLength = lenRunes
-	}
-	return string(runes[0:maxLength]) + "…"
+	return string(runes[0:maxCharCount]) + "…"
 }
 
 type file struct {
@@ -71,7 +66,7 @@ func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher)
 	}
 
 	for i, line := range hunkLines {
-		hunkLines[i] = truncateLine(line)
+		hunkLines[i] = truncateLine(line, maxLineCharCount)
 	}
 
 	lines := strings.Join(hunkLines, "\n")
