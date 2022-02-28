@@ -408,26 +408,20 @@ func Test_truncateLine(t *testing.T) {
 		want         string
 	}{
 		{
-			name: "line equal to max character count returns line",
-			// len(line) = 8
-			// rune count = 5
-			line:         "one 🐜",
+			name:         "line equal to max character count returns line",
+			line:         "one 🐜", // len(line) = 8, rune count = 5
 			maxCharCount: 5,
 			want:         "one 🐜",
 		},
 		{
-			name: "line less than max character count returns line",
-			// len(line) = 8
-			// rune count = 5
-			line:         "one 🐜",
+			name:         "line less than max character count returns line",
+			line:         "one 🐜", // len(line) = 8, rune count = 5
 			maxCharCount: 8,
 			want:         "one 🐜",
 		},
 		{
-			name: "line more than max character count returns truncated",
-			// len(line) = 8
-			// rune count = 5
-			line:         "one 🐜",
+			name:         "line more than max character count returns truncated",
+			line:         "one 🐜", // len(line) = 8, rune count = 5
 			maxCharCount: 4,
 			want:         "one …",
 		},
