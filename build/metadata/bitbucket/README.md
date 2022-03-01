@@ -22,7 +22,7 @@ Add the following snippet to the script section of your `bitbucket-pipelines.yml
 
 ## Variables
 
-See [the configuration documentation](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md) for information about additional configuration options, such as configuration delimiters and ignoring files and directories.
+See [the configuration documentation](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md) for information about additional configuration options, such as configuration delimiters and ignoring files and directories.
 
 | Variable                 | Usage |
 | --------------------------- | ----- |

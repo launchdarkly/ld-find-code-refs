@@ -30,7 +30,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 - If new `projects` block is used with CSV output, the first project key is used in the output file name. If still using `projKey` there is no change.
 
 ### Added:
-- Monorepo with starting directory support. More info can be read at [Projects](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md#projects).
+- Monorepo with starting directory support. More info can be read at [Projects](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#projects).
 
 ## [2.4.1] - 2021-12-17
 ### Fixed:
@@ -86,11 +86,11 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ### Added
 
-- Most command line flags can now be [specified in a YAML file](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md#yaml) located in the `.launchdarkly/coderefs.yaml` subdirectory of your repository. [docs](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md#yaml)
+- Most command line flags can now be [specified in a YAML file](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#yaml) located in the `.launchdarkly/coderefs.yaml` subdirectory of your repository. [docs](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#yaml)
   - The following options cannot be specified in YAML, and must be set using the command line or as environment variables:
     - `--dir` / `LD_DIR`
     - `--accessToken` / `LD_ACCESS_TOKEN`
-- All command line flags can now be specified as environment variables. [docs](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md#environment-variables)
+- All command line flags can now be specified as environment variables. [docs](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#environment-variables)
 - When flags with no code references are detected, `ld-find-code-refs` will search Git commit history to detect when the last reference to a feature flag was removed. Use the `--lookback` command line flag to configure the number of commits you would like to search. The lookback will start at the current commit and will review up to the last n commits to find the last reference of the flag. The default is 10 commits.
 - Added support for scanning non-git repositories. Use the `--revision` flag to specify your repository version number.
 - Added the `prune` sub-command to delete stale code reference data from LaunchDarkly manually by providing a list of branch names as arguments. example: `ld-find-code-refs prune [flags] "branch1" "branch2"`
@@ -103,7 +103,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Changed
 
 - Command line arguments names have been improved. Now, a flag specified with a single dash indicates a shorthand name, while 2 dashes indicate the longform name. Some existing configurations may be invalid, see `ld-find-code-refs --help` for details.
-- The default delimiters (single quotes, double quotes and backticks) can now be disabled in the `coderefs.yaml` configuration. [docs](https://github.com/launchdarkly/ld-find-code-refs/blob/master/docs/CONFIGURATION.md#delimiters). Delimiters can no longer be specified using command line flags or environment variables. If you use additional delimiters, or would like to disable delimiters completely, use YAML configuration instead.
+- The default delimiters (single quotes, double quotes and backticks) can now be disabled in the `coderefs.yaml` configuration. [docs](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#delimiters). Delimiters can no longer be specified using command line flags or environment variables. If you use additional delimiters, or would like to disable delimiters completely, use YAML configuration instead.
 
 ### Removed
 
