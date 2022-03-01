@@ -1,6 +1,6 @@
 name: Find code references
 description: Job for finding and sending feature flag code references to LaunchDarkly
-image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:2.5.4
+image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:2.5.5
 repository: https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe
 maintainer: support@launchdarkly.com
 icon: https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe/logo.svg
