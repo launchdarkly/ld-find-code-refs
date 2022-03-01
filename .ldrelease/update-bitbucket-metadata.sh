@@ -3,6 +3,7 @@
 set -ex
 # Read from the command line so we can debug this script. Defaults to releaser env variable.
 RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
+RELEASE_TAG=${1:-$LD_RELEASE_TAG}
 
 README=build/metadata/bitbucket/README.md
 README_TEMP=${README}.tmp
@@ -11,5 +12,5 @@ mv ${README_TEMP} ${README}
 
 YML=build/metadata/bitbucket/pipe.yml
 YML_TEMP=${YML}.tmp
-sed "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:v${RELEASE_VERSION}#g" ${YML} > ${YML_TEMP}
+sed "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:${RELEASE_TAG}#g" ${YML} > ${YML_TEMP}
 mv ${YML_TEMP} ${YML}

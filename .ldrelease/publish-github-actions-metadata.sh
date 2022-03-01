@@ -5,6 +5,7 @@ set -ev
 
 # Read from the command line so we can debug this script. Defaults to releaser env variable.
 RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
+RELEASE_TAG=${1:-$LD_RELEASE_TAG}
 GITHUB_TOKEN=${2:-"${LD_RELEASE_SECRETS_DIR}/github_token"}
 RELEASE_NOTES="$(make echo-release-notes)"
 
@@ -31,9 +32,9 @@ if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
   echo "Live run: will publish action to github action marketplace."
 
   # tag the commit with the release version and create release
-  git tag v$RELEASE_VERSION
+  git tag $RELEASE_TAG
   git push origin master --tags
-  gh release create v$RELEASE_VERSION --notes "$RELEASE_NOTES"
+  gh release create $RELEASE_TAG --notes "$RELEASE_NOTES"
 else
   echo "Dry run: will not publish action to github action marketplace."
   git push origin master --tags --dry-run
