@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.6] - 2022-03-01
+### Fixed:
+- Change in release process lead to build with incorrect docker image tag
+
 ## [2.5.5] - 2022-03-01
 ### Fixed:
 - Slice bounds out of range error when saving hunks (#224)
