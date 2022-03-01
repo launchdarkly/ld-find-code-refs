@@ -32,11 +32,11 @@ if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
 
   # tag the commit with the release version and create release
   git tag v$RELEASE_VERSION
-  git push origin master --tags
+  git push origin main --tags
   gh release create v$RELEASE_VERSION --notes "$RELEASE_NOTES"
 else
   echo "Dry run: will not publish action to github action marketplace."
-  git push origin master --tags --dry-run
+  git push origin main --tags --dry-run
 fi
 
 # clean up
