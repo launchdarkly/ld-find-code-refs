@@ -97,7 +97,7 @@ dockers:
   -
     image_templates:
     - "launchdarkly/ld-find-code-refs:latest"
-    - "launchdarkly/ld-find-code-refs:{{ .Tag }}"
+    - "launchdarkly/ld-find-code-refs:{{ .Version }}"
       
     dockerfile: build/package/cmd/Dockerfile
  
@@ -111,7 +111,7 @@ dockers:
 
     image_templates:
     - "launchdarkly/ld-find-code-refs-github-action:latest"
-    - "launchdarkly/ld-find-code-refs-github-action:{{ .Tag }}"
+    - "launchdarkly/ld-find-code-refs-github-action:{{ .Version }}"
       
     dockerfile: Dockerfile.github
   -
@@ -122,7 +122,7 @@ dockers:
 
     image_templates:
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
-    - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Tag }}"
+    - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Version }}"
      
     ids: 
     - ld-find-code-refs-bitbucket-pipeline
