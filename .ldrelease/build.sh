@@ -7,4 +7,6 @@ if [[ $LD_RELEASE_VERSION == v* ]]; then
   exit 1
 fi
 
+echo "Release tag: $LD_RELEASE_TAG"
+
 make build
