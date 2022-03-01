@@ -11,5 +11,5 @@ mv ${README_TEMP} ${README}
 
 YML=build/metadata/bitbucket/pipe.yml
 YML_TEMP=${YML}.tmp
-sed "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:${RELEASE_VERSION}#g" ${YML} > ${YML_TEMP}
+sed "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:v${RELEASE_VERSION}#g" ${YML} > ${YML_TEMP}
 mv ${YML_TEMP} ${YML}
