@@ -4,7 +4,7 @@ set -ex
 
 # Read from the command line so we can debug this script. Defaults to releaser env variable.
 RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
-RELEASE_TAG=${1:-$LD_RELEASE_TAG}
+RELEASE_TAG="v${RELEASE_VERSION}"
 
 README=build/metadata/github-actions/README.md
 README_TEMP=${README}.tmp

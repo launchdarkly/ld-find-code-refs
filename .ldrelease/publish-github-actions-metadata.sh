@@ -5,7 +5,7 @@ set -ev
 
 # Read from the command line so we can debug this script. Defaults to releaser env variable.
 RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
-RELEASE_TAG=${1:-$LD_RELEASE_TAG}
+RELEASE_TAG="v${RELEASE_VERSION}"
 GITHUB_TOKEN=${2:-"${LD_RELEASE_SECRETS_DIR}/github_token"}
 RELEASE_NOTES="$(make echo-release-notes)"
 
