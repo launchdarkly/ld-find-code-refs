@@ -12,5 +12,5 @@ mv ${README_TEMP} ${README}
 
 DOCKERFILE=build/metadata/github-actions/Dockerfile
 DOCKERFILE_TEMP=${DOCKERFILE}.tmp
-sed "s#launchdarkly/ld-find-code-refs-github-action:.*#launchdarkly/ld-find-code-refs-github-action:${RELEASE_VERSION}#g" ${DOCKERFILE} > ${DOCKERFILE_TEMP}
+sed "s#launchdarkly/ld-find-code-refs-github-action:.*#launchdarkly/ld-find-code-refs-github-action:v${RELEASE_VERSION}#g" ${DOCKERFILE} > ${DOCKERFILE_TEMP}
 mv ${DOCKERFILE_TEMP} ${DOCKERFILE}
