@@ -4,7 +4,7 @@ experimental:
   notify:
     branches:
       only:
-        - master
+        - main
 
 defaults:
   environment: &environment
