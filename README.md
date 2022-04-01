@@ -29,7 +29,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Turn-key Configuration options
 
-We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the `ld-find-code-refs` utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
+We provide turnkey support for common trigger mechanisms and CI/CD providers. You can also invoke the `ld-find-code-refs` utility from the command line, which can be run in any custom workflow you define, such as from a bash script or a cron job.
 
 | System           | Status                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------- |
@@ -100,7 +100,7 @@ docker run \
 
 Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`.
 
-### Using code references in Federal environments
+### Using code references in federal environments
 
 If you are using the FedRAMP compliant [LaunchDarkly federal instance](https://docs.launchdarkly.com/home/advanced/federal), the `ld-find-code-refs` binary should be compiled with FIPS 140-2 support by using a tool like [boringssl](https://github.com/golang/go/tree/dev.boringcrypto/misc/boring#caveat).
 
