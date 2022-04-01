@@ -15,6 +15,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
     - [Linux](#linux)
     - [Windows](#windows)
     - [Docker](#docker)
+- [Federal environments](#using-code-references-in-federal-environments)
 - [Configuration](#cli-configuration)
   - [Required arguments](docs/CONFIGURATION.md#required-arguments)
   - [All arguments](docs/CONFIGURATION.md#command-line)
@@ -98,6 +99,10 @@ docker run \
 #### Manual
 
 Precompiled binaries for the latest release can be found [here](https://github.com/launchdarkly/ld-find-code-refs/releases/latest). Be sure to install the required [dependencies](#prerequisities) before running `ld-find-code-refs`.
+
+### Using code references in Federal environments
+
+If you are using the FedRAMP compliant [LaunchDarkly federal instance](https://docs.launchdarkly.com/home/advanced/federal), the `ld-find-code-refs` binary should be compiled with FIPS 140-2 support by using a tool like [boringssl](https://github.com/golang/go/tree/dev.boringcrypto/misc/boring#caveat).
 
 ### CLI Configuration
 
