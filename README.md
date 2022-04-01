@@ -2,11 +2,11 @@
 
 Command line program for generating flag code references.
 
-This repository provides solutions for configuring [LaunchDarkly code references](https://docs.launchdarkly.com/v2.0/docs/git-code-references) with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
+This repository provides solutions for configuring [LaunchDarkly code references](https://docs.launchdarkly.com/home/code/code-references) with various systems out-of-the-box, as well as the ability to automate code reference discovery on your own infrastructure using the provided command line interface.
 
 ### Documentation quick links
 
-- [Feature guide](https://docs.launchdarkly.com/docs/git-code-references)
+- [Feature guide](https://docs.launchdarkly.com/home/code/code-references)
 - [Turn-key configuration options](#turn-key-configuration-options)
 - [Execuation via CLI](#execution-via-cli)
   - [Prerequisites](#prerequisites)
@@ -28,15 +28,15 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 ## Turn-key Configuration options
 
-We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the ld-find-code-refs utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
+We provide turnkey support for common trigger mechanisms and CI / CD providers. You can also invoke the `ld-find-code-refs` utility from the command line, which can be run in any custom workflow you define (e.g. from a bash script, or a cron job).
 
 | System           | Status                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------- |
-| GitHub Actions   | [Supported](https://docs.launchdarkly.com/v2.0/docs/github-actions)                   |
-| CircleCI Orbs    | [Supported](https://docs.launchdarkly.com/v2.0/docs/circleci-orbs)                    |
-| Bitbucket Pipes  | [Supported](https://docs.launchdarkly.com/v2.0/docs/bitbucket-pipes-coderefs)         |
-| GitLab CI        | [Supported](https://docs.launchdarkly.com/integrations/git-code-references/gitlab-ci) |
-| Manually via CLI | [Supported](https://docs.launchdarkly.com/v2.0/docs/custom-configuration-via-cli)     |
+| GitHub Actions   | [Supported](https://docs.launchdarkly.com/home/code/github-actions)                   |
+| CircleCI Orbs    | [Supported](https://docs.launchdarkly.com/home/code/circleci)                    |
+| Bitbucket Pipes  | [Supported](https://docs.launchdarkly.com/home/code/bitbucket)         |
+| GitLab CI        | [Supported](https://docs.launchdarkly.com/home/code/gitlab) |
+| Manually via CLI | [Supported](https://docs.launchdarkly.com/home/code/custom-config)     |
 
 ## Execution via CLI
 
