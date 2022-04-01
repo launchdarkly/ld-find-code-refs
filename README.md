@@ -48,7 +48,7 @@ We recommend incorporating `ld-find-code-refs` into your CI/CD build process. `l
 
 If you are scanning a git repository, `ld-find-code-refs` requires git (tested with version 2.21.0) to be installed on the system path.
 
-All turn-key configuration methods (docker images used by services like CircleCI or Github actions) come with git preinstalled.
+All turn-key configuration methods (docker images used by services like CircleCI or GitHub actions) come with git preinstalled.
 
 ### Installing
 
