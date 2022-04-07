@@ -102,7 +102,7 @@ Precompiled binaries for the latest release can be found [here](https://github.c
 
 ### Using code references in federal environments
 
-If you are using the FedRAMP compliant [LaunchDarkly federal instance](https://docs.launchdarkly.com/home/advanced/federal), the `ld-find-code-refs` binary should be compiled with FIPS 140-2 support by using a tool like [boringssl](https://github.com/golang/go/tree/dev.boringcrypto/misc/boring#caveat).
+If you are using the FedRAMP compliant [LaunchDarkly federal instance](https://docs.launchdarkly.com/home/advanced/federal), the `ld-find-code-refs` binary should be compiled with FIPS 140-2 support by using a tool like [Go+BoringCrypto](https://github.com/golang/go/tree/dev.boringcrypto/misc/boring).
 
 ### CLI Configuration
 
