@@ -9,6 +9,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/options"
 	"github.com/stretchr/testify/require"
 
@@ -21,6 +22,11 @@ const (
 	flag2   = "flag2"
 	flag3   = "flag3"
 )
+
+func TestMain(m *testing.M) {
+	log.Init(true)
+	os.Exit(m.Run())
+}
 
 func setupRepo(t *testing.T) *git.Repository {
 	os.RemoveAll(repoDir)
