@@ -204,6 +204,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 
 	ret := []ld.ExtinctionRep{}
 	for i, c := range commits[:len(commits)-1] {
+		log.Debug.Printf("Examining commit: %s", c.commit.Hash)
 		changes, err := commits[i+1].tree.Diff(c.tree)
 		if err != nil {
 			return nil, err
@@ -214,6 +215,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 		}
 		for _, filePatch := range patch.FilePatches() {
 			fromFile, toFile := filePatch.Files()
+			log.Debug.Printf("Examining from file: %s and to file: %s", fromFile, toFile)
 			if project.Dir != "" && (toFile == nil || !strings.HasPrefix(toFile.Path(), project.Dir)) {
 				if fromFile != nil && !strings.HasPrefix(fromFile.Path(), project.Dir) {
 					continue
@@ -244,6 +246,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 						ProjKey:  project.Key,
 						FlagKey:  flag,
 					})
+					log.Debug.Printf("Found extinct flag: %s in project: %s", flag, project.Key)
 				} else {
 					// this flag was not removed in the current commit, so check for it again in the next commit
 					nextFlags = append(nextFlags, flag)
