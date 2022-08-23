@@ -20,6 +20,24 @@ const (
 	maxProjKeyLength = 20 // Maximum project key length
 )
 
+type RepoType string
+
+func (repoType RepoType) isValid() error {
+	switch repoType {
+	case GITHUB, GITLAB, BITBUCKET, CUSTOM:
+		return nil
+	default:
+		return fmt.Errorf(`invalid value %q for "repoType": must be %s, %s, %s, or %s`, repoType, GITHUB, GITLAB, BITBUCKET, CUSTOM)
+	}
+}
+
+const (
+	GITHUB    RepoType = "github"
+	GITLAB             = "gitlab"
+	BITBUCKET          = "bitbucket"
+	CUSTOM             = "custom"
+)
+
 type Project struct {
 	Key     string  `mapstructure:"key"`
 	Dir     string  `mapstructure:"dir"`
@@ -205,9 +223,10 @@ func (o Options) Validate() error {
 		return fmt.Errorf(`invalid value %q for "contextLines": must be <= %d`, o.ContextLines, maxContextLines)
 	}
 
-	repoType := strings.ToLower(o.RepoType)
-	if repoType != "custom" && repoType != "github" && repoType != "bitbucket" {
-		return fmt.Errorf(`invalid value %q for "repoType": must be "custom", "bitbucket", or "github"`, o.RepoType)
+	repoType := RepoType(strings.ToLower(o.RepoType))
+	err = repoType.isValid()
+	if err != nil {
+		return err
 	}
 
 	if o.RepoUrl != "" {
