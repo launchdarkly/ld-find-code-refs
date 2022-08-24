@@ -25,14 +25,14 @@ func Test_calculateStaleBranches(t *testing.T) {
 	}{
 		{
 			name:           "stale branch",
-			branches:       []string{"master", "another-branch"},
-			remoteBranches: []string{"master"},
+			branches:       []string{"main", "another-branch"},
+			remoteBranches: []string{"main"},
 			expected:       []string{"another-branch"},
 		},
 		{
 			name:           "no stale branches",
-			branches:       []string{"master"},
-			remoteBranches: []string{"master"},
+			branches:       []string{"main"},
+			remoteBranches: []string{"main"},
 			expected:       []string{},
 		},
 	}
