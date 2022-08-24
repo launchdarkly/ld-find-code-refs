@@ -32,7 +32,7 @@ See [the configuration documentation](https://github.com/launchdarkly/ld-find-co
 | LD_CONTEXT_LINES        | The number of context lines above and below a code reference for the flag parser to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. Defaults to 2 |
 | LD_BASE_URI                 | Set the base URL of the LaunchDarkly server for this configuration. Defaults to https://app.launchdarkly.com |
 | LD_DEBUG | Enables verbose debug logging. Default: `false`|
-| LD_DEFAULT_BRANCH | The git default branch. The LaunchDarkly UI will default to display code references for this branch. Default: `master`. |
+| LD_DEFAULT_BRANCH | The git default branch. The LaunchDarkly UI will default to display code references for this branch. Default: `main`. |
 | LD_IGNORE_SERVICE_ERRORS | If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response. Default: `false` |
 | LD_LOOKBACK | Sets the number of Git commits to search in history for whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time. Defaults to 10 |
 
