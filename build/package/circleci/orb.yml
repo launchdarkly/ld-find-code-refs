@@ -81,7 +81,7 @@ jobs:
       default_branch:
         description: "The git default branch. The LaunchDarkly UI will default to display code references for this branch."
         type: string
-        default: "master"
+        default: "main"
       commit_url_template:
         description: "If provided, LaunchDarkly will attempt to generate links to your Git service provider per commit. Example: `https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}`. Allowed template variables: `branchName`, `sha`. If `commitUrlTemplate` is not provided, but `repoUrl` is provided, LaunchDarkly will automatically generate links for github or bitbucket repo types."
         type: string
