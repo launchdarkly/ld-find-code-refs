@@ -33,9 +33,9 @@ func (repoType RepoType) isValid() error {
 
 const (
 	GITHUB    RepoType = "github"
-	GITLAB             = "gitlab"
-	BITBUCKET          = "bitbucket"
-	CUSTOM             = "custom"
+	GITLAB    RepoType = "gitlab"
+	BITBUCKET RepoType = "bitbucket"
+	CUSTOM    RepoType = "custom"
 )
 
 type Project struct {
