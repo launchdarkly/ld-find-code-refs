@@ -3,9 +3,9 @@
 ## Versioning
 This project adheres to [Semantic Versioning](http://semver.org). Release version tags should be in the form `MAJOR.MINOR.PATCH`, with no leading v. When releasing, be sure to update the version number in [`version.go`](https://github.com/launchdarkly/ld-find-code-refs/blob/main/internal/version/version.go), and in the [CircleCI orb](https://github.com/launchdarkly/ld-find-code-refs/blob/main/build/package/circleci/orb.yml).
 
-## Github Releases
+## GitHub Releases
 
-This project uses [goreleaser](https://goreleaser.com/) to generate github releases. Releases are automated via CircleCI. To generate a new release, simply tag the commit you want to release and push the tag. If the tag ends in -rc(.+), the github release will be marked as "Pre-release." If you'd like to see how release notes are generated, see the .circleci/config.yml publish job.
+This project uses [goreleaser](https://goreleaser.com/) to generate GitHub releases. Releases are automated via CircleCI. To generate a new release, simply tag the commit you want to release and push the tag. If the tag ends in -rc(.+), the github release will be marked as "Pre-release." If you'd like to see how release notes are generated, see the .circleci/config.yml publish job.
 
 Make sure you update the changelog before generating a release.
 
