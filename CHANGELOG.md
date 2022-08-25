@@ -25,7 +25,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 - `extinctions` command that will only generate and send extinctions using the `lookback` parameter
 
 ### Changed 
-- Added additional examples for Github Action repo on how to configure the action
+- Added additional examples for GitHub Action repo on how to configure the action
 
 ## [2.5.3] - 2022-02-16
 ### Fixed
@@ -35,7 +35,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 - `extinctions` command that will only generate and send extinctions using the `lookback` parameter
 
 ### Changed 
-- Added additional examples for Github Action repo on how to configure the action
+- Added additional examples for GitHub Action repo on how to configure the action
 
 ## [2.5.0] - 2022-02-04
 ### Fixed:
@@ -52,7 +52,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 - Relative paths were not being expanded to an absolute path when used.
 
 ### Changed:
-- Find Code References Github Action is moving to semver versioning. Previously it was a major version that was incremented on every release of the underlying command line tool. Now the Github Action version will mirror the command line tooling version. This is moving it from `v14` to `v2.4.1`
+- Find Code References GitHub Action is moving to semver versioning. Previously it was a major version that was incremented on every release of the underlying command line tool. Now the GitHub Action version will mirror the command line tooling version. This is moving it from `v14` to `v2.4.1`
 
 ## [2.4.0] - 2021-11-22
 ### Changed:
@@ -175,7 +175,7 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Added
 
 - Added a `--branch` option to the CLI. This lets a branch name be manually specified when the repo is in a detached head state.
-- Github actions v2 support: the github actions wrapper reads the branch name from `GITHUB_REF` and populates the `branch` option with it.
+- GitHub actions v2 support: the github actions wrapper reads the branch name from `GITHUB_REF` and populates the `branch` option with it.
 
 ## [1.1.1] - 2019-04-11
 
