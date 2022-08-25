@@ -62,9 +62,9 @@ may be provided.`,
 	{
 		name:         "defaultBranch",
 		short:        "B",
-		defaultValue: "master",
+		defaultValue: "main",
 		usage: `The default branch. The LaunchDarkly UI will default to this branch.
-If not provided, will fallback to 'master'.`,
+If not provided, will fallback to 'main'.`,
 	},
 	{
 		name:         "dir",

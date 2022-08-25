@@ -76,9 +76,9 @@ func TestParseBranch(t *testing.T) {
 			name:        "returns the event branch name for an invalid GITHUB_REF",
 			in:          "refs/pull/1",
 			allowTags:   false,
-			expectedOut: "master",
+			expectedOut: "main",
 			expectError: false,
-			event:       &Event{Pull: &Pull{Head: Head{Ref: "master"}}},
+			event:       &Event{Pull: &Pull{Head: Head{Ref: "main"}}},
 		},
 		{
 			name:        "returns the event tag name for an invalid GITHUB_REF",

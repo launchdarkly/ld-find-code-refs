@@ -43,7 +43,7 @@ Flags:
 
       --debug                      Enables verbose debug logging
 
-  -B, --defaultBranch string       The default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to 'master'. (default "master")
+  -B, --defaultBranch string       The default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to 'main'. (default "main")
 
   -d, --dir string                 Path to existing checkout of the repository.
 

@@ -135,7 +135,7 @@ func TestPostDeleteBranchesTask(t *testing.T) {
 
 			retryMax := 0
 			client := InitApiClient(ApiOptions{ApiKey: "api-x", ProjKey: "default", BaseUri: testServer.URL, RetryMax: &retryMax})
-			err := client.PostDeleteBranchesTask("test", []string{"master"})
+			err := client.PostDeleteBranchesTask("test", []string{"main"})
 			require.Equal(t, tt.expectedErr, err)
 		})
 	}
@@ -148,7 +148,7 @@ func TestGetCodeReferenceRepositoryBranches(t *testing.T) {
 		responseBody   string
 		expectedErr    error
 	}{
-		{"succeeds", 200, `{"items":[{"name":"master"}]}`, nil},
+		{"succeeds", 200, `{"items":[{"name":"main"}]}`, nil},
 		{"fails on not found", 404, ``, NotFoundErr},
 	}
 	for _, tt := range specs {
