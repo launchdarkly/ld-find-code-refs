@@ -37,7 +37,7 @@ Flags:
 
   -b, --branch string              The currently checked out branch. If not provided, branch name will be auto-detected. Provide this option when using CI systems that leave the repository in a detached HEAD state.
 
-      --commitUrlTemplate string   If provided, LaunchDarkly will attempt to generate links to your VCS service provider per commit. Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}. Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate links to the repository for each commit.
+      --commitUrlTemplate string   If provided, LaunchDarkly will attempt to generate links to your VCS service provider per commit. Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}. Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType.
 
   -C, --contextLines int           The number of context lines to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. (default 2)
 
@@ -51,7 +51,7 @@ Flags:
 
   -h, --help                       help for ld-find-code-refs
 
-      --hunkUrlTemplate string     If provided, LaunchDarkly will attempt to generate links to  your VCS service provider per code reference.  Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}. Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided,  but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate links to the repository for each code reference.
+      --hunkUrlTemplate string     If provided, LaunchDarkly will attempt to generate links to  your VCS service provider per code reference.  Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}. Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType.
 
   -i, --ignoreServiceErrors        If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response.
 
@@ -65,7 +65,7 @@ Flags:
 
   -T, --repoType string            The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: bitbucket|custom|github|gitlab. (default "custom")
 
-  -u, --repoUrl string             The display url for the repository. If provided for a bitbucket, github, or gitlab repository, LaunchDarkly will attempt to automatically generate source code links.
+  -u, --repoUrl string             The URL for the repository. If provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType.
 
   -R, --revision string            Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.
 

@@ -40,9 +40,7 @@ leave the repository in a detached HEAD state.`,
 		usage: `If provided, LaunchDarkly will attempt to generate links to
 your VCS service provider per commit.
 Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}.
-Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is
-not provided, but repoUrl is provided and repoType is not custom,
-LaunchDarkly will automatically generate links to the repository for each commit.`,
+Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType.`,
 	},
 	{
 		name:         "contextLines",
@@ -84,9 +82,7 @@ LaunchDarkly. Combine with the outDir option to output code references to a CSV.
 		usage: `If provided, LaunchDarkly will attempt to generate links to 
 your VCS service provider per code reference. 
 Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}.
-Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided, 
-but repoUrl is provided and repoType is not custom, LaunchDarkly will automatically generate
-links to the repository for each code reference.`,
+Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType.`,
 	},
 	{
 		name:         "ignoreServiceErrors",
@@ -133,7 +129,7 @@ LaunchDarkly UI. Aceptable values: bitbucket|custom|github|gitlab.`,
 		name:         "repoUrl",
 		short:        "u",
 		defaultValue: "",
-		usage:        `The display url for the repository. If provided for a bitbucket, github, or gitlab repository, LaunchDarkly will attempt to automatically generate source code links.`,
+		usage:        `The URL for the repository. If provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType`,
 	},
 	{
 		name:         "revision",
