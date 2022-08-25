@@ -2,7 +2,7 @@
 
 * @launchdarkly/squad-flag-lifecycle
 
-# Documenation
+# Documentation
 *.md @launchdarkly/docs-reviewers
 
 # Change log is updated by release bot
