@@ -1,1 +1,9 @@
+# https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
+
 * @launchdarkly/squad-flag-lifecycle
+
+# Documenation
+*.md @launchdarkly/docs-reviewers
+
+# Change log is updated by release bot
+CHANGELOG.md @launchdarkly/squad-flag-lifecycle
