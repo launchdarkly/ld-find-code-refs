@@ -9,13 +9,13 @@ inputs:
     description: 'Key of the LaunchDarkly project associated with this repository. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with `projects` block in configuration file.'
     required: false
   accessToken:
-    description: 'Token with write access to LaunchDarkly project.'
+    description: 'A token with write access to the LaunchDarkly project.'
     required: true
   repoName:
-    description: 'Sets the repository name for this project. Defaults to the current GitHub repository.'
+    description: 'The repository name. Defaults to the current GitHub repository.'
     required: false
   baseUri:
-    description: 'Set the base URL of the LaunchDarkly server for this configuration.'
+    description: 'The base URL of the LaunchDarkly server for this configuration.'
     default: 'https://app.launchdarkly.com'
     required: false
   contextLines:
@@ -24,11 +24,11 @@ inputs:
     default: '2'
     required: false
   allowTags:
-    description: Enables storing references for tags. The tag will be listed as a branch.
+    description: Enable storing references for tags. The tag will be listed as a branch.
     default: 'false'
     required: false
   debug:
-    description: Enables verbose debug logging.
+    description: Enable verbose debug logging.
     default: 'false'
     required: false
   ignoreServiceErrors:
@@ -36,7 +36,7 @@ inputs:
     default: 'false'
     required: false
   lookback:
-    description: Sets the number of Git commits to search in history for whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time.
+    description: Set the number of commits to search in history for whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time.
     default: '10'
     required: false
 runs:
