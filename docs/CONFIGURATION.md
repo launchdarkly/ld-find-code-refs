@@ -63,7 +63,7 @@ Flags:
 
   -r, --repoName string            Repository name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."
 
-  -T, --repoType string            The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|custom. (default "custom")
+  -T, --repoType string            The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|gitlab|custom. (default "custom")
 
   -u, --repoUrl string             The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.
 
