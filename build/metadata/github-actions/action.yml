@@ -12,7 +12,7 @@ inputs:
     description: 'Token with write access to LaunchDarkly project.'
     required: true
   repoName:
-    description: 'Sets the repository name for this project. This is useful if you have a single monorepo containing multiple YAML configurations each mapping to its own projKey. Each YAML configuration must have a unique LD_PROJ_KEY and LD_REPO_NAME combination so it displays correctly in the LaunchDarkly dashboard. Defaults to the current Github repository.'
+    description: 'Sets the repository name for this project. Defaults to the current GitHub repository.'
   baseUri:
     description: 'Set the base URL of the LaunchDarkly server for this configuration.'
     default: 'https://app.launchdarkly.com'
