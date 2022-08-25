@@ -63,9 +63,9 @@ Flags:
 
   -r, --repoName string            Repository name. Will be displayed in LaunchDarkly. Case insensitive. Repo names must only contain letters, numbers, '.', '_' or '-'."
 
-  -T, --repoType string            The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: github|bitbucket|gitlab|custom. (default "custom")
+  -T, --repoType string            The repo service provider. Used to correctly categorize repositories in the LaunchDarkly UI. Aceptable values: bitbucket|custom|github|gitlab. (default "custom")
 
-  -u, --repoUrl string             The display url for the repository. If provided for a github or bitbucket repository, LaunchDarkly will attempt to automatically generate source code links.
+  -u, --repoUrl string             The display url for the repository. If provided for a bitbucket, github, or gitlab repository, LaunchDarkly will attempt to automatically generate source code links.
 
   -R, --revision string            Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.
 

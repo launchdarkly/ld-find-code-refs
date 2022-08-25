@@ -127,14 +127,13 @@ Repo names must only contain letters, numbers, '.', '_' or '-'."`,
 		short:        "T",
 		defaultValue: "custom",
 		usage: `The repo service provider. Used to correctly categorize repositories in the
-LaunchDarkly UI. Aceptable values: github|bitbucket|gitlab|custom.`,
+LaunchDarkly UI. Aceptable values: bitbucket|custom|github|gitlab.`,
 	},
 	{
 		name:         "repoUrl",
 		short:        "u",
 		defaultValue: "",
-		usage: `The display url for the repository. If provided for a github,
-bitbucket, or gitlab repository, LaunchDarkly will attempt to automatically generate source code links.`,
+		usage:        `The display url for the repository. If provided for a bitbucket, github, or gitlab repository, LaunchDarkly will attempt to automatically generate source code links.`,
 	},
 	{
 		name:         "revision",
