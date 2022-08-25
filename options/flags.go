@@ -40,7 +40,7 @@ leave the repository in a detached HEAD state.`,
 		usage: `If provided, LaunchDarkly will attempt to generate links to
 your VCS service provider per commit.
 Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}.
-Allowed template variables: 'branchName', 'sha'. If commitUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType.`,
+Allowed template variables: 'branchName', 'sha'. If "commitUrlTemplate" is not provided, but "repoUrl" is provided and "repoType" is not custom, LaunchDarkly will attempt to automatically generate source code links for the given "repoType".`,
 	},
 	{
 		name:         "contextLines",
@@ -82,7 +82,7 @@ LaunchDarkly. Combine with the outDir option to output code references to a CSV.
 		usage: `If provided, LaunchDarkly will attempt to generate links to 
 your VCS service provider per code reference. 
 Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}.
-Allowed template variables: 'sha', 'filePath', 'lineNumber'. If hunkUrlTemplate is not provided, but repoUrl is provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType.`,
+Allowed template variables: 'sha', 'filePath', 'lineNumber'. If "hunkUrlTemplate" is not provided, but "repoUrl" is provided and "repoType" is not custom, LaunchDarkly will attempt to automatically generate source code links for the given "repoType".`,
 	},
 	{
 		name:         "ignoreServiceErrors",
@@ -95,7 +95,7 @@ LaunchDarkly API is unreachable or returns an unexpected response.`,
 		name:         "lookback",
 		short:        "l",
 		defaultValue: 10,
-		usage: `Sets the number of Git commits to search in history for
+		usage: `Sets the number of git commits to search in history for
 whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time.`,
 	},
 	{
@@ -109,27 +109,27 @@ the project to this directory.`,
 		name:         "projKey",
 		short:        "p",
 		defaultValue: "",
-		usage:        `LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard.`,
+		usage:        `LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with "projects" block in configuration file.`,
 	},
 	{
 		name:         "repoName",
 		short:        "r",
 		defaultValue: "",
 		usage: `Repository name. Will be displayed in LaunchDarkly. Case insensitive.
-Repo names must only contain letters, numbers, '.', '_' or '-'."`,
+Repository names must only contain letters, numbers, '.', '_' or '-'."`,
 	},
 	{
 		name:         "repoType",
 		short:        "T",
 		defaultValue: "custom",
 		usage: `The repo service provider. Used to correctly categorize repositories in the
-LaunchDarkly UI. Aceptable values: bitbucket|custom|github|gitlab.`,
+LaunchDarkly UI. Acceptable values: bitbucket|custom|github|gitlab.`,
 	},
 	{
 		name:         "repoUrl",
 		short:        "u",
 		defaultValue: "",
-		usage:        `The URL for the repository. If provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links for the given repoType`,
+		usage:        `The URL for the repository. If provided and "repoType" is not custom, LaunchDarkly will attempt to automatically generate source code links for the given "repoType".`,
 	},
 	{
 		name:         "revision",
