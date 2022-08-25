@@ -75,7 +75,7 @@ jobs:
         default: custom
         enum: ["bitbucket", "custom", "github", "gitlab"]
       repo_url:
-        description:  "The URL for the repository. If provided and repoType is not custom, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs`"
+        description:  "The URL for the repository. If provided and `repoType` is not custom, LaunchDarkly will attempt to automatically generate source code links. Example: `https://github.com/launchdarkly/ld-find-code-refs`"
         type: string
         default: ""
       default_branch:
