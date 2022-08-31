@@ -138,34 +138,34 @@ func (c *Client) tagName() (name string, err error) {
 	return name, err
 }
 
-func (c *Client) headSha() (string, error) {
+func (c *Client) headSha() (sha string, err error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return "", err
+		return sha, err
 	}
 	ref, err := repo.Head()
 	if err != nil {
-		return "", err
+		return sha, err
 	}
-	sha := ref.Hash().String()
+	sha = ref.Hash().String()
 	log.Debug.Printf("identified head sha: %s", sha)
 	return sha, nil
 }
 
-func (c *Client) commitTime() (int64, error) {
+func (c *Client) commitTime() (commitTime int64, err error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return 0, err
+		return commitTime, err
 	}
 	head, err := repo.Head()
 	if err != nil {
-		return 0, err
+		return commitTime, err
 	}
 	commit, err := repo.CommitObject(head.Hash())
 	if err != nil {
-		return 0, err
+		return commitTime, err
 	}
-	commitTime := commit.Author.When.Unix() * 1000
+	commitTime = commit.Author.When.UnixMilli()
 	return commitTime, nil
 }
 
