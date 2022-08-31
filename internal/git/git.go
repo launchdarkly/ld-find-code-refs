@@ -108,6 +108,7 @@ func (c *Client) branchName() (name string, err error) {
 	return name, nil
 }
 
+// TODO convert to go git, probably difficult w/lightweight commits
 func (c *Client) tagName() (string, error) {
 	/* #nosec */
 	cmd := exec.Command("git", "-C", c.workspace, "describe", "--tags", "HEAD")
