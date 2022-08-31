@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -107,20 +108,34 @@ func (c *Client) branchName() (name string, err error) {
 	return name, nil
 }
 
-// TODO convert to go git, probably difficult w/lightweight commits
-func (c *Client) tagName() (string, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "describe", "--tags", "HEAD")
-	out, err := cmd.CombinedOutput()
+func (c *Client) tagName() (name string, err error) {
+	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return "", errors.New(string(out))
+		return name, err
 	}
-	ret := strings.TrimSpace(string(out))
-	if ret == "" {
-		return "", nil
+	head, err := repo.Head()
+	if err != nil {
+		return name, err
 	}
-	log.Debug.Printf("identified tag name: %s", ret)
-	return ret, nil
+	iter, err := repo.Tags()
+	if err != nil {
+		return name, err
+	}
+
+	if err := iter.ForEach(func(ref *plumbing.Reference) error {
+		if head.Hash() == ref.Hash() {
+			name = ref.Name().Short()
+			iter.Close()
+		}
+		return nil
+	}); err != nil {
+		return name, err
+	}
+	if name == "" {
+		return name, nil
+	}
+	log.Debug.Printf("identified tag name: %s", name)
+	return name, err
 }
 
 func (c *Client) headSha() (string, error) {
