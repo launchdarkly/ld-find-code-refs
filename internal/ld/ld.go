@@ -18,7 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
 
@@ -84,7 +83,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 	}
 	client.RetryWaitMin = 1 * time.Second
 	client.RetryWaitMax = 30 * time.Second
-	client.Backoff = retryablehttp.LinearJitterBackoff
+	client.Backoff = h.LinearJitterBackoff
 
 	return ApiClient{
 		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{

@@ -7,7 +7,6 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 	"github.com/launchdarkly/ld-find-code-refs/options"
 )
 
@@ -17,7 +16,7 @@ const (
 
 func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
 	isDryRun := opts.DryRun
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: helpers.GetUserAgent(opts.UserAgent)})
 	ignoreServiceErrors := opts.IgnoreServiceErrors
 
 	if !isDryRun {

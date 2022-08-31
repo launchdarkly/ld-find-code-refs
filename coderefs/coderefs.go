@@ -9,7 +9,6 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
-	"github.com/launchdarkly/ld-find-code-refs/internal/version"
 	"github.com/launchdarkly/ld-find-code-refs/options"
 	"github.com/launchdarkly/ld-find-code-refs/search"
 )
@@ -26,7 +25,7 @@ func Run(opts options.Options, output bool) {
 	}
 
 	log.Info.Printf("absolute directory path: %s", absPath)
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: helpers.GetUserAgent(opts.UserAgent)})
 
 	branchName := opts.Branch
 	revision := opts.Revision
@@ -79,7 +78,7 @@ func Run(opts options.Options, output bool) {
 }
 
 func Prune(opts options.Options, branches []string) {
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: "LDFindCodeRefs/" + version.Version})
+	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: helpers.GetUserAgent(opts.UserAgent)})
 	err := ldApi.PostDeleteBranchesTask(opts.RepoName, branches)
 	if err != nil {
 		helpers.FatalServiceError(err, opts.IgnoreServiceErrors)
