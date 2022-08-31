@@ -249,7 +249,6 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 		}
 		for _, filePatch := range patch.FilePatches() {
 			fromFile, toFile := filePatch.Files()
-			log.Debug.Printf("Examining from file: %s and to file: %s", fromFile, toFile)
 			if project.Dir != "" && (toFile == nil || !strings.HasPrefix(toFile.Path(), project.Dir)) {
 				if fromFile != nil && !strings.HasPrefix(fromFile.Path(), project.Dir) {
 					continue
