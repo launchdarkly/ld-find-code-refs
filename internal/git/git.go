@@ -7,7 +7,6 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	git "github.com/go-git/go-git/v5"
@@ -155,23 +154,34 @@ func (c *Client) commitTime() (int64, error) {
 	return commitTime, nil
 }
 
-func (c *Client) RemoteBranches() (map[string]bool, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "ls-remote", "--quiet", "--heads")
-	out, err := cmd.CombinedOutput()
+func (c *Client) RemoteBranches() (branches map[string]bool, err error) {
+	branches = map[string]bool{}
+	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return nil, errors.New(string(out))
+		return branches, err
 	}
-	rgx := regexp.MustCompile("refs/heads/(.*)")
-	results := rgx.FindAllStringSubmatch(string(out), -1)
-	log.Debug.Printf("found %d branches on remote", len(results))
-	ret := map[string]bool{}
-	for _, r := range results {
-		ret[r[1]] = true
+	remote, err := repo.Remote("origin")
+	if err != nil {
+		return branches, err
 	}
+	refList, err := remote.List(&git.ListOptions{})
+	if err != nil {
+		return branches, err
+	}
+	refPrefix := "refs/heads/"
+	for _, ref := range refList {
+		refName := ref.Name().String()
+		if !strings.HasPrefix(refName, refPrefix) {
+			continue
+		}
+		branchName := refName[len(refPrefix):]
+		log.Debug.Printf("found remote branch: %s", branchName)
+		branches[branchName] = true
+	}
+
 	// the current branch should be in the list of remote branches
-	ret[c.GitBranch] = true
-	return ret, nil
+	branches[c.GitBranch] = true
+	return branches, nil
 }
 
 type CommitData struct {
