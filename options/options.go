@@ -64,6 +64,7 @@ type Options struct {
 	Debug               bool   `mapstructure:"debug"`
 	DryRun              bool   `mapstructure:"dryRun"`
 	IgnoreServiceErrors bool   `mapstructure:"ignoreServiceErrors"`
+	UserAgent           string `mapstructure:"userAgent"`
 
 	// The following options can only be configured via YAML configuration
 

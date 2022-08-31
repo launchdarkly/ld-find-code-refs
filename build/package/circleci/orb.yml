@@ -132,3 +132,4 @@ jobs:
               --repoName=${CIRCLE_PROJECT_REPONAME} \
               --updateSequenceId=${CIRCLE_BUILD_NUM} \
               --dir=/repo
+              --userAgent="circle-ci"

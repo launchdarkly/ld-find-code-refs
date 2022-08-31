@@ -148,4 +148,9 @@ only be updated if the existing "updateSequenceId" is less than the new
 "updateSequenceId". Examples: the time a "git push" was initiated, CI
 build number, the current unix timestamp.`,
 	},
+	{
+		name:         "userAgent",
+		defaultValue: "",
+		usage:        `(Internal) Platform where code references is run.`,
+	},
 }

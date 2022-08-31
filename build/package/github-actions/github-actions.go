@@ -64,6 +64,7 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	opts.DefaultBranch = defaultBranch
 	opts.Branch = ghBranch
 	opts.UpdateSequenceId = updateSequenceId
+	opts.UserAgent = "github-actions"
 
 	return opts, opts.Validate()
 }

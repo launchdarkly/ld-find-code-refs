@@ -32,5 +32,6 @@ func mergeBitbucketOptions(opts o.Options) (o.Options, error) {
 		updateSequenceId = -1
 	}
 	opts.UpdateSequenceId = updateSequenceId
+	opts.UserAgent = "bitbucket-pipeline"
 	return opts, opts.Validate()
 }
