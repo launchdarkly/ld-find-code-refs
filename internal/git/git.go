@@ -108,19 +108,24 @@ func (c *Client) branchName() (name string, err error) {
 	return name, nil
 }
 
-func (c *Client) tagName() (string, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "describe", "--tags", "HEAD")
-	out, err := cmd.CombinedOutput()
+func (c *Client) tagName() (name string, err error) {
+	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return "", errors.New(string(out))
+		return name, err
 	}
-	ret := strings.TrimSpace(string(out))
-	if ret == "" {
+	ref, err := repo.Head()
+	if err != nil {
+		return name, err
+	}
+	if !ref.Name().IsTag() {
 		return "", nil
 	}
-	log.Debug.Printf("identified tag name: %s", ret)
-	return ret, nil
+	name = ref.Name().Short()
+	log.Debug.Printf("identified tag name: %s", name)
+	if name == "HEAD" {
+		return "", nil
+	}
+	return name, nil
 }
 
 func (c *Client) headSha() (string, error) {
