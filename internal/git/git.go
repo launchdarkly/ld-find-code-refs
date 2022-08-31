@@ -91,19 +91,21 @@ func (c *Client) getRef(branch string, allowTags bool) (name string, refType str
 	return "", "", fmt.Errorf("error parsing git tag name: git repo at %s must be checked out to a valid branch or tag, or --branch option must be set", c.workspace)
 }
 
-func (c *Client) branchName() (string, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "--abbrev-ref", "HEAD")
-	out, err := cmd.CombinedOutput()
+func (c *Client) branchName() (name string, err error) {
+	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return "", errors.New(string(out))
+		return name, err
 	}
-	ret := strings.TrimSpace(string(out))
-	log.Debug.Printf("identified branch name: %s", ret)
-	if ret == "HEAD" {
+	ref, err := repo.Head()
+	if err != nil {
+		return name, err
+	}
+	name = ref.Name().Short()
+	log.Debug.Printf("identified branch name: %s", name)
+	if name == "HEAD" {
 		return "", nil
 	}
-	return ret, nil
+	return name, nil
 }
 
 func (c *Client) tagName() (string, error) {
