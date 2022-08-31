@@ -122,15 +122,17 @@ func (c *Client) tagName() (string, error) {
 }
 
 func (c *Client) headSha() (string, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "HEAD")
-	out, err := cmd.CombinedOutput()
+	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return "", errors.New(string(out))
+		return "", err
 	}
-	ret := strings.TrimSpace(string(out))
-	log.Debug.Printf("identified head sha: %s", ret)
-	return ret, nil
+	ref, err := repo.Head()
+	if err != nil {
+		return "", err
+	}
+	sha := ref.Hash().String()
+	log.Debug.Printf("identified head sha: %s", sha)
+	return sha, nil
 }
 
 func (c *Client) commitTime() (int64, error) {
