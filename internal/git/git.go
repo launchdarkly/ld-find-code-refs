@@ -11,6 +11,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/format/diff"
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -249,6 +250,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 		}
 		for _, filePatch := range patch.FilePatches() {
 			fromFile, toFile := filePatch.Files()
+			printDebugStatement(fromFile, toFile)
 			if project.Dir != "" && (toFile == nil || !strings.HasPrefix(toFile.Path(), project.Dir)) {
 				if fromFile != nil && !strings.HasPrefix(fromFile.Path(), project.Dir) {
 					continue
@@ -290,4 +292,15 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 	}
 
 	return ret, err
+}
+
+func printDebugStatement(fromFile, toFile diff.File) {
+	fromPath, toPath := "FROM_PATH", "TO_PATH"
+	if fromFile != nil {
+		fromPath = fromFile.Path()
+	}
+	if toFile != nil {
+		toPath = toFile.Path()
+	}
+	log.Debug.Printf("Examining from file: %s and to file: %s", fromPath, toPath)
 }
