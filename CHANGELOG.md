@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.6.0] - 2022-08-31
+### Changed:
+- `gitlab` is a supported `repoType`
+- Optional `defaultBranch` will fallback to `main` when not provided, instead of `master`
+- Bumped dependencies
+- Added debug logging
+
 ## [2.5.7] - 2022-03-01
 ### Changed:
 - Update release configuration
