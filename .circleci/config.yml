@@ -26,7 +26,7 @@ defaults:
       - run: sudo apt-get install python3-pip
       - run: sudo pip install pre-commit
       - run: pre-commit install
-      - run: SKIP=go-unit-tests,github-action-docs pre-commit run -a
+      - run: pre-commit run -a golangci-lint
       - run:
           name: Set up Code Climate test-reporter
           command: |
@@ -87,7 +87,7 @@ jobs:
       - run: sudo pip install pre-commit
       - run: pre-commit install
       - run: npm install action-docs
-      - run: SKIP=go-unit-tests,golangci-lint pre-commit run -a
+      - run: pre-commit run -a github-action-docs
 
 workflows:
   test:

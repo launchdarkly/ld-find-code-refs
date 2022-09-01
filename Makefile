@@ -17,7 +17,7 @@ lint:
 
 # Generate docs about GitHub Action inputs and updates README.md
 github-action-docs:
-	cd build/metadata/github-actions && npx action-docs -u
+	cd build/metadata/github-actions && npx action-docs -u --no-banner
 
 # Strip debug informatino from production builds
 BUILD_FLAGS = -ldflags="-s -w"
