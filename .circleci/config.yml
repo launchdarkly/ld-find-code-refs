@@ -82,6 +82,10 @@ jobs:
       - image: cimg/node:18.8.0
     steps:
       - checkout
+      - run: sudo apt-get update
+      - run: sudo apt-get install python3-pip
+      - run: sudo pip install pre-commit
+      - run: pre-commit install
       - run: SKIP=go-unit-tests,golangci-lint pre-commit run -a
 
 workflows:
