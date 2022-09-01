@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.6.1] - 2022-09-01
+### Fixed:
+- git repo permissions in GitHub Action
+
 ## [2.6.0] - 2022-08-31
 ### Changed:
 - `gitlab` is a supported `repoType`
