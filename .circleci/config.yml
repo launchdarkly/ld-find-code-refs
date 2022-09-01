@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 experimental:
   notify:
@@ -77,8 +77,14 @@ jobs:
       - run: sudo apt-get install rpm
       - run: curl -sL https://git.io/goreleaser | VERSION=v0.169.0 bash -s -- --rm-dist --skip-publish --skip-validate
 
+  github-actions-docs:
+    docker:
+      - image: cimg/node:18.8.0
+    steps:
+      - checkout
+      - run: SKIP=go-unit-tests,golangci-lint pre-commit run -a
+
 workflows:
-  version: 2
   test:
     jobs:
       - go-test:
@@ -88,3 +94,7 @@ workflows:
       - test-publish:
           requires:
             - go-test
+
+  lint:
+    jobs:
+      - github-actions-docs
