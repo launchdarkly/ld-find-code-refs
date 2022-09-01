@@ -86,6 +86,7 @@ jobs:
       - run: sudo apt-get install python3-pip
       - run: sudo pip install pre-commit
       - run: pre-commit install
+      - run: npm install actions-docs
       - run: SKIP=go-unit-tests,golangci-lint pre-commit run -a
 
 workflows:
