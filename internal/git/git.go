@@ -175,23 +175,27 @@ func (c *Client) RemoteBranches() (branches map[string]bool, err error) {
 	if err != nil {
 		return branches, err
 	}
-	remote, err := repo.Remote("origin")
+
+	remotes, err := repo.Remotes()
 	if err != nil {
 		return branches, err
 	}
-	refList, err := remote.List(&git.ListOptions{})
-	if err != nil {
-		return branches, err
-	}
-	refPrefix := "refs/heads/"
-	for _, ref := range refList {
-		refName := ref.Name().String()
-		if !strings.HasPrefix(refName, refPrefix) {
-			continue
+
+	for _, r := range remotes {
+		refList, err := r.List(&git.ListOptions{})
+		if err != nil {
+			return branches, err
 		}
-		branchName := refName[len(refPrefix):]
-		log.Debug.Printf("found remote branch: %s", branchName)
-		branches[branchName] = true
+		refPrefix := "refs/heads/"
+		for _, ref := range refList {
+			refName := ref.Name().String()
+			if !strings.HasPrefix(refName, refPrefix) {
+				continue
+			}
+			branchName := refName[len(refPrefix):]
+			log.Debug.Printf("found remote branch: %s/%s", r.Config().Name, branchName)
+			branches[branchName] = true
+		}
 	}
 
 	// the current branch should be in the list of remote branches
