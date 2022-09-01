@@ -38,9 +38,6 @@ inputs:
   repoName: 
     description: "The repository name. Defaults to the current GitHub repository."
     required: false
-  newprop:
-    description: new prop
-    required: true
 runs:
   using: 'docker'
   image: 'Dockerfile'
