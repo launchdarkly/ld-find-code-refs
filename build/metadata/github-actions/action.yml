@@ -10,7 +10,7 @@ inputs:
     required: true
   allowTags: 
     default: "false"
-    description: "Enable storing references for tags. The tag will be listed as a branch."
+    description: "Enable storing references for tags. Lists the tag as a branch."
     required: false
   baseUri: 
     default: "https://app.launchdarkly.com"
@@ -18,7 +18,7 @@ inputs:
     required: false
   contextLines: 
     default: "2"
-    description: "The number of context lines above and below a code reference for the job to send to LaunchDarkly. By default, the flag finder will not send any context lines to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided."
+    description: "The number of context lines above and below a code reference for the job to send to LaunchDarkly. By default, the flag finder will not send any context lines to LaunchDarkly. If < 0, it will send no source code to LaunchDarkly. If 0, it will send only the lines containing flag references. If > 0, it will send that number of context lines above and below the flag reference. You may provide a maximum of 5 context lines."
     required: false
   debug: 
     default: "false"
