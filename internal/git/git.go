@@ -7,10 +7,10 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
@@ -91,82 +91,116 @@ func (c *Client) getRef(branch string, allowTags bool) (name string, refType str
 	return "", "", fmt.Errorf("error parsing git tag name: git repo at %s must be checked out to a valid branch or tag, or --branch option must be set", c.workspace)
 }
 
-func (c *Client) branchName() (string, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "--abbrev-ref", "HEAD")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", errors.New(string(out))
-	}
-	ret := strings.TrimSpace(string(out))
-	log.Debug.Printf("identified branch name: %s", ret)
-	if ret == "HEAD" {
-		return "", nil
-	}
-	return ret, nil
-}
-
-func (c *Client) tagName() (string, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "describe", "--tags", "HEAD")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", errors.New(string(out))
-	}
-	ret := strings.TrimSpace(string(out))
-	if ret == "" {
-		return "", nil
-	}
-	log.Debug.Printf("identified tag name: %s", ret)
-	return ret, nil
-}
-
-func (c *Client) headSha() (string, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "rev-parse", "HEAD")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", errors.New(string(out))
-	}
-	ret := strings.TrimSpace(string(out))
-	log.Debug.Printf("identified head sha: %s", ret)
-	return ret, nil
-}
-
-func (c *Client) commitTime() (int64, error) {
+func (c *Client) branchName() (name string, err error) {
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return 0, err
+		return name, err
+	}
+	ref, err := repo.Head()
+	if err != nil {
+		return name, err
+	}
+	name = ref.Name().Short()
+	log.Debug.Printf("identified branch name: %s", name)
+	if name == "HEAD" {
+		return "", nil
+	}
+	return name, nil
+}
+
+func (c *Client) tagName() (name string, err error) {
+	repo, err := git.PlainOpen(c.workspace)
+	if err != nil {
+		return name, err
 	}
 	head, err := repo.Head()
 	if err != nil {
-		return 0, err
+		return name, err
+	}
+	iter, err := repo.Tags()
+	if err != nil {
+		return name, err
+	}
+
+	if err := iter.ForEach(func(ref *plumbing.Reference) error {
+		if head.Hash() == ref.Hash() {
+			name = ref.Name().Short()
+			iter.Close()
+		}
+		return nil
+	}); err != nil {
+		return name, err
+	}
+	if name == "" {
+		return name, nil
+	}
+	log.Debug.Printf("identified tag name: %s", name)
+	return name, err
+}
+
+func (c *Client) headSha() (sha string, err error) {
+	repo, err := git.PlainOpen(c.workspace)
+	if err != nil {
+		return sha, err
+	}
+	ref, err := repo.Head()
+	if err != nil {
+		return sha, err
+	}
+	sha = ref.Hash().String()
+	log.Debug.Printf("identified head sha: %s", sha)
+	return sha, nil
+}
+
+func (c *Client) commitTime() (commitTime int64, err error) {
+	repo, err := git.PlainOpen(c.workspace)
+	if err != nil {
+		return commitTime, err
+	}
+	head, err := repo.Head()
+	if err != nil {
+		return commitTime, err
 	}
 	commit, err := repo.CommitObject(head.Hash())
 	if err != nil {
-		return 0, err
+		return commitTime, err
 	}
-	commitTime := commit.Author.When.Unix() * 1000
+	commitTime = commit.Author.When.UnixMilli()
 	return commitTime, nil
 }
 
-func (c *Client) RemoteBranches() (map[string]bool, error) {
-	/* #nosec */
-	cmd := exec.Command("git", "-C", c.workspace, "ls-remote", "--quiet", "--heads")
-	out, err := cmd.CombinedOutput()
+func (c *Client) RemoteBranches() (branches map[string]bool, err error) {
+	branches = map[string]bool{}
+	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
-		return nil, errors.New(string(out))
+		return branches, err
 	}
-	rgx := regexp.MustCompile("refs/heads/(.*)")
-	results := rgx.FindAllStringSubmatch(string(out), -1)
-	log.Debug.Printf("found %d branches on remote", len(results))
-	ret := map[string]bool{}
-	for _, r := range results {
-		ret[r[1]] = true
+
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return branches, err
 	}
+
+	for _, r := range remotes {
+		refList, err := r.List(&git.ListOptions{})
+		if err != nil {
+			return branches, err
+		}
+		refPrefix := "refs/heads/"
+		for _, ref := range refList {
+			refName := ref.Name().String()
+			if !strings.HasPrefix(refName, refPrefix) {
+				continue
+			}
+			branchName := refName[len(refPrefix):]
+			log.Debug.Printf("found remote branch: %s/%s", r.Config().Name, branchName)
+			branches[branchName] = true
+		}
+	}
+
 	// the current branch should be in the list of remote branches
-	ret[c.GitBranch] = true
-	return ret, nil
+	branches[c.GitBranch] = true
+	return branches, nil
 }
 
 type CommitData struct {
