@@ -15,6 +15,9 @@ test: lint
 lint:
 	pre-commit run -a --verbose golangci-lint
 
+github-action-docs:
+	cd build/metadata/github-actions && npx action-docs
+
 # Strip debug informatino from production builds
 BUILD_FLAGS = -ldflags="-s -w"
 
