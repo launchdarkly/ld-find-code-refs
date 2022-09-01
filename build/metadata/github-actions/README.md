@@ -74,6 +74,9 @@ If the action fails, there may be a problem with your configuration. To investig
 
 ## Additional Options
 
+<!-- action-docs-inputs -->
+## Inputs
+
 | parameter | description | required | default |
 | - | - | - | - |
 | accessToken | A token with write access to the LaunchDarkly project. | `true` |  |
@@ -85,3 +88,7 @@ If the action fails, there may be a problem with your configuration. To investig
 | lookback | Set the number of commits to search in history for whether you removed a feature flag from code. You may set to 0 to disable this feature. Setting this option to a high value will increase search time. | `false` | 10 |
 | projKey | Key of the LaunchDarkly project associated with this repository. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with `projects` block in configuration file. | `false` |  |
 | repoName | The repository name. Defaults to the current GitHub repository. | `false` |  |
+
+
+
+<!-- action-docs-inputs -->
