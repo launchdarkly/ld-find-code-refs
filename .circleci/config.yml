@@ -29,7 +29,7 @@ defaults:
       - run: sudo apt-get install python3-pip
       - run: sudo pip install pre-commit
       - run: pre-commit install
-      - run: SKIP=go-unit-tests pre-commit run -a
+      - run: SKIP=go-unit-tests,github-action-docs pre-commit run -a
       - run:
           name: Set up Code Climate test-reporter
           command: |
