@@ -131,5 +131,5 @@ jobs:
               --hunkUrlTemplate=<< parameters.hunk_url_template >> \
               --repoName=${CIRCLE_PROJECT_REPONAME} \
               --updateSequenceId=${CIRCLE_BUILD_NUM} \
-              --dir=/repo
+              --dir=/repo \
               --userAgent="circle-ci"
