@@ -11,8 +11,8 @@ defaults:
     CIRCLE_TEST_REPORTS: /tmp/circle-reports
     CIRCLE_ARTIFACTS: /tmp/circle-artifacts
     COMMON_GO_PACKAGES: >
-      github.com/jstemmer/go-junit-report
-      github.com/kyoh86/richgo
+      github.com/jstemmer/go-junit-report@v1.0.0
+      github.com/kyoh86/richgo@v0.3.10
 
   build_steps: &build_steps
     steps:
