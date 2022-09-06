@@ -23,4 +23,4 @@ repos:
     types: [markdown]
     pass_filenames: false
     language: system
-    files: 'build/metadata/github-actions/README.md'
+    files: 'build/metadata/github-actions/*'
