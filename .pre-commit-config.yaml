@@ -14,3 +14,13 @@ repos:
   rev: v0.3.3
   hooks:
     - id: go-unit-tests
+
+- repo: local
+  hooks:
+  - id: github-action-docs
+    name: github-action-docs
+    entry: make github-action-docs
+    types: [markdown]
+    pass_filenames: false
+    language: system
+    files: 'build/metadata/github-actions/*'

@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 experimental:
   notify:
@@ -26,7 +26,7 @@ defaults:
       - run: sudo apt-get install python3-pip
       - run: sudo pip install pre-commit
       - run: pre-commit install
-      - run: SKIP=go-unit-tests pre-commit run -a
+      - run: pre-commit run -a golangci-lint
       - run:
           name: Set up Code Climate test-reporter
           command: |
@@ -75,10 +75,21 @@ jobs:
       - setup_remote_docker
       - run: sudo apt-get update
       - run: sudo apt-get install rpm
-      - run: curl -sL https://git.io/goreleaser | VERSION=v0.169.0 bash -s -- --rm-dist --skip-publish --skip-validate --release-notes <(make echo-release-notes)
+      - run: curl -sL https://git.io/goreleaser | VERSION=v0.169.0 bash -s -- --rm-dist --skip-publish --skip-validate
+
+  github-actions-docs:
+    docker:
+      - image: cimg/node:18.8.0
+    steps:
+      - checkout
+      - run: sudo apt-get update
+      - run: sudo apt-get install python3-pip
+      - run: sudo pip install pre-commit
+      - run: pre-commit install
+      - run: npm install action-docs
+      - run: pre-commit run -a github-action-docs
 
 workflows:
-  version: 2
   test:
     jobs:
       - go-test:
@@ -88,3 +99,7 @@ workflows:
       - test-publish:
           requires:
             - go-test
+
+  lint:
+    jobs:
+      - github-actions-docs
