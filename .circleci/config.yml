@@ -21,7 +21,7 @@ defaults:
           name: install pre dependencies
           command: |
             sudo apt-get install -yqq git
-      - run: go install -u $COMMON_GO_PACKAGES
+      - run: go install $COMMON_GO_PACKAGES
       - run: sudo apt-get update
       - run: sudo apt-get install python3-pip
       - run: sudo pip install pre-commit
