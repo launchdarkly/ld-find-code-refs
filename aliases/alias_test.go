@@ -5,8 +5,10 @@ import (
 	"os"
 	"testing"
 
-	o "github.com/launchdarkly/ld-find-code-refs/options"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
+	o "github.com/launchdarkly/ld-find-code-refs/options"
 )
 
 var allNamingConventions = []o.Alias{
@@ -26,6 +28,11 @@ const (
 	testFlagAliasKey = "AnyKind.of_key"
 	testWildFlagKey  = "wildFlag"
 )
+
+func TestMain(m *testing.M) {
+	log.Init(true)
+	os.Exit(m.Run())
+}
 
 func Test_GenerateAliases(t *testing.T) {
 	specs := []struct {
@@ -138,8 +145,8 @@ func Test_processFileContent(t *testing.T) {
 				},
 			},
 			dir:     "dirDoesNotExist",
-			want:    nil,
-			wantErr: true,
+			want:    map[string][]byte{},
+			wantErr: false,
 		},
 		{
 			name: "Non-existent file",
@@ -150,8 +157,8 @@ func Test_processFileContent(t *testing.T) {
 				},
 			},
 			dir:     tmpDir,
-			want:    nil,
-			wantErr: true,
+			want:    map[string][]byte{},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
