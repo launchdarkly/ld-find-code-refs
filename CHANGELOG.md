@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.6.2] - 2022-09-06
+### Fixed:
+- error running CircleCI orb
+
 ## [2.6.1] - 2022-09-01
 ### Fixed:
 - git repo permissions in GitHub Action
