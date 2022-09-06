@@ -72,8 +72,6 @@ Once your workflow has been created, the best way to confirm that the workflow i
 
 If the action fails, there may be a problem with your configuration. To investigate, dig into the action's logs to view any error messages.
 
-## Additional Options
-
 <!-- action-docs-inputs -->
 ## Inputs
 
