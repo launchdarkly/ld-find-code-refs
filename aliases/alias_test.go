@@ -145,7 +145,7 @@ func Test_processFileContent(t *testing.T) {
 				},
 			},
 			dir:     "dirDoesNotExist",
-			want:    map[string][]byte{},
+			want:    emptyMap,
 			wantErr: false,
 		},
 		{
@@ -157,7 +157,7 @@ func Test_processFileContent(t *testing.T) {
 				},
 			},
 			dir:     tmpDir,
-			want:    map[string][]byte{},
+			want:    emptyMap,
 			wantErr: false,
 		},
 	}
