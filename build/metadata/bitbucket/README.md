@@ -73,5 +73,5 @@ If you're reporting an issue, please include:
 * steps to reproduce
 
 ## License
-Copyright 2021 Catamorphic, Co.
+Copyright 2022 Catamorphic, Co.
 Licensed under the Apache License, Version 2.0. See [LICENSE.txt](LICENSE.txt) file.
