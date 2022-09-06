@@ -25,6 +25,8 @@ mkdir -p githubActionsMetadataUpdates
 gh repo clone launchdarkly/find-code-references githubActionsMetadataUpdates
 cp build/metadata/github-actions/* githubActionsMetadataUpdates
 cd githubActionsMetadataUpdates
+git config user.email "launchdarklyreleasebot@launchdarkly.com"
+git config user.name "LaunchDarklyReleaseBot"
 git add -u
 git commit -m "Release auto update version"
 
