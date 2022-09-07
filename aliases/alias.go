@@ -14,6 +14,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
+	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/options"
 )
@@ -27,7 +28,10 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 
 	ret := make(map[string][]string, len(flags))
 	for _, flag := range flags {
-		for _, a := range aliases {
+		for i, a := range aliases {
+			if a.Name == "" {
+				a.Name = strconv.Itoa(i)
+			}
 			flagAliases, err := generateAlias(a, flag, dir, allFileContents)
 			if err != nil {
 				return nil, err
@@ -41,6 +45,7 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 
 func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
 	ret := []string{}
+	aliasId := a.Name
 	switch a.Type.Canonical() {
 	case options.Literal:
 		ret = a.Flags[flag]
@@ -63,7 +68,7 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 			absGlob := filepath.Join(dir, path)
 			matches, err := filepath.Glob(absGlob)
 			if err != nil {
-				return nil, fmt.Errorf("could not process path glob '%s'", absGlob)
+				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
 			}
 			for _, match := range matches {
 				pathFileContents := allFileContents[match]
@@ -101,11 +106,11 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 		cmd.Dir = dir
 		stdout, err := cmd.Output()
 		if err != nil {
-			return nil, fmt.Errorf("failed to execute alias command: %w", err)
+			return nil, fmt.Errorf("filepattern '%s': failed to execute alias command: %w", aliasId, err)
 		}
 		err = json.Unmarshal(stdout, &ret)
 		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal json output of alias command: %w", err)
+			return nil, fmt.Errorf("filepattern '%s': could not unmarshal json output of alias command: %w", aliasId, err)
 		}
 	}
 
@@ -129,8 +134,11 @@ func processFileContent(aliases []options.Alias, dir string) (map[string][]byte,
 		for _, glob := range a.Paths {
 			absGlob := filepath.Join(dir, glob)
 			matches, err := filepath.Glob(absGlob)
-			if matches == nil || err != nil {
+			if err != nil {
 				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
+			}
+			if matches == nil {
+				log.Info.Printf("filepattern '%s': no matching files found for alias path glob '%s'", aliasId, absGlob)
 			}
 			paths = append(paths, matches...)
 		}
