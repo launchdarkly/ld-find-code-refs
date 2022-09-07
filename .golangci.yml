@@ -46,18 +46,11 @@ linter-settings:
 
 issues:
   exclude:
-    - "G104: Errors unhandled." # Let errcheck handle these
     - "error returned from external package is unwrapped"
     - "error returned from interface method should be wrapped"
-    # - "error is not nil (line 73) but it returns nil"
-    - "SA5011: possible nil pointer dereference" # should fix
     - "comparing with == will fail on wrapped errors. Use errors.Is to check for a specific error" # should fix
     - "comparing with != will fail on wrapped errors. Use errors.Is to check for a specific error" # should fix
     - "non-wrapping format verb for fmt.Errorf. Use `%w` to format errors" # should fix
-    - 'G307: Deferring unsafe method "Close" on type "*os.File"'
-    - "calculated cyclomatic complexity for function processFileContent is 11, max is 10"
-    - "unnecessary leading newline" # should fix
-    - "unnecessary trailing newline" # fix
     - "append to slice `projectKeys` with non-zero initialized length"
   exclude-rules:
     # Exclude some `staticcheck` messages.
