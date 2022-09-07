@@ -275,7 +275,6 @@ func (o Options) Validate() error {
 				return err
 			}
 		}
-
 	}
 
 	return nil
