@@ -13,15 +13,51 @@ linters:
       - lll
       - errcheck
       - interfacer
+      - tagliatelle
+      - varnamelen
+      - nonamedreturns
+      - nlreturn # re-enable this after fixing all cases
+      - gomnd # re-enable this after fixing all cases
+      - nosnakecase
+      - ifshort # re-enable
+      - nilerr #re-enable
+      - goerr113
+      - exhaustivestruct
+      - exhaustruct
+      - exhaustive
+      - godot
+      - wsl #fix
+      - gocognit
+      - revive
+      - errname
+      - cyclop
+      - gofumpt # fix
+      - gci
+      - nestif # fix
+      - gosec
+      - gocritic
   fast: false
 
 linter-settings:
   goimports:
     local-prefixes: github.com/launchdarkly,gopkg.in/launchdarkly
+  staticcheck:
+    go: '1.18'
 
 issues:
   exclude:
-    - "G104: Errors unhandled." # Let errcheck handle these
+    - "error returned from external package is unwrapped"
+    - "error returned from interface method should be wrapped"
+    - "comparing with == will fail on wrapped errors. Use errors.Is to check for a specific error" # should fix
+    - "comparing with != will fail on wrapped errors. Use errors.Is to check for a specific error" # should fix
+    - "non-wrapping format verb for fmt.Errorf. Use `%w` to format errors" # should fix
+    - "append to slice `projectKeys` with non-zero initialized length"
+  exclude-rules:
+    # Exclude some `staticcheck` messages.
+    - linters:
+        - staticcheck
+      text: "SA5011" # fix
+  
   exclude-use-default: false
   max-same-issues: 1000
   max-per-linter: 1000

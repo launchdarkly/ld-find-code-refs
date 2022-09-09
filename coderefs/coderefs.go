@@ -74,7 +74,6 @@ func Run(opts options.Options, output bool) {
 	if gitClient != nil {
 		runExtinctions(opts, matcher, branch, repoParams, gitClient, ldApi)
 	}
-
 }
 
 func Prune(opts options.Options, branches []string) {
@@ -120,7 +119,6 @@ func generateHunkOutput(opts options.Options, matcher search.Matcher, branch ld.
 	for _, project := range opts.Projects {
 		projectKeys = append(projectKeys, project.Key)
 	}
-
 	if outDir != "" {
 		outPath, err := branch.WriteToCSV(outDir, projectKeys[0], repoParams.Name, opts.Revision)
 		if err != nil {
@@ -180,7 +178,6 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 				if count == 0 {
 					missingFlags = append(missingFlags, flag)
 				}
-
 			}
 			log.Info.Printf("checking if %d flags without references were removed in the last %d commits for project: %s", len(missingFlags), opts.Lookback, project.Key)
 			removedFlagsByProject, err := gitClient.FindExtinctions(project, missingFlags, matcher, lookback+1)

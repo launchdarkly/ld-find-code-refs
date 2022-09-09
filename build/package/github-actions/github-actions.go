@@ -146,5 +146,4 @@ func parseBranch(ref string, event *Event, allowTags bool) (string, error) {
 	}
 
 	return "", fmt.Errorf("expected ref name starting with refs/heads/%s, got: %s", addendum, ref)
-
 }

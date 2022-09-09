@@ -10,9 +10,6 @@ defaults:
   environment: &environment
     CIRCLE_TEST_REPORTS: /tmp/circle-reports
     CIRCLE_ARTIFACTS: /tmp/circle-artifacts
-    COMMON_GO_PACKAGES: >
-      github.com/jstemmer/go-junit-report
-      github.com/kyoh86/richgo
 
   build_steps: &build_steps
     steps:
@@ -21,7 +18,8 @@ defaults:
           name: install pre dependencies
           command: |
             sudo apt-get install -yqq git
-      - run: go get -u $COMMON_GO_PACKAGES
+      - run: go install github.com/jstemmer/go-junit-report@v1.0.0
+      - run: go install github.com/kyoh86/richgo@v0.3.10
       - run: sudo apt-get update
       - run: sudo apt-get install python3-pip
       - run: sudo pip install pre-commit
@@ -61,7 +59,7 @@ defaults:
 jobs:
   go-test:
     docker:
-      - image: cimg/go:1.17.1
+      - image: cimg/go:1.18
         environment:
           <<: *environment
 
@@ -69,7 +67,7 @@ jobs:
 
   test-publish:
     docker:
-      - image: cimg/go:1.17.1
+      - image: cimg/go:1.18
     steps:
       - checkout
       - setup_remote_docker
