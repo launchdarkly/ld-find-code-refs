@@ -23,6 +23,7 @@ var allNamingConventions = []o.Alias{
 var allSomeFlagNamingConventionAliases = slice("anyKindOfKey", "AnyKindOfKey", "any_kind_of_key", "ANY_KIND_OF_KEY", "any-kind-of-key", "any.kind.of.key")
 
 const (
+	testFlagAlias    = "test-flag"
 	testFlagKey      = "someFlag"
 	testFlagKey2     = "anotherFlag"
 	testFlagAliasKey = "AnyKind.of_key"
