@@ -42,7 +42,7 @@ type ApiOptions struct {
 }
 
 const (
-	apiVersion       = "20191212"
+	apiVersion       = "20210729"
 	apiVersionHeader = "LD-API-Version"
 	v2ApiPath        = "/api/v2"
 	reposPath        = v2ApiPath + "/code-refs/repositories"
