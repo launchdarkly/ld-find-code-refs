@@ -42,8 +42,10 @@ type ApiOptions struct {
 }
 
 const (
-	v2ApiPath = "/api/v2"
-	reposPath = v2ApiPath + "/code-refs/repositories"
+	apiVersion       = "20210729"
+	apiVersionHeader = "LD-API-Version"
+	v2ApiPath        = "/api/v2"
+	reposPath        = v2ApiPath + "/code-refs/repositories"
 )
 
 type ConfigurationError struct {
@@ -91,6 +93,9 @@ func InitApiClient(options ApiOptions) ApiClient {
 			Servers: []ldapi.ServerConfiguration{{
 				URL: options.BaseUri,
 			}},
+			DefaultHeader: map[string]string{
+				apiVersionHeader: apiVersion,
+			},
 		}),
 		httpClient: client,
 		Options:    options,
@@ -356,6 +361,7 @@ type ldErrorResponse struct {
 
 func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", c.Options.ApiKey)
+	req.Header.Set(apiVersionHeader, apiVersion)
 	req.Header.Set("User-Agent", c.Options.UserAgent)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
