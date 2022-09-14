@@ -2,6 +2,14 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.7.0] - 2022-09-14
+### Changed:
+- Log a warning when a `filepattern` alias configuration does not match any files instead of failing
+- Bumped dependencies
+
+### Fixed:
+- Error running code refs when using a newer API token with version `20220603` and later.
+
 ## [2.6.3] - 2022-09-09
 ### Changed:
 - update documentation
