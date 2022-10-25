@@ -76,7 +76,7 @@ If the action fails, there may be a problem with your configuration. To investig
 ## Inputs
 
 | parameter | description | required | default |
-| - | - | - | - |
+| --- | --- | --- | --- |
 | accessToken | A token with write access to the LaunchDarkly project. | `true` |  |
 | allowTags | Enable storing references for tags. Lists the tag as a branch. | `false` | false |
 | baseUri | The base URL of the LaunchDarkly server for this configuration. | `false` | https://app.launchdarkly.com |
@@ -86,7 +86,4 @@ If the action fails, there may be a problem with your configuration. To investig
 | lookback | Set the number of commits to search in history for whether you removed a feature flag from code. You may set to 0 to disable this feature. Setting this option to a high value will increase search time. | `false` | 10 |
 | projKey | Key of the LaunchDarkly project associated with this repository. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with `projects` block in configuration file. | `false` |  |
 | repoName | The repository name. Defaults to the current GitHub repository. | `false` |  |
-
-
-
 <!-- action-docs-inputs -->
