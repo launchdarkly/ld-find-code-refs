@@ -1,0 +1,37 @@
+name: Gosec
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y/%m/%d')"
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@2.14.0
+        timeout-minutes: 5
+        with:
+          args: --exclude-generated=true --severity=medium --concurrency=1 --fmt json --out=gosec-results.json --stdout --verbose=text --no-fail ./...
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          audience: https://github.com/launchdarkly
+          role-to-assume: ${{ secrets.ORG_SECURITY_GHA_ROLE_ARN }}
+          aws-region: us-east-1
+      - name: Upload scan results to S3
+        run: |
+          aws s3 cp ./gosec-results.json s3://launchdarkly-org-security-inventory/scan-results/gosec/${{ steps.date.outputs.date }}/$GITHUB_REPOSITORY.json
