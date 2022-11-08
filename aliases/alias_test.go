@@ -88,7 +88,7 @@ func Test_GenerateAliases(t *testing.T) {
 			aliases: []o.Alias{
 				fileWildPattern(testFlagKey),
 			},
-			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG"), testFlagKey: slice("SOME_FLAG")},
+			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG", "WILD_FLAG_SECOND_ALIAS"), testFlagKey: slice("SOME_FLAG")},
 		},
 		// TODO
 		// {
@@ -208,7 +208,7 @@ func fileExactPattern(flag string) o.Alias {
 func fileWildPattern(flag string) o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
-	a.Paths = []string{"testdata/*/*.txt", "testdata/*.txt"}
+	a.Paths = []string{"testdata/**/*.txt"}
 	a.Patterns = []string{pattern}
 	return a
 }
