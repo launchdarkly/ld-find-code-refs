@@ -119,5 +119,5 @@ jobs:
         accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
         projKey: LD_PROJECT_KEY
       env:
-        LD_DIR: "${{ github.workspace}}/repo-to-scan"
+        LD_DIR: "${{ github.workspace }}/repo-to-scan"
 ```
