@@ -12,6 +12,7 @@ RELEASE_VERSION=${1:-$LD_RELEASE_VERSION}
 mkdir -p bitbucketMetadataUpdates
 git clone "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git" bitbucketMetadataUpdates
 cp build/metadata/bitbucket/* bitbucketMetadataUpdates/
+cp CHANGELOG.md bitbucketMetadataUpdates/
 cd bitbucketMetadataUpdates
 git config user.email "launchdarklyreleasebot@launchdarkly.com"
 git config user.name "LaunchDarklyReleaseBot"
