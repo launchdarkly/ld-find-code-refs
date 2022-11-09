@@ -154,9 +154,13 @@ func GetWrapperOptions(dir string, merge func(Options) (Options, error)) (Option
 	if err != nil {
 		return Options{}, err
 	}
-	err = flags.Set("dir", dir)
-	if err != nil {
-		return Options{}, err
+	// if dir is set, it means that it was
+	// overridden with `LD_DIR` environment variable
+	if d, _ := flags.GetString("dir"); d == "" {
+		err = flags.Set("dir", dir)
+		if err != nil {
+			return Options{}, err
+		}
 	}
 
 	err = InitYAML()

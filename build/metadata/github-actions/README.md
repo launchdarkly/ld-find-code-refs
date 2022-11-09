@@ -87,3 +87,37 @@ If the action fails, there may be a problem with your configuration. To investig
 | projKey | Key of the LaunchDarkly project associated with this repository. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with `projects` block in configuration file. | `false` |  |
 | repoName | The repository name. Defaults to the current GitHub repository. | `false` |  |
 <!-- action-docs-inputs -->
+
+# Additional inputs
+
+All [command line flags](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#command-line) are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `dir` may be set as an environment variable.
+
+For example, if your action checks out multiple repositories you may override the default `dir` which is `GITHUB_WORKSPACE`.
+
+> GITHUB_WORKSPACE - The default working directory on the runner for steps, and the default location of your repository when using the checkout action. For example, /home/runner/work/my-repo-name/my-repo-name.
+
+
+```yaml
+jobs:
+  launchDarklyCodeReferences:
+    name: LaunchDarkly Code References
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo to scan
+      uses: actions/checkout@v3
+      with:
+        repository: launchdarkly/SupportService
+        path: repo-to-scan
+    - name: Checkout current repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 10
+        path: main
+    - name: LaunchDarkly Code References
+      uses: launchdarkly/find-code-references@v2.7.0
+      with:
+        accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
+        projKey: LD_PROJECT_KEY
+      env:
+        LD_DIR: "${{ github.workspace}}/repo-to-scan"
+```
