@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.8.0] - 2022-11-10
+Added:
+* Support doublestar glob patterns in `filepattern` aliases
+
+Changed:
+* Update dependencies
+
 ## [2.7.0] - 2022-09-14
 ### Changed:
 - Log a warning when a `filepattern` alias configuration does not match any files instead of failing
