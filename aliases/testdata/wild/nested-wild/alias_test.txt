@@ -1,0 +1,1 @@
+WILD_FLAG_SECOND_ALIAS = 'wildFlag'

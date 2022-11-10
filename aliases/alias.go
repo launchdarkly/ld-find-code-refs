@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/iancoleman/strcase"
+
 	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
@@ -66,7 +68,7 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 		fileContents := []byte{}
 		for _, path := range a.Paths {
 			absGlob := filepath.Join(dir, path)
-			matches, err := filepath.Glob(absGlob)
+			matches, err := doublestar.FilepathGlob(absGlob)
 			if err != nil {
 				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
 			}
@@ -133,7 +135,7 @@ func processFileContent(aliases []options.Alias, dir string) (map[string][]byte,
 		paths := []string{}
 		for _, glob := range a.Paths {
 			absGlob := filepath.Join(dir, glob)
-			matches, err := filepath.Glob(absGlob)
+			matches, err := doublestar.FilepathGlob(absGlob)
 			if err != nil {
 				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
 			}
