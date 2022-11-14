@@ -4,8 +4,6 @@ category: Feature flagging
 description: Job for finding and sending feature flag code references to LaunchDarkly
 repository: https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe
 variables:
-  - name: LD_ACCESS_TOKEN
-  - name: LD_PROJ_KEY # Required unless using 'projects' block in configuration file then it must be omitted.
   - name: LD_REPO_NAME
     default: '$BITBUCKET_REPO_SLUG'
   - name: LD_CONTEXT_LINES
@@ -14,7 +12,6 @@ variables:
     default: 'https://app.launchdarkly.com'
   - name: LD_DEFAULT_BRANCH
     default: main
-  - name: LD_DELIMITERS
   - name: LD_IGNORE_SERVICE_ERRORS
     default: 'false'
   - name: LD_LOOKBACK
