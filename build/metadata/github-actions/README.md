@@ -90,7 +90,7 @@ If the action fails, there may be a problem with your configuration. To investig
 
 # Additional inputs
 
-All [command line flags](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#command-line) are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `dir` may be set as an environment variable.
+All [command line flags](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#command-line) are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `dir` may be set as an environment variable using `LD_DIR`.
 
 For example, if your action checks out multiple repositories you may override the default `dir` which is `GITHUB_WORKSPACE`.
 
