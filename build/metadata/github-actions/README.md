@@ -92,9 +92,9 @@ If the action fails, there may be a problem with your configuration. To investig
 
 All [command line flags](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#command-line) are available as environment variables following the "upper snake case" format, with a prefix of `LD_`. For example, the command line option `dir` may be set as an environment variable using `LD_DIR`.
 
-For example, if your action checks out multiple repositories you may override the default `dir` which is `GITHUB_WORKSPACE`.
+The default `dir` is `GITHUB_WORKSPACE`. This is the default working directory on the runner for steps and the default location of your repository when using the checkout action, for example, `/home/runner/work/my-repo-name/my-repo-name`.
 
-> GITHUB_WORKSPACE - The default working directory on the runner for steps, and the default location of your repository when using the checkout action. For example, /home/runner/work/my-repo-name/my-repo-name.
+If your action checks out multiple repositories, override the default `dir`.
 
 
 ```yaml
