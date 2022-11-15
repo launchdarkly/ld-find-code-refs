@@ -26,14 +26,18 @@ See [the configuration documentation](https://github.com/launchdarkly/ld-find-co
 | Variable                 | Usage |
 | --------------------------- | ----- |
 | LD_ACCESS_TOKEN (*)       | A LaunchDarkly personal access token with writer-level access, or access to the `code-reference-repository` [custom role](https://docs.launchdarkly.com/v2.0/docs/custom-roles) resource. Should be provided as a [secured repository variable](https://confluence.atlassian.com/bitbucket/variables-in-pipelines-794502608.html) to secure it. |
-| LD_PROJ_KEY   | A LaunchDarkly project key. The pipe will search this project for code references in this project. Cannot be combined with `projects` block in configuration file. |
-| LD_REPO_NAME | The repository name. Defaults to the current Bitbucket repository. |
+| LD_PROJ_KEY   | A LaunchDarkly project key. The pipe will search this project for code references in this project. Required when `projects` is not defined in the configuration file. |
+| LD_REPO_NAME (**) | The repository name. Defaults to the current Bitbucket repository. |
 | LD_CONTEXT_LINES        | The number of context lines above and below a code reference for the flag parser to send to LaunchDarkly. If < 0, no source code will be sent to LaunchDarkly. If 0, only the lines containing flag references will be sent. If > 0, will send that number of context lines above and below the flag reference. A maximum of 5 context lines may be provided. Default: `2` |
 | LD_BASE_URI                 | Set the base URL of the LaunchDarkly server for this configuration. Defaults to https://app.launchdarkly.com |
 | LD_DEBUG | Enables verbose debug logging. Default: `false`|
 | LD_DEFAULT_BRANCH | The git default branch. The LaunchDarkly UI will default to display code references for this branch. Default: `main`. |
 | LD_IGNORE_SERVICE_ERRORS | If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response. Default: `false` |
 | LD_LOOKBACK | Sets the number of Git commits to search in history for whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time. Defaults to 10 |
+
+(*) = required variable. This variable needs to be specified always when using the pipe.
+
+(**) = required variable. If this variable is configured as a repository, account or environment variable, it doesn’t need to be declared in the pipe as it will be taken from the context. It can still be overridden when using the pipe.
 
 ## Details
 LaunchDarkly's Code references feature allows you to find source code references to your feature flags within LaunchDarkly. This makes it easy to determine which projects reference your feature flags, and makes cleanup and removal of technical debt easy. For more information, visit our [documentation](https://docs.launchdarkly.com/home/code/code-references). For documentation on the source code of this pipe, see the [source repo](https://github.com/launchdarkly/ld-find-code-refs).
