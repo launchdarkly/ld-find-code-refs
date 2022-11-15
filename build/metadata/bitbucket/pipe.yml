@@ -6,20 +6,6 @@ repository: https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe
 variables:
   - name: LD_REPO_NAME
     default: '$BITBUCKET_REPO_SLUG'
-  - name: LD_CONTEXT_LINES
-    default: '2'
-  - name: LD_BASE_URI
-    default: 'https://app.launchdarkly.com'
-  - name: LD_DEFAULT_BRANCH
-    default: main
-  - name: LD_IGNORE_SERVICE_ERRORS
-    default: 'false'
-  - name: LD_LOOKBACK
-    default: '10'
-  - name: LD_ALLOW_TAGS
-    default: 'false'
-  - name: LD_DEBUG
-    default: 'false'
 maintainer:
   name: LaunchDarkly
   website: https://launchdarkly.com/
