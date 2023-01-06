@@ -115,6 +115,7 @@ jobs:
       - run:
           name: Find flag references
           command: |
+            source $BASH_ENV || true
             ld-find-code-refs \
               --debug=<< parameters.debug >> \
               --accessToken=<< parameters.access_token >> \
