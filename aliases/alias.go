@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -156,7 +156,7 @@ func processFileContent(aliases []options.Alias, dir string) (map[string][]byte,
 				return nil, fmt.Errorf("filepattern '%s': could not find file at path '%s'", aliasId, path)
 			}
 			/* #nosec */
-			data, err := ioutil.ReadFile(path)
+			data, err := os.ReadFile(path)
 			if err != nil {
 				return nil, fmt.Errorf("filepattern '%s': could not process file at path '%s': %v", aliasId, path, err)
 			}

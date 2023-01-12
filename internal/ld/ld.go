@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -184,7 +184,7 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 		return nil, err
 	}
 
-	resBytes, err := ioutil.ReadAll(res.Body)
+	resBytes, err := io.ReadAll(res.Body)
 	if res != nil {
 		defer res.Body.Close()
 	}
@@ -210,7 +210,7 @@ func (c ApiClient) GetCodeReferenceRepositoryBranches(repoName string) ([]Branch
 		return nil, err
 	}
 
-	resBytes, err := ioutil.ReadAll(res.Body)
+	resBytes, err := io.ReadAll(res.Body)
 	if res != nil {
 		defer res.Body.Close()
 	}
@@ -375,7 +375,7 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
 		return res, nil
 	default:
-		resBytes, err := ioutil.ReadAll(res.Body)
+		resBytes, err := io.ReadAll(res.Body)
 		if res != nil {
 			defer res.Body.Close()
 		}

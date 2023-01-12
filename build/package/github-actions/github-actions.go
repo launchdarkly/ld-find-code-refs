@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -104,7 +104,7 @@ func parseEvent(path string) (*Event, error) {
 		return nil, err
 	}
 
-	eventJsonBytes, err := ioutil.ReadAll(eventJsonFile)
+	eventJsonBytes, err := io.ReadAll(eventJsonFile)
 	if err != nil {
 		return nil, err
 	}

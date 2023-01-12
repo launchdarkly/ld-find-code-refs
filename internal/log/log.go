@@ -1,7 +1,7 @@
 package log
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 )
@@ -16,7 +16,7 @@ var (
 
 // Init overrides the default loggers that write to stdout
 func Init(debug bool) {
-	debugHandle := ioutil.Discard
+	debugHandle := io.Discard
 	if debug {
 		debugHandle = os.Stdout
 	}
