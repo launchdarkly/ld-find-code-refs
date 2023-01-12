@@ -270,6 +270,9 @@ func (o Options) Validate() error {
 
 	if len(o.Projects) > 0 {
 		for _, project := range o.Projects {
+			if project.Dir == "" {
+				return nil
+			}
 			err := validation.IsSubDirValid(o.Dir, project.Dir)
 			if err != nil {
 				return err
