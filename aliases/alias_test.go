@@ -1,7 +1,6 @@
 package aliases
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -108,11 +107,11 @@ func Test_GenerateAliases(t *testing.T) {
 }
 
 func Test_processFileContent(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		panic(err)
 	}
-	f, err := ioutil.TempFile(tmpDir, "testalias")
+	f, err := os.MkdirTemp(tmpDir, "testalias")
 	if err != nil {
 		panic(err)
 	}
@@ -130,7 +129,7 @@ func Test_processFileContent(t *testing.T) {
 			name: "Existing directory and file",
 			aliases: []o.Alias{
 				{
-					Paths: []string{f.Name()},
+					Paths: []string{f},
 				},
 			},
 			dir:     tmpDir,
