@@ -5,5 +5,8 @@
 # Documentation
 *.md @launchdarkly/squad-docs
 
+# vendor docs don't need to be owned by docs team
+vendor/* @launchdarkly/squad-flag-lifecycle
+
 # Change log is updated by release bot
 CHANGELOG.md @launchdarkly/squad-flag-lifecycle
