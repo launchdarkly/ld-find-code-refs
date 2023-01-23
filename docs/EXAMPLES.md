@@ -14,7 +14,7 @@ ld-find-code-refs \
 
 ## Configuration with context lines
 
-https://docs.launchdarkly.com/integrations/git-code-references#configuring-context-lines
+https://docs.launchdarkly.com/home/code/code-references#configuring-context-lines
 
 ```bash
 ld-find-code-refs \
