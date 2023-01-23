@@ -117,10 +117,10 @@ jobs:
           command: |
             source $BASH_ENV || true
             ld-find-code-refs \
-              --debug="<< parameters.debug >>"" \
-              --accessToken="<< parameters.access_token >>"" \
-              --projKey="<< parameters.proj_key >>"" \
-              --ignoreServiceErrors="<< parameters.ignore_service_errors >>"" \
+              --debug="<< parameters.debug >>" \
+              --accessToken="<< parameters.access_token >>" \
+              --projKey="<< parameters.proj_key >>" \
+              --ignoreServiceErrors="<< parameters.ignore_service_errors >>" \
               --lookback="<< parameters.lookback >>" \
               --contextLines="<< parameters.context_lines >>" \
               --baseUri="<< parameters.base_uri >>" \
