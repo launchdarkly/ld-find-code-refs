@@ -19,7 +19,7 @@ examples:
                 debug: true
 
   context_lines:
-    description: "Configuration with context lines provided. Context line documentation: https://docs.launchdarkly.com/v2.0/docs/git-code-references#section-adding-context-lines"
+    description: "Configuration with context lines provided. Context line documentation: https://docs.launchdarkly.com/home/code/code-references#configuring-context-lines"
     usage:
       version: 2.1
       orbs:
