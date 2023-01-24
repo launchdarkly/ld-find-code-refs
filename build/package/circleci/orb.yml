@@ -117,20 +117,20 @@ jobs:
           command: |
             source $BASH_ENV || true
             ld-find-code-refs \
-              --debug=<< parameters.debug >> \
-              --accessToken=<< parameters.access_token >> \
-              --projKey=<< parameters.proj_key >> \
-              --ignoreServiceErrors=<< parameters.ignore_service_errors >> \
-              --lookback=<< parameters.lookback >> \
-              --contextLines=<< parameters.context_lines >> \
-              --baseUri=<< parameters.base_uri >> \
-              --repoType=<< parameters.repo_type >> \
-              --repoUrl=<< parameters.repo_url >> \
-              --defaultBranch=<< parameters.default_branch >> \
-              --allowTags=<< parameters.allow_tags >> \
-              --commitUrlTemplate=<< parameters.commit_url_template >> \
-              --hunkUrlTemplate=<< parameters.hunk_url_template >> \
-              --repoName=${CIRCLE_PROJECT_REPONAME} \
-              --updateSequenceId=${CIRCLE_BUILD_NUM} \
-              --dir=/repo \
+              --debug="<< parameters.debug >>" \
+              --accessToken="<< parameters.access_token >>" \
+              --projKey="<< parameters.proj_key >>" \
+              --ignoreServiceErrors="<< parameters.ignore_service_errors >>" \
+              --lookback="<< parameters.lookback >>" \
+              --contextLines="<< parameters.context_lines >>" \
+              --baseUri="<< parameters.base_uri >>" \
+              --repoType="<< parameters.repo_type >>" \
+              --repoUrl="<< parameters.repo_url >>" \
+              --defaultBranch="<< parameters.default_branch >>" \
+              --allowTags=<"< parameters.allow_tags >>" \
+              --commitUrlTemplate="<< parameters.commit_url_template >>" \
+              --hunkUrlTemplate="<< parameters.hunk_url_template >>" \
+              --repoName="${CIRCLE_PROJECT_REPONAME}" \
+              --updateSequenceId="${CIRCLE_BUILD_NUM}" \
+              --dir="/repo" \
               --userAgent="circle-ci"
