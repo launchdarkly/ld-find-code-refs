@@ -2,6 +2,16 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.9.0] - 2023-01-26
+Added:
+* CircleCI orb - manually source `BASH_ENV` since the orb uses `sh` entrypoint instead of `bash`
+
+Changed:
+* Update dependencies
+
+Fixed:
+* Monorepo configuration should not require that a `dir` be specified for each project key, as described in the documentation
+
 ## [2.8.0] - 2022-11-10
 Added:
 * Support doublestar glob patterns in `filepattern` aliases
