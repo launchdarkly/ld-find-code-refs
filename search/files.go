@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"golang.org/x/tools/godoc/util"
 
 	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
+	"github.com/launchdarkly/ld-find-code-refs/options"
 )
 
 type ignore struct {
@@ -19,7 +21,7 @@ type ignore struct {
 	ignores []gitignore.IgnoreMatcher
 }
 
-func newIgnore(path string, ignoreFiles []string) ignore {
+func NewIgnore(path string, ignoreFiles []string) ignore {
 	ignores := make([]gitignore.IgnoreMatcher, 0, len(ignoreFiles))
 	for _, ignoreFile := range ignoreFiles {
 		i, err := gitignore.NewGitIgnore(filepath.Join(path, ignoreFile))
@@ -29,6 +31,20 @@ func newIgnore(path string, ignoreFiles []string) ignore {
 		ignores = append(ignores, i)
 	}
 	return ignore{path: path, ignores: ignores}
+}
+
+func NewIgnoreBase(opts options.Options, ignoreFiles []string) ignore {
+	//absPath, _ := validation.NormalizeAndValidatePath(opts.Dir)
+	ignores := make([]gitignore.IgnoreMatcher, 0, len(ignoreFiles))
+	for _, ignoreFile := range ignoreFiles {
+		i, err := gitignore.NewGitIgnore(filepath.Join("testdata", ignoreFile))
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		ignores = append(ignores, i)
+	}
+	return ignore{path: "/", ignores: ignores}
 }
 
 func (m ignore) Match(path string, isDir bool) bool {
@@ -67,7 +83,7 @@ func readFileLines(path string) ([]string, error) {
 func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	defer close(files)
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
-	allIgnores := newIgnore(workspace, ignoreFiles)
+	allIgnores := NewIgnore(workspace, ignoreFiles)
 	workspace = filepath.ToSlash(workspace)
 
 	readFile := func(path string, info os.FileInfo, err error) error {

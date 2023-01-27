@@ -210,7 +210,10 @@ type CommitData struct {
 }
 
 // FindExtinctions searches commit history for flags that had references removed recently
-func (c Client) FindExtinctions(project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
+func (c Client) FindExtinctions(opts options.Options, project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
+	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
+	allIgnores := search.NewIgnoreBase(opts, ignoreFiles)
+	fmt.Printf("%v", allIgnores)
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
 		return nil, err
@@ -256,7 +259,12 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 					continue
 				}
 			}
-
+			fmt.Println(fromFile.Path())
+			fmt.Printf("%v", allIgnores.Match("./"+fromFile.Path(), false))
+			if fromFile != nil && (strings.HasPrefix(fromFile.Path(), ".") || allIgnores.Match(fromFile.Path(), false)) {
+				fmt.Println("TEST")
+				continue
+			}
 			patchLines := strings.Split(patch.String(), "\n")
 			nextFlags := make([]string, 0, len(flags))
 			for _, flag := range flags {

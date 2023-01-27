@@ -113,7 +113,10 @@ func TestFindExtinctions(t *testing.T) {
 
 	extinctions := make([]ld.ExtinctionRep, 0)
 	for i, project := range projects {
-		extinctionsByProject, err := c.FindExtinctions(project, missingFlags[i], matcher, 10)
+		opts := options.Options{
+			Dir: "/Users/daniel/code/launchdarkly/ld-find-code-refs/internal/git/testdata/",
+		}
+		extinctionsByProject, err := c.FindExtinctions(opts, project, missingFlags[i], matcher, 10)
 		require.NoError(t, err)
 		extinctions = append(extinctions, extinctionsByProject...)
 	}
