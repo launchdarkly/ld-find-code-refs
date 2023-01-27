@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.9.1] - 2023-01-27
+### Fixed:
+- CircleCI - pipeline exits with error when `$BASH_ENV` doesn't exist.
+
 ## [2.9.0] - 2023-01-26
 Added:
 * CircleCI orb - manually source `BASH_ENV` since the orb uses `sh` entrypoint instead of `bash`
