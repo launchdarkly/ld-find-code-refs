@@ -97,7 +97,7 @@ Here's an example of a bash script which returns the the flag key as it's own al
 ```yaml
 aliases:
   - type: command
-    command: .launchdarkly/launchdarklyAlias.sh # must be a valid shell command.
+    command: ./launchdarkly/launchdarklyAlias.sh # must be a valid shell command.
     timeout: 5 # seconds
 ```
 
