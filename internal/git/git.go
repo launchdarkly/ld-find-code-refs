@@ -213,7 +213,7 @@ type CommitData struct {
 func (c Client) FindExtinctions(opts options.Options, project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := search.NewIgnoreBase(opts, ignoreFiles)
-	fmt.Printf("%v", allIgnores)
+	fmt.Printf("%#v", allIgnores)
 	repo, err := git.PlainOpen(c.workspace)
 	if err != nil {
 		return nil, err
@@ -260,7 +260,7 @@ func (c Client) FindExtinctions(opts options.Options, project options.Project, f
 				}
 			}
 			if fromFile != nil {
-				fmt.Printf("%s matches ignore? %v\n", fromFile.Path(), allIgnores.Match("./"+fromFile.Path(), false))
+				fmt.Printf("%s matches ignore? %v\n", fromFile.Path(), allIgnores.Match(fromFile.Path(), false))
 			}
 
 			if fromFile != nil && (strings.HasPrefix(fromFile.Path(), ".") || allIgnores.Match(fromFile.Path(), false)) {
@@ -269,7 +269,7 @@ func (c Client) FindExtinctions(opts options.Options, project options.Project, f
 			}
 
 			if toFile != nil {
-				fmt.Printf("%s matches ignore? %v\n", toFile.Path(), allIgnores.Match("./"+toFile.Path(), false))
+				fmt.Printf("%s matches ignore? %v\n", toFile.Path(), allIgnores.Match(toFile.Path(), false))
 			}
 
 			if toFile != nil && (strings.HasPrefix(toFile.Path(), ".") || allIgnores.Match(toFile.Path(), false)) {

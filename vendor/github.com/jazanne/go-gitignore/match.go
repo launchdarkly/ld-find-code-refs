@@ -1,6 +1,8 @@
 package gitignore
 
-import "path/filepath"
+import (
+	ds "github.com/bmatcuk/doublestar/v4"
+)
 
 type pathMatcher interface {
 	match(path string) bool
@@ -19,6 +21,6 @@ type filepathMatcher struct {
 }
 
 func (m filepathMatcher) match(path string) bool {
-	match, _ := filepath.Match(m.path, path)
+	match, _ := ds.Match(m.path, path)
 	return match
 }
