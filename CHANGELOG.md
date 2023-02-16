@@ -2,6 +2,11 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.9.2] - 2023-02-16
+### Fixed:
+- Bug introduced in 2.5.0 caused extinction scanning to run for hours and timeout.
+- Typo in CircleCI orb caused failures
+
 ## [2.9.1] - 2023-01-27
 ### Fixed:
 - CircleCI - pipeline exits with error when `$BASH_ENV` doesn't exist.
