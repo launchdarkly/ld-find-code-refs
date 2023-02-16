@@ -271,10 +271,10 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 
 			for _, chunk := range filePatch.Chunks() {
 				delta := 0
-				if chunk.Type() == diff.Add {
-					delta = -1
-				} else if chunk.Type() == diff.Delete {
+				if chunk.Type() == diff.Delete {
 					delta = 1
+				} else if chunk.Type() == diff.Add {
+					delta = -1
 				}
 				if delta != 0 {
 					for _, line := range strings.Split(chunk.Content(), "\n") {
