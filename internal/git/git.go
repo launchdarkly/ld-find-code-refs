@@ -257,8 +257,12 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 		log.Debug.Printf("Scanning commit: %s", c.commit.Hash)
 		patchLines := strings.Split(patch.String(), "\n")
 		nextFlags := make([]string, 0, len(flags))
+		flagMap := make(map[string]int, 0)
 		for _, flag := range flags {
-			removalCount := 0
+			flagMap[flag] = 0
+		}
+
+		for _, element := range matcher.Elements {
 			for _, patchLine := range patchLines {
 				delta := 0
 				// Is a change line and not a metadata line
@@ -267,10 +271,17 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
 					delta = -1
 				}
-				if delta != 0 && matcher.MatchElement(patchLine, flag) {
-					removalCount += delta
+				if delta != 0 {
+					for _, el := range element.FindMatches(patchLine) {
+						if _, ok := flagMap[el]; ok {
+							flagMap[el] = delta
+						}
+					}
 				}
 			}
+		}
+
+		for flag, removalCount := range flagMap {
 			if removalCount > 0 {
 				ret = append(ret, ld.ExtinctionRep{
 					Revision: c.commit.Hash.String(),
