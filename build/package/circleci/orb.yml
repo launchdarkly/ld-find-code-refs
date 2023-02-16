@@ -128,7 +128,7 @@ jobs:
               --repoType="<< parameters.repo_type >>" \
               --repoUrl="<< parameters.repo_url >>" \
               --defaultBranch="<< parameters.default_branch >>" \
-              --allowTags=<"< parameters.allow_tags >>" \
+              --allowTags="<< parameters.allow_tags >>" \
               --commitUrlTemplate="<< parameters.commit_url_template >>" \
               --hunkUrlTemplate="<< parameters.hunk_url_template >>" \
               --repoName="${CIRCLE_PROJECT_REPONAME}" \
