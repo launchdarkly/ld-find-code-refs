@@ -274,7 +274,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 				if delta != 0 {
 					for _, el := range element.FindMatches(patchLine) {
 						if _, ok := flagMap[el]; ok {
-							flagMap[el] = delta
+							flagMap[el] += delta
 						}
 					}
 				}
