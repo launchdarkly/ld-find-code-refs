@@ -267,6 +267,11 @@ func (c Client) FindExtinctions(opts options.Options, project options.Project, f
 				log.Debug.Printf("Skipping ignored file: %s", fromFile.Path())
 				continue
 			}
+
+			if toFile != nil && (strings.HasPrefix(toFile.Path(), ".") || allIgnores.Match(toFile.Path(), false)) {
+				log.Debug.Printf("Skipping ignored file: %s", toFile.Path())
+				continue
+			}
 			patchLines := strings.Split(patch.String(), "\n")
 			nextFlags := make([]string, 0, len(flags))
 			for _, flag := range flags {
