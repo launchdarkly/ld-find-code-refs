@@ -260,8 +260,7 @@ func (c Client) FindExtinctions(opts options.Options, project options.Project, f
 				}
 			}
 			if fromFile != nil {
-				fmt.Println(fromFile.Path())
-				fmt.Printf(": %v", allIgnores.Match("./"+fromFile.Path(), false))
+				fmt.Printf("\n%s: %v\n", fromFile.Path(), allIgnores.Match("./"+fromFile.Path(), false))
 			}
 
 			if fromFile != nil && (strings.HasPrefix(fromFile.Path(), ".") || allIgnores.Match(fromFile.Path(), false)) {
