@@ -253,14 +253,10 @@ func (c Client) FindExtinctions(opts options.Options, project options.Project, f
 		}
 		for _, filePatch := range patch.FilePatches() {
 			fromFile, toFile := filePatch.Files()
-			printDebugStatement(fromFile, toFile)
 			if project.Dir != "" && (toFile == nil || !strings.HasPrefix(toFile.Path(), project.Dir)) {
 				if fromFile != nil && !strings.HasPrefix(fromFile.Path(), project.Dir) {
 					continue
 				}
-			}
-			if fromFile != nil {
-				fmt.Printf("%s matches ignore? %v\n", fromFile.Path(), allIgnores.Match(fromFile.Path(), false))
 			}
 
 			if fromFile != nil && (strings.HasPrefix(fromFile.Path(), ".") || allIgnores.Match(fromFile.Path(), false)) {
@@ -268,14 +264,12 @@ func (c Client) FindExtinctions(opts options.Options, project options.Project, f
 				continue
 			}
 
-			if toFile != nil {
-				fmt.Printf("%s matches ignore? %v\n", toFile.Path(), allIgnores.Match(toFile.Path(), false))
-			}
-
 			if toFile != nil && (strings.HasPrefix(toFile.Path(), ".") || allIgnores.Match(toFile.Path(), false)) {
 				log.Debug.Printf("Skipping ignored file: %s", toFile.Path())
 				continue
 			}
+
+			printDebugStatement(fromFile, toFile)
 			patchLines := strings.Split(patch.String(), "\n")
 			nextFlags := make([]string, 0, len(flags))
 			for _, flag := range flags {
@@ -321,5 +315,5 @@ func printDebugStatement(fromFile, toFile diff.File) {
 	if toFile != nil {
 		toPath = toFile.Path()
 	}
-	log.Debug.Printf("Examining from file: %s and to file: %s", fromPath, toPath)
+	log.Debug.Printf("Scanning from file: %s and to file: %s", fromPath, toPath)
 }
