@@ -259,10 +259,13 @@ func (c Client) FindExtinctions(opts options.Options, project options.Project, f
 					continue
 				}
 			}
-			fmt.Println(fromFile.Path())
-			fmt.Printf("%v", allIgnores.Match("./"+fromFile.Path(), false))
+			if fromFile != nil {
+				fmt.Println(fromFile.Path())
+				fmt.Printf(": %v", allIgnores.Match("./"+fromFile.Path(), false))
+			}
+
 			if fromFile != nil && (strings.HasPrefix(fromFile.Path(), ".") || allIgnores.Match(fromFile.Path(), false)) {
-				fmt.Println("TEST")
+				log.Debug.Printf("Skipping ignored file: %s", fromFile.Path())
 				continue
 			}
 			patchLines := strings.Split(patch.String(), "\n")
