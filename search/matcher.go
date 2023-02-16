@@ -127,6 +127,17 @@ func (m Matcher) MatchElement(line, element string) bool {
 	return false
 }
 
+func (m Matcher) GetProjectElementMatcher(projectKey string) *ElementMatcher {
+	var elementMatcher ElementMatcher
+	for _, element := range m.Elements {
+		if element.ProjKey == projectKey {
+			elementMatcher = element
+			break
+		}
+	}
+	return &elementMatcher
+}
+
 func (m Matcher) FindAliases(line, element string) []string {
 	matches := make([]string, 0)
 	for _, em := range m.Elements {

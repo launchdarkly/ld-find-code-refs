@@ -250,12 +250,10 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 		}
 
 		// get matcher for project
-		var elementMatcher search.ElementMatcher
-		for _, element := range matcher.Elements {
-			if element.ProjKey == project.Key {
-				elementMatcher = element
-				break
-			}
+		elementMatcher := matcher.GetProjectElementMatcher(project.Key)
+		if elementMatcher == nil {
+			// This is actually a huge issue if it happens
+			panic(fmt.Sprintf("Matcher for project (%s) not found", project.Key))
 		}
 
 		nextFlags := make([]string, 0, len(flags))
