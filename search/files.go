@@ -37,7 +37,7 @@ func NewIgnoreBase(opts options.Options, ignoreFiles []string) ignore {
 	//absPath, _ := validation.NormalizeAndValidatePath(opts.Dir)
 	ignores := make([]gitignore.IgnoreMatcher, 0, len(ignoreFiles))
 	for _, ignoreFile := range ignoreFiles {
-		i, err := gitignore.NewGitIgnore(filepath.Join("testdata", ignoreFile))
+		i, err := gitignore.NewGitIgnore(ignoreFile)
 		if err != nil {
 			fmt.Println(err)
 			continue
