@@ -248,50 +248,71 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 		if err != nil {
 			return nil, err
 		}
-		for _, filePatch := range patch.FilePatches() {
-			fromFile, toFile := filePatch.Files()
-			printDebugStatement(fromFile, toFile)
-			if project.Dir != "" && (toFile == nil || !strings.HasPrefix(toFile.Path(), project.Dir)) {
-				if fromFile != nil && !strings.HasPrefix(fromFile.Path(), project.Dir) {
-					continue
-				}
-			}
 
-			patchLines := strings.Split(patch.String(), "\n")
-			nextFlags := make([]string, 0, len(flags))
-			for _, flag := range flags {
-				removalCount := 0
-				for _, patchLine := range patchLines {
-					delta := 0
-					// Is a change line and not a metadata line
-					if strings.HasPrefix(patchLine, "-") && !strings.HasPrefix(patchLine, "---") {
-						delta = 1
-					} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
-						delta = -1
-					}
-					if delta != 0 && matcher.MatchElement(patchLine, flag) {
-						removalCount += delta
-					}
+		if !shouldScanPatch(project.Dir, patch) {
+			log.Debug.Printf("Skipping commit: %s", c.commit.Hash)
+			continue
+		}
+
+		log.Debug.Printf("Scanning commit: %s", c.commit.Hash)
+		patchLines := strings.Split(patch.String(), "\n")
+		nextFlags := make([]string, 0, len(flags))
+		for _, flag := range flags {
+			removalCount := 0
+			for _, patchLine := range patchLines {
+				delta := 0
+				// Is a change line and not a metadata line
+				if strings.HasPrefix(patchLine, "-") && !strings.HasPrefix(patchLine, "---") {
+					delta = 1
+				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
+					delta = -1
 				}
-				if removalCount > 0 {
-					ret = append(ret, ld.ExtinctionRep{
-						Revision: c.commit.Hash.String(),
-						Message:  c.commit.Message,
-						Time:     c.commit.Author.When.Unix() * 1000,
-						ProjKey:  project.Key,
-						FlagKey:  flag,
-					})
-					log.Debug.Printf("Found extinct flag: %s in project: %s", flag, project.Key)
-				} else {
-					// this flag was not removed in the current commit, so check for it again in the next commit
-					nextFlags = append(nextFlags, flag)
+				if delta != 0 && matcher.MatchElement(patchLine, flag) {
+					removalCount += delta
 				}
 			}
-			flags = nextFlags
+			if removalCount > 0 {
+				ret = append(ret, ld.ExtinctionRep{
+					Revision: c.commit.Hash.String(),
+					Message:  c.commit.Message,
+					Time:     c.commit.Author.When.Unix() * 1000,
+					ProjKey:  project.Key,
+					FlagKey:  flag,
+				})
+				log.Debug.Printf("Found extinct flag: %s in project: %s", flag, project.Key)
+			} else {
+				// this flag was not removed in the current commit, so check for it again in the next commit
+				nextFlags = append(nextFlags, flag)
+			}
 		}
+		flags = nextFlags
 	}
 
 	return ret, err
+}
+
+// Determine if any changed files should be scanned
+func shouldScanPatch(projectDir string, patch *object.Patch) bool {
+	for _, filePatch := range patch.FilePatches() {
+		fromFile, toFile := filePatch.Files()
+		printDebugStatement(fromFile, toFile)
+
+		if projectDir == "" {
+			return true
+		}
+
+		// Ignore files outside of the project directory
+
+		if toFile != nil && strings.HasPrefix(toFile.Path(), projectDir) {
+			return true
+		}
+
+		if fromFile != nil && strings.HasPrefix(fromFile.Path(), projectDir) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func printDebugStatement(fromFile, toFile diff.File) {
@@ -302,5 +323,5 @@ func printDebugStatement(fromFile, toFile diff.File) {
 	if toFile != nil {
 		toPath = toFile.Path()
 	}
-	log.Debug.Printf("Examining from file: %s and to file: %s", fromPath, toPath)
+	log.Debug.Printf("Deciding to scan from file: %s and to file: %s", fromPath, toPath)
 }
