@@ -249,28 +249,45 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 			return nil, err
 		}
 
-		if !shouldScanPatch(project.Dir, patch) {
-			log.Debug.Printf("Skipping commit: %s", c.commit.Hash)
-			continue
+		// get matcher for project
+		elementMatcher := matcher.GetProjectElementMatcher(project.Key)
+		if elementMatcher == nil {
+			// This is actually a huge issue if it happens
+			panic(fmt.Sprintf("Matcher for project (%s) not found", project.Key))
 		}
 
-		log.Debug.Printf("Scanning commit: %s", c.commit.Hash)
-		patchLines := strings.Split(patch.String(), "\n")
 		nextFlags := make([]string, 0, len(flags))
+		flagMap := make(map[string]int, len(flags))
 		for _, flag := range flags {
-			removalCount := 0
-			for _, patchLine := range patchLines {
+			flagMap[flag] = 0
+		}
+
+		for _, filePatch := range patch.FilePatches() {
+			if !shouldScanFilePatch(project.Dir, filePatch) {
+				continue
+			}
+
+			for _, chunk := range filePatch.Chunks() {
 				delta := 0
-				// Is a change line and not a metadata line
-				if strings.HasPrefix(patchLine, "-") && !strings.HasPrefix(patchLine, "---") {
+				switch chunk.Type() {
+				case diff.Delete:
 					delta = 1
-				} else if strings.HasPrefix(patchLine, "+") && !strings.HasPrefix(patchLine, "+++") {
+				case diff.Add:
 					delta = -1
 				}
-				if delta != 0 && matcher.MatchElement(patchLine, flag) {
-					removalCount += delta
+				if delta != 0 {
+					for _, line := range strings.Split(chunk.Content(), "\n") {
+						for _, el := range elementMatcher.FindMatches(line) {
+							if _, ok := flagMap[el]; ok {
+								flagMap[el] += delta
+							}
+						}
+					}
 				}
 			}
+		}
+
+		for flag, removalCount := range flagMap {
 			if removalCount > 0 {
 				ret = append(ret, ld.ExtinctionRep{
 					Revision: c.commit.Hash.String(),
@@ -291,25 +308,23 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 	return ret, err
 }
 
-// Determine if any changed files should be scanned
-func shouldScanPatch(projectDir string, patch *object.Patch) bool {
-	for _, filePatch := range patch.FilePatches() {
-		fromFile, toFile := filePatch.Files()
-		printDebugStatement(fromFile, toFile)
+// Determine if changed file should be scanned
+func shouldScanFilePatch(projectDir string, filePatch diff.FilePatch) bool {
+	fromFile, toFile := filePatch.Files()
+	printDebugStatement(fromFile, toFile)
 
-		if projectDir == "" {
-			return true
-		}
+	if projectDir == "" {
+		return true
+	}
 
-		// Ignore files outside of the project directory
+	// Ignore files outside of the project directory
 
-		if toFile != nil && strings.HasPrefix(toFile.Path(), projectDir) {
-			return true
-		}
+	if toFile != nil && strings.HasPrefix(toFile.Path(), projectDir) {
+		return true
+	}
 
-		if fromFile != nil && strings.HasPrefix(fromFile.Path(), projectDir) {
-			return true
-		}
+	if fromFile != nil && strings.HasPrefix(fromFile.Path(), projectDir) {
+		return true
 	}
 
 	return false
@@ -323,5 +338,5 @@ func printDebugStatement(fromFile, toFile diff.File) {
 	if toFile != nil {
 		toPath = toFile.Path()
 	}
-	log.Debug.Printf("Deciding to scan from file: %s and to file: %s", fromPath, toPath)
+	log.Debug.Printf("Scanning from file: %s and to file: %s", fromPath, toPath)
 }
