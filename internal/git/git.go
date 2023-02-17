@@ -257,7 +257,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 		}
 
 		nextFlags := make([]string, 0, len(flags))
-		flagMap := make(map[string]int, 0)
+		flagMap := make(map[string]int, len(flags))
 		for _, flag := range flags {
 			flagMap[flag] = 0
 		}
