@@ -137,7 +137,10 @@ func (c *Client) tagName() (name string, err error) {
 			}
 			return err
 		}
-		// Annotated tag target is commit hash
+		// Annotated tag target should be commit
+		if obj.TargetType != plumbing.CommitObject {
+			return nil
+		}
 		if head.Hash() == obj.Target {
 			name = obj.Name
 			iter.Close()
