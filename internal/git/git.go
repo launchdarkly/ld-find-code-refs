@@ -124,10 +124,11 @@ func (c *Client) tagName() (name string, err error) {
 	}
 
 	if err := iter.ForEach(func(ref *plumbing.Reference) error {
+		// Check if ref is an annotated tag
 		obj, err := repo.TagObject(ref.Hash())
 		if err != nil {
 			if errors.Is(err, plumbing.ErrObjectNotFound) {
-				// Lightweight tag
+				// Ref is lightweight tag
 				if head.Hash() == ref.Hash() {
 					name = ref.Name().Short()
 					iter.Close()
@@ -136,7 +137,7 @@ func (c *Client) tagName() (name string, err error) {
 			}
 			return err
 		}
-		// Annotated tag
+		// Annotated tag target is commit hash
 		if head.Hash() == obj.Target {
 			name = obj.Name
 			iter.Close()
