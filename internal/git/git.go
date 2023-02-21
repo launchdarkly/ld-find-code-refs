@@ -131,8 +131,8 @@ func (c *Client) tagName() (name string, err error) {
 				if head.Hash() == ref.Hash() {
 					name = ref.Name().Short()
 					iter.Close()
-					return nil
 				}
+				return nil
 			}
 			return err
 		}
