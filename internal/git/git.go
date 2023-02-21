@@ -124,8 +124,21 @@ func (c *Client) tagName() (name string, err error) {
 	}
 
 	if err := iter.ForEach(func(ref *plumbing.Reference) error {
-		if head.Hash() == ref.Hash() {
-			name = ref.Name().Short()
+		obj, err := repo.TagObject(ref.Hash())
+		if err != nil {
+			if errors.Is(err, plumbing.ErrObjectNotFound) {
+				// Lightweight tag
+				if head.Hash() == ref.Hash() {
+					name = ref.Name().Short()
+					iter.Close()
+					return nil
+				}
+			}
+			return err
+		}
+		// Annotated tag
+		if head.Hash() == obj.Target {
+			name = obj.Name
 			iter.Close()
 		}
 		return nil
