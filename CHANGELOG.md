@@ -2,6 +2,14 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.10.0] - 2023-02-21
+### Changed:
+- Performance improvements around searching for flag extinctions in commit diffs, including changing search to use Aho-Corasick algorithm to find flags.
+- Updated dependencies
+
+### Fixed:
+- Error parsing git tag name when tag is annotated #329
+
 ## [2.9.2] - 2023-02-16
 ### Fixed:
 - Bug introduced in 2.5.0 caused extinction scanning to run for hours and timeout.
