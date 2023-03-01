@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.6.0
-	github.com/go-git/go-git/v5 v5.5.2
+	github.com/go-git/go-git/v5 v5.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/iancoleman/strcase v0.2.0
 	github.com/launchdarkly/api-client-go/v7 v7.1.1
@@ -40,7 +40,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
-	github.com/pjbgf/sha1cd v0.2.3 // indirect
+	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
