@@ -84,7 +84,7 @@ aliases:
   - type: filepattern
     paths:
       - '*[!_test].go'
-    patterns: 
+    patterns:
       - '(\w+) = "FLAG_KEY"'
 ```
 
@@ -97,13 +97,27 @@ Here's an example of a bash script which returns the the flag key as it's own al
 ```yaml
 aliases:
   - type: command
-    command: ./launchdarkly/launchdarklyAlias.sh # must be a valid shell command.
+    command: ./.launchdarkly/flagAlias.sh # must be a valid shell command.
     timeout: 5 # seconds
 ```
 
-Contents of `./launchdarkly/launchdarklyAlias.sh`:
+Contents of `./.launchdarkly/flagAlias.sh`:
 
 ```sh
 #! /bin/sh
 read flagKey <&0; echo "[\"$flagKey\"]"
+```
+
+If you are using a shell script, make sure that the file is executable.
+
+For a new file:
+
+```sh
+git add --chmod=+x -- .launchdarkly/flagAlias.sh
+```
+
+For a file that has already been committed:
+
+```sh
+git update-index --chmod=+x .launchdarkly/flagAlias.sh
 ```
