@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/go-git/go-git/v5 v5.7.0
-	github.com/hashicorp/go-retryablehttp v0.7.2
+	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/iancoleman/strcase v0.2.0
 	github.com/launchdarkly/api-client-go/v7 v7.1.1
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
