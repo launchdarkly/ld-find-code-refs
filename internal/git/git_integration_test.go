@@ -8,12 +8,12 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/options"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/v2/options"
 	"github.com/stretchr/testify/require"
 
-	"github.com/launchdarkly/ld-find-code-refs/search"
+	"github.com/launchdarkly/ld-find-code-refs/v2/search"
 )
 
 const (

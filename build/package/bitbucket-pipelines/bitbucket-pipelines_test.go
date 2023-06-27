@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/options"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	o "github.com/launchdarkly/ld-find-code-refs/v2/options"
 	"github.com/stretchr/testify/assert"
 )
 

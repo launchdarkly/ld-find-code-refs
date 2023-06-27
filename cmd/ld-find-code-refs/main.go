@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/launchdarkly/ld-find-code-refs/coderefs"
-	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/internal/version"
-	o "github.com/launchdarkly/ld-find-code-refs/options"
+	"github.com/launchdarkly/ld-find-code-refs/v2/coderefs"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/version"
+	o "github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
 
 var prune = &cobra.Command{

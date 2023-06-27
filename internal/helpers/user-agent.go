@@ -3,7 +3,7 @@ package helpers
 import (
 	"fmt"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/version"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/version"
 )
 
 func GetUserAgent(u string) string {

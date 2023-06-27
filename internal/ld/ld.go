@@ -23,8 +23,8 @@ import (
 
 	ldapi "github.com/launchdarkly/api-client-go/v7"
 	jsonpatch "github.com/launchdarkly/json-patch"
-	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
 )
 
 type ApiClient struct {

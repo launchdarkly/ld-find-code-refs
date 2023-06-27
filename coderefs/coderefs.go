@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/launchdarkly/ld-find-code-refs/internal/git"
-	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/internal/validation"
-	"github.com/launchdarkly/ld-find-code-refs/options"
-	"github.com/launchdarkly/ld-find-code-refs/search"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/git"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
+	"github.com/launchdarkly/ld-find-code-refs/v2/options"
+	"github.com/launchdarkly/ld-find-code-refs/v2/search"
 )
 
 func Run(opts options.Options, output bool) {

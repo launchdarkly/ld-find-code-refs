@@ -5,12 +5,12 @@ import (
 
 	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 
-	"github.com/launchdarkly/ld-find-code-refs/aliases"
-	"github.com/launchdarkly/ld-find-code-refs/flags"
-	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/options"
+	aliases "github.com/launchdarkly/ld-find-code-refs/v2/aliases"
+	"github.com/launchdarkly/ld-find-code-refs/v2/flags"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
 
 type ElementMatcher struct {
