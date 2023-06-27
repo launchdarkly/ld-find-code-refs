@@ -4,9 +4,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/v2/options"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {

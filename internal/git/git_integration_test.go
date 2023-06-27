@@ -8,11 +8,11 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/stretchr/testify/require"
+
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/options"
-	"github.com/stretchr/testify/require"
-
 	"github.com/launchdarkly/ld-find-code-refs/v2/search"
 )
 

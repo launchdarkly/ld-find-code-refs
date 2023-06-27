@@ -5,7 +5,7 @@ import (
 
 	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 
-	aliases "github.com/launchdarkly/ld-find-code-refs/v2/aliases"
+	"github.com/launchdarkly/ld-find-code-refs/v2/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/v2/flags"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
