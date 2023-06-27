@@ -1,4 +1,4 @@
-module github.com/launchdarkly/ld-find-code-refs
+module github.com/launchdarkly/ld-find-code-refs/v2
 
 go 1.18
 
