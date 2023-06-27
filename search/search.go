@@ -8,8 +8,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/launchdarkly/ld-find-code-refs/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/internal/ld"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 
 // Truncate lines to prevent sending over massive hunks, e.g. a minified file.
 // NOTE: We may end up truncating a valid flag key reference. We accept this risk
-//       and will handle hunks missing flag key references on the frontend.
+// and will handle hunks missing flag key references on the frontend.
 func truncateLine(line string, maxCharCount int) string {
 	if utf8.RuneCountInString(line) <= maxCharCount {
 		return line
