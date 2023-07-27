@@ -40,9 +40,23 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 			}
 			ret[flag] = append(ret[flag], flagAliases...)
 		}
-		ret[flag] = helpers.Dedupe(ret[flag])
+		ret[flag] = uniqueAliases(flag, ret[flag])
 	}
 	return ret, nil
+}
+
+// Return a unique list of aliase, excluding flag key itself
+func uniqueAliases(flagKey string, aliases []string) []string {
+	ret := make([]string, 0, len(aliases))
+	keys := make(map[string]bool, len(aliases))
+	keys[flagKey] = true
+	for _, a := range aliases {
+		if _, ok := keys[a]; !ok {
+			keys[a] = true
+			ret = append(ret, a)
+		}
+	}
+	return ret
 }
 
 func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
