@@ -45,7 +45,7 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 	return ret, nil
 }
 
-// Return a unique list of aliase, excluding flag key itself
+// Return a unique list of aliases, excluding flag key itself
 func uniqueAliases(flagKey string, aliases []string) []string {
 	ret := make([]string, 0, len(aliases))
 	keys := make(map[string]bool, len(aliases))
