@@ -228,30 +228,16 @@ type CommitData struct {
 
 // FindExtinctions searches commit history for flags that had references removed recently
 func (c Client) FindExtinctions(project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
-	repo, err := git.PlainOpen(c.workspace)
-	if err != nil {
-		return nil, err
-	}
-	logResult, err := repo.Log(&git.LogOptions{})
+	commits, err := getCommits(c.workspace, lookback)
 	if err != nil {
 		return nil, err
 	}
 
-	commits := []CommitData{}
-	for i := 0; i < lookback; i++ {
-		commit, err := logResult.Next()
-		if err != nil {
-			// reached end of commit tree
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		tree, err := commit.Tree()
-		if err != nil {
-			return nil, err
-		}
-		commits = append(commits, CommitData{commit, tree})
+	// get matcher for project
+	elementMatcher := matcher.GetProjectElementMatcher(project.Key)
+	if elementMatcher == nil {
+		// This is actually a huge issue if it happens
+		panic(fmt.Sprintf("Matcher for project (%s) not found", project.Key))
 	}
 
 	ret := []ld.ExtinctionRep{}
@@ -266,18 +252,8 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 			return nil, err
 		}
 
-		// get matcher for project
-		elementMatcher := matcher.GetProjectElementMatcher(project.Key)
-		if elementMatcher == nil {
-			// This is actually a huge issue if it happens
-			panic(fmt.Sprintf("Matcher for project (%s) not found", project.Key))
-		}
-
 		nextFlags := make([]string, 0, len(flags))
-		flagMap := make(map[string]int, len(flags))
-		for _, flag := range flags {
-			flagMap[flag] = 0
-		}
+		flagMap := getFlagDeltaMap(flags)
 
 		for _, filePatch := range patch.FilePatches() {
 			if !shouldScanFilePatch(project.Dir, filePatch) {
@@ -285,19 +261,14 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 			}
 
 			for _, chunk := range filePatch.Chunks() {
-				delta := 0
-				switch chunk.Type() {
-				case diff.Delete:
-					delta = 1
-				case diff.Add:
-					delta = -1
+				delta := getDeltaFromChunkType(chunk.Type())
+				if delta == 0 {
+					continue
 				}
-				if delta != 0 {
-					for _, line := range strings.Split(chunk.Content(), "\n") {
-						for _, el := range elementMatcher.FindMatches(line) {
-							if _, ok := flagMap[el]; ok {
-								flagMap[el] += delta
-							}
+				for _, line := range strings.Split(chunk.Content(), "\n") {
+					for _, el := range elementMatcher.FindMatches(line) {
+						if _, ok := flagMap[el]; ok {
+							flagMap[el] += delta
 						}
 					}
 				}
@@ -306,13 +277,7 @@ func (c Client) FindExtinctions(project options.Project, flags []string, matcher
 
 		for flag, removalCount := range flagMap {
 			if removalCount > 0 {
-				ret = append(ret, ld.ExtinctionRep{
-					Revision: c.commit.Hash.String(),
-					Message:  c.commit.Message,
-					Time:     c.commit.Author.When.Unix() * 1000,
-					ProjKey:  project.Key,
-					FlagKey:  flag,
-				})
+				ret = append(ret, makeExtinctionRepFromCommit(project.Key, flag, c.commit))
 				log.Debug.Printf("Found extinct flag: %s in project: %s", flag, project.Key)
 			} else {
 				// this flag was not removed in the current commit, so check for it again in the next commit
@@ -356,4 +321,63 @@ func printDebugStatement(fromFile, toFile diff.File) {
 		toPath = toFile.Path()
 	}
 	log.Debug.Printf("Scanning from file: %s and to file: %s", fromPath, toPath)
+}
+
+func makeExtinctionRepFromCommit(projectKey, flagKey string, commit *object.Commit) ld.ExtinctionRep {
+	return ld.ExtinctionRep{
+		Revision: commit.Hash.String(),
+		Message:  commit.Message,
+		Time:     commit.Author.When.Unix() * 1000,
+		ProjKey:  projectKey,
+		FlagKey:  flagKey,
+	}
+}
+
+func getCommits(workspace string, lookback int) ([]CommitData, error) {
+	repo, err := git.PlainOpen(workspace)
+	if err != nil {
+		return nil, err
+	}
+	logResult, err := repo.Log(&git.LogOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	commits := []CommitData{}
+	for i := 0; i < lookback; i++ {
+		commit, err := logResult.Next()
+		if err != nil {
+			// reached end of commit tree
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		tree, err := commit.Tree()
+		if err != nil {
+			return nil, err
+		}
+		commits = append(commits, CommitData{commit, tree})
+	}
+
+	return commits, nil
+}
+
+func getFlagDeltaMap(flags []string) map[string]int {
+	flagMap := make(map[string]int, len(flags))
+	for _, flag := range flags {
+		flagMap[flag] = 0
+	}
+	return flagMap
+}
+
+func getDeltaFromChunkType(chunkType diff.Operation) int {
+	delta := 0
+	switch chunkType {
+	case diff.Delete:
+		delta = 1
+	case diff.Add:
+		delta = -1
+	}
+	return delta
 }
