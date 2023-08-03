@@ -62,15 +62,14 @@ type Alias struct {
 }
 
 func (a *Alias) IsValid() error {
-	err := a.Type.IsValid()
-	if err != nil {
+	if err := a.Type.IsValid(); err != nil {
 		return err
 	}
 	// Validate expected fields
 	switch a.Type {
 	case Literal:
 		if a.Flags == nil {
-			return errors.New("literal aliases must provide an 'flags'")
+			return errors.New("literal aliases must provide 'flags'")
 		}
 	case FilePattern:
 		if len(a.Paths) == 0 {
@@ -83,8 +82,7 @@ func (a *Alias) IsValid() error {
 			if !strings.Contains(pattern, "FLAG_KEY") {
 				return fmt.Errorf("filepattern regex '%s' must contain 'FLAG_KEY' for templating", pattern)
 			}
-			_, err := regexp.Compile(pattern)
-			if err != nil {
+			if _, err := regexp.Compile(pattern); err != nil {
 				return fmt.Errorf("could not validate regex pattern: %v", err)
 			}
 		}
