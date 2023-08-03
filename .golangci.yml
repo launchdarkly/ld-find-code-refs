@@ -36,6 +36,7 @@ linters:
       - nestif # fix
       - gosec
       - gocritic
+      - depguard
   fast: false
 
 linter-settings:
