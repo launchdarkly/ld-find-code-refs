@@ -108,7 +108,7 @@ func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
 	}
 	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKeys, auth)
 
-	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, projKey).Execute()
+	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, projKey).Execute() //nolint:bodyclose
 	if err != nil {
 		return nil, err
 	}
@@ -123,12 +123,12 @@ func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
 		archiveReq = archiveReq.Env(firstEnv.Key)
 	}
 
-	flags, _, err := flagReq.Execute()
+	flags, _, err := flagReq.Execute() //nolint:bodyclose
 	if err != nil {
 		return nil, err
 	}
 
-	archivedFlags, _, err := archiveReq.Execute()
+	archivedFlags, _, err := archiveReq.Execute() //nolint:bodyclose
 	if err != nil {
 		return nil, err
 	}
@@ -166,9 +166,10 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 		return err
 	}
 
-	_, err = c.do(req)
-	if err != nil {
+	if res, err := c.do(req); err != nil {
 		return err
+	} else if res != nil {
+		defer res.Body.Close()
 	}
 
 	return nil
@@ -237,9 +238,10 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 		return err
 	}
 
-	_, err = c.do(req)
-	if err != nil {
+	if res, err := c.do(req); err != nil {
 		return err
+	} else if res != nil {
+		defer res.Body.Close()
 	}
 
 	return nil
@@ -308,9 +310,10 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 		return err
 	}
 
-	_, err = c.do(req)
-	if err != nil {
+	if res, err := c.do(req); err != nil {
 		return err
+	} else if res != nil {
+		defer res.Body.Close()
 	}
 
 	return nil
@@ -327,9 +330,10 @@ func (c ApiClient) PostExtinctionEvents(extinctions []ExtinctionRep, repoName, b
 		return err
 	}
 
-	_, err = c.do(req)
-	if err != nil {
+	if res, err := c.do(req); err != nil {
 		return err
+	} else if res != nil {
+		defer res.Body.Close()
 	}
 
 	return nil
@@ -346,9 +350,10 @@ func (c ApiClient) PostDeleteBranchesTask(repoName string, branches []string) er
 		return err
 	}
 
-	_, err = c.do(req)
-	if err != nil {
+	if res, err := c.do(req); err != nil {
 		return err
+	} else if res != nil {
+		defer res.Body.Close()
 	}
 
 	return nil
