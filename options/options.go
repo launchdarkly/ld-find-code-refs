@@ -214,8 +214,7 @@ func (o Options) ValidateRequired() error {
 
 // Validate ensures all options have been set to a valid value
 func (o Options) Validate() error {
-	err := o.ValidateRequired()
-	if err != nil {
+	if err := o.ValidateRequired(); err != nil {
 		return err
 	}
 
@@ -225,14 +224,12 @@ func (o Options) Validate() error {
 	}
 
 	repoType := RepoType(strings.ToLower(o.RepoType))
-	err = repoType.isValid()
-	if err != nil {
+	if err := repoType.isValid(); err != nil {
 		return err
 	}
 
 	if o.RepoUrl != "" {
-		_, err := url.ParseRequestURI(o.RepoUrl)
-		if err != nil {
+		if _, err := url.ParseRequestURI(o.RepoUrl); err != nil {
 			return fmt.Errorf(`invalid value %q for "repoUrl": %+v`, o.RepoUrl, err)
 		}
 	}
@@ -245,21 +242,18 @@ func (o Options) Validate() error {
 		}
 	}
 
-	_, err = validation.NormalizeAndValidatePath(o.Dir)
-	if err != nil {
+	if _, err := validation.NormalizeAndValidatePath(o.Dir); err != nil {
 		return fmt.Errorf(`invalid value for "dir": %+v`, err)
 	}
 
 	if o.OutDir != "" {
-		_, err = validation.NormalizeAndValidatePath(o.OutDir)
-		if err != nil {
+		if _, err := validation.NormalizeAndValidatePath(o.OutDir); err != nil {
 			return fmt.Errorf(`invalid valid for "outDir": %+v`, err)
 		}
 	}
 
 	for _, a := range o.Aliases {
-		err := a.IsValid()
-		if err != nil {
+		if err := a.IsValid(); err != nil {
 			return err
 		}
 	}
@@ -273,8 +267,7 @@ func (o Options) Validate() error {
 			if project.Dir == "" {
 				return nil
 			}
-			err := validation.IsSubDirValid(o.Dir, project.Dir)
-			if err != nil {
+			if err := validation.IsSubDirValid(o.Dir, project.Dir); err != nil {
 				return err
 			}
 		}
