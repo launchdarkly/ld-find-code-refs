@@ -87,15 +87,13 @@ var cmd = &cobra.Command{
 }
 
 func main() {
-	err := o.Init(cmd.PersistentFlags())
-	if err != nil {
+	if err := o.Init(cmd.PersistentFlags()); err != nil {
 		panic(err)
 	}
 	cmd.AddCommand(prune)
 	cmd.AddCommand(extinctions)
 
-	err = cmd.Execute()
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
