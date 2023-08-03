@@ -59,7 +59,7 @@ defaults:
 jobs:
   go-test:
     docker:
-      - image: cimg/go:1.18
+      - image: cimg/go:1.20
         environment:
           <<: *environment
 
@@ -67,7 +67,7 @@ jobs:
 
   test-publish:
     docker:
-      - image: cimg/go:1.18
+      - image: cimg/go:1.20
     steps:
       - checkout
       - setup_remote_docker
