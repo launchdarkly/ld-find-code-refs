@@ -5,7 +5,7 @@ repo:
 
 jobs:
   - docker:
-      image: cimg/go:1.18
+      image: cimg/go:1.20
       copyGitHistory: true
     template:
       name: go

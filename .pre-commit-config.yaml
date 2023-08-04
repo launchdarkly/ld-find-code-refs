@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/golangci/golangci-lint
-  rev: v1.49.0
+  rev: v1.53.3
   hooks:
   - id: golangci-lint
     name: golangci-lint
@@ -23,4 +23,4 @@ repos:
     types: [markdown]
     pass_filenames: false
     language: system
-    files: 'build/metadata/github-actions/*'
+    files: 'build/metadata/github-actions/'
