@@ -46,37 +46,28 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 }
 
 func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
-	var ret []string
 	switch a.Type.Canonical() {
 	case options.Literal:
-		ret = a.Flags[flag]
+		return a.Flags[flag], nil
 	case options.CamelCase:
-		ret = []string{strcase.ToLowerCamel(flag)}
+		return []string{strcase.ToLowerCamel(flag)}, nil
 	case options.PascalCase:
-		ret = []string{strcase.ToCamel(flag)}
+		return []string{strcase.ToCamel(flag)}, nil
 	case options.SnakeCase:
-		ret = []string{strcase.ToSnake(flag)}
+		return []string{strcase.ToSnake(flag)}, nil
 	case options.UpperSnakeCase:
-		ret = []string{strcase.ToScreamingSnake(flag)}
+		return []string{strcase.ToScreamingSnake(flag)}, nil
 	case options.KebabCase:
-		ret = []string{strcase.ToKebab(flag)}
+		return []string{strcase.ToKebab(flag)}, nil
 	case options.DotCase:
-		ret = []string{strcase.ToDelimited(flag, '.')}
+		return []string{strcase.ToDelimited(flag, '.')}, nil
 	case options.FilePattern:
-		aliases, err := generateAliasesFromFilePattern(a, flag, dir, allFileContents)
-		if err != nil {
-			return nil, err
-		}
-		ret = aliases
+		return generateAliasesFromFilePattern(a, flag, dir, allFileContents)
 	case options.Command:
-		aliases, err := generateAliasesFromCommand(a, flag, dir)
-		if err != nil {
-			return nil, err
-		}
-		ret = aliases
+		return generateAliasesFromCommand(a, flag, dir)
 	}
 
-	return ret, nil
+	return []string{}, nil
 }
 
 func generateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
