@@ -38,7 +38,6 @@ linters:
       - gocritic
       - depguard
       - tagalign
-      - funlen
   fast: false
 
 linter-settings:

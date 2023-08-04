@@ -45,9 +45,7 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 	return ret, nil
 }
 
-func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
-	ret := []string{}
-	aliasId := a.Name
+func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) (ret []string, err error) {
 	switch a.Type.Canonical() {
 	case options.Literal:
 		ret = a.Flags[flag]
@@ -64,59 +62,71 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 	case options.DotCase:
 		ret = []string{strcase.ToDelimited(flag, '.')}
 	case options.FilePattern:
-		// Concatenate the contents of all files into a single byte array to be matched by specified patterns
-		fileContents := []byte{}
-		for _, path := range a.Paths {
-			absGlob := filepath.Join(dir, path)
-			matches, err := doublestar.FilepathGlob(absGlob)
-			if err != nil {
-				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
-			}
-			for _, match := range matches {
-				pathFileContents := allFileContents[match]
-				if len(pathFileContents) > 0 {
-					fileContents = append(fileContents, pathFileContents...)
-				}
-			}
-		}
-
-		for _, p := range a.Patterns {
-			pattern := regexp.MustCompile(strings.ReplaceAll(p, "FLAG_KEY", flag))
-			results := pattern.FindAllStringSubmatch(string(fileContents), -1)
-			for _, res := range results {
-				if len(res) > 1 {
-					ret = append(ret, res[1:]...)
-				}
-			}
-		}
+		ret, err = generateAliasesFromFilePattern(a, flag, dir, allFileContents)
 	case options.Command:
-		ctx := context.Background()
-		if a.Timeout != nil && *a.Timeout > 0 {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*time.Duration(*a.Timeout)))
-			defer cancel()
-		}
-		tokens := strings.Split(*a.Command, " ")
-		name := tokens[0]
-		args := []string{}
-		if len(tokens) > 1 {
-			args = tokens[1:]
-		}
-		/* #nosec */
-		cmd := exec.CommandContext(ctx, name, args...)
-		cmd.Stdin = strings.NewReader(flag)
-		cmd.Dir = dir
-		stdout, err := cmd.Output()
+		ret, err = generateAliasesFromCommand(a, flag, dir)
+	}
+
+	return ret, err
+}
+
+func generateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
+	ret := []string{}
+	// Concatenate the contents of all files into a single byte array to be matched by specified patterns
+	fileContents := []byte{}
+	for _, path := range a.Paths {
+		absGlob := filepath.Join(dir, path)
+		matches, err := doublestar.FilepathGlob(absGlob)
 		if err != nil {
-			return nil, fmt.Errorf("filepattern '%s': failed to execute alias command: %w", aliasId, err)
+			return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", a.Name, absGlob)
 		}
-		err = json.Unmarshal(stdout, &ret)
-		if err != nil {
-			return nil, fmt.Errorf("filepattern '%s': could not unmarshal json output of alias command: %w", aliasId, err)
+		for _, match := range matches {
+			if pathFileContents := allFileContents[match]; len(pathFileContents) > 0 {
+				fileContents = append(fileContents, pathFileContents...)
+			}
+		}
+	}
+
+	for _, p := range a.Patterns {
+		pattern := regexp.MustCompile(strings.ReplaceAll(p, "FLAG_KEY", flag))
+		results := pattern.FindAllStringSubmatch(string(fileContents), -1)
+		for _, res := range results {
+			if len(res) > 1 {
+				ret = append(ret, res[1:]...)
+			}
 		}
 	}
 
 	return ret, nil
+}
+
+func generateAliasesFromCommand(a options.Alias, flag, dir string) ([]string, error) {
+	ret := []string{}
+	ctx := context.Background()
+	if a.Timeout != nil && *a.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*time.Duration(*a.Timeout)))
+		defer cancel()
+	}
+	tokens := strings.Split(*a.Command, " ")
+	name := tokens[0]
+	args := []string{}
+	if len(tokens) > 1 {
+		args = tokens[1:]
+	}
+	/* #nosec */
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Stdin = strings.NewReader(flag)
+	cmd.Dir = dir
+	stdout, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("filepattern '%s': failed to execute alias command: %w", a.Name, err)
+	}
+	if err := json.Unmarshal(stdout, &ret); err != nil {
+		return nil, fmt.Errorf("filepattern '%s': could not unmarshal json output of alias command: %w", a.Name, err)
+	}
+
+	return ret, err
 }
 
 // processFileContent reads and stores the content of files specified by filePattern alias matchers to be matched for aliases
