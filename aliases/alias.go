@@ -46,7 +46,7 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 }
 
 func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
-	ret := []string{}
+	var ret []string
 	switch a.Type.Canonical() {
 	case options.Literal:
 		ret = a.Flags[flag]
