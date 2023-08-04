@@ -65,13 +65,13 @@ func generateAlias(a options.Alias, flag, dir string, allFileContents map[string
 	case options.FilePattern:
 		aliases, err := generateAliasesFromFilePattern(a, flag, dir, allFileContents)
 		if err != nil {
-			return ret, err
+			return nil, err
 		}
 		ret = append(ret, aliases...)
 	case options.Command:
 		aliases, err := generateAliasesFromCommand(a, flag, dir)
 		if err != nil {
-			return ret, err
+			return nil, err
 		}
 		ret = append(ret, aliases...)
 	}
