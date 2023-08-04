@@ -20,11 +20,6 @@ defaults:
             sudo apt-get install -yqq git
       - run: go install github.com/jstemmer/go-junit-report@v1.0.0
       - run: go install github.com/kyoh86/richgo@v0.3.10
-      - run: sudo apt-get update
-      - run: sudo apt-get install python3-pip
-      - run: sudo pip install pre-commit
-      - run: pre-commit install
-      - run: pre-commit run -a golangci-lint
       - run:
           name: Set up Code Climate test-reporter
           command: |
@@ -85,7 +80,12 @@ jobs:
       - run: sudo pip install pre-commit
       - run: pre-commit install
       - run: npm install action-docs
-      - run: pre-commit run -a github-action-docs
+      - run:
+          name: Check docs up to date
+          command: pre-commit run -a github-action-docs
+      - run:
+          name: Go lint
+          command: pre-commit run -a golangci-lint
 
 workflows:
   test:
