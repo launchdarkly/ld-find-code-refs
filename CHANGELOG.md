@@ -2,6 +2,14 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.0] - 2023-08-10
+### Changed:
+- Update app to go 1.20
+- Update dependencies
+
+### Fixed:
+- Update module-path to v2 #362
+
 ## [2.10.0] - 2023-02-21
 ### Changed:
 - Performance improvements around searching for flag extinctions in commit diffs, including changing search to use Aho-Corasick algorithm to find flags.
