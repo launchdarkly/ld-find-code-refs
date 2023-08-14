@@ -87,8 +87,8 @@ brews:
       bin.install "ld-find-code-refs"
 
     commit_author:
-      name: LaunchDarklyCI
-      email: dev@launchdarkly.com
+      name: LaunchDarklyReleaseBot
+      email: launchdarklyreleasebot@launchdarkly.com
 
 release:
   disable: true # this disables releasing *to GitHub*; it will still push to Docker
