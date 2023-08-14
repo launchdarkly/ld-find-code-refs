@@ -47,7 +47,11 @@ archives:
 nfpms:
   -
     id: ld-find-code-refs
-    file_name_template: "{{ .ProjectName }}_{{ .Version }}.{{ .Arch }}"
+    file_name_template: >-
+      {{ .ProjectName }}_
+      {{ .Version }}.
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
 
     homepage: https://launchdarkly.com/
     maintainer: LaunchDarkly <team@launchdarkly.com>
@@ -59,21 +63,18 @@ nfpms:
     - deb
     - rpm
 
-    replacements:
-      386: i386
-
 brews:
   -
-    ids: 
+    ids:
     - ld-find-code-refs
-    
+
     name: ld-find-code-refs
 
     description: Job for finding and sending feature flag code references to LaunchDarkly
 
     homepage: "https://launchdarkly.com"
 
-    tap:
+    repository:
       owner: launchdarkly
       name: homebrew-tap
       token: "{{ .Env.GITHUB_TOKEN }}"
@@ -98,21 +99,21 @@ dockers:
     image_templates:
     - "launchdarkly/ld-find-code-refs:latest"
     - "launchdarkly/ld-find-code-refs:{{ .Version }}"
-      
+
     dockerfile: build/package/cmd/Dockerfile
- 
+
   -
     goos: linux
 
     # GOARCH of the built binaries/packages that should be used.
     goarch: amd64
-    ids: 
+    ids:
     - ld-find-code-refs-github-action
 
     image_templates:
     - "launchdarkly/ld-find-code-refs-github-action:latest"
     - "launchdarkly/ld-find-code-refs-github-action:{{ .Version }}"
-      
+
     dockerfile: Dockerfile.github
   -
     goos: linux
@@ -123,8 +124,8 @@ dockers:
     image_templates:
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
     - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Version }}"
-     
-    ids: 
+
+    ids:
     - ld-find-code-refs-bitbucket-pipeline
 
     dockerfile: Dockerfile.bitbucket

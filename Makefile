@@ -1,7 +1,7 @@
 # Note: These commands pertain to the development of ld-find-code-refs.
 #       They are not intended for use by the end-users of this program.
 SHELL=/bin/bash
-GORELEASER_VERSION=v1.5.0
+GORELEASER_VERSION=v1.20.0
 
 build:
 	go build ./cmd/...
@@ -72,10 +72,13 @@ clean:
 	rm -f build/package/github-actions/ld-find-code-refs-github-action
 	rm -f build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 
-RELEASE_CMD=curl -sL https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(GORELEASER_VERSION) GITHUB_TOKEN=$(GITHUB_TOKEN) bash -s -- --rm-dist --release-notes $(RELEASE_NOTES)
+RELEASE_CMD=curl -sL https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(GORELEASER_VERSION) GITHUB_TOKEN=$(GITHUB_TOKEN) bash -s -- --clean --release-notes $(RELEASE_NOTES)
 
 publish:
 	$(RELEASE_CMD)
+
+test-publish:
+	curl -sL https://git.io/goreleaser | VERSION=$(GORELEASER_VERSION) bash -s -- --clean --skip-publish --skip-validate
 
 products-for-release:
 	$(RELEASE_CMD) --skip-publish --skip-validate
