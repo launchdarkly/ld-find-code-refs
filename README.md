@@ -8,7 +8,7 @@ This repository provides solutions for configuring [LaunchDarkly code references
 
 - [Feature guide](https://docs.launchdarkly.com/home/code/code-references)
 - [Turn-key configuration options](#turn-key-configuration-options)
-- [Execuation via CLI](#execution-via-cli)
+- [Execution via CLI](#execution-via-cli)
   - [Prerequisites](#prerequisites)
   - [Installing](#installing)
     - [MacOS](#macOS)
