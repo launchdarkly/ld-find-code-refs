@@ -74,7 +74,7 @@ brews:
 
     homepage: "https://launchdarkly.com"
 
-    tap:
+    repository:
       owner: launchdarkly
       name: homebrew-tap
       token: "{{ .Env.GITHUB_TOKEN }}"
