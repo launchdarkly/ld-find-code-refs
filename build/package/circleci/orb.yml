@@ -9,7 +9,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@2.11.0
+        launchdarkly: launchdarkly/ld-find-code-refs@2.11.1
       workflows:
         main:
           jobs:
@@ -23,7 +23,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@2.11.0
+        launchdarkly: launchdarkly/ld-find-code-refs@2.11.1
       workflows:
         main:
           jobs:
@@ -38,7 +38,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        launchdarkly: launchdarkly/ld-find-code-refs@2.11.0
+        launchdarkly: launchdarkly/ld-find-code-refs@2.11.1
       workflows:
         main:
           jobs:
@@ -107,7 +107,7 @@ jobs:
         type: integer
         default: 10
     docker:
-      - image: launchdarkly/ld-find-code-refs:2.11.0
+      - image: launchdarkly/ld-find-code-refs:2.11.1
         entrypoint: sh
     steps:
       - checkout:
