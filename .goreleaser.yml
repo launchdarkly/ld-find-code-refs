@@ -51,7 +51,7 @@ nfpms:
       {{ .ProjectName }}_
       {{ .Version }}.
       {{- if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
+      {{- else }}{{ .Arch }}{{ end -}}
 
     homepage: https://launchdarkly.com/
     maintainer: LaunchDarkly <team@launchdarkly.com>
