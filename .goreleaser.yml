@@ -48,8 +48,8 @@ nfpms:
   -
     id: ld-find-code-refs
     file_name_template: >-
-      {{ .ProjectName }}_
-      {{ .Version }}.
+      {{- .ProjectName -}}_
+      {{- .Version -}}.
       {{- if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end -}}
 
