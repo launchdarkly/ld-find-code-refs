@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.2] - 2023-08-21
+### Fixed:
+- Updates to release process
+
 ## [2.11.1] - 2023-08-18
 ### Changed:
 - Update docker images
