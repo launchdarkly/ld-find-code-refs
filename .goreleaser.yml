@@ -100,7 +100,7 @@ dockers:
     - "launchdarkly/ld-find-code-refs:latest"
     - "launchdarkly/ld-find-code-refs:{{ .Version }}"
 
-    dockerfile: build/package/cmd/Dockerfile
+    dockerfile: Dockerfile
 
   -
     goos: linux
