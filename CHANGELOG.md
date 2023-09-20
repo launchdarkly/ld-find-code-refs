@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.3] - 2023-09-20
+### Changed:
+- Dependencies updated
+
+### Fixed:
+- Docker image was not being built with correct alpine version (does not affect github or bitbucket integrations)
+
 ## [2.11.2] - 2023-08-21
 ### Fixed:
 - Updates to release process
