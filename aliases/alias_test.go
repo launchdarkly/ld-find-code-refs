@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	o "github.com/launchdarkly/ld-find-code-refs/v2/options"
@@ -40,7 +41,6 @@ func Test_GenerateAliases(t *testing.T) {
 		flags   []string
 		aliases []o.Alias
 		want    map[string][]string
-		wantErr error
 	}{
 		{
 			name:  "literals",
@@ -74,6 +74,14 @@ func Test_GenerateAliases(t *testing.T) {
 			want: map[string][]string{testFlagKey: slice("SomeFlag")},
 		},
 		{
+			name:  "PascalCase alias",
+			flags: slice("some_flag"),
+			aliases: []o.Alias{
+				alias(o.PascalCase),
+			},
+			want: map[string][]string{"some_flag": slice("SomeFlag")},
+		},
+		{
 			name:  "file exact pattern",
 			flags: slice(testFlagKey),
 			aliases: []o.Alias{
@@ -89,19 +97,29 @@ func Test_GenerateAliases(t *testing.T) {
 			},
 			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG", "WILD_FLAG_SECOND_ALIAS"), testFlagKey: slice("SOME_FLAG")},
 		},
-		// TODO
-		// {
-		// 	name:    "command",
-		// 	flags:   slice(testFlagKey),
-		// 	aliases: []o.Alias{cmd(`echo '["SOME_FLAG"]'`, 0)},
-		// },
+		{
+			name:  "command",
+			flags: slice(testFlagKey),
+			aliases: []o.Alias{
+				cmd(`echo ["SOME_FLAG"]`, 0),
+			},
+			want: map[string][]string{testFlagKey: slice("SOME_FLAG")},
+		},
+		{
+			name:  "command, custom pascalcase",
+			flags: slice("some_flag"),
+			aliases: []o.Alias{
+				cmd(`python3 ./aliases-test.py`, 5),
+			},
+			want: map[string][]string{"some_flag": slice("Some_Flag")},
+		},
 	}
 
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
 			aliases, err := GenerateAliases(tt.flags, tt.aliases, "")
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, aliases)
-			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }
