@@ -58,6 +58,7 @@ func TestMatcher_MatchElement(t *testing.T) {
 			flagKey:  "TEST_FLAG",
 		},
 		{
+			// This example is equivalent to setting `defaultsDisabled: true` in delimiters configuration
 			name:     "matches without delimiters",
 			expected: true,
 			line:     "var TEST_FLAG",
