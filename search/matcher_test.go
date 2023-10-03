@@ -29,32 +29,47 @@ func TestElementMatcher_FindMatches(t *testing.T) {
 }
 
 func TestMatcher_MatchElement(t *testing.T) {
-	const FLAG_KEY = "testflag"
-
 	specs := []struct {
 		name     string
 		expected bool
 		line     string
 		matcher  Matcher
+		flagKey  string
 	}{
 		{
 			name:     "match found",
 			expected: true,
 			line:     "var flagKey = 'testflag'",
 			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", ",'\"", []string{"testflag"}, map[string][]string{"testflag": {"testFlag"}})}},
+			flagKey:  "testflag",
 		},
 		{
 			name:     "no match found",
 			expected: false,
 			line:     "var flagKey = 'testflag'",
 			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", ",'\"", []string{"anotherflag"}, map[string][]string{"anotherflag": {"anotherFlag"}})}},
+			flagKey:  "testflag",
+		},
+		{
+			name:     "doesn't match when delimiters aren't present",
+			expected: false,
+			line:     "var TEST_FLAG",
+			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", "'", []string{"TEST_FLAG"}, map[string][]string{"testflag": {}})}},
+			flagKey:  "TEST_FLAG",
+		},
+		{
+			name:     "matches without delimiters",
+			expected: true,
+			line:     "var TEST_FLAG",
+			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", "", []string{"TEST_FLAG"}, map[string][]string{"testflag": {}})}},
+			flagKey:  "TEST_FLAG",
 		},
 	}
 
 	for _, tt := range specs {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expected, tt.matcher.MatchElement(tt.line, FLAG_KEY))
+			require.Equal(t, tt.expected, tt.matcher.MatchElement(tt.line, tt.flagKey))
 		})
 	}
 }
