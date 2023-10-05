@@ -120,10 +120,10 @@ func generateAliasesFromCommand(a options.Alias, flag, dir string) ([]string, er
 	cmd.Dir = dir
 	stdout, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("filepattern '%s': failed to execute alias command: %w", a.Name, err)
+		return nil, fmt.Errorf("command '%s': failed to execute alias command: %w", a.Name, err)
 	}
 	if err := json.Unmarshal(stdout, &ret); err != nil {
-		return nil, fmt.Errorf("filepattern '%s': could not unmarshal json output of alias command: %w", a.Name, err)
+		return nil, fmt.Errorf("command '%s': could not unmarshal json output of alias command: %w", a.Name, err)
 	}
 
 	return ret, err
