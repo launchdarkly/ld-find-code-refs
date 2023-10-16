@@ -82,6 +82,14 @@ func Test_GenerateAliases(t *testing.T) {
 			want: map[string][]string{"some_flag": slice("SomeFlag")},
 		},
 		{
+			name:  "screaming snake case to camel case",
+			flags: slice("SOME_FLAG"),
+			aliases: []o.Alias{
+				alias(o.CamelCase),
+			},
+			want: map[string][]string{"SOME_FLAG": slice("someFlag")},
+		},
+		{
 			name:  "file exact pattern",
 			flags: slice(testFlagKey),
 			aliases: []o.Alias{
