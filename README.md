@@ -108,26 +108,25 @@ If you are using the FedRAMP compliant [LaunchDarkly federal instance](https://d
 
 `ld-find-code-refs` provides a number of configuration options to customize how code references are generated and surfaced in your LaunchDarkly dashboard. See [CONFIGURATION.md](docs/CONFIGURATION.md) for details on configuration, and [EXAMPLES.md](docs/EXAMPLES.md) for detailed sample configurations.
 
-Configuration options include, but are not limited to:
 
 <!-- Headers are used here to maintain historic section links -->
-- ##### Ignoring files and directories
+#### Ignoring files and directories
 
 [Ignoring files and directories](docs/CONFIGURATION.md#ignoring-files-and-directories)
 
-- ##### Searching for flag key aliases, such as keys stored in variables or evaluated in an SDK wrapper
+#### Searching for flag key aliases, such as keys stored in variables or evaluated in an SDK wrapper
 
 [Feature flag aliases](docs/ALIASES.md)
 
-- ##### Providing flag key delimiters to reduce false positives and false negatives
+#### Providing flag key delimiters to reduce false positives and false negatives
 
 [Delimiters](docs/CONFIGURATION.md#delimiters)
 
-- ##### Customizing the amount of data stored and displayed by LaunchDarkly
+#### Customizing the amount of data stored and displayed by LaunchDarkly
 
 [Configuration with context lines](docs/EXAMPLES.md#configuration-with-context-lines)
 
-- ##### Exporting code references as a CSV file
+#### Exporting code references as a CSV file
 
 [All command-line arguments](docs/CONFIGURATION.md#command-line)
 <!-- end historic links -->
