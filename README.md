@@ -104,18 +104,13 @@ Precompiled binaries for the latest release can be found [here](https://github.c
 
 If you are using the FedRAMP compliant [LaunchDarkly federal instance](https://docs.launchdarkly.com/home/advanced/federal), the `ld-find-code-refs` binary should be compiled with FIPS 140-2 support by using a tool like [Go+BoringCrypto](https://github.com/golang/go/tree/dev.boringcrypto/misc/boring).
 
-### CLI Configuration
+### Configuration
 
-`ld-find-code-refs` provides a number of configuration options to customize how code references are generated and surfaced in your LaunchDarkly dashboard. See [CONFIGURATION.md](docs/CONFIGURATION.md) for details on configuration, and [EXAMPLES.md](docs/EXAMPLES.md) for detailed sample configurations.
+`ld-find-code-refs` provides a number of configuration options to customize how code references are generated and surfaced in your LaunchDarkly dashboard.
 
-Configuration options include, but are not limited to:
-
-<!-- Headers are used here to maintain historic section links -->
-- ##### Ignoring files and directories
-- ##### Searching for flag key aliases, such as keys stored in variables or evaluated in an SDK wrapper
-- ##### Providing flag key delimiters to reduce false positives and false negatives
-- ##### Customizing the amount of data stored and displayed by LaunchDarkly
-- ##### Exporting code references as a CSV file
+- [All configuration options are documented in CONFIGURATION.md](docs/CONFIGURATION.md)
+- [Common configuration examples are documented in EXAMPLES.md](docs/EXAMPLES.md)
+- [Detailed information on configuring feature flag aliases is documented in ALIASES.md](docs/ALIASES.md)
 
 ### Searching for unused flags (extinctions)
 
