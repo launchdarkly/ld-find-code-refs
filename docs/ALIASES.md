@@ -35,7 +35,7 @@ var secondFeatureFlag = 'second-flag-key'
 
 Aliases can be hardcoded using the `literal` type. This is intended to be used for testing aliasing functionality.
 
-Please note: literal aliases are limited to flag keys using lowercase only because of a limitation of a dependency we use to parse the configuration file. You can track the issue [here](https://github.com/spf13/viper/issues/1014).
+Note that literal aliases are limited to flag keys using lowercase letters only, due to a limitation of a dependency LaunchDarkly uses to parse the configuration file. [You can track the issue here](https://github.com/spf13/viper/issues/1014).
 
 Example hardcoding aliases for a couple flags:
 
