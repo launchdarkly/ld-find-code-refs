@@ -114,7 +114,7 @@ func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
 	}
 
 	flagReq := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey).Summary(true)
-	archiveReq := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey).Summary(true).Archived(true)
+	archiveReq := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey).Summary(true).Filter("state:archived")
 
 	if len(project.Environments) > 0 {
 		// The first environment allows filtering when retrieving flags.
