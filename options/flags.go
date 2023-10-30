@@ -112,6 +112,11 @@ the project to this directory.`,
 		usage:        `LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with "projects" block in configuration file.`,
 	},
 	{
+		name:         "prune",
+		defaultValue: true,
+		usage:        `If enabled, branches that are not found in the remote repository will be deleted from LaunchDarkly.`,
+	},
+	{
 		name:         "repoName",
 		short:        "r",
 		defaultValue: "",

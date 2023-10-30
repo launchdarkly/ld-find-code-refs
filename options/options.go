@@ -65,6 +65,7 @@ type Options struct {
 	DryRun              bool   `mapstructure:"dryRun"`
 	IgnoreServiceErrors bool   `mapstructure:"ignoreServiceErrors"`
 	UserAgent           string `mapstructure:"userAgent"`
+	Prune               bool   `mapstructure:"prune"`
 
 	// The following options can only be configured via YAML configuration
 

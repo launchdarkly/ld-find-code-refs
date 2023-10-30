@@ -166,9 +166,7 @@ func generateHunkOutput(opts options.Options, matcher search.Matcher, branch ld.
 }
 
 func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.BranchRep, repoParams ld.RepoParams, gitClient *git.Client, ldApi ld.ApiClient) {
-	lookback := opts.Lookback
-	dryRun := opts.DryRun
-	if lookback > 0 {
+	if opts.Lookback > 0 {
 		var removedFlags []ld.ExtinctionRep
 
 		flagCounts := branch.CountByProjectAndFlag(matcher.GetElements(), opts.GetProjectKeys())
@@ -180,7 +178,7 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 				}
 			}
 			log.Info.Printf("checking if %d flags without references were removed in the last %d commits for project: %s", len(missingFlags), opts.Lookback, project.Key)
-			removedFlagsByProject, err := gitClient.FindExtinctions(project, missingFlags, matcher, lookback+1)
+			removedFlagsByProject, err := gitClient.FindExtinctions(project, missingFlags, matcher, opts.Lookback+1)
 			if err != nil {
 				log.Warning.Printf("unable to generate flag extinctions: %s", err)
 			} else {
@@ -188,14 +186,14 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 			}
 			removedFlags = append(removedFlags, removedFlagsByProject...)
 		}
-		if len(removedFlags) > 0 && !dryRun {
+		if len(removedFlags) > 0 && !opts.DryRun {
 			err := ldApi.PostExtinctionEvents(removedFlags, repoParams.Name, branch.Name)
 			if err != nil {
 				log.Error.Printf("error sending extinction events to LaunchDarkly: %s", err)
 			}
 		}
 	}
-	if !dryRun {
+	if !opts.DryRun && opts.Prune {
 		log.Info.Printf("attempting to prune old code reference data from LaunchDarkly")
 		remoteBranches, err := gitClient.RemoteBranches()
 		if err != nil {

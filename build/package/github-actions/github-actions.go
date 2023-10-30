@@ -65,6 +65,7 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	opts.Branch = ghBranch
 	opts.UpdateSequenceId = updateSequenceId
 	opts.UserAgent = "github-actions"
+	opts.Prune = false // Temporary, since pruning doesn't work in private repos
 
 	return opts, opts.Validate()
 }
