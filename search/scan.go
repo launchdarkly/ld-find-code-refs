@@ -5,7 +5,6 @@ import (
 
 	"github.com/launchdarkly/ld-find-code-refs/v2/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/v2/flags"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/options"
@@ -25,7 +24,7 @@ func ScanForFlags(opts options.Options, flagKeys map[string][]string, dir string
 			log.Error.Fatalf("failed to generate aliases: %s for project: %s", err, project.Key)
 		}
 
-		delimiters := strings.Join(helpers.Dedupe(getDelimiters(opts)), "")
+		delimiters := strings.Join(GetDelimiters(opts), "")
 		elements = append(elements, NewElementMatcher(project.Key, project.Dir, delimiters, projectFlags, aliasesByFlagKey))
 	}
 	matcher := Matcher{
