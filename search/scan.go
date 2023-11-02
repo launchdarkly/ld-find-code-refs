@@ -10,7 +10,7 @@ import (
 // ScanForFlags checks the configured directory for flags based on the options configured for Code References.
 // flagKeys is a map of flag keys per-project
 func ScanForFlags(opts options.Options, flagKeys map[string][]string, dir string) (Matcher, []ld.ReferenceHunksRep) {
-	matcher := NewMatcher(opts, flagKeys, dir)
+	matcher := NewMultiProjectMatcher(opts, flagKeys, dir)
 
 	refs, err := SearchForRefs(dir, matcher)
 	if err != nil {

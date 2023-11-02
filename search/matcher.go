@@ -14,7 +14,7 @@ type Matcher struct {
 	ctxLines int
 }
 
-func NewMatcher(opts options.Options, flagKeys map[string][]string, dir string) Matcher {
+func NewMultiProjectMatcher(opts options.Options, flagKeys map[string][]string, dir string) Matcher {
 	elements := []ElementMatcher{}
 	delimiters := strings.Join(GetDelimiters(opts), "")
 
