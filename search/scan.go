@@ -1,9 +1,6 @@
 package search
 
 import (
-	"strings"
-
-	"github.com/launchdarkly/ld-find-code-refs/v2/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/v2/flags"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
@@ -13,24 +10,7 @@ import (
 // ScanForFlags checks the configured directory for flags based on the options configured for Code References.
 // flagKeys is a map of flag keys per-project
 func ScanForFlags(opts options.Options, flagKeys map[string][]string, dir string) (Matcher, []ld.ReferenceHunksRep) {
-	elements := []ElementMatcher{}
-
-	for _, project := range opts.Projects {
-		projectFlags := flagKeys[project.Key]
-		projectAliases := opts.Aliases
-		projectAliases = append(projectAliases, project.Aliases...)
-		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, dir)
-		if err != nil {
-			log.Error.Fatalf("failed to generate aliases: %s for project: %s", err, project.Key)
-		}
-
-		delimiters := strings.Join(GetDelimiters(opts), "")
-		elements = append(elements, NewElementMatcher(project.Key, project.Dir, delimiters, projectFlags, aliasesByFlagKey))
-	}
-	matcher := Matcher{
-		ctxLines: opts.ContextLines,
-		Elements: elements,
-	}
+	matcher := NewMatcher(opts, flagKeys, dir)
 
 	refs, err := SearchForRefs(dir, matcher)
 	if err != nil {

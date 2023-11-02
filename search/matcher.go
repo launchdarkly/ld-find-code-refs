@@ -3,12 +3,37 @@ package search
 import (
 	"strings"
 
+	"github.com/launchdarkly/ld-find-code-refs/v2/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
+	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
 
 type Matcher struct {
 	Elements []ElementMatcher
 	ctxLines int
+}
+
+func NewMatcher(opts options.Options, flagKeys map[string][]string, dir string) Matcher {
+	elements := []ElementMatcher{}
+	delimiters := strings.Join(GetDelimiters(opts), "")
+
+	for _, project := range opts.Projects {
+		projectFlags := flagKeys[project.Key]
+		projectAliases := opts.Aliases
+		projectAliases = append(projectAliases, project.Aliases...)
+		aliasesByFlagKey, err := aliases.GenerateAliases(projectFlags, projectAliases, dir)
+		if err != nil {
+			log.Error.Fatalf("failed to generate aliases: %s for project: %s", err, project.Key)
+		}
+
+		elements = append(elements, NewElementMatcher(project.Key, project.Dir, delimiters, projectFlags, aliasesByFlagKey))
+	}
+
+	return Matcher{
+		ctxLines: opts.ContextLines,
+		Elements: elements,
+	}
 }
 
 func (m Matcher) MatchElement(line, element string) bool {
