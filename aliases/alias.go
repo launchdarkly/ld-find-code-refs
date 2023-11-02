@@ -45,6 +45,23 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 	return ret, nil
 }
 
+func generateAlias(a options.Alias, flag, dir string, allFileContents FileContentsMap) (ret []string, err error) {
+	switch a.Type.Canonical() {
+	case options.Literal:
+		ret = a.Flags[flag]
+	case options.FilePattern:
+		ret, err = GenerateAliasesFromFilePattern(a, flag, dir, allFileContents)
+	case options.Command:
+		ret, err = GenerateAliasesFromCommand(a, flag, dir)
+	default:
+		var alias string
+		alias, err = GenerateNamingConventionAlias(a, flag)
+		ret = []string{alias}
+	}
+
+	return ret, err
+}
+
 func GenerateNamingConventionAlias(a options.Alias, flag string) (alias string, err error) {
 	switch a.Type.Canonical() {
 	case options.CamelCase:
@@ -64,23 +81,6 @@ func GenerateNamingConventionAlias(a options.Alias, flag string) (alias string, 
 	}
 
 	return alias, err
-}
-
-func generateAlias(a options.Alias, flag, dir string, allFileContents FileContentsMap) (ret []string, err error) {
-	switch a.Type.Canonical() {
-	case options.Literal:
-		ret = a.Flags[flag]
-	case options.FilePattern:
-		ret, err = GenerateAliasesFromFilePattern(a, flag, dir, allFileContents)
-	case options.Command:
-		ret, err = GenerateAliasesFromCommand(a, flag, dir)
-	default:
-		var alias string
-		alias, err = GenerateNamingConventionAlias(a, flag)
-		ret = []string{alias}
-	}
-
-	return ret, err
 }
 
 func GenerateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents FileContentsMap) ([]string, error) {
