@@ -45,32 +45,45 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 	return ret, nil
 }
 
-func generateAlias(a options.Alias, flag, dir string, allFileContents map[string][]byte) (ret []string, err error) {
+func generateAlias(a options.Alias, flag, dir string, allFileContents FileContentsMap) (ret []string, err error) {
 	switch a.Type.Canonical() {
 	case options.Literal:
 		ret = a.Flags[flag]
-	case options.CamelCase:
-		ret = []string{strcase.ToLowerCamel(flag)}
-	case options.PascalCase:
-		ret = []string{strcase.ToCamel(flag)}
-	case options.SnakeCase:
-		ret = []string{strcase.ToSnake(flag)}
-	case options.UpperSnakeCase:
-		ret = []string{strcase.ToScreamingSnake(flag)}
-	case options.KebabCase:
-		ret = []string{strcase.ToKebab(flag)}
-	case options.DotCase:
-		ret = []string{strcase.ToDelimited(flag, '.')}
 	case options.FilePattern:
-		ret, err = generateAliasesFromFilePattern(a, flag, dir, allFileContents)
+		ret, err = GenerateAliasesFromFilePattern(a, flag, dir, allFileContents)
 	case options.Command:
-		ret, err = generateAliasesFromCommand(a, flag, dir)
+		ret, err = GenerateAliasesFromCommand(a, flag, dir)
+	default:
+		var alias string
+		alias, err = GenerateNamingConventionAlias(a, flag)
+		ret = []string{alias}
 	}
 
 	return ret, err
 }
 
-func generateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents map[string][]byte) ([]string, error) {
+func GenerateNamingConventionAlias(a options.Alias, flag string) (alias string, err error) {
+	switch a.Type.Canonical() {
+	case options.CamelCase:
+		alias = strcase.ToLowerCamel(flag)
+	case options.PascalCase:
+		alias = strcase.ToCamel(flag)
+	case options.SnakeCase:
+		alias = strcase.ToSnake(flag)
+	case options.UpperSnakeCase:
+		alias = strcase.ToScreamingSnake(flag)
+	case options.KebabCase:
+		alias = strcase.ToKebab(flag)
+	case options.DotCase:
+		alias = strcase.ToDelimited(flag, '.')
+	default:
+		err = fmt.Errorf("naming convention alias type %s not recognized", a.Type)
+	}
+
+	return alias, err
+}
+
+func GenerateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents FileContentsMap) ([]string, error) {
 	ret := []string{}
 	// Concatenate the contents of all files into a single byte array to be matched by specified patterns
 	fileContents := []byte{}
@@ -100,7 +113,7 @@ func generateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileCo
 	return ret, nil
 }
 
-func generateAliasesFromCommand(a options.Alias, flag, dir string) ([]string, error) {
+func GenerateAliasesFromCommand(a options.Alias, flag, dir string) ([]string, error) {
 	ret := []string{}
 	ctx := context.Background()
 	if a.Timeout != nil && *a.Timeout > 0 {
@@ -130,7 +143,7 @@ func generateAliasesFromCommand(a options.Alias, flag, dir string) ([]string, er
 }
 
 // processFileContent reads and stores the content of files specified by filePattern alias matchers to be matched for aliases
-func processFileContent(aliases []options.Alias, dir string) (map[string][]byte, error) {
+func processFileContent(aliases []options.Alias, dir string) (FileContentsMap, error) {
 	allFileContents := map[string][]byte{}
 	for idx, a := range aliases {
 		if a.Type.Canonical() != options.FilePattern {
