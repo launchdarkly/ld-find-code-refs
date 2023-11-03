@@ -16,34 +16,20 @@ import (
 )
 
 var filepathGlobCache = make(map[string][]string)
-var absGlobContents = make(map[string][]byte)
 
 func GenerateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents FileContentsMap) ([]string, error) {
 	ret := make([]string, 0)
 	// Concatenate the contents of all files into a single byte array to be matched by specified patterns
 	fileContents := []byte{}
-	fmt.Printf("looking for aliases for flag %s\n", flag)
 	for _, path := range a.Paths {
-		fmt.Printf("finding aliases for path %s\n", path)
-		absGlob := filepath.Join(dir, path)
-		if contents, ok := absGlobContents[absGlob]; ok {
-			fmt.Println("using found contents")
-			fileContents = append(fileContents, contents...)
-		} else {
-			fmt.Println("searching for contents")
-			matches, err := filepathGlob(dir, path)
-			if err != nil {
-				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", a.Name, path)
+		matches, err := filepathGlob(dir, path)
+		if err != nil {
+			return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", a.Name, path)
+		}
+		for _, match := range matches {
+			if pathFileContents := allFileContents[match]; len(pathFileContents) > 0 {
+				fileContents = append(fileContents, pathFileContents...)
 			}
-
-			contents := []byte{}
-			for _, match := range matches {
-				if pathFileContents := allFileContents[match]; len(pathFileContents) > 0 {
-					contents = append(contents, pathFileContents...)
-				}
-			}
-			absGlobContents[absGlob] = contents
-			fileContents = append(fileContents, contents...)
 		}
 	}
 
@@ -106,10 +92,8 @@ func processFileContent(aliases []options.Alias, dir string) (FileContentsMap, e
 }
 
 func filepathGlob(dir, glob string) ([]string, error) {
-	fmt.Printf("looking for glob %s\n", glob)
 	absGlob := filepath.Join(dir, glob)
 	if cachedFilePaths, ok := filepathGlobCache[absGlob]; ok {
-		fmt.Println("found cache")
 		return cachedFilePaths, nil
 	}
 
