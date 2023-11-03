@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
+
 	"strconv"
 	"strings"
 
@@ -12,6 +12,7 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/v2/options"
+	regexp "github.com/wasilibs/go-re2"
 )
 
 var filepathGlobCache = make(map[string][]string)
