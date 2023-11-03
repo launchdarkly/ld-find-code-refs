@@ -7,9 +7,9 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
 
-// ScanForFlags checks the configured directory for flags based on the options configured for Code References.
-// flagKeys is a map of flag keys per-project
-func ScanForFlags(opts options.Options, flagKeys map[string][]string, dir string) (Matcher, []ld.ReferenceHunksRep) {
+// Scan checks the configured directory for flags based on the options configured for Code References.
+func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, []ld.ReferenceHunksRep) {
+	flagKeys := flags.GetFlagKeys(opts, repoParams)
 	matcher := NewMultiProjectMatcher(opts, dir, flagKeys)
 
 	refs, err := SearchForRefs(dir, matcher)
@@ -18,11 +18,4 @@ func ScanForFlags(opts options.Options, flagKeys map[string][]string, dir string
 	}
 
 	return matcher, refs
-}
-
-// Scan checks the configured directory for flags based on the options configured for Code References.
-// @Deprecated: Use ScanForFlags instead
-func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, []ld.ReferenceHunksRep) {
-	flagKeys := flags.GetFlagKeys(opts, repoParams)
-	return ScanForFlags(opts, flagKeys, dir)
 }
