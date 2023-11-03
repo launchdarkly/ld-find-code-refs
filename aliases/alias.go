@@ -4,20 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/bmatcuk/doublestar/v4"
 	"github.com/iancoleman/strcase"
 
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
 
@@ -83,36 +77,6 @@ func GenerateNamingConventionAlias(a options.Alias, flag string) (alias string, 
 	return alias, err
 }
 
-func GenerateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents FileContentsMap) ([]string, error) {
-	ret := []string{}
-	// Concatenate the contents of all files into a single byte array to be matched by specified patterns
-	fileContents := []byte{}
-	for _, path := range a.Paths {
-		absGlob := filepath.Join(dir, path)
-		matches, err := doublestar.FilepathGlob(absGlob)
-		if err != nil {
-			return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", a.Name, absGlob)
-		}
-		for _, match := range matches {
-			if pathFileContents := allFileContents[match]; len(pathFileContents) > 0 {
-				fileContents = append(fileContents, pathFileContents...)
-			}
-		}
-	}
-
-	for _, p := range a.Patterns {
-		pattern := regexp.MustCompile(strings.ReplaceAll(p, "FLAG_KEY", flag))
-		results := pattern.FindAllStringSubmatch(string(fileContents), -1)
-		for _, res := range results {
-			if len(res) > 1 {
-				ret = append(ret, res[1:]...)
-			}
-		}
-	}
-
-	return ret, nil
-}
-
 func GenerateAliasesFromCommand(a options.Alias, flag, dir string) ([]string, error) {
 	ret := []string{}
 	ctx := context.Background()
@@ -140,50 +104,4 @@ func GenerateAliasesFromCommand(a options.Alias, flag, dir string) ([]string, er
 	}
 
 	return ret, err
-}
-
-// processFileContent reads and stores the content of files specified by filePattern alias matchers to be matched for aliases
-func processFileContent(aliases []options.Alias, dir string) (FileContentsMap, error) {
-	allFileContents := map[string][]byte{}
-	for idx, a := range aliases {
-		if a.Type.Canonical() != options.FilePattern {
-			continue
-		}
-
-		aliasId := strconv.Itoa(idx)
-		if a.Name != "" {
-			aliasId = a.Name
-		}
-
-		paths := []string{}
-		for _, glob := range a.Paths {
-			absGlob := filepath.Join(dir, glob)
-			matches, err := doublestar.FilepathGlob(absGlob)
-			if err != nil {
-				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
-			}
-			if matches == nil {
-				log.Info.Printf("filepattern '%s': no matching files found for alias path glob '%s'", aliasId, absGlob)
-			}
-			paths = append(paths, matches...)
-		}
-
-		for _, path := range paths {
-			_, pathAlreadyProcessed := allFileContents[path]
-			if pathAlreadyProcessed {
-				continue
-			}
-
-			if !validation.FileExists(path) {
-				return nil, fmt.Errorf("filepattern '%s': could not find file at path '%s'", aliasId, path)
-			}
-			/* #nosec */
-			data, err := os.ReadFile(path)
-			if err != nil {
-				return nil, fmt.Errorf("filepattern '%s': could not process file at path '%s': %v", aliasId, path, err)
-			}
-			allFileContents[path] = data
-		}
-	}
-	return allFileContents, nil
 }
