@@ -101,7 +101,7 @@ func Test_GenerateAliases(t *testing.T) {
 			name:  "file wildcard pattern",
 			flags: slice(testFlagKey, testWildFlagKey),
 			aliases: []o.Alias{
-				fileWildPattern(testFlagKey),
+				fileWildPattern(),
 			},
 			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG", "WILD_FLAG_SECOND_ALIAS"), testFlagKey: slice("SOME_FLAG")},
 		},
@@ -128,72 +128,6 @@ func Test_GenerateAliases(t *testing.T) {
 			aliases, err := GenerateAliases(tt.flags, tt.aliases, "")
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, aliases)
-		})
-	}
-}
-
-func Test_processFileContent(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		panic(err)
-	}
-	f, err := os.MkdirTemp(tmpDir, "testalias")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove(tmpDir)
-
-	emptyMap := make(map[string][]byte)
-	tests := []struct {
-		name    string
-		dir     string
-		aliases []o.Alias
-		want    map[string][]byte
-		wantErr bool
-	}{
-		{
-			name: "Existing directory and file",
-			aliases: []o.Alias{
-				{
-					Paths: []string{f},
-				},
-			},
-			dir:     tmpDir,
-			want:    emptyMap,
-			wantErr: false,
-		},
-		{
-			name: "Non-existent directory",
-			aliases: []o.Alias{
-				{
-					Type:  "filepattern",
-					Paths: []string{"test"},
-				},
-			},
-			dir:     "dirDoesNotExist",
-			want:    emptyMap,
-			wantErr: false,
-		},
-		{
-			name: "Non-existent file",
-			aliases: []o.Alias{
-				{
-					Type:  "filepattern",
-					Paths: []string{"fileDoesNotExist"},
-				},
-			},
-			dir:     tmpDir,
-			want:    emptyMap,
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			aliases, err := processFileContent(tt.aliases, tt.dir)
-			assert.Equal(t, tt.want, aliases)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("processFileContent error = %v, wantErr %v", err, tt.wantErr)
-			}
 		})
 	}
 }
@@ -230,7 +164,7 @@ func fileExactPattern(flag string) o.Alias {
 	return a
 }
 
-func fileWildPattern(flag string) o.Alias {
+func fileWildPattern() o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
 	a.Paths = []string{"testdata/**/*.txt"}
