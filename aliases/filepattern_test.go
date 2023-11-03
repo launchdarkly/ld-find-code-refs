@@ -76,13 +76,13 @@ func Test_processFileContent(t *testing.T) {
 }
 
 func Test_GenerateAliasesFromFilePattern(t *testing.T) {
-	expectedAliases := []string{"WILD_FLAG", "WILD_FLAG_SECOND_ALIAS"}
+	expectedAliases := []string{"WILD_FLAG", "WILD_FLAG_SECOND_ALIAS", "EVEN_WILDER"}
 
 	fileContents := map[string][]byte{
 		"testdata/alias_test.txt":                                  []byte("SOME_FLAG = 'someFlag'"),
 		"testdata/wild/alias_test.txt":                             []byte("WILD_FLAG = 'wildFlag'"),
 		"testdata/wild/nested-wild/alias_test.txt":                 []byte("WILD_FLAG_SECOND_ALIAS = 'wildFlag'"),
-		"testdata/wild/nested-wild/another/another/alias_test.txt": []byte("EVEN_WILDER = 'someFlag'"),
+		"testdata/wild/nested-wild/another/another/alias_test.txt": []byte("EVEN_WILDER = 'wildFlag'"),
 	}
 
 	alias := fileWildPattern()

@@ -1,1 +1,1 @@
-EVEN_WILDER = 'someFlag'
+EVEN_WILDER = 'wildFlag'

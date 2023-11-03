@@ -103,7 +103,7 @@ func Test_GenerateAliases(t *testing.T) {
 			aliases: []o.Alias{
 				fileWildPattern(),
 			},
-			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG", "WILD_FLAG_SECOND_ALIAS"), testFlagKey: slice("SOME_FLAG")},
+			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG", "WILD_FLAG_SECOND_ALIAS", "EVEN_WILDER"), testFlagKey: slice("SOME_FLAG")},
 		},
 		{
 			name:  "command",
