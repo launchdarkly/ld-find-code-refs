@@ -15,7 +15,7 @@ type Matcher struct {
 }
 
 func NewMultiProjectMatcher(opts options.Options, flagKeys map[string][]string, dir string) Matcher {
-	elements := []ElementMatcher{}
+	elements := make([]ElementMatcher, 0, len(opts.Projects))
 	delimiters := strings.Join(GetDelimiters(opts), "")
 
 	for _, project := range opts.Projects {
