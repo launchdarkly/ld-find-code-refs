@@ -167,7 +167,6 @@ func processFileContent(aliases []options.Alias, dir string) (FileContentsMap, e
 			}
 			paths = append(paths, matches...)
 		}
-		paths = helpers.Dedupe(paths)
 
 		for _, path := range paths {
 			_, pathAlreadyProcessed := allFileContents[path]
