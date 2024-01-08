@@ -1,5 +1,5 @@
 name: LaunchDarkly Code References
-image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:2.11.4
+image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:2.11.5
 category: Feature flagging
 description: Job for finding and sending feature flag code references to LaunchDarkly
 repository: https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe

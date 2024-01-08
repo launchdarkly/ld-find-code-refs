@@ -2,6 +2,14 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.5] - 2024-01-08
+### Added:
+- Allow prune stage to be disabled [#405](https://github.com/launchdarkly/ld-find-code-refs/pull/405)
+
+### Changed:
+- Disable branch pruning by default in GitHub action [#405](https://github.com/launchdarkly/ld-find-code-refs/pull/405)
+- Dependency updates
+
 ## [2.11.4] - 2023-10-16
 ### Changed:
 - Dependencies updated
