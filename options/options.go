@@ -57,6 +57,7 @@ type Options struct {
 	RepoType            string `mapstructure:"repoType"`
 	RepoUrl             string `mapstructure:"repoUrl"`
 	Revision            string `mapstructure:"revision"`
+	UserAgent           string `mapstructure:"userAgent"`
 	ContextLines        int    `mapstructure:"contextLines"`
 	Lookback            int    `mapstructure:"lookback"`
 	UpdateSequenceId    int    `mapstructure:"updateSequenceId"`
@@ -64,7 +65,7 @@ type Options struct {
 	Debug               bool   `mapstructure:"debug"`
 	DryRun              bool   `mapstructure:"dryRun"`
 	IgnoreServiceErrors bool   `mapstructure:"ignoreServiceErrors"`
-	UserAgent           string `mapstructure:"userAgent"`
+	Prune               bool   `mapstructure:"prune"`
 
 	// The following options can only be configured via YAML configuration
 

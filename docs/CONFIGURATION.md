@@ -44,18 +44,21 @@ Flags:
   -B, --defaultBranch string       The default branch. The LaunchDarkly UI will default to this branch. If not provided, will fallback to 'main'. (default "main")
 
   -d, --dir string                 Path to existing checkout of the repository.
-
       --dryRun                     If enabled, the scanner will run without sending code references to LaunchDarkly. Combine with the outDir option to output code references to a CSV.
 
   -h, --help                       help for ld-find-code-refs
 
       --hunkUrlTemplate string     If provided, LaunchDarkly will attempt to generate links to  your VCS service provider per code reference.  Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}. Allowed template variables: 'sha', 'filePath', 'lineNumber'. If "hunkUrlTemplate" is not provided, but "repoUrl" is provided and "repoType" is not custom, LaunchDarkly will attempt to automatically generate source code links for the given "repoType".
+
   -i, --ignoreServiceErrors        If enabled, the scanner will terminate with exit code 0 when the LaunchDarkly API is unreachable or returns an unexpected response.
 
   -l, --lookback int               Sets the number of git commits to search in history for whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time. (default 10)
+
   -o, --outDir string              If provided, will output a csv file containing all code references for the project to this directory.
 
   -p, --projKey string             LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with "projects" block in configuration file.
+
+      --prune                      If enabled, branches that are not found in the remote repository will be deleted from LaunchDarkly. (default true)
 
   -r, --repoName string            Repository name. Will be displayed in LaunchDarkly. Case insensitive. Repository names must only contain letters, numbers, '.', '_' or '-'."
 
@@ -66,6 +69,8 @@ Flags:
   -R, --revision string            Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.
 
   -s, --updateSequenceId int       An integer representing the order number of code reference updates. Used to version updates across concurrent executions of the flag finder. If not provided, data will always be updated. If provided, data will only be updated if the existing "updateSequenceId" is less than the new "updateSequenceId". Examples: the time a "git push" was initiated, CI build number, the current unix timestamp. (default -1)
+
+      --userAgent string           (Internal) Platform where code references is run.
 
   -v, --version                    version for ld-find-code-refs
 ```
