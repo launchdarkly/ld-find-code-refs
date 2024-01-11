@@ -100,6 +100,7 @@ func Init(flagSet *pflag.FlagSet) error {
 	return viper.BindPFlags(flagSet)
 }
 
+// TODO update
 func InitYAML() error {
 	err := validateYAMLPreconditions()
 	if err != nil {

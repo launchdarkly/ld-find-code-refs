@@ -14,6 +14,7 @@ const (
 	minFlagKeyLen = 3 // Minimum flag key length helps reduce the number of false positives
 )
 
+// TODO remove dependency on LD API
 func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
 	isDryRun := opts.DryRun
 	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: helpers.GetUserAgent(opts.UserAgent)})

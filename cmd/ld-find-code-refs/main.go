@@ -74,6 +74,7 @@ var cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		// TODO update
 		err = opts.Validate()
 		if err != nil {
 			return err
@@ -90,6 +91,7 @@ func main() {
 	if err := o.Init(cmd.PersistentFlags()); err != nil {
 		panic(err)
 	}
+	// TODO worth refactoring? or just commenting for now?
 	cmd.AddCommand(prune)
 	cmd.AddCommand(extinctions)
 

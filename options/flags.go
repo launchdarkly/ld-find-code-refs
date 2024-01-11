@@ -8,6 +8,7 @@ type flag struct {
 }
 
 // Options that are available as command line flags
+// TODO update to reflect changes
 var flags = []flag{
 	{
 		name:         "accessToken",
