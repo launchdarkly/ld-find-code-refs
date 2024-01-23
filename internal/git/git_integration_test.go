@@ -2,12 +2,12 @@ package git
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
@@ -18,9 +18,13 @@ import (
 
 const (
 	repoDir = "testdata/repo"
-	flag1   = "flag1"
-	flag2   = "flag2"
-	flag3   = "flag3"
+)
+
+var (
+	flag1 = "flag1"
+	flag2 = "flag2"
+	flag3 = "flag3"
+	flag4 = "flag4" // in bigdiff.txt
 )
 
 func TestMain(m *testing.M) {
@@ -41,21 +45,10 @@ func TestFindExtinctions(t *testing.T) {
 	repo := setupRepo(t)
 
 	// Create commit history
-	flagFile, err := os.Create(filepath.Join(repoDir, "flag1.txt"))
-	require.NoError(t, err)
-	_, err = flagFile.WriteString(flag1)
-	require.NoError(t, err)
-	require.NoError(t, flagFile.Close())
-	flagFile, err = os.Create(filepath.Join(repoDir, "flag2.txt"))
-	require.NoError(t, err)
-	_, err = flagFile.WriteString(flag2)
-	require.NoError(t, err)
-	require.NoError(t, flagFile.Close())
-	flagFile, err = os.Create(filepath.Join(repoDir, "flag3.txt"))
-	require.NoError(t, err)
-	_, err = flagFile.WriteString(flag3)
-	require.NoError(t, err)
-	require.NoError(t, flagFile.Close())
+	createRepoFile(t, "flag1.txt", &flag1)
+	createRepoFile(t, "flag2.txt", &flag2)
+	createRepoFile(t, "flag3.txt", &flag3)
+	copyFile(t, "testdata/bigdiff.txt", repoPath("bigdiff.txt"))
 
 	wt, err := repo.Worktree()
 	require.NoError(t, err)
@@ -65,34 +58,43 @@ func TestFindExtinctions(t *testing.T) {
 	wt.Add("flag1.txt")
 	wt.Add("flag2.txt")
 	wt.Add("flag3.txt")
+	wt.Add("bigdiff.txt")
 	_, err = wt.Commit("add flags", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
 	// Test with a removed file
-	err = os.Remove(filepath.Join(repoDir, "flag1.txt"))
-	require.NoError(t, err)
+	removeRepoFile(t, "flag1.txt")
 
-	who.When = who.When.Add(time.Minute)
+	when2 := who.When.Add(time.Minute)
+	who.When = when2
 	message2 := "remove flag1"
 	commit2, err := wt.Commit(message2, &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
 	// Test with an updated (truncated) file
-	flagFile, err = os.Create(filepath.Join(repoDir, "flag2.txt"))
-	require.NoError(t, err)
-	require.NoError(t, flagFile.Close())
+	createRepoFile(t, "flag2.txt", nil)
 
-	who.When = who.When.Add(time.Minute)
+	when3 := who.When.Add(time.Minute)
+	who.When = when3
 	message3 := "remove flag2"
 	commit3, err := wt.Commit("remove flag2", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
-	err = os.Remove(filepath.Join(repoDir, "flag3.txt"))
-	require.NoError(t, err)
+	removeRepoFile(t, "flag3.txt")
 
-	who.When = who.When.Add(time.Minute)
+	when4 := who.When.Add(time.Minute)
+	who.When = when4
 	message4 := "remove flag3"
 	commit4, err := wt.Commit("remove flag3", &git.CommitOptions{All: true, Committer: &who, Author: &who})
+	require.NoError(t, err)
+
+	// Test big diff
+	removeRepoFile(t, "bigdiff.txt")
+
+	when5 := who.When.Add(time.Minute)
+	who.When = when5
+	message5 := "remove flag4 from bigdiff"
+	commit5, err := wt.Commit(message5, &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
 	c := Client{workspace: repoDir}
@@ -103,11 +105,11 @@ func TestFindExtinctions(t *testing.T) {
 		Key: "otherProject",
 	}
 	projects := []options.Project{projKey, addProjKey}
-	missingFlags := [][]string{{flag1, flag2}, {flag3}}
+	missingFlags := [][]string{{flag1, flag2}, {flag3, flag4}}
 	matcher := search.Matcher{
 		Elements: []search.ElementMatcher{
 			search.NewElementMatcher(projKey.Key, ``, ``, []string{flag1, flag2}, nil),
-			search.NewElementMatcher(addProjKey.Key, ``, ``, []string{flag3}, nil),
+			search.NewElementMatcher(addProjKey.Key, ``, ``, []string{flag3, flag4}, nil),
 		},
 	}
 
@@ -122,25 +124,34 @@ func TestFindExtinctions(t *testing.T) {
 		{
 			Revision: commit3.String(),
 			Message:  message3,
-			Time:     who.When.Add(-time.Minute).Unix() * 1000,
+			Time:     when3.Unix() * 1000,
 			ProjKey:  projKey.Key,
 			FlagKey:  flag2,
 		},
 		{
 			Revision: commit2.String(),
 			Message:  message2,
-			Time:     who.When.Add(-time.Minute*2).Unix() * 1000,
+			Time:     when2.Unix() * 1000,
 			ProjKey:  projKey.Key,
 			FlagKey:  flag1,
 		},
 		{
+			Revision: commit5.String(),
+			Message:  message5,
+			Time:     when5.Unix() * 1000,
+			ProjKey:  addProjKey.Key,
+			FlagKey:  flag4,
+		},
+		{
 			Revision: commit4.String(),
 			Message:  message4,
-			Time:     who.When.Unix() * 1000,
+			Time:     when4.Unix() * 1000,
 			ProjKey:  addProjKey.Key,
 			FlagKey:  flag3,
 		},
 	}
-	require.Equal(t, expected, extinctions)
 
+	for i, e := range expected {
+		assert.Equalf(t, e, extinctions[i], "exinction at element %d does not match", i)
+	}
 }
