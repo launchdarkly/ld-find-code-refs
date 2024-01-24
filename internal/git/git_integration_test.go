@@ -67,8 +67,7 @@ func TestFindExtinctions(t *testing.T) {
 	// Test with a removed file
 	removeRepoFile(t, "flag1.txt")
 
-	when2 := who.When.Add(time.Minute)
-	who.When = when2
+	who, when2 := incrementCommitTime(who)
 	message2 := "remove flag1"
 	commit2, err := wt.Commit(message2, &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
@@ -76,16 +75,14 @@ func TestFindExtinctions(t *testing.T) {
 	// Test with an updated (truncated) file
 	createRepoFile(t, "flag2.txt", nil)
 
-	when3 := who.When.Add(time.Minute)
-	who.When = when3
+	who, when3 := incrementCommitTime(who)
 	message3 := "remove flag2"
 	commit3, err := wt.Commit("remove flag2", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
 	removeRepoFile(t, "flag3.txt")
 
-	when4 := who.When.Add(time.Minute)
-	who.When = when4
+	who, when4 := incrementCommitTime(who)
 	message4 := "remove flag3"
 	commit4, err := wt.Commit("remove flag3", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
@@ -93,8 +90,7 @@ func TestFindExtinctions(t *testing.T) {
 	// Test big diff
 	removeRepoFile(t, "bigdiff.txt")
 
-	when5 := who.When.Add(time.Minute)
-	who.When = when5
+	who, when5 := incrementCommitTime(who)
 	message5 := "remove flag4 from bigdiff"
 	commit5, err := wt.Commit(message5, &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
@@ -193,4 +189,11 @@ func removeRepoFile(t *testing.T, path string) {
 
 func repoPath(path string) string {
 	return filepath.Join(REPO_DIR, path)
+}
+
+func incrementCommitTime(who object.Signature) (object.Signature, time.Time) {
+	t := who.When.Add(time.Minute)
+	who.When = t
+
+	return who, t
 }
