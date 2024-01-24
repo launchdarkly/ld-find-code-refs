@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	repoDir = "testdata/repo"
+	REPO_DIR = "testdata/repo"
 )
 
 var (
@@ -35,9 +35,9 @@ func TestMain(m *testing.M) {
 }
 
 func setupRepo(t *testing.T) *git.Repository {
-	os.RemoveAll(repoDir)
-	require.NoError(t, os.MkdirAll(repoDir, 0700))
-	repo, err := git.PlainInit(repoDir, false)
+	os.RemoveAll(REPO_DIR)
+	require.NoError(t, os.MkdirAll(REPO_DIR, 0700))
+	repo, err := git.PlainInit(REPO_DIR, false)
 	require.NoError(t, err)
 	return repo
 }
@@ -99,7 +99,7 @@ func TestFindExtinctions(t *testing.T) {
 	commit5, err := wt.Commit(message5, &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
-	c := Client{workspace: repoDir}
+	c := Client{workspace: REPO_DIR}
 	projKey := options.Project{
 		Key: "default",
 	}
@@ -188,9 +188,9 @@ func createRepoFile(t *testing.T, path string, content *string) {
 }
 
 func removeRepoFile(t *testing.T, path string) {
-	require.NoError(t, os.Remove(filepath.Join(repoDir, path)))
+	require.NoError(t, os.Remove(filepath.Join(REPO_DIR, path)))
 }
 
 func repoPath(path string) string {
-	return filepath.Join(repoDir, path)
+	return filepath.Join(REPO_DIR, path)
 }
