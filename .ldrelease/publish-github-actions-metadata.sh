@@ -28,7 +28,7 @@ cd githubActionsMetadataUpdates
 git config user.email "launchdarklyreleasebot@launchdarkly.com"
 git config user.name "LaunchDarklyReleaseBot"
 git add -u
-git commit -m "Release auto update version"
+git commit -m "Release auto update version $RELEASE_VERSION"
 
 if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
   echo "Live run: will publish action to github action marketplace."

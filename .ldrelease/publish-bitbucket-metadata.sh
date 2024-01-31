@@ -17,7 +17,7 @@ cd bitbucketMetadataUpdates
 git config user.email "launchdarklyreleasebot@launchdarkly.com"
 git config user.name "LaunchDarklyReleaseBot"
 git add -u
-git commit -m "Release auto update version"
+git commit -m "Release auto update version $RELEASE_VERSION"
 git remote add bb-origin "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git"
 
 if [[ -z "${LD_RELEASE_DRY_RUN}" ]]; then
