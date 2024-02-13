@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.8] - 2024-02-13
+### Changed:
+- Updated dependencies
+
+### Fixed:
+- Multi-project scans now ignore projects without valid flags [#430](https://github.com/launchdarkly/ld-find-code-refs/pull/430)
+
 ## [2.11.7] - 2024-01-31
 ### Changed:
 - Updated docker images to use [alpine 3.19.1](https://www.alpinelinux.org/posts/Alpine-3.19.1-released.html) ([#426](https://github.com/launchdarkly/ld-find-code-refs/pull/426))
