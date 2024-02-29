@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -233,4 +234,42 @@ func TestCountByProjectAndFlag(t *testing.T) {
 	want[projectKey][notFoundKey2] = 0
 	require.Equal(t, count, want)
 
+}
+
+func TestRateLimitBackoff(t *testing.T) {
+	// Backoff instance where the time is always 0
+	backoff := RateLimitBackoff(func() time.Time { return time.Unix(0, 0) })
+
+	defaultBackoff := time.Second * time.Duration(1)
+
+	invalidRateLimitReset := "abc"
+	validRateLimitReset := "2000"
+	pastRateLimitReset := "-1000"
+	specs := []struct {
+		name           string
+		status         int
+		rateLimitReset *string
+		expected       time.Duration
+	}{
+		{"falls back to default backoff due to status", http.StatusBadGateway, nil, defaultBackoff},
+		{"falls back to default backoff due to missing header", http.StatusTooManyRequests, nil, defaultBackoff},
+		{"falls back to default backoff due to invalid header", http.StatusTooManyRequests, &invalidRateLimitReset, defaultBackoff},
+		{"returns difference between reset and current time", http.StatusTooManyRequests, &validRateLimitReset, time.Second * time.Duration(2)},
+		{"returns 0 because reset is in past", http.StatusTooManyRequests, &pastRateLimitReset, time.Duration(0)},
+	}
+	for _, tt := range specs {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := &http.Response{
+				StatusCode: tt.status,
+				Header:     make(http.Header),
+			}
+
+			if tt.rateLimitReset != nil {
+				resp.Header.Set("X-Ratelimit-Reset", *tt.rateLimitReset)
+			}
+
+			actual := backoff(defaultBackoff, time.Second*time.Duration(10), 0, resp)
+			require.Equal(t, tt.expected, actual)
+		})
+	}
 }
