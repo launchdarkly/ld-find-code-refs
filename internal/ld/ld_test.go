@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/stretchr/testify/require"
 
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
@@ -238,7 +239,7 @@ func TestCountByProjectAndFlag(t *testing.T) {
 
 func TestRateLimitBackoff(t *testing.T) {
 	// Backoff instance where the time is always 0
-	backoff := RateLimitBackoff(func() time.Time { return time.Unix(0, 0) })
+	backoff := RateLimitBackoff(func() time.Time { return time.Unix(0, 0) }, h.DefaultBackoff)
 
 	defaultBackoff := time.Second * time.Duration(1)
 

@@ -77,8 +77,8 @@ func IsTransient(err error) bool {
 // LaunchDarkly API uses the X-Ratelimit-Reset header to communicate when to retry after a 429
 // Fallback to default backoff if header can't be parsed
 // https://apidocs.launchdarkly.com/#section/Overview/Rate-limiting
-// Method is curried in order to avoid stubbing the time package in unit tests
-func RateLimitBackoff(now func() time.Time) func(time.Duration, time.Duration, int, *http.Response) time.Duration {
+// Method is curried in order to avoid stubbing the time package and fallback Backoff in unit tests
+func RateLimitBackoff(now func() time.Time, fallbackBackoff h.Backoff) func(time.Duration, time.Duration, int, *http.Response) time.Duration {
 	return func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
 		if resp != nil {
 			if resp.StatusCode == http.StatusTooManyRequests {
@@ -96,7 +96,7 @@ func RateLimitBackoff(now func() time.Time) func(time.Duration, time.Duration, i
 			}
 		}
 
-		return h.DefaultBackoff(min, max, attemptNum, resp)
+		return fallbackBackoff(min, max, attemptNum, resp)
 	}
 }
 
@@ -109,7 +109,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 	if options.RetryMax != nil && *options.RetryMax >= 0 {
 		client.RetryMax = *options.RetryMax
 	}
-	client.Backoff = RateLimitBackoff(time.Now)
+	client.Backoff = RateLimitBackoff(time.Now, h.LinearJitterBackoff)
 
 	return ApiClient{
 		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{
