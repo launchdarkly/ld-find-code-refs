@@ -85,6 +85,7 @@ func RateLimitBackoff(now func() time.Time, fallbackBackoff h.Backoff) func(time
 				if s, ok := resp.Header["X-Ratelimit-Reset"]; ok {
 					if sleepUntil, err := strconv.ParseInt(s[0], 10, 64); err == nil {
 						sleep := sleepUntil - now().UnixMilli()
+						log.Info.Printf("rate limit for %s %s hit, sleeping for %d ms", resp.Request.Method, resp.Request.URL, sleep)
 
 						if sleep > 0 {
 							return time.Millisecond * time.Duration(sleep)
@@ -113,7 +114,8 @@ func InitApiClient(options ApiOptions) ApiClient {
 
 	return ApiClient{
 		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{
-			UserAgent: options.UserAgent,
+			HTTPClient: client.StandardClient(),
+			UserAgent:  options.UserAgent,
 			Servers: []ldapi.ServerConfiguration{{
 				URL: options.BaseUri,
 			}},
