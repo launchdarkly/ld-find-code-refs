@@ -20,7 +20,7 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
 
-	ldapi "github.com/launchdarkly/api-client-go/v7"
+	ldapi "github.com/launchdarkly/api-client-go/v14"
 	jsonpatch "github.com/launchdarkly/json-patch"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
@@ -116,17 +116,20 @@ func InitApiClient(options ApiOptions) ApiClient {
 	}
 }
 
+// path should have leading slash
+func (c ApiClient) getPath(path string) string {
+	return fmt.Sprintf("%s%s%s", c.Options.BaseUri, v2ApiPath, path)
+}
+
 func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
-	project, err := c.getProject(projKey)
+	env, err := c.getProjectEnvironment(projKey)
 	if err != nil {
 		return nil, err
 	}
 
 	params := url.Values{}
-	if len(project.Environments) > 0 {
-		// The first environment allows filtering when retrieving flags.
-		firstEnv := project.Environments[0]
-		params.Add("env", firstEnv.Key)
+	if env != nil {
+		params.Add("env", env.Key)
 	}
 	activeFlags, err := c.getFlags(projKey, params)
 	if err != nil {
@@ -150,16 +153,21 @@ func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
 	return flagKeys, nil
 }
 
-func (c ApiClient) getProject(projKey string) (ldapi.Project, error) {
-	url := fmt.Sprintf("%s/api/v2/projects/%s", c.Options.BaseUri, projKey)
-	req, err := h.NewRequest(http.MethodGet, url, nil)
+// Get the first environment we can find for a project
+func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, error) {
+	urlStr := c.getPath(fmt.Sprintf("/projects/%s/environments", projKey))
+	req, err := h.NewRequest(http.MethodGet, urlStr, nil)
 	if err != nil {
-		return ldapi.Project{}, err
+		return nil, err
 	}
+
+	params := url.Values{}
+	params.Add("limit", "1")
+	req.URL.RawQuery = params.Encode()
 
 	res, err := c.do(req)
 	if err != nil {
-		return ldapi.Project{}, err
+		return nil, err
 	}
 
 	resBytes, err := io.ReadAll(res.Body)
@@ -167,15 +175,20 @@ func (c ApiClient) getProject(projKey string) (ldapi.Project, error) {
 		defer res.Body.Close()
 	}
 	if err != nil {
-		return ldapi.Project{}, err
+		return nil, err
 	}
 
-	var project ldapi.Project
-	if err := json.Unmarshal(resBytes, &project); err != nil {
-		return ldapi.Project{}, err
+	var collection ldapi.Environments
+	if err := json.Unmarshal(resBytes, &collection); err != nil {
+		return nil, err
+	}
+	if len(collection.Items) == 0 {
+		return nil, nil
 	}
 
-	return project, nil
+	env := collection.Items[0]
+
+	return &env, nil
 }
 
 func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
