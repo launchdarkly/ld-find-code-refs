@@ -220,10 +220,6 @@ func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureF
 	return flags.Items, nil
 }
 
-func (c ApiClient) repoUrl() string {
-	return c.getPath(reposPath)
-}
-
 func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) error {
 	originalBytes, err := json.Marshal(currentRepo)
 	if err != nil {
@@ -240,7 +236,7 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 		return err
 	}
 
-	req, err := h.NewRequest("PATCH", fmt.Sprintf("%s/%s", c.repoUrl(), repo.Name), bytes.NewBuffer(patch))
+	req, err := h.NewRequest("PATCH", c.getPath(fmt.Sprintf("%s/%s", reposPath, repo.Name)), bytes.NewBuffer(patch))
 	if err != nil {
 		return err
 	}
@@ -255,7 +251,7 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 }
 
 func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
-	req, err := h.NewRequest("GET", fmt.Sprintf("%s/%s", c.repoUrl(), name), nil)
+	req, err := h.NewRequest("GET", c.getPath(fmt.Sprintf("%s/%s", reposPath, name)), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +277,7 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 }
 
 func (c ApiClient) GetCodeReferenceRepositoryBranches(repoName string) ([]BranchRep, error) {
-	req, err := h.NewRequest("GET", fmt.Sprintf("%s/%s/branches", c.repoUrl(), repoName), nil)
+	req, err := h.NewRequest("GET", c.getPath(fmt.Sprintf("%s/%s/branches", reposPath, repoName)), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +308,7 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 		return err
 	}
 
-	req, err := h.NewRequest("POST", c.repoUrl(), bytes.NewBuffer(repoBytes))
+	req, err := h.NewRequest("POST", c.getPath(reposPath), bytes.NewBuffer(repoBytes))
 	if err != nil {
 		return err
 	}
@@ -383,7 +379,7 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 	if err != nil {
 		return err
 	}
-	putUrl := fmt.Sprintf("%s/%s/branches/%s", c.repoUrl(), repoName, url.PathEscape(branch.Name))
+	putUrl := c.getPath(fmt.Sprintf("%s/%s/branches/%s", reposPath, repoName, url.PathEscape(branch.Name)))
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
@@ -403,7 +399,7 @@ func (c ApiClient) PostExtinctionEvents(extinctions []ExtinctionRep, repoName, b
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s/%s/branches/%s/extinction-events", c.repoUrl(), repoName, url.PathEscape(branchName))
+	url := c.getPath(fmt.Sprintf("%s/%s/branches/%s/extinction-events", reposPath, repoName, url.PathEscape(branchName)))
 	req, err := h.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return err
@@ -423,7 +419,7 @@ func (c ApiClient) PostDeleteBranchesTask(repoName string, branches []string) er
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s/%s/branch-delete-tasks", c.repoUrl(), repoName)
+	url := c.getPath(fmt.Sprintf("%s/%s/branch-delete-tasks", reposPath, repoName))
 	req, err := h.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
