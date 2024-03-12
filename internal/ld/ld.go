@@ -43,7 +43,7 @@ const (
 	apiVersion       = "20220603"
 	apiVersionHeader = "LD-API-Version"
 	v2ApiPath        = "/api/v2"
-	reposPath        = v2ApiPath + "/code-refs/repositories"
+	reposPath        = "/code-refs/repositories"
 )
 
 type ConfigurationError struct {
@@ -221,7 +221,7 @@ func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureF
 }
 
 func (c ApiClient) repoUrl() string {
-	return fmt.Sprintf("%s%s", c.Options.BaseUri, reposPath)
+	return c.getPath(reposPath)
 }
 
 func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) error {
@@ -383,7 +383,7 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 	if err != nil {
 		return err
 	}
-	putUrl := fmt.Sprintf("%s%s/%s/branches/%s", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branch.Name))
+	putUrl := fmt.Sprintf("%s/%s/branches/%s", c.repoUrl(), repoName, url.PathEscape(branch.Name))
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
@@ -403,7 +403,7 @@ func (c ApiClient) PostExtinctionEvents(extinctions []ExtinctionRep, repoName, b
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s%s/%s/branches/%s/extinction-events", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branchName))
+	url := fmt.Sprintf("%s/%s/branches/%s/extinction-events", c.repoUrl(), repoName, url.PathEscape(branchName))
 	req, err := h.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return err
@@ -423,7 +423,7 @@ func (c ApiClient) PostDeleteBranchesTask(repoName string, branches []string) er
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s%s/%s/branch-delete-tasks", c.Options.BaseUri, reposPath, repoName)
+	url := fmt.Sprintf("%s/%s/branch-delete-tasks", c.repoUrl(), repoName)
 	req, err := h.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
