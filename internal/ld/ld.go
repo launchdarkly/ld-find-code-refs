@@ -192,7 +192,7 @@ func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, er
 }
 
 func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
-	url := fmt.Sprintf("%s/api/v2/flags/%s", c.Options.BaseUri, projKey)
+	url := c.getPath(fmt.Sprintf("/flags/%s", projKey))
 	req, err := h.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
