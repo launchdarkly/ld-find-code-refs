@@ -3,6 +3,7 @@ package ld
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -260,9 +261,15 @@ func TestRateLimitBackoff(t *testing.T) {
 	}
 	for _, tt := range specs {
 		t.Run(tt.name, func(t *testing.T) {
+			testUrl, _ := url.Parse("http://test.example/")
+			req := &http.Request{
+				Method: "POST",
+				URL:    testUrl,
+			}
 			resp := &http.Response{
 				StatusCode: tt.status,
 				Header:     make(http.Header),
+				Request:    req,
 			}
 
 			if tt.rateLimitReset != nil {
