@@ -2,6 +2,10 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.10] - 2024-03-14
+### Changed:
+- Use same http client with rate-limited retries for ld api client calls [#437](https://github.com/launchdarkly/ld-find-code-refs/pull/437)
+
 ## [2.11.9] - 2024-03-04
 ### Changed:
 - Respect rate-limit headers during retries [#434](https://github.com/launchdarkly/ld-find-code-refs/pull/434)
