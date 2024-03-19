@@ -2,7 +2,6 @@ package ld
 
 import (
 	"bytes"
-	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -21,14 +20,13 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
 
-	ldapi "github.com/launchdarkly/api-client-go/v7"
+	ldapi "github.com/launchdarkly/api-client-go/v15"
 	jsonpatch "github.com/launchdarkly/json-patch"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
 )
 
 type ApiClient struct {
-	ldClient   *ldapi.APIClient
 	httpClient *h.Client
 	Options    ApiOptions
 }
@@ -42,10 +40,10 @@ type ApiOptions struct {
 }
 
 const (
-	apiVersion       = "20210729"
+	apiVersion       = "20220603"
 	apiVersionHeader = "LD-API-Version"
 	v2ApiPath        = "/api/v2"
-	reposPath        = v2ApiPath + "/code-refs/repositories"
+	reposPath        = "/code-refs/repositories"
 )
 
 type ConfigurationError struct {
@@ -113,62 +111,113 @@ func InitApiClient(options ApiOptions) ApiClient {
 	client.Backoff = RateLimitBackoff(time.Now, h.LinearJitterBackoff)
 
 	return ApiClient{
-		ldClient: ldapi.NewAPIClient(&ldapi.Configuration{
-			HTTPClient: client.StandardClient(),
-			UserAgent:  options.UserAgent,
-			Servers: []ldapi.ServerConfiguration{{
-				URL: options.BaseUri,
-			}},
-			DefaultHeader: map[string]string{
-				apiVersionHeader: apiVersion,
-			},
-		}),
 		httpClient: client,
 		Options:    options,
 	}
 }
 
+// path should have leading slash
+func (c ApiClient) getPath(path string) string {
+	return fmt.Sprintf("%s%s%s", c.Options.BaseUri, v2ApiPath, path)
+}
+
 func (c ApiClient) GetFlagKeyList(projKey string) ([]string, error) {
-	auth := map[string]ldapi.APIKey{
-		"ApiKey": {Key: c.Options.ApiKey},
-	}
-	ctx := context.WithValue(context.Background(), ldapi.ContextAPIKeys, auth)
-
-	project, _, err := c.ldClient.ProjectsApi.GetProject(ctx, projKey).Execute() //nolint:bodyclose
+	env, err := c.getProjectEnvironment(projKey)
 	if err != nil {
 		return nil, err
 	}
 
-	flagReq := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey).Summary(true)
-	archiveReq := c.ldClient.FeatureFlagsApi.GetFeatureFlags(ctx, projKey).Summary(true).Filter("state:archived")
-
-	if len(project.Environments) > 0 {
-		// The first environment allows filtering when retrieving flags.
-		firstEnv := project.Environments[0]
-		flagReq = flagReq.Env(firstEnv.Key)
-		archiveReq = archiveReq.Env(firstEnv.Key)
+	params := url.Values{}
+	if env != nil {
+		params.Add("env", env.Key)
 	}
-
-	flags, _, err := flagReq.Execute() //nolint:bodyclose
+	activeFlags, err := c.getFlags(projKey, params)
 	if err != nil {
 		return nil, err
 	}
 
-	archivedFlags, _, err := archiveReq.Execute() //nolint:bodyclose
+	params.Add("filter", "state:archived")
+	archivedFlags, err := c.getFlags(projKey, params)
 	if err != nil {
 		return nil, err
 	}
+	flags := make([]ldapi.FeatureFlag, 0, len(activeFlags)+len(archivedFlags))
+	flags = append(flags, activeFlags...)
+	flags = append(flags, archivedFlags...)
 
-	flagKeys := make([]string, 0, len(flags.Items))
-	for _, flag := range append(flags.Items, archivedFlags.Items...) {
+	flagKeys := make([]string, 0, len(flags))
+	for _, flag := range flags {
 		flagKeys = append(flagKeys, flag.Key)
 	}
 
 	return flagKeys, nil
 }
 
-func (c ApiClient) repoUrl() string {
-	return fmt.Sprintf("%s%s", c.Options.BaseUri, reposPath)
+// Get the first environment we can find for a project
+func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, error) {
+	urlStr := c.getPath(fmt.Sprintf("/projects/%s/environments", projKey))
+	req, err := h.NewRequest(http.MethodGet, urlStr, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	params := url.Values{}
+	params.Add("limit", "1")
+	req.URL.RawQuery = params.Encode()
+
+	res, err := c.do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	resBytes, err := io.ReadAll(res.Body)
+	if res != nil {
+		defer res.Body.Close()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var collection ldapi.Environments
+	if err := json.Unmarshal(resBytes, &collection); err != nil {
+		return nil, err
+	}
+	if len(collection.Items) == 0 {
+		return nil, nil
+	}
+
+	env := collection.Items[0]
+
+	return &env, nil
+}
+
+func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
+	url := c.getPath(fmt.Sprintf("/flags/%s", projKey))
+	req, err := h.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.URL.RawQuery = params.Encode()
+
+	res, err := c.do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	resBytes, err := io.ReadAll(res.Body)
+	if res != nil {
+		defer res.Body.Close()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var flags ldapi.FeatureFlags
+	if err := json.Unmarshal(resBytes, &flags); err != nil {
+		return nil, err
+	}
+
+	return flags.Items, nil
 }
 
 func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) error {
@@ -187,7 +236,7 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 		return err
 	}
 
-	req, err := h.NewRequest("PATCH", fmt.Sprintf("%s/%s", c.repoUrl(), repo.Name), bytes.NewBuffer(patch))
+	req, err := h.NewRequest("PATCH", c.getPath(fmt.Sprintf("%s/%s", reposPath, repo.Name)), bytes.NewBuffer(patch))
 	if err != nil {
 		return err
 	}
@@ -202,7 +251,7 @@ func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) er
 }
 
 func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
-	req, err := h.NewRequest("GET", fmt.Sprintf("%s/%s", c.repoUrl(), name), nil)
+	req, err := h.NewRequest("GET", c.getPath(fmt.Sprintf("%s/%s", reposPath, name)), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +277,7 @@ func (c ApiClient) getCodeReferenceRepository(name string) (*RepoRep, error) {
 }
 
 func (c ApiClient) GetCodeReferenceRepositoryBranches(repoName string) ([]BranchRep, error) {
-	req, err := h.NewRequest("GET", fmt.Sprintf("%s/%s/branches", c.repoUrl(), repoName), nil)
+	req, err := h.NewRequest("GET", c.getPath(fmt.Sprintf("%s/%s/branches", reposPath, repoName)), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +308,7 @@ func (c ApiClient) postCodeReferenceRepository(repo RepoParams) error {
 		return err
 	}
 
-	req, err := h.NewRequest("POST", c.repoUrl(), bytes.NewBuffer(repoBytes))
+	req, err := h.NewRequest("POST", c.getPath(reposPath), bytes.NewBuffer(repoBytes))
 	if err != nil {
 		return err
 	}
@@ -330,7 +379,7 @@ func (c ApiClient) PutCodeReferenceBranch(branch BranchRep, repoName string) err
 	if err != nil {
 		return err
 	}
-	putUrl := fmt.Sprintf("%s%s/%s/branches/%s", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branch.Name))
+	putUrl := c.getPath(fmt.Sprintf("%s/%s/branches/%s", reposPath, repoName, url.PathEscape(branch.Name)))
 	req, err := h.NewRequest("PUT", putUrl, bytes.NewBuffer(branchBytes))
 	if err != nil {
 		return err
@@ -350,7 +399,7 @@ func (c ApiClient) PostExtinctionEvents(extinctions []ExtinctionRep, repoName, b
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s%s/%s/branches/%s/extinction-events", c.Options.BaseUri, reposPath, repoName, url.PathEscape(branchName))
+	url := c.getPath(fmt.Sprintf("%s/%s/branches/%s/extinction-events", reposPath, repoName, url.PathEscape(branchName)))
 	req, err := h.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return err
@@ -370,7 +419,7 @@ func (c ApiClient) PostDeleteBranchesTask(repoName string, branches []string) er
 	if err != nil {
 		return err
 	}
-	url := fmt.Sprintf("%s%s/%s/branch-delete-tasks", c.Options.BaseUri, reposPath, repoName)
+	url := c.getPath(fmt.Sprintf("%s/%s/branch-delete-tasks", reposPath, repoName))
 	req, err := h.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return err

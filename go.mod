@@ -7,7 +7,6 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/iancoleman/strcase v0.3.0
-	github.com/launchdarkly/api-client-go/v7 v7.1.1
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00
 	github.com/olekukonko/tablewriter v0.0.5
@@ -18,6 +17,8 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/tools v0.19.0
 )
+
+require github.com/launchdarkly/api-client-go/v15 v15.0.0
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
@@ -31,7 +32,7 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -58,10 +59,10 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/oauth2 v0.15.0 // indirect
+	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
