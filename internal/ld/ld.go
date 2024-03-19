@@ -20,7 +20,7 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
 
-	ldapi "github.com/launchdarkly/api-client-go/v14"
+	ldapi "github.com/launchdarkly/api-client-go/v15"
 	jsonpatch "github.com/launchdarkly/json-patch"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
