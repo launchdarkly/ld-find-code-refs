@@ -385,7 +385,7 @@ func Test_processFiles(t *testing.T) {
 }
 
 func Test_SearchForRefs(t *testing.T) {
-	os.Symlink("testdata/fileWithRefs", "testdata/symlink")
+	os.Symlink("testdata/exclude-github-files/fileWithRefs", "testdata/exclude-github-files/symlink")
 	want := []ld.ReferenceHunksRep{{Path: testFile.path}}
 	matcher := Matcher{
 		ctxLines: 0,
@@ -393,8 +393,8 @@ func Test_SearchForRefs(t *testing.T) {
 	matcher.Elements = append(matcher.Elements,
 		NewElementMatcher("default", "", "", []string{testFlagKey, testFlagKey2}, nil),
 	)
-	t.Cleanup(func() { os.Remove("testdata/symlink") })
-	got, err := SearchForRefs("testdata", matcher)
+	t.Cleanup(func() { os.Remove("testdata/exclude-github-files/symlink") })
+	got, err := SearchForRefs("testdata/exclude-github-files", matcher)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
 	require.Equal(t, want[0].Path, got[0].Path)

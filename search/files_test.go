@@ -11,7 +11,7 @@ import (
 func Test_readFiles(t *testing.T) {
 	t.Run("don't ignore .github by default", func(t *testing.T) {
 		files := make(chan file, 8)
-		err := readFiles(context.Background(), files, "testdata/test-1")
+		err := readFiles(context.Background(), files, "testdata/include-github-files")
 		require.NoError(t, err)
 		got := []file{}
 		for file := range files {
@@ -34,7 +34,7 @@ func Test_readFiles(t *testing.T) {
 
 	t.Run("explicitly ignore .github files", func(t *testing.T) {
 		files := make(chan file, 8)
-		err := readFiles(context.Background(), files, "testdata/test-2")
+		err := readFiles(context.Background(), files, "testdata/exclude-github-files")
 		require.NoError(t, err)
 		got := []file{}
 		for file := range files {
