@@ -38,6 +38,14 @@ Commit this file under a new branch. Submit as a PR to your code reviewers to be
 
 As shown in the above example, the workflow should run on the `push` event, and contain an action provided by the [launchdarkly/find-code-references repository](https://github.com/launchdarkly/find-code-references). The `LD_ACCESS_TOKEN` configured in the previous step should be included as a secret, as well as a new environment variable containing your LaunchDarkly project key.
 
+## Additional configuration
+
+To customize additional configuration not referenced in [Inputs](#inputs), you may use a configuration file located at `.launchdarkly/coderefs.yml`. The following links provide more inforation about configurable options:
+
+- [All configuration options](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md)
+- [Monorepo configuration](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#projects)
+- [Alias configuration](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/ALIASES.md).
+
 ## Additional Examples
 The example below is the same as first, but it also excludes any `dependabot` branches. We suggest excluding any automatically generated branches where flags do not change.
 
@@ -66,14 +74,6 @@ jobs:
         accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
         projKey: LD_PROJECT_KEY
 ```
-
-## Additional configuration
-
-To customize additional configuration not referenced in [Inputs](#inputs), you may use a configuration file located at `.launchdarkly/coderefs.yml`. The following links provide more inforation about configurable options:
-
-- [All configuration options](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md)
-- [Monorepo configuration](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/CONFIGURATION.md#projects)
-- [Alias configuration](https://github.com/launchdarkly/ld-find-code-refs/blob/main/docs/ALIASES.md).
 
 ## Troubleshooting
 
