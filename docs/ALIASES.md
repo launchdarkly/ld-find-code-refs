@@ -123,3 +123,29 @@ For a file that has already been committed:
 ```sh
 git update-index --chmod=+x .launchdarkly/flagAlias.sh
 ```
+
+## Finding flags used in GitHub workflow files
+
+If you are using [launchdarkly/gha-flags](https://github.com/launchdarkly/gha-flags), your flag keys will not be wrapped in delimiters, so it is important to either have the proper aliases configured or disable delimiters.
+
+Example alias configuration:
+
+```yaml
+// given flag key "enable-new-feature"
+aliases:
+  - type: kebabcase
+```
+
+```yaml
+// given flag key "enable_new_feature"
+aliases:
+  - type: snakecase
+```
+
+Example delimiter disable:
+
+```yaml
+delimiters:
+  disableDefaults: true # will find keys without surrounding delimiters like ' or "
+```
+
