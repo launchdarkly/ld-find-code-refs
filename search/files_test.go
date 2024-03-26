@@ -18,7 +18,7 @@ func Test_readFiles(t *testing.T) {
 		switch file.path {
 		case "fileWithNoRefs":
 			assert.Equal(t, []string{"fileWithNoRefs"}, file.lines)
-		case "fileWithRefs":
+		case "fileWithRefs", ".github/workflows/workflow.yml":
 			assert.Equal(t, testFile.lines, file.lines)
 		case "ignoredFiles/included":
 			assert.Equal(t, []string{"IGNORED BUT INCLUDED"}, file.lines)
@@ -28,5 +28,5 @@ func Test_readFiles(t *testing.T) {
 			assert.Fail(t, "Read unexpected file", file)
 		}
 	}
-	assert.Len(t, got, 3, "Expected 3 valid files to have been found")
+	assert.Len(t, got, 4, "Expected 4 valid files to have been found")
 }
