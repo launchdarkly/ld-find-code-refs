@@ -80,8 +80,17 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 		path = filepath.ToSlash(path)
 
 		// Skip directories, hidden files, and ignored files
-		if strings.HasPrefix(info.Name(), ".") || allIgnores.Match(path, isDir) {
+		if allIgnores.Match(path, isDir) {
 			if isDir {
+				return filepath.SkipDir
+			}
+			return nil
+		} else if strings.HasPrefix(info.Name(), ".") {
+			if isDir {
+				// don't skip github dir
+				if strings.HasPrefix(info.Name(), ".github") {
+					return nil
+				}
 				return filepath.SkipDir
 			}
 			return nil

@@ -136,6 +136,6 @@ delimiters:
 
 ## Ignoring files and directories
 
-All dotfiles and patterns in `.gitignore` and `.ignore` will be excluded by default.
+All dotfiles and patterns in `.gitignore` and `.ignore` will be excluded by default, except the `.github` directory. Flags may be referenced when using [launchdarky/gha-flags](https://github.com/launchdarkly/gha-flags). If you would like to skip scanning these files, add `.github` to one of the ignore files.
 
 To ignore additional files and directories, provide a `.ldignore` file in the root directory of your Git repository. All patterns specified in `.ldignore` file will be excluded by the scanner. Patterns must follow the `.gitignore` format as specified here: https://git-scm.com/docs/gitignore#_pattern_format
