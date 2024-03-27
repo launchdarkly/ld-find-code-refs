@@ -126,7 +126,7 @@ git update-index --chmod=+x .launchdarkly/flagAlias.sh
 
 ## Finding flags used in GitHub workflow files
 
-If you are using [launchdarkly/gha-flags](https://github.com/launchdarkly/gha-flags), your flag keys will not be wrapped in delimiters, so it is important to either have the proper aliases configured or disable delimiters.
+If you are using [launchdarkly/gha-flags](https://github.com/launchdarkly/gha-flags), your flag keys will not be wrapped in delimiters, so it is important to either configure the proper aliases or disable delimiters.
 
 Example alias configuration:
 
