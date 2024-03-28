@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.12.0] - 2024-03-28
+### Added:
+- Enable scanning of github workflow files [#441](https://github.com/launchdarkly/ld-find-code-refs/pull/441)
+
+### Changed:
+- Streamline HTTP client used in requests [#438](https://github.com/launchdarkly/ld-find-code-refs/pull/438)
+
 ## [2.11.10] - 2024-03-14
 ### Changed:
 - Use same http client with rate-limited retries for ld api client calls [#437](https://github.com/launchdarkly/ld-find-code-refs/pull/437)
