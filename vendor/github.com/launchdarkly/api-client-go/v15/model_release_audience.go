@@ -12,318 +12,128 @@ Contact: support@launchdarkly.com
 package ldapi
 
 import (
-	"bytes"
-	"context"
-	"io/ioutil"
-	"net/http"
-	"net/url"
+	"encoding/json"
 )
 
-
-// InsightsFlagEventsBetaApiService InsightsFlagEventsBetaApi service
-type InsightsFlagEventsBetaApiService service
-
-type ApiGetFlagEventsRequest struct {
-	ctx context.Context
-	ApiService *InsightsFlagEventsBetaApiService
-	projectKey *string
-	environmentKey *string
-	applicationKey *string
-	query *string
-	impactSize *string
-	hasExperiments *bool
-	global *string
-	expand *string
-	limit *int64
-	from *int64
-	to *int64
-	after *string
-	before *string
+// ReleaseAudience struct for ReleaseAudience
+type ReleaseAudience struct {
+	Environment EnvironmentSummary `json:"environment"`
+	// The release phase name
+	Name string `json:"name"`
 }
 
-// The project key
-func (r ApiGetFlagEventsRequest) ProjectKey(projectKey string) ApiGetFlagEventsRequest {
-	r.projectKey = &projectKey
-	return r
+// NewReleaseAudience instantiates a new ReleaseAudience object
+// This constructor will assign default values to properties that have it defined,
+// and makes sure properties required by API are set, but the set of arguments
+// will change when the set of required properties is changed
+func NewReleaseAudience(environment EnvironmentSummary, name string) *ReleaseAudience {
+	this := ReleaseAudience{}
+	this.Environment = environment
+	this.Name = name
+	return &this
 }
 
-// The environment key
-func (r ApiGetFlagEventsRequest) EnvironmentKey(environmentKey string) ApiGetFlagEventsRequest {
-	r.environmentKey = &environmentKey
-	return r
+// NewReleaseAudienceWithDefaults instantiates a new ReleaseAudience object
+// This constructor will only assign default values to properties that have it defined,
+// but it doesn't guarantee that properties required by API are set
+func NewReleaseAudienceWithDefaults() *ReleaseAudience {
+	this := ReleaseAudience{}
+	return &this
 }
 
-// Comma separated list of application keys
-func (r ApiGetFlagEventsRequest) ApplicationKey(applicationKey string) ApiGetFlagEventsRequest {
-	r.applicationKey = &applicationKey
-	return r
+// GetEnvironment returns the Environment field value
+func (o *ReleaseAudience) GetEnvironment() EnvironmentSummary {
+	if o == nil {
+		var ret EnvironmentSummary
+		return ret
+	}
+
+	return o.Environment
 }
 
-// Filter events by flag key
-func (r ApiGetFlagEventsRequest) Query(query string) ApiGetFlagEventsRequest {
-	r.query = &query
-	return r
+// GetEnvironmentOk returns a tuple with the Environment field value
+// and a boolean to check if the value has been set.
+func (o *ReleaseAudience) GetEnvironmentOk() (*EnvironmentSummary, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Environment, true
 }
 
-// Filter events by impact size. A small impact created a less than 20% change in the proportion of end users receiving one or more flag variations. A medium impact created between a 20%-80% change. A large impact created a more than 80% change. Options: &#x60;none&#x60;, &#x60;small&#x60;, &#x60;medium&#x60;, &#x60;large&#x60;
-func (r ApiGetFlagEventsRequest) ImpactSize(impactSize string) ApiGetFlagEventsRequest {
-	r.impactSize = &impactSize
-	return r
+// SetEnvironment sets field value
+func (o *ReleaseAudience) SetEnvironment(v EnvironmentSummary) {
+	o.Environment = v
 }
 
-// Filter events to those associated with an experiment (&#x60;true&#x60;) or without an experiment (&#x60;false&#x60;)
-func (r ApiGetFlagEventsRequest) HasExperiments(hasExperiments bool) ApiGetFlagEventsRequest {
-	r.hasExperiments = &hasExperiments
-	return r
+// GetName returns the Name field value
+func (o *ReleaseAudience) GetName() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Name
 }
 
-// Filter to include or exclude global events. Default value is &#x60;include&#x60;. Options: &#x60;include&#x60;, &#x60;exclude&#x60;
-func (r ApiGetFlagEventsRequest) Global(global string) ApiGetFlagEventsRequest {
-	r.global = &global
-	return r
+// GetNameOk returns a tuple with the Name field value
+// and a boolean to check if the value has been set.
+func (o *ReleaseAudience) GetNameOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Name, true
 }
 
-// Expand properties in response. Options: &#x60;experiments&#x60;
-func (r ApiGetFlagEventsRequest) Expand(expand string) ApiGetFlagEventsRequest {
-	r.expand = &expand
-	return r
+// SetName sets field value
+func (o *ReleaseAudience) SetName(v string) {
+	o.Name = v
 }
 
-// The number of deployments to return. Default is 20. Maximum allowed is 100.
-func (r ApiGetFlagEventsRequest) Limit(limit int64) ApiGetFlagEventsRequest {
-	r.limit = &limit
-	return r
+func (o ReleaseAudience) MarshalJSON() ([]byte, error) {
+	toSerialize := map[string]interface{}{}
+	if true {
+		toSerialize["environment"] = o.Environment
+	}
+	if true {
+		toSerialize["name"] = o.Name
+	}
+	return json.Marshal(toSerialize)
 }
 
-// Unix timestamp in milliseconds. Default value is 7 days ago.
-func (r ApiGetFlagEventsRequest) From(from int64) ApiGetFlagEventsRequest {
-	r.from = &from
-	return r
+type NullableReleaseAudience struct {
+	value *ReleaseAudience
+	isSet bool
 }
 
-// Unix timestamp in milliseconds. Default value is now.
-func (r ApiGetFlagEventsRequest) To(to int64) ApiGetFlagEventsRequest {
-	r.to = &to
-	return r
+func (v NullableReleaseAudience) Get() *ReleaseAudience {
+	return v.value
 }
 
-// Identifier used for pagination
-func (r ApiGetFlagEventsRequest) After(after string) ApiGetFlagEventsRequest {
-	r.after = &after
-	return r
+func (v *NullableReleaseAudience) Set(val *ReleaseAudience) {
+	v.value = val
+	v.isSet = true
 }
 
-// Identifier used for pagination
-func (r ApiGetFlagEventsRequest) Before(before string) ApiGetFlagEventsRequest {
-	r.before = &before
-	return r
+func (v NullableReleaseAudience) IsSet() bool {
+	return v.isSet
 }
 
-func (r ApiGetFlagEventsRequest) Execute() (*FlagEventCollectionRep, *http.Response, error) {
-	return r.ApiService.GetFlagEventsExecute(r)
+func (v *NullableReleaseAudience) Unset() {
+	v.value = nil
+	v.isSet = false
 }
 
-/*
-GetFlagEvents List flag events
-
-Get a list of flag events
-
-### Expanding the flag event collection response
-
-LaunchDarkly supports expanding the flag event collection response to include additional fields.
-
-To expand the response, append the `expand` query parameter and include the following:
-
-* `experiments` includes details on all of the experiments run on each flag
-
-For example, use `?expand=experiments` to include the `experiments` field in the response. By default, this field is **not** included in the response.
-
-
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiGetFlagEventsRequest
-*/
-func (a *InsightsFlagEventsBetaApiService) GetFlagEvents(ctx context.Context) ApiGetFlagEventsRequest {
-	return ApiGetFlagEventsRequest{
-		ApiService: a,
-		ctx: ctx,
-	}
+func NewNullableReleaseAudience(val *ReleaseAudience) *NullableReleaseAudience {
+	return &NullableReleaseAudience{value: val, isSet: true}
 }
 
-// Execute executes the request
-//  @return FlagEventCollectionRep
-func (a *InsightsFlagEventsBetaApiService) GetFlagEventsExecute(r ApiGetFlagEventsRequest) (*FlagEventCollectionRep, *http.Response, error) {
-	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *FlagEventCollectionRep
-	)
-
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "InsightsFlagEventsBetaApiService.GetFlagEvents")
-	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
-	}
-
-	localVarPath := localBasePath + "/api/v2/engineering-insights/flag-events"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-	if r.projectKey == nil {
-		return localVarReturnValue, nil, reportError("projectKey is required and must be specified")
-	}
-	if r.environmentKey == nil {
-		return localVarReturnValue, nil, reportError("environmentKey is required and must be specified")
-	}
-
-	localVarQueryParams.Add("projectKey", parameterToString(*r.projectKey, ""))
-	localVarQueryParams.Add("environmentKey", parameterToString(*r.environmentKey, ""))
-	if r.applicationKey != nil {
-		localVarQueryParams.Add("applicationKey", parameterToString(*r.applicationKey, ""))
-	}
-	if r.query != nil {
-		localVarQueryParams.Add("query", parameterToString(*r.query, ""))
-	}
-	if r.impactSize != nil {
-		localVarQueryParams.Add("impactSize", parameterToString(*r.impactSize, ""))
-	}
-	if r.hasExperiments != nil {
-		localVarQueryParams.Add("hasExperiments", parameterToString(*r.hasExperiments, ""))
-	}
-	if r.global != nil {
-		localVarQueryParams.Add("global", parameterToString(*r.global, ""))
-	}
-	if r.expand != nil {
-		localVarQueryParams.Add("expand", parameterToString(*r.expand, ""))
-	}
-	if r.limit != nil {
-		localVarQueryParams.Add("limit", parameterToString(*r.limit, ""))
-	}
-	if r.from != nil {
-		localVarQueryParams.Add("from", parameterToString(*r.from, ""))
-	}
-	if r.to != nil {
-		localVarQueryParams.Add("to", parameterToString(*r.to, ""))
-	}
-	if r.after != nil {
-		localVarQueryParams.Add("after", parameterToString(*r.after, ""))
-	}
-	if r.before != nil {
-		localVarQueryParams.Add("before", parameterToString(*r.before, ""))
-	}
-	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
-	if localVarHTTPContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
-	}
-
-	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
-
-	// set Accept header
-	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	if r.ctx != nil {
-		// API Key Authentication
-		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
-			if apiKey, ok := auth["ApiKey"]; ok {
-				var key string
-				if apiKey.Prefix != "" {
-					key = apiKey.Prefix + " " + apiKey.Key
-				} else {
-					key = apiKey.Key
-				}
-				localVarHeaderParams["Authorization"] = key
-			}
-		}
-	}
-	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
-	if err != nil {
-		return localVarReturnValue, nil, err
-	}
-
-	localVarHTTPResponse, err := a.client.callAPI(req)
-	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHTTPResponse.Body)
-	localVarHTTPResponse.Body.Close()
-	localVarHTTPResponse.Body = ioutil.NopCloser(bytes.NewBuffer(localVarBody))
-	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
-	}
-
-	if localVarHTTPResponse.StatusCode >= 300 {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: localVarHTTPResponse.Status,
-		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v ValidationFailedErrorRep
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 401 {
-			var v UnauthorizedErrorRep
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 403 {
-			var v ForbiddenErrorRep
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 404 {
-			var v NotFoundErrorRep
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
-		if localVarHTTPResponse.StatusCode == 429 {
-			var v RateLimitedErrorRep
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-			newErr.model = v
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
+func (v NullableReleaseAudience) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.value)
 }
+
+func (v *NullableReleaseAudience) UnmarshalJSON(src []byte) error {
+	v.isSet = true
+	return json.Unmarshal(src, &v.value)
+}
+
+

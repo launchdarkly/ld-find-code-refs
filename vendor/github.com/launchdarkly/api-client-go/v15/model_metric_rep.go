@@ -56,11 +56,11 @@ type MetricRep struct {
 	EventKey *string `json:"eventKey,omitempty"`
 	// An array of randomization units allowed for this metric
 	RandomizationUnits []string `json:"randomizationUnits,omitempty"`
-	// The method in which multiple unit event values are aggregated
+	// The method by which multiple unit event values are aggregated
 	UnitAggregationType *string `json:"unitAggregationType,omitempty"`
-	// The strategy for analyzing metric events
+	// The method for analyzing metric events
 	AnalysisType *string `json:"analysisType,omitempty"`
-	// The percentile, an integer denoting the target percentile between 0 and 100. Only present when <code>analysisType</code> is <code>percentile</code>.
+	// The percentile for the analysis method. An integer denoting the target percentile between 0 and 100. Required when <code>analysisType</code> is <code>percentile</code>.
 	PercentileValue *int32 `json:"percentileValue,omitempty"`
 	EventDefault *MetricEventDefaultRep `json:"eventDefault,omitempty"`
 	Experiments []DependentExperimentRep `json:"experiments,omitempty"`
