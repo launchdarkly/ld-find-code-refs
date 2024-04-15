@@ -43,8 +43,13 @@ type MetricPost struct {
 	Tags []string `json:"tags,omitempty"`
 	// An array of randomization units allowed for this metric
 	RandomizationUnits []string `json:"randomizationUnits,omitempty"`
-	// The method in which multiple unit event values are aggregated
+	// The method by which multiple unit event values are aggregated
 	UnitAggregationType *string `json:"unitAggregationType,omitempty"`
+	// The method for analyzing metric events
+	AnalysisType *string `json:"analysisType,omitempty"`
+	// The percentile for the analysis method. An integer denoting the target percentile between 0 and 100. Required when <code>analysisType</code> is <code>percentile</code>.
+	PercentileValue *int32 `json:"percentileValue,omitempty"`
+	EventDefault *MetricEventDefaultRep `json:"eventDefault,omitempty"`
 }
 
 // NewMetricPost instantiates a new MetricPost object
@@ -498,6 +503,102 @@ func (o *MetricPost) SetUnitAggregationType(v string) {
 	o.UnitAggregationType = &v
 }
 
+// GetAnalysisType returns the AnalysisType field value if set, zero value otherwise.
+func (o *MetricPost) GetAnalysisType() string {
+	if o == nil || o.AnalysisType == nil {
+		var ret string
+		return ret
+	}
+	return *o.AnalysisType
+}
+
+// GetAnalysisTypeOk returns a tuple with the AnalysisType field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *MetricPost) GetAnalysisTypeOk() (*string, bool) {
+	if o == nil || o.AnalysisType == nil {
+		return nil, false
+	}
+	return o.AnalysisType, true
+}
+
+// HasAnalysisType returns a boolean if a field has been set.
+func (o *MetricPost) HasAnalysisType() bool {
+	if o != nil && o.AnalysisType != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAnalysisType gets a reference to the given string and assigns it to the AnalysisType field.
+func (o *MetricPost) SetAnalysisType(v string) {
+	o.AnalysisType = &v
+}
+
+// GetPercentileValue returns the PercentileValue field value if set, zero value otherwise.
+func (o *MetricPost) GetPercentileValue() int32 {
+	if o == nil || o.PercentileValue == nil {
+		var ret int32
+		return ret
+	}
+	return *o.PercentileValue
+}
+
+// GetPercentileValueOk returns a tuple with the PercentileValue field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *MetricPost) GetPercentileValueOk() (*int32, bool) {
+	if o == nil || o.PercentileValue == nil {
+		return nil, false
+	}
+	return o.PercentileValue, true
+}
+
+// HasPercentileValue returns a boolean if a field has been set.
+func (o *MetricPost) HasPercentileValue() bool {
+	if o != nil && o.PercentileValue != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetPercentileValue gets a reference to the given int32 and assigns it to the PercentileValue field.
+func (o *MetricPost) SetPercentileValue(v int32) {
+	o.PercentileValue = &v
+}
+
+// GetEventDefault returns the EventDefault field value if set, zero value otherwise.
+func (o *MetricPost) GetEventDefault() MetricEventDefaultRep {
+	if o == nil || o.EventDefault == nil {
+		var ret MetricEventDefaultRep
+		return ret
+	}
+	return *o.EventDefault
+}
+
+// GetEventDefaultOk returns a tuple with the EventDefault field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *MetricPost) GetEventDefaultOk() (*MetricEventDefaultRep, bool) {
+	if o == nil || o.EventDefault == nil {
+		return nil, false
+	}
+	return o.EventDefault, true
+}
+
+// HasEventDefault returns a boolean if a field has been set.
+func (o *MetricPost) HasEventDefault() bool {
+	if o != nil && o.EventDefault != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetEventDefault gets a reference to the given MetricEventDefaultRep and assigns it to the EventDefault field.
+func (o *MetricPost) SetEventDefault(v MetricEventDefaultRep) {
+	o.EventDefault = &v
+}
+
 func (o MetricPost) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
@@ -541,6 +642,15 @@ func (o MetricPost) MarshalJSON() ([]byte, error) {
 	}
 	if o.UnitAggregationType != nil {
 		toSerialize["unitAggregationType"] = o.UnitAggregationType
+	}
+	if o.AnalysisType != nil {
+		toSerialize["analysisType"] = o.AnalysisType
+	}
+	if o.PercentileValue != nil {
+		toSerialize["percentileValue"] = o.PercentileValue
+	}
+	if o.EventDefault != nil {
+		toSerialize["eventDefault"] = o.EventDefault
 	}
 	return json.Marshal(toSerialize)
 }

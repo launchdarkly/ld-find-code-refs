@@ -481,6 +481,7 @@ Class | Method | HTTP request | Description
 *AccountMembersApi* | [**PostMemberTeams**](docs/AccountMembersApi.md#postmemberteams) | **Post** /api/v2/members/{id}/teams | Add a member to teams
 *AccountMembersApi* | [**PostMembers**](docs/AccountMembersApi.md#postmembers) | **Post** /api/v2/members | Invite new members
 *AccountMembersBetaApi* | [**PatchMembers**](docs/AccountMembersBetaApi.md#patchmembers) | **Patch** /api/v2/members | Modify account members
+*AccountUsageBetaApi* | [**GetDataExportEventsUsage**](docs/AccountUsageBetaApi.md#getdataexporteventsusage) | **Get** /api/v2/usage/data-export-events | Get data export events usage
 *AccountUsageBetaApi* | [**GetEvaluationsUsage**](docs/AccountUsageBetaApi.md#getevaluationsusage) | **Get** /api/v2/usage/evaluations/{projectKey}/{environmentKey}/{featureFlagKey} | Get evaluations usage
 *AccountUsageBetaApi* | [**GetEventsUsage**](docs/AccountUsageBetaApi.md#geteventsusage) | **Get** /api/v2/usage/events/{type} | Get events usage
 *AccountUsageBetaApi* | [**GetExperimentationKeysUsage**](docs/AccountUsageBetaApi.md#getexperimentationkeysusage) | **Get** /api/v2/usage/experimentation-keys | Get experimentation keys usage
@@ -488,6 +489,7 @@ Class | Method | HTTP request | Description
 *AccountUsageBetaApi* | [**GetMauSdksByType**](docs/AccountUsageBetaApi.md#getmausdksbytype) | **Get** /api/v2/usage/mau/sdks | Get MAU SDKs by type
 *AccountUsageBetaApi* | [**GetMauUsage**](docs/AccountUsageBetaApi.md#getmauusage) | **Get** /api/v2/usage/mau | Get MAU usage
 *AccountUsageBetaApi* | [**GetMauUsageByCategory**](docs/AccountUsageBetaApi.md#getmauusagebycategory) | **Get** /api/v2/usage/mau/bycategory | Get MAU usage by category
+*AccountUsageBetaApi* | [**GetServiceConnectionUsage**](docs/AccountUsageBetaApi.md#getserviceconnectionusage) | **Get** /api/v2/usage/service-connections | Get service connection usage
 *AccountUsageBetaApi* | [**GetStreamUsage**](docs/AccountUsageBetaApi.md#getstreamusage) | **Get** /api/v2/usage/streams/{source} | Get stream usage
 *AccountUsageBetaApi* | [**GetStreamUsageBySdkVersion**](docs/AccountUsageBetaApi.md#getstreamusagebysdkversion) | **Get** /api/v2/usage/streams/{source}/bysdkversion | Get stream usage by SDK version
 *AccountUsageBetaApi* | [**GetStreamUsageSdkversion**](docs/AccountUsageBetaApi.md#getstreamusagesdkversion) | **Get** /api/v2/usage/streams/{source}/sdkversions | Get stream usage SDK versions
@@ -596,7 +598,7 @@ Class | Method | HTTP request | Description
 *InsightsChartsBetaApi* | [**GetDeploymentFrequencyChart**](docs/InsightsChartsBetaApi.md#getdeploymentfrequencychart) | **Get** /api/v2/engineering-insights/charts/deployments/frequency | Get deployment frequency chart data
 *InsightsChartsBetaApi* | [**GetFlagStatusChart**](docs/InsightsChartsBetaApi.md#getflagstatuschart) | **Get** /api/v2/engineering-insights/charts/flags/status | Get flag status chart data
 *InsightsChartsBetaApi* | [**GetLeadTimeChart**](docs/InsightsChartsBetaApi.md#getleadtimechart) | **Get** /api/v2/engineering-insights/charts/lead-time | Get lead time chart data
-*InsightsChartsBetaApi* | [**GetReleaseFrequencyChart**](docs/InsightsChartsBetaApi.md#getreleasefrequencychart) | **Get** /api/v2/engineering-insights/charts/releases/frequency | Get replease frequency chart data
+*InsightsChartsBetaApi* | [**GetReleaseFrequencyChart**](docs/InsightsChartsBetaApi.md#getreleasefrequencychart) | **Get** /api/v2/engineering-insights/charts/releases/frequency | Get release frequency chart data
 *InsightsChartsBetaApi* | [**GetStaleFlagsChart**](docs/InsightsChartsBetaApi.md#getstaleflagschart) | **Get** /api/v2/engineering-insights/charts/flags/stale | Get stale flags chart data
 *InsightsDeploymentsBetaApi* | [**CreateDeploymentEvent**](docs/InsightsDeploymentsBetaApi.md#createdeploymentevent) | **Post** /api/v2/engineering-insights/deployment-events | Create deployment event
 *InsightsDeploymentsBetaApi* | [**GetDeployment**](docs/InsightsDeploymentsBetaApi.md#getdeployment) | **Get** /api/v2/engineering-insights/deployments/{deploymentID} | Get deployment
@@ -1030,6 +1032,7 @@ Class | Method | HTTP request | Description
  - [RelayAutoConfigPost](docs/RelayAutoConfigPost.md)
  - [RelayAutoConfigRep](docs/RelayAutoConfigRep.md)
  - [Release](docs/Release.md)
+ - [ReleaseAudience](docs/ReleaseAudience.md)
  - [ReleasePhase](docs/ReleasePhase.md)
  - [ReleasePipeline](docs/ReleasePipeline.md)
  - [ReleasePipelineCollection](docs/ReleasePipelineCollection.md)

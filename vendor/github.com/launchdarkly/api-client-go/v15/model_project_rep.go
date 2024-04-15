@@ -28,6 +28,7 @@ type ProjectRep struct {
 	DefaultClientSideAvailability *ClientSideAvailability `json:"defaultClientSideAvailability,omitempty"`
 	// A human-friendly name for the project
 	Name string `json:"name"`
+	Access *Access `json:"_access,omitempty"`
 	// A list of tags for the project
 	Tags []string `json:"tags"`
 	// The key of the default release pipeline for this project
@@ -212,6 +213,38 @@ func (o *ProjectRep) SetName(v string) {
 	o.Name = v
 }
 
+// GetAccess returns the Access field value if set, zero value otherwise.
+func (o *ProjectRep) GetAccess() Access {
+	if o == nil || o.Access == nil {
+		var ret Access
+		return ret
+	}
+	return *o.Access
+}
+
+// GetAccessOk returns a tuple with the Access field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ProjectRep) GetAccessOk() (*Access, bool) {
+	if o == nil || o.Access == nil {
+		return nil, false
+	}
+	return o.Access, true
+}
+
+// HasAccess returns a boolean if a field has been set.
+func (o *ProjectRep) HasAccess() bool {
+	if o != nil && o.Access != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetAccess gets a reference to the given Access and assigns it to the Access field.
+func (o *ProjectRep) SetAccess(v Access) {
+	o.Access = &v
+}
+
 // GetTags returns the Tags field value
 func (o *ProjectRep) GetTags() []string {
 	if o == nil {
@@ -311,6 +344,9 @@ func (o ProjectRep) MarshalJSON() ([]byte, error) {
 	}
 	if true {
 		toSerialize["name"] = o.Name
+	}
+	if o.Access != nil {
+		toSerialize["_access"] = o.Access
 	}
 	if true {
 		toSerialize["tags"] = o.Tags

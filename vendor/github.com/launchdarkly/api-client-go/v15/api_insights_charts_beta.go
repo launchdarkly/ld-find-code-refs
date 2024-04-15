@@ -768,7 +768,7 @@ func (r ApiGetReleaseFrequencyChartRequest) ApplicationKey(applicationKey string
 	return r
 }
 
-// Filter events to those associated with an experiment
+// Filter events to those associated with an experiment (&#x60;true&#x60;) or without an experiment (&#x60;false&#x60;)
 func (r ApiGetReleaseFrequencyChartRequest) HasExperiments(hasExperiments bool) ApiGetReleaseFrequencyChartRequest {
 	r.hasExperiments = &hasExperiments
 	return r
@@ -821,7 +821,7 @@ func (r ApiGetReleaseFrequencyChartRequest) Execute() (*InsightsChart, *http.Res
 }
 
 /*
-GetReleaseFrequencyChart Get replease frequency chart data
+GetReleaseFrequencyChart Get release frequency chart data
 
 Get release frequency chart data. Engineering insights displays release frequency data in the [release frequency metric view](https://docs.launchdarkly.com/home/engineering-insights/metrics/release).
 

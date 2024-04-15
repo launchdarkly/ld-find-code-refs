@@ -27,14 +27,14 @@ type ReleasePhase struct {
 	CompletionDate *int64 `json:"_completionDate,omitempty"`
 	CompletedBy *CompletedBy `json:"_completedBy,omitempty"`
 	// A logical grouping of one or more environments that share attributes for rolling out changes
-	Audiences []Audience `json:"_audiences"`
+	Audiences []ReleaseAudience `json:"_audiences"`
 }
 
 // NewReleasePhase instantiates a new ReleasePhase object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewReleasePhase(id string, name string, complete bool, creationDate int64, audiences []Audience) *ReleasePhase {
+func NewReleasePhase(id string, name string, complete bool, creationDate int64, audiences []ReleaseAudience) *ReleasePhase {
 	this := ReleasePhase{}
 	this.Id = id
 	this.Name = name
@@ -213,9 +213,9 @@ func (o *ReleasePhase) SetCompletedBy(v CompletedBy) {
 }
 
 // GetAudiences returns the Audiences field value
-func (o *ReleasePhase) GetAudiences() []Audience {
+func (o *ReleasePhase) GetAudiences() []ReleaseAudience {
 	if o == nil {
-		var ret []Audience
+		var ret []ReleaseAudience
 		return ret
 	}
 
@@ -224,7 +224,7 @@ func (o *ReleasePhase) GetAudiences() []Audience {
 
 // GetAudiencesOk returns a tuple with the Audiences field value
 // and a boolean to check if the value has been set.
-func (o *ReleasePhase) GetAudiencesOk() ([]Audience, bool) {
+func (o *ReleasePhase) GetAudiencesOk() ([]ReleaseAudience, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -232,7 +232,7 @@ func (o *ReleasePhase) GetAudiencesOk() ([]Audience, bool) {
 }
 
 // SetAudiences sets field value
-func (o *ReleasePhase) SetAudiences(v []Audience) {
+func (o *ReleasePhase) SetAudiences(v []ReleaseAudience) {
 	o.Audiences = v
 }
 

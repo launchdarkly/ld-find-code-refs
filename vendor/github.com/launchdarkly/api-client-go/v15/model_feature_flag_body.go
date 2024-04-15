@@ -38,6 +38,10 @@ type FeatureFlagBody struct {
 	// Purpose of the flag
 	Purpose *string `json:"purpose,omitempty"`
 	MigrationSettings *MigrationSettingsPost `json:"migrationSettings,omitempty"`
+	// The ID of the member who maintains this feature flag
+	MaintainerId *string `json:"maintainerId,omitempty"`
+	// The key of the team that maintains this feature flag
+	MaintainerTeamKey *string `json:"maintainerTeamKey,omitempty"`
 }
 
 // NewFeatureFlagBody instantiates a new FeatureFlagBody object
@@ -430,6 +434,70 @@ func (o *FeatureFlagBody) SetMigrationSettings(v MigrationSettingsPost) {
 	o.MigrationSettings = &v
 }
 
+// GetMaintainerId returns the MaintainerId field value if set, zero value otherwise.
+func (o *FeatureFlagBody) GetMaintainerId() string {
+	if o == nil || o.MaintainerId == nil {
+		var ret string
+		return ret
+	}
+	return *o.MaintainerId
+}
+
+// GetMaintainerIdOk returns a tuple with the MaintainerId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *FeatureFlagBody) GetMaintainerIdOk() (*string, bool) {
+	if o == nil || o.MaintainerId == nil {
+		return nil, false
+	}
+	return o.MaintainerId, true
+}
+
+// HasMaintainerId returns a boolean if a field has been set.
+func (o *FeatureFlagBody) HasMaintainerId() bool {
+	if o != nil && o.MaintainerId != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMaintainerId gets a reference to the given string and assigns it to the MaintainerId field.
+func (o *FeatureFlagBody) SetMaintainerId(v string) {
+	o.MaintainerId = &v
+}
+
+// GetMaintainerTeamKey returns the MaintainerTeamKey field value if set, zero value otherwise.
+func (o *FeatureFlagBody) GetMaintainerTeamKey() string {
+	if o == nil || o.MaintainerTeamKey == nil {
+		var ret string
+		return ret
+	}
+	return *o.MaintainerTeamKey
+}
+
+// GetMaintainerTeamKeyOk returns a tuple with the MaintainerTeamKey field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *FeatureFlagBody) GetMaintainerTeamKeyOk() (*string, bool) {
+	if o == nil || o.MaintainerTeamKey == nil {
+		return nil, false
+	}
+	return o.MaintainerTeamKey, true
+}
+
+// HasMaintainerTeamKey returns a boolean if a field has been set.
+func (o *FeatureFlagBody) HasMaintainerTeamKey() bool {
+	if o != nil && o.MaintainerTeamKey != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetMaintainerTeamKey gets a reference to the given string and assigns it to the MaintainerTeamKey field.
+func (o *FeatureFlagBody) SetMaintainerTeamKey(v string) {
+	o.MaintainerTeamKey = &v
+}
+
 func (o FeatureFlagBody) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
@@ -467,6 +535,12 @@ func (o FeatureFlagBody) MarshalJSON() ([]byte, error) {
 	}
 	if o.MigrationSettings != nil {
 		toSerialize["migrationSettings"] = o.MigrationSettings
+	}
+	if o.MaintainerId != nil {
+		toSerialize["maintainerId"] = o.MaintainerId
+	}
+	if o.MaintainerTeamKey != nil {
+		toSerialize["maintainerTeamKey"] = o.MaintainerTeamKey
 	}
 	return json.Marshal(toSerialize)
 }
