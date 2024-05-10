@@ -61,7 +61,7 @@ func (m *Ci) BuildBinary(ctx context.Context, source *dagger.Directory) (string,
 	fmt.Printf("Building binary")
 
 	return dag.Goreleaser(source).
-		withGoCache().
+		WithGoCache().
 		Release(ctx)
 }
 
