@@ -29,9 +29,10 @@ func TestMain(m *testing.M) {
 }
 
 func setupRepo(t *testing.T) *git.Repository {
-	os.RemoveAll(repoDir)
-	require.NoError(t, os.MkdirAll(repoDir, 0700))
-	repo, err := git.PlainInit(repoDir, false)
+	tmpDir := filepath.Join(os.TempDir(), repoDir)
+	os.RemoveAll(tmpDir)
+	require.NoError(t, os.MkdirAll(tmpDir, 0700))
+	repo, err := git.PlainInit(tmpDir, false)
 	require.NoError(t, err)
 	return repo
 }
@@ -39,19 +40,19 @@ func setupRepo(t *testing.T) *git.Repository {
 // TestFindExtinctions is an integration test against a real Git repository stored under the testdata directory.
 func TestFindExtinctions(t *testing.T) {
 	repo := setupRepo(t)
-
+	tmpDir := filepath.Join(os.TempDir(), repoDir)
 	// Create commit history
-	flagFile, err := os.Create(filepath.Join(repoDir, "flag1.txt"))
+	flagFile, err := os.Create(filepath.Join(tmpDir, "flag1.txt"))
 	require.NoError(t, err)
 	_, err = flagFile.WriteString(flag1)
 	require.NoError(t, err)
 	require.NoError(t, flagFile.Close())
-	flagFile, err = os.Create(filepath.Join(repoDir, "flag2.txt"))
+	flagFile, err = os.Create(filepath.Join(tmpDir, "flag2.txt"))
 	require.NoError(t, err)
 	_, err = flagFile.WriteString(flag2)
 	require.NoError(t, err)
 	require.NoError(t, flagFile.Close())
-	flagFile, err = os.Create(filepath.Join(repoDir, "flag3.txt"))
+	flagFile, err = os.Create(filepath.Join(tmpDir, "flag3.txt"))
 	require.NoError(t, err)
 	_, err = flagFile.WriteString(flag3)
 	require.NoError(t, err)
@@ -69,7 +70,7 @@ func TestFindExtinctions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test with a removed file
-	err = os.Remove(filepath.Join(repoDir, "flag1.txt"))
+	err = os.Remove(filepath.Join(tmpDir, "flag1.txt"))
 	require.NoError(t, err)
 
 	who.When = who.When.Add(time.Minute)
@@ -78,7 +79,7 @@ func TestFindExtinctions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test with an updated (truncated) file
-	flagFile, err = os.Create(filepath.Join(repoDir, "flag2.txt"))
+	flagFile, err = os.Create(filepath.Join(tmpDir, "flag2.txt"))
 	require.NoError(t, err)
 	require.NoError(t, flagFile.Close())
 
@@ -87,7 +88,7 @@ func TestFindExtinctions(t *testing.T) {
 	commit3, err := wt.Commit("remove flag2", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
-	err = os.Remove(filepath.Join(repoDir, "flag3.txt"))
+	err = os.Remove(filepath.Join(tmpDir, "flag3.txt"))
 	require.NoError(t, err)
 
 	who.When = who.When.Add(time.Minute)
@@ -95,7 +96,7 @@ func TestFindExtinctions(t *testing.T) {
 	commit4, err := wt.Commit("remove flag3", &git.CommitOptions{All: true, Committer: &who, Author: &who})
 	require.NoError(t, err)
 
-	c := Client{workspace: repoDir}
+	c := Client{workspace: tmpDir}
 	projKey := options.Project{
 		Key: "default",
 	}

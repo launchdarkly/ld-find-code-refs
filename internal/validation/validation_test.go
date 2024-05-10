@@ -9,17 +9,17 @@ import (
 )
 
 func Test_IsSubDirValid(t *testing.T) {
-	baseDir, err := os.Getwd()
+	tempDir := os.TempDir()
 	testDir := "testDir"
-	exampleDir := filepath.Join(baseDir, testDir)
+	exampleDir := filepath.Join(os.TempDir(), testDir)
+
 	defer os.Remove(exampleDir)
 
-	require.NoError(t, err)
 	require.NoError(t, os.MkdirAll(exampleDir, 0700))
-	require.NoError(t, IsSubDirValid(baseDir, testDir))
+	require.NoError(t, IsSubDirValid(tempDir, testDir))
 
-	require.Error(t, IsSubDirValid(baseDir, "doesNotExist"))
-	require.Error(t, IsSubDirValid(baseDir, "./"+testDir))
-	require.Error(t, IsSubDirValid(baseDir, "/"+testDir))
-	require.Error(t, IsSubDirValid(baseDir, "\\"+testDir))
+	require.Error(t, IsSubDirValid(tempDir, "doesNotExist"))
+	require.Error(t, IsSubDirValid(tempDir, "./"+testDir))
+	require.Error(t, IsSubDirValid(tempDir, "/"+testDir))
+	require.Error(t, IsSubDirValid(tempDir, "\\"+testDir))
 }
