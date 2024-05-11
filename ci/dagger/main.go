@@ -76,6 +76,8 @@ func (m *Ci) Snapshot(ctx context.Context, source *dagger.Directory) (string, er
 			"--tls=false",
 			"--host=tcp://0.0.0.0:2375",
 		}, ContainerWithExecOpts{
+			// Errors in GHA without `InsecureRootCapabilities: true`
+			InsecureRootCapabilities:      true,
 			ExperimentalPrivilegedNesting: true,
 		}).
 		WithExposedPort(2375).
