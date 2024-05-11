@@ -1,7 +1,7 @@
 name: ci
 on:
   push:
-    branches: [main, dagger]
+    branches: [main, dob/dagger]
   pull_request:
 jobs:
   test-and-build:
