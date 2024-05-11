@@ -13,3 +13,5 @@ build/package/cmd/ld-find-code-refs
 /internal/git/testdata/repo
 metadataUpdates/
 bitbucketMetadataUpdates
+go.work
+go.work.sum

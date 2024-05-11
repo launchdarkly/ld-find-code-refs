@@ -1,0 +1,18 @@
+name: ci
+on:
+  push:
+    branches: [main, dagger]
+  pull_request:
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: dagger call test-and-snapshot
+        uses: dagger/dagger-for-github@v5
+        with:
+          workdir: ci/dagger
+          args: dagger call test-and-snapshot --source=${{ github.workspace }}
