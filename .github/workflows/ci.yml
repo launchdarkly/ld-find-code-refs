@@ -15,4 +15,4 @@ jobs:
         uses: dagger/dagger-for-github@v5
         with:
           workdir: ci/dagger
-          args: dagger call test-and-snapshot --source=${{ github.workspace }}
+          args: test-and-snapshot --source=${{ github.workspace }}
