@@ -32,10 +32,6 @@ func (m *Ci) TestAndSnapshot(ctx context.Context, source *Directory) (string, er
 	return "Lint, test and snapshot successful", nil
 }
 
-func (m *Ci) TestExit(ctx context.Context, source *Directory) (int, error) {
-	return 0, nil
-}
-
 func (m *Ci) Precommit(ctx context.Context, source *Directory) (string, error) {
 	return dag.Container().
 		From(imageId).
