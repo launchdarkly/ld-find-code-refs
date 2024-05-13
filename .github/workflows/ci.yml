@@ -14,5 +14,7 @@ jobs:
         name: dagger call test-and-snapshot
         uses: dagger/dagger-for-github@v5
         with:
+          # 0.11.3 was hanging on exit
+          version: latest
           workdir: ci/dagger
           args: test-and-snapshot --source=${{ github.workspace }}

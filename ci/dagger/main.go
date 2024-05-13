@@ -37,10 +37,6 @@ func (m *Ci) TestExit(ctx context.Context, source *Directory) (int, error) {
 }
 
 func (m *Ci) Precommit(ctx context.Context, source *Directory) (string, error) {
-	//img := m.baseImage(ctx)
-	// if err != nil {
-	// 	return "", err
-	// }
 	return dag.Container().
 		From(imageId).
 		With(m.baseImage(ctx)).
@@ -58,10 +54,11 @@ func (m *Ci) TestRepo(ctx context.Context, source *Directory) (string, error) {
 	return dag.Container().
 		From(imageId).
 		With(m.baseImage(ctx)).
+		WithExec([]string{"go", "install", "github.com/kyoh86/richgo@v0.3.10"}).
 		WithDirectory(sourceDir, source, dagger.ContainerWithDirectoryOpts{
 			Owner: "circleci",
 		}).WithWorkdir(sourceDir).
-		WithExec([]string{"go", "test", "./..."}).
+		WithExec([]string{"sh", "-c", "go test -race -v ./... | richgo testfilter"}).
 		Stdout(ctx)
 }
 
