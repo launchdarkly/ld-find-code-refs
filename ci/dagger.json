@@ -11,10 +11,6 @@
       "source": "github.com/shykes/daggerverse/docker@c9a80c9eac0675a53a7e052da3594207f4235988"
     },
     {
-      "name": "go-dagger",
-      "source": "github.com/felipecruz91/daggerverse/go@12b847cf74dde253bc3a541cff07f6cb08049a79"
-    },
-    {
       "name": "goreleaser",
       "source": "github.com/Excoriate/daggerverse/goreleaser@9c8fa25c61133a2ea58f9f06d7326c7829fc0d2c"
     }
