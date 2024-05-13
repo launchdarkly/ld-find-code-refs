@@ -29,11 +29,21 @@ func (m *Ci) TestAndSnapshot(ctx context.Context, source *Directory) (string, er
 		return "", err
 	}
 
-	return "Lint, test and build successful", nil
+	return "Lint, test and snapshot successful", nil
+}
+
+func (m *Ci) TestExit(ctx context.Context, source *Directory) (int, error) {
+	return 0, nil
 }
 
 func (m *Ci) Precommit(ctx context.Context, source *Directory) (string, error) {
-	return m.baseImage().
+	//img := m.baseImage(ctx)
+	// if err != nil {
+	// 	return "", err
+	// }
+	return dag.Container().
+		From(imageId).
+		With(m.baseImage(ctx)).
 		WithExec([]string{"sudo", "pip", "install", "pre-commit"}).
 		WithDirectory(sourceDir, source, dagger.ContainerWithDirectoryOpts{
 			Owner: "circleci",
@@ -45,10 +55,9 @@ func (m *Ci) Precommit(ctx context.Context, source *Directory) (string, error) {
 
 // Setup and run go tests
 func (m *Ci) TestRepo(ctx context.Context, source *Directory) (string, error) {
-	return m.baseImage().
+	return dag.Container().
 		From(imageId).
-		WithExec([]string{"go", "install", "github.com/jstemmer/go-junit-report@v1.0.0"}).
-		WithExec([]string{"go", "install", "github.com/kyoh86/richgo@v0.3.10"}).
+		With(m.baseImage(ctx)).
 		WithDirectory(sourceDir, source, dagger.ContainerWithDirectoryOpts{
 			Owner: "circleci",
 		}).WithWorkdir(sourceDir).
@@ -89,17 +98,11 @@ func (m *Ci) Snapshot(ctx context.Context, source *dagger.Directory) (string, er
 		WithServiceBinding("docker", docker).
 		WithEnvVariable("DOCKER_HOST", "tcp://docker:2375")
 
-	_, err := dag.Goreleaser(source, dagger.GoreleaserOpts{
+	return dag.Goreleaser(source, dagger.GoreleaserOpts{
 		Ctr: goReleaserDocker,
 	}).
 		WithGoCache().
 		Snapshot(ctx)
-
-	if err != nil {
-		return "", err
-	}
-
-	return "Snapshot successful", nil
 }
 
 func (m *Ci) goModCacheVolume() *CacheVolume {
@@ -110,9 +113,21 @@ func (m *Ci) goBuildCacheVolume() *CacheVolume {
 	return dag.CacheVolume("go-build")
 }
 
-func (m *Ci) baseImage() *Container {
-	return dag.Container().From(imageId).
-		WithMountedCache("/go/pkg/mod", m.goModCacheVolume()).
-		WithExec([]string{"sudo", "apt-get", "update"}).
-		WithExec([]string{"sudo", "apt-get", "install", "python3-pip"})
+// Trying to return a cached base image here.
+func (m *Ci) baseImage(ctx context.Context) dagger.WithContainerFunc {
+	return func(dag *dagger.Container) *dagger.Container {
+
+		dag, err := dag.From(imageId).
+			WithMountedCache("/go/pkg/mod", m.goModCacheVolume()).
+			WithExec([]string{"sudo", "apt-get", "update"}).
+			WithExec([]string{"sudo", "apt-get", "install", "python3-pip"}).
+			Sync(ctx)
+
+		if err != nil {
+			fmt.Println("Failed to run [base image setup]")
+		}
+
+		return dag
+	}
+
 }
