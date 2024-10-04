@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"io"
+	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -200,7 +202,14 @@ func (c *Client) RemoteBranches() (branches map[string]bool, err error) {
 	}
 
 	for _, r := range remotes {
-		refList, err := r.List(&git.ListOptions{})
+		auth, err := loadSSHKey("/Users/jburger/.ssh/id_rsa")
+		if err != nil {
+			log.Debug.Printf("Failed to load SSH key: %v", err)
+		}
+
+		refList, err := r.List(&git.ListOptions{
+			Auth: auth,
+		})
 		if err != nil {
 			return branches, err
 		}
@@ -219,6 +228,20 @@ func (c *Client) RemoteBranches() (branches map[string]bool, err error) {
 	// the current branch should be in the list of remote branches
 	branches[c.GitBranch] = true
 	return branches, nil
+}
+
+func loadSSHKey(path string) (*ssh.PublicKeys, error) {
+	key, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKeys, err := ssh.NewPublicKeys("git", key, "")
+	if err != nil {
+		return nil, err
+	}
+
+	return publicKeys, nil
 }
 
 type CommitData struct {

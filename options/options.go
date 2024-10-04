@@ -3,7 +3,7 @@ package options
 import (
 	"errors"
 	"fmt"
-	"net/url"
+	//"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -230,9 +230,9 @@ func (o Options) Validate() error {
 	}
 
 	if o.RepoUrl != "" {
-		if _, err := url.ParseRequestURI(o.RepoUrl); err != nil {
-			return fmt.Errorf(`invalid value %q for "repoUrl": %+v`, o.RepoUrl, err)
-		}
+		//if _, err := url.ParseRequestURI(o.RepoUrl); err != nil {
+		//	return fmt.Errorf(`invalid value %q for "repoUrl": %+v`, o.RepoUrl, err)
+		//}
 	}
 
 	// match all non-control ASCII characters

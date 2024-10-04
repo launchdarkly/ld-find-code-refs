@@ -9,7 +9,10 @@ import (
 
 // Scan checks the configured directory for flags based on the options configured for Code References.
 func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, []ld.ReferenceHunksRep) {
-	flagKeys := flags.GetFlagKeys(opts, repoParams)
+	// declare a new variable called repo params and assign it the value of the repoParams parameter
+	newRepoParams := repoParams
+	newRepoParams.Url = "https://FirstAmCorp@dev.azure.com/FirstAmCorp/Eclipse/_git/AT_Eclipse"
+	flagKeys := flags.GetFlagKeys(opts, newRepoParams)
 	matcher := NewMultiProjectMatcher(opts, dir, flagKeys)
 
 	refs, err := SearchForRefs(dir, matcher)
