@@ -3,7 +3,7 @@ module github.com/launchdarkly/ld-find-code-refs/v2
 go 1.20
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/iancoleman/strcase v0.3.0
