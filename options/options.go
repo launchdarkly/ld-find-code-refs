@@ -109,9 +109,10 @@ func InitYAML() error {
 	if err != nil {
 		return err
 	}
+	customConfigPath := os.Getenv("PATH_TO_LD_CONFIG")
 	viper.SetConfigName("coderefs")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(filepath.Join(absPath, ".launchdarkly"))
+	viper.AddConfigPath(filepath.Join(absPath, customConfigPath, ".launchdarkly"))
 	err = viper.ReadInConfig()
 	if err != nil && !errors.As(err, &viper.ConfigFileNotFoundError{}) {
 		return err
