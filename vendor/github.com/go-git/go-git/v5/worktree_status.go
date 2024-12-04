@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -429,6 +430,7 @@ func (w *Worktree) AddGlob(pattern string) error {
 // the file added is different from the index.
 // if s status is nil will skip the status check and update the index anyway
 func (w *Worktree) doAddFile(idx *index.Index, s Status, path string, ignorePattern []gitignore.Pattern) (added bool, h plumbing.Hash, err error) {
+	fmt.Println("doAddFile", path)
 	if s != nil && s.File(path).Worktree == Unmodified {
 		return false, h, nil
 	}
