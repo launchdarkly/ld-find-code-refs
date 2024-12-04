@@ -1,97 +1,42 @@
-# .github/workflows/ci.yml
-name: CI
+name: Test and Generate Docs
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: pull_request
 
 jobs:
-  go-test:
+  go-tests:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.22
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -yqq git python3-pip
-          go install github.com/jstemmer/go-junit-report@v1.0.0
-          go install github.com/kyoh86/richgo@v0.3.10
-          sudo pip install pre-commit
-      - name: Run pre-commit
-        run: |
-          pre-commit install
-          pre-commit run -a golangci-lint
-      - name: Set up Code Climate test-reporter
-        run: |
-          curl -sS -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
-      - name: Run tests
-        env:
-          CIRCLE_TEST_REPORTS: /tmp/circle-reports
-          CIRCLE_ARTIFACTS: /tmp/circle-artifacts
-        run: |
-          mkdir -p $CIRCLE_TEST_REPORTS
-          mkdir -p $CIRCLE_ARTIFACTS
-          trap "go-junit-report < $CIRCLE_ARTIFACTS/report.txt > $CIRCLE_TEST_REPORTS/junit.xml" EXIT
-          if [ -z "$DISABLE_COVERAGE" ]; then
-            go_cover_args="-covermode=atomic -coverpkg=./... -coverprofile /tmp/circle-artifacts/coverage.txt"
-          fi
-          go test -race $go_cover_args -v $(go list ./... | grep -v /vendor/) | tee >(richgo testfilter) > $CIRCLE_ARTIFACTS/report.txt
-          if [[ -z "$DISABLE_COVERAGE" && -n "$CC_TEST_REPORTER_ID" ]]; then
-            ./cc-test-reporter format-coverage $CIRCLE_ARTIFACTS/coverage.txt -t gocov --output $CIRCLE_ARTIFACTS/coverage.json
-            ./cc-test-reporter upload-coverage --input $CIRCLE_ARTIFACTS/coverage.json
-          fi
-      - name: Generate coverage report
-        if: always()
-        run: |
-          if [ -z "$DISABLE_COVERAGE" ]; then
-            go tool cover -html=$CIRCLE_ARTIFACTS/coverage.txt -o $CIRCLE_ARTIFACTS/coverage.html
-          fi
-      - name: Store test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: /tmp/circle-reports
-      - name: Store artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifacts
-          path: /tmp/circle-artifacts
 
-  test-publish:
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed
         with:
-          go-version: 1.22
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install rpm
-      - name: Run test-publish
-        run: make test-publish
+          go-version-file: go.mod
 
-  github-actions-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        with:
+          python-version: '3.x'
+        
+      - name: Install pre-commit
         run: |
-          sudo apt-get update
-          sudo apt-get install python3-pip
-          sudo pip install pre-commit
-          npm install action-docs
-      - name: Run pre-commit
+          python -m pip install --upgrade pip
+          pip install pre-commit
+
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files
+
+      - name: Run tests with gotestsum
         run: |
-          pre-commit install
-          pre-commit run -a github-action-docs
+          mkdir -p ${{ github.workspace }}/artifacts
+          mkdir -p ${{ github.workspace }}/reports
+          GONFALON_MODE=test \
+          gotestsum --packages="./..." \
+            --junitfile ${{ github.workspace }}/reports/go-test_go_tests.xml \
+            --jsonfile ${{ github.workspace }}/artifacts/go-test_go_tests.json \
+            --rerun-fails=2 \
+            --rerun-fails-max-failures=10 \
+            --rerun-fails-report ${{ github.workspace }}/artifacts/rerun_tests_go_tests.txt \
+            -- -p=1
