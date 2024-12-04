@@ -38,5 +38,4 @@ jobs:
             --jsonfile ${{ github.workspace }}/artifacts/go-test_go_tests.json \
             --rerun-fails=2 \
             --rerun-fails-max-failures=10 \
-            --rerun-fails-report ${{ github.workspace }}/artifacts/rerun_tests_go_tests.txt \
-            -- -p=1
+            --rerun-fails-report ${{ github.workspace }}/artifacts/rerun_tests_go_tests.txt
