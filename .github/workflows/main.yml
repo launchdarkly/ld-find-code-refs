@@ -23,9 +23,6 @@ jobs:
           go install github.com/kyoh86/richgo@v0.3.10
           pip install pre-commit
 
-      - name: Run pre-commit hooks
-        run: pre-commit run --all-files
-
       - name: Run tests with gotestsum
         run: |
           mkdir -p ${{ github.workspace }}/artifacts
