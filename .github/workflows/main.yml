@@ -32,7 +32,6 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/artifacts
           mkdir -p ${{ github.workspace }}/reports
-          GONFALON_MODE=test \
           gotestsum --packages="./..." \
             --junitfile ${{ github.workspace }}/reports/go-test_go_tests.xml \
             --jsonfile ${{ github.workspace }}/artifacts/go-test_go_tests.json \
