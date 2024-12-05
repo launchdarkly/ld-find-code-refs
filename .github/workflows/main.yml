@@ -60,6 +60,3 @@ jobs:
 
       - name: Run pre-commit hooks
         run: pre-commit run -a github-action-docs
-
-      - name: Generate docs
-        run: action-docs generate
