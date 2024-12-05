@@ -1,7 +1,6 @@
 package git
 
 import (
-	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -175,7 +174,6 @@ func copyFile(t *testing.T, src, dst string) {
 }
 
 func createRepoFile(t *testing.T, path string, content *string) {
-	require.NoError(t, errors.New(repoPath(path)))
 	flagFile, err := os.Create(repoPath(path))
 	require.NoError(t, err)
 	if content != nil {
