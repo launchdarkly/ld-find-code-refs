@@ -27,7 +27,7 @@ jobs:
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8 # v6.1.1
         with:
-          version: v6.1.1
+          version: v1.62.2
 
       - name: Run golangci-lint
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
