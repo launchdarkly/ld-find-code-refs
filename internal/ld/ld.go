@@ -77,8 +77,8 @@ func IsTransient(err error) bool {
 // Fallback to default backoff if header can't be parsed
 // https://apidocs.launchdarkly.com/#section/Overview/Rate-limiting
 // Method is curried in order to avoid stubbing the time package and fallback Backoff in unit tests
-func RateLimitBackoff(now func() time.Time, fallbackBackoff h.Backoff) func(minDuration, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
-	return func(minDuration, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+func RateLimitBackoff(now func() time.Time, fallbackBackoff h.Backoff) func(minDuration, max time.Duration, attemptNum int, resp *http.Response) time.Duration { //nolint:predeclared
+	return func(minDuration, max time.Duration, attemptNum int, resp *http.Response) time.Duration { //nolint:predeclared
 		if resp != nil {
 			if resp.StatusCode == http.StatusTooManyRequests {
 				if s, ok := resp.Header["X-Ratelimit-Reset"]; ok {
@@ -193,7 +193,7 @@ func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, er
 }
 
 func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
-	url := c.getPath("/flags/" + projKey)
+	url := c.getPath(fmt.Sprintf("/flags/%s", projKey))
 	req, err := h.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
