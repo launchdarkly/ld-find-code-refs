@@ -1,0 +1,35 @@
+name: Publish JUnit Tests
+description: Publishes JUnit tests to one or more sources
+inputs:
+  files:
+    required: true
+    description: The JUnit files to upload
+  name:
+    required: true
+    description: The name of the suite
+  datadog:
+    required: false
+    description: Upload to Datadog
+    default: 'true'
+  github:
+    required: false
+    description: Upload to GitHub
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Report Tests to Datadog
+      shell: bash
+      if: ${{ inputs.datadog }} == 'true'
+      run: datadog-ci junit upload --service ${{ inputs.name }} ${{ inputs.files }}
+
+    - name: Test Publish
+      uses: phoenix-actions/test-reporting@f957cd93fc2d848d556fa0d03c57bc79127b6b5e # v15
+      if: ${{ inputs.github }} == 'true'
+      with:
+        name: ${{ inputs.name }}
+        output-to: step-summary
+        path: ${{ inputs.files }}
+        reporter: java-junit
+        fail-on-error: 'false'
