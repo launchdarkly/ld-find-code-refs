@@ -8,7 +8,6 @@ type flag struct {
 }
 
 const (
-	defaultFlagValue        = 2  // Descriptive constant for default flag value
 	anotherDefaultFlagValue = 10 // Descriptive constant for another default flag value
 )
 
