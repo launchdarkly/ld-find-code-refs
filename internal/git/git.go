@@ -21,6 +21,11 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 )
 
+const (
+	// ... other constants ...
+	millisecondsInSecond = 1000 // Descriptive constant for milliseconds conversion
+)
+
 type Client struct {
 	workspace    string
 	GitBranch    string
@@ -327,7 +332,7 @@ func makeExtinctionRepFromCommit(projectKey, flagKey string, commit *object.Comm
 	return ld.ExtinctionRep{
 		Revision: commit.Hash.String(),
 		Message:  commit.Message,
-		Time:     commit.Author.When.Unix() * 1000,
+		Time:     commit.Author.When.Unix() * millisecondsInSecond,
 		ProjKey:  projectKey,
 		FlagKey:  flagKey,
 	}
