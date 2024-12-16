@@ -68,13 +68,6 @@ jobs:
       - name: Install action-docs
         run: npm install action-docs
 
-      - name: Install Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         with:
-          python-version: '3.x'
-
-      - name: Install pre-commit
-        run: pip install pre-commit
-
-      - name: Run pre-commit hooks
-        run: pre-commit run -a github-action-docs
+          extra_args: github-action-docs --all-files
