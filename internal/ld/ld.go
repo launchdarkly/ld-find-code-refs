@@ -451,9 +451,6 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	// Ensure the response body is closed
-	defer res.Body.Close()
-
 	// Check for all general status codes returned by the code references API, attempting to deconstruct LD error messages, if possible.
 	switch res.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
