@@ -38,6 +38,16 @@ jobs:
             --rerun-fails-max-failures=10 \
             --rerun-fails-report ${{ github.workspace }}/artifacts/rerun_tests_go_tests.txt
           
+      - name: Publish JUnit Tests
+        uses: ./.github/actions/publish-junit
+        env:
+          DD_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+        with:
+          files: ${{ github.workspace }}/reports/go-test_go_tests.xml
+          name: find-code-references-in-pull-request
+          datadog: 'true'
+          github: 'true'
+
   github-actions-docs:
     runs-on: ubuntu-latest
     steps:
