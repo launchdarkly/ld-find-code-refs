@@ -17,6 +17,7 @@ Add the following snippet to the script section of your `bitbucket-pipelines.yml
     # LD_IGNORE_SERVICE_ERRORS "<boolean>" # Optional.
     # LD_LOOKBACK "<integer>" # Optional.
     # LD_ALLOW_TAGS "<boolean>" #Optional.
+    # LD_SUBDIRECTORY "<string>" # Optional.
 ```
 
 ## Variables
