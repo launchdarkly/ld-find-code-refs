@@ -227,7 +227,7 @@ type CommitData struct {
 }
 
 // FindExtinctions searches commit history for flags that had references removed recently
-func (c Client) FindExtinctions(project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
+func (c *Client) FindExtinctions(project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
 	commits, err := getCommits(c.workspace, lookback)
 	if err != nil {
 		return nil, err
@@ -342,9 +342,8 @@ func getCommits(workspace string, lookback int) ([]CommitData, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	commits := []CommitData{}
-	for i := 0; i < lookback; i++ {
+	for range make([]struct{}, lookback) {
 		commit, err := logResult.Next()
 		if err != nil {
 			// reached end of commit tree

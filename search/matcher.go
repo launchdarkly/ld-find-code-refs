@@ -9,6 +9,11 @@ import (
 	"github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
 
+const (
+	// ... other constants ...
+	bufferGrowthFactor = 2 // Descriptive constant for buffer growth
+)
+
 type Matcher struct {
 	Elements []ElementMatcher
 	ctxLines int
@@ -83,7 +88,7 @@ func buildElementPatterns(flags []string, delimiters string) map[string][]string
 			for _, left := range delimiters {
 				for _, right := range delimiters {
 					var sb strings.Builder
-					sb.Grow(len(flag) + 2)
+					sb.Grow(len(flag) + bufferGrowthFactor)
 					sb.WriteRune(left)
 					sb.WriteString(flag)
 					sb.WriteRune(right)

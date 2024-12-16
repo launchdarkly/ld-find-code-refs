@@ -14,6 +14,10 @@ import (
 	o "github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
 
+const (
+	millisecondsInSecond = 1000 // Descriptive constant for milliseconds conversion
+)
+
 func main() {
 	log.Init(false)
 	dir := os.Getenv("GITHUB_WORKSPACE")
@@ -55,7 +59,7 @@ func mergeGithubOptions(opts o.Options) (o.Options, error) {
 	if event != nil {
 		repoUrl = event.Repo.Url
 		defaultBranch = event.Repo.DefaultBranch
-		updateSequenceId = int(time.Now().Unix() * 1000) // seconds to ms
+		updateSequenceId = int(time.Now().Unix() * millisecondsInSecond) // seconds to ms
 	}
 
 	opts.RepoType = "github"

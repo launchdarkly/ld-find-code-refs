@@ -7,6 +7,11 @@ type flag struct {
 	usage        string
 }
 
+const (
+	defaultFlagValue = 2 // Descriptive constant for default flag value
+	anotherDefaultFlagValue = 10 // Descriptive constant for another default flag value
+)
+
 // Options that are available as command line flags
 var flags = []flag{
 	{
@@ -45,7 +50,7 @@ Allowed template variables: 'branchName', 'sha'. If "commitUrlTemplate" is not p
 	{
 		name:         "contextLines",
 		short:        "C",
-		defaultValue: 2,
+		defaultValue: anotherDefaultFlagValue,
 		usage: `The number of context lines to send to LaunchDarkly. If < 0, no
 source code will be sent to LaunchDarkly. If 0, only the lines containing
 flag references will be sent. If > 0, will send that number of context
