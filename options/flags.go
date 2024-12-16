@@ -99,7 +99,7 @@ LaunchDarkly API is unreachable or returns an unexpected response.`,
 	{
 		name:         "lookback",
 		short:        "l",
-		defaultValue: 10,
+		defaultValue: 10, //nolint:gomnd
 		usage: `Sets the number of git commits to search in history for
 whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time.`,
 	},

@@ -109,7 +109,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 	if options.RetryMax != nil && *options.RetryMax >= 0 {
 		client.RetryMax = *options.RetryMax
 	}
-	client.Backoff = RateLimitBackoff(time.Now, h.LinearJitterBackoff)
+	client.Backoff = RateLimitBackoff(time.Now, h.LinearJitterBackoff) //nolint:bodyclose
 
 	return ApiClient{
 		httpClient: client,
@@ -193,7 +193,7 @@ func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, er
 }
 
 func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
-	url := c.getPath(fmt.Sprintf("/flags/%s", projKey))
+	url := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
 	req, err := h.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
