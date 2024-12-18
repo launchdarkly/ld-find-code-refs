@@ -1,6 +1,8 @@
 package search
 
 import (
+	"path/filepath"
+
 	"github.com/launchdarkly/ld-find-code-refs/v2/flags"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
@@ -12,7 +14,12 @@ func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, 
 	flagKeys := flags.GetFlagKeys(opts, repoParams)
 	matcher := NewMultiProjectMatcher(opts, dir, flagKeys)
 
-	refs, err := SearchForRefs(dir, matcher)
+	searchDir := dir
+	if opts.Subdirectory != "" {
+		searchDir = filepath.Join(dir, opts.Subdirectory)
+	}
+
+	refs, err := SearchForRefs(searchDir, matcher)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}

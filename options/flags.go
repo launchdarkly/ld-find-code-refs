@@ -143,6 +143,14 @@ LaunchDarkly UI. Acceptable values: bitbucket|custom|github|gitlab.`,
 		usage:        `Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.`,
 	},
 	{
+		name:         "subdirectory",
+		defaultValue: "",
+		usage: `If the .launchdarkly/coderefs.yaml file is not in the root of
+the repository, provide the path to the subdirectory containing the configuration,
+relative to the root. Code references will only run on this provided subdirectory.
+This allows a monorepo to have multiple configuration files, one per subdirectory.`,
+	},
+	{
 		name:         "updateSequenceId",
 		short:        "s",
 		defaultValue: -1,
