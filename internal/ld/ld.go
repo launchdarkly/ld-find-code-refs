@@ -457,6 +457,9 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 		return res, nil
 	default:
 		resBytes, err := io.ReadAll(res.Body)
+		if res != nil {
+			defer res.Body.Close()
+		}
 		if err != nil {
 			return nil, err
 		}
