@@ -44,7 +44,7 @@ Allowed template variables: 'branchName', 'sha'. If "commitUrlTemplate" is not p
 	{
 		name:         "contextLines",
 		short:        "C",
-		defaultValue: 10,
+		defaultValue: 2, //nolint:mnd
 		usage: `The number of context lines to send to LaunchDarkly. If < 0, no
 source code will be sent to LaunchDarkly. If 0, only the lines containing
 flag references will be sent. If > 0, will send that number of context
