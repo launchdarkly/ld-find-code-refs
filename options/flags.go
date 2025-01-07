@@ -45,7 +45,7 @@ Allowed template variables: 'branchName', 'sha'. If "commitUrlTemplate" is not p
 	{
 		name:         "contextLines",
 		short:        "C",
-		defaultValue: 2,
+		defaultValue: 2, //nolint:mnd
 		usage: `The number of context lines to send to LaunchDarkly. If < 0, no
 source code will be sent to LaunchDarkly. If 0, only the lines containing
 flag references will be sent. If > 0, will send that number of context
@@ -94,7 +94,7 @@ LaunchDarkly API is unreachable or returns an unexpected response.`,
 	{
 		name:         "lookback",
 		short:        "l",
-		defaultValue: 10,
+		defaultValue: 10, //nolint:mnd
 		usage: `Sets the number of git commits to search in history for
 whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time.`,
 	},

@@ -44,6 +44,7 @@ const (
 	apiVersionHeader = "LD-API-Version"
 	v2ApiPath        = "/api/v2"
 	reposPath        = "/code-refs/repositories"
+	shortShaLength   = 7 // Descriptive constant for SHA length
 )
 
 type ConfigurationError struct {
@@ -76,8 +77,8 @@ func IsTransient(err error) bool {
 // Fallback to default backoff if header can't be parsed
 // https://apidocs.launchdarkly.com/#section/Overview/Rate-limiting
 // Method is curried in order to avoid stubbing the time package and fallback Backoff in unit tests
-func RateLimitBackoff(now func() time.Time, fallbackBackoff h.Backoff) func(time.Duration, time.Duration, int, *http.Response) time.Duration {
-	return func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+func RateLimitBackoff(now func() time.Time, fallbackBackoff h.Backoff) func(minDuration, _ time.Duration, attemptNum int, resp *http.Response) time.Duration {
+	return func(minDuration, max2 time.Duration, attemptNum int, resp *http.Response) time.Duration {
 		if resp != nil {
 			if resp.StatusCode == http.StatusTooManyRequests {
 				if s, ok := resp.Header["X-Ratelimit-Reset"]; ok {
@@ -95,7 +96,7 @@ func RateLimitBackoff(now func() time.Time, fallbackBackoff h.Backoff) func(time
 			}
 		}
 
-		return fallbackBackoff(min, max, attemptNum, resp)
+		return fallbackBackoff(minDuration, max2, attemptNum, resp)
 	}
 }
 
@@ -108,7 +109,7 @@ func InitApiClient(options ApiOptions) ApiClient {
 	if options.RetryMax != nil && *options.RetryMax >= 0 {
 		client.RetryMax = *options.RetryMax
 	}
-	client.Backoff = RateLimitBackoff(time.Now, h.LinearJitterBackoff)
+	client.Backoff = RateLimitBackoff(time.Now, h.LinearJitterBackoff) //nolint:bodyclose
 
 	return ApiClient{
 		httpClient: client,
@@ -192,7 +193,7 @@ func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, er
 }
 
 func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
-	url := c.getPath(fmt.Sprintf("/flags/%s", projKey))
+	url := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
 	req, err := h.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -441,7 +442,7 @@ type ldErrorResponse struct {
 
 func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", c.Options.ApiKey)
-	req.Header.Set(apiVersionHeader, apiVersion)
+	req.Header.Set(apiVersionHeader, apiVersion) //nolint:canonicalheader
 	req.Header.Set("User-Agent", c.Options.UserAgent)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-Length", strconv.FormatInt(req.ContentLength, 10))
@@ -550,8 +551,8 @@ func (b BranchRep) TotalHunkCount() int {
 func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, err error) {
 	// Try to create a filename with a shortened sha, but if the sha is too short for some unexpected reason, use the branch name instead
 	var tag string
-	if len(sha) >= 7 {
-		tag = sha[:7]
+	if len(sha) >= shortShaLength {
+		tag = sha[:shortShaLength]
 	} else {
 		tag = b.Name
 	}
@@ -577,7 +578,7 @@ func (b BranchRep) WriteToCSV(outDir, projKey, repo, sha string) (path string, e
 	// sort csv by flag key
 	sort.Slice(records, func(i, j int) bool {
 		// sort by flagKey -> path -> startingLineNumber
-		for k := 0; k < 3; k++ {
+		for k := range [3]int{} {
 			if records[i][k] != records[j][k] {
 				return records[i][k] < records[j][k]
 			}
