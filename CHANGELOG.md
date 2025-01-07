@@ -2,6 +2,13 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.0] - 2024-12-18
+### Added:
+- `subdirectory` option to set path to `.launchdarkly/coderefs.yaml` config file if not located in the root, in order to support monorepo subdirectories.
+
+### Changed:
+- Updated dependencies
+
 ## [2.12.0] - 2024-03-28
 ### Added:
 - Enable scanning of github workflow files [#441](https://github.com/launchdarkly/ld-find-code-refs/pull/441)

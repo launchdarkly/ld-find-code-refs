@@ -57,6 +57,7 @@ type Options struct {
 	RepoType            string `mapstructure:"repoType"`
 	RepoUrl             string `mapstructure:"repoUrl"`
 	Revision            string `mapstructure:"revision"`
+	Subdirectory        string `mapstructure:"subdirectory"`
 	UserAgent           string `mapstructure:"userAgent"`
 	ContextLines        int    `mapstructure:"contextLines"`
 	Lookback            int    `mapstructure:"lookback"`
@@ -109,9 +110,11 @@ func InitYAML() error {
 	if err != nil {
 		return err
 	}
+	subdirectoryPath := viper.GetString("subdirectory")
 	viper.SetConfigName("coderefs")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(filepath.Join(absPath, ".launchdarkly"))
+	configPath := filepath.Join(absPath, subdirectoryPath, ".launchdarkly")
+	viper.AddConfigPath(configPath)
 	err = viper.ReadInConfig()
 	if err != nil && !errors.As(err, &viper.ConfigFileNotFoundError{}) {
 		return err
