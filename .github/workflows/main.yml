@@ -29,11 +29,6 @@ jobs:
         with:
           version: v1.62.2
 
-      - name: Run golangci-lint
-        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
-        with:
-          extra_args: golangci-lint --all-files
-
       - name: Run tests with gotestsum
         run: |
           mkdir -p ${{ github.workspace }}/artifacts
