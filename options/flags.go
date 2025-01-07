@@ -7,7 +7,6 @@ type flag struct {
 	usage        string
 }
 
-
 // Options that are available as command line flags
 var flags = []flag{
 	{
