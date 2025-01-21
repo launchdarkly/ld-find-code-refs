@@ -3,10 +3,10 @@ package search
 import (
 	"path/filepath"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/flags"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/v2/options"
+	"github.com/bucketeer-io/code-refs/flags"
+	"github.com/bucketeer-io/code-refs/internal/ld"
+	"github.com/bucketeer-io/code-refs/internal/log"
+	"github.com/bucketeer-io/code-refs/options"
 )
 
 // Scan checks the configured directory for flags based on the options configured for Code References.

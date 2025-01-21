@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/coderefs"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/v2/options"
+	"github.com/bucketeer-io/code-refs/coderefs"
+	"github.com/bucketeer-io/code-refs/internal/log"
+	o "github.com/bucketeer-io/code-refs/options"
 )
 
 const (

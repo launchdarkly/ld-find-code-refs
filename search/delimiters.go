@@ -1,8 +1,8 @@
 package search
 
 import (
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/v2/options"
+	"github.com/bucketeer-io/code-refs/internal/helpers"
+	"github.com/bucketeer-io/code-refs/options"
 )
 
 // Get a list of delimiters to use for flag key matching

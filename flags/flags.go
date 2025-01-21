@@ -3,10 +3,10 @@ package flags
 import (
 	"fmt"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/v2/options"
+	"github.com/bucketeer-io/code-refs/internal/helpers"
+	"github.com/bucketeer-io/code-refs/internal/ld"
+	"github.com/bucketeer-io/code-refs/internal/log"
+	"github.com/bucketeer-io/code-refs/options"
 )
 
 const (

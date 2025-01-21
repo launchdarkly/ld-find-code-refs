@@ -1,7 +1,7 @@
 package search
 
 import (
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
+	"github.com/bucketeer-io/code-refs/internal/helpers"
 	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 )
 

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
+	"github.com/bucketeer-io/code-refs/internal/validation"
 )
 
 const (

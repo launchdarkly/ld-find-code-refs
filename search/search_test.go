@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/bucketeer-io/code-refs/internal/ld"
+	"github.com/bucketeer-io/code-refs/internal/log"
 	"github.com/stretchr/testify/require"
 )
 

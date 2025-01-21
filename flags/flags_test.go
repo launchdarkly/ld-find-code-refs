@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/bucketeer-io/code-refs/internal/log"
 )
 
 func init() {

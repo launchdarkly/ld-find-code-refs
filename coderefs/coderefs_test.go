@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
+	"github.com/bucketeer-io/code-refs/internal/ld"
+	"github.com/bucketeer-io/code-refs/internal/log"
 )
 
 func init() {

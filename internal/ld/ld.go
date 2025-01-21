@@ -20,10 +20,10 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
 
+	"github.com/bucketeer-io/code-refs/internal/log"
+	"github.com/bucketeer-io/code-refs/internal/validation"
 	ldapi "github.com/launchdarkly/api-client-go/v15"
 	jsonpatch "github.com/launchdarkly/json-patch"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
 )
 
 type ApiClient struct {

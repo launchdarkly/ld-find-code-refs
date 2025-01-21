@@ -1,7 +1,8 @@
-module github.com/launchdarkly/ld-find-code-refs/v2
+module github.com/bucketeer-io/code-refs
 
-go 1.22
-toolchain go1.22.5
+go 1.22.0
+
+toolchain go1.22.8
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.7.1

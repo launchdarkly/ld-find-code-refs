@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
-	o "github.com/launchdarkly/ld-find-code-refs/v2/options"
+	"github.com/bucketeer-io/code-refs/internal/log"
+	o "github.com/bucketeer-io/code-refs/options"
 )
 
 var allNamingConventions = []o.Alias{

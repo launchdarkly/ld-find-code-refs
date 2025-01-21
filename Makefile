@@ -1,4 +1,4 @@
-# Note: These commands pertain to the development of ld-find-code-refs.
+# Note: These commands pertain to the development of bucketeer-find-code-refs.
 #       They are not intended for use by the end-users of this program.
 SHELL=/bin/bash
 GORELEASER_VERSION=v1.20.0
@@ -23,19 +23,19 @@ github-action-docs:
 BUILD_FLAGS = -ldflags="-s -w"
 
 compile-macos-binary:
-	GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o out/ld-find-code-refs ./cmd/ld-find-code-refs
+	GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o out/bucketeer-find-code-refs ./cmd/bucketeer-find-code-refs
 
 compile-windows-binary:
-	GOOS=windows GOARCH=amd64 go build ${BUILD_FLAGS} -o out/ld-find-code-refs.exe ./cmd/ld-find-code-refs
+	GOOS=windows GOARCH=amd64 go build ${BUILD_FLAGS} -o out/bucketeer-find-code-refs.exe ./cmd/bucketeer-find-code-refs
 
 compile-linux-binary:
-	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/cmd/ld-find-code-refs ./cmd/ld-find-code-refs
+	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/cmd/bucketeer-find-code-refs ./cmd/bucketeer-find-code-refs
 
 compile-github-actions-binary:
-	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/github-actions/ld-find-code-refs-github-action ./build/package/github-actions
+	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/github-actions/bucketeer-find-code-refs-github-action ./build/package/github-actions
 
 compile-bitbucket-pipelines-binary:
-	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline ./build/package/bitbucket-pipelines
+	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/bitbucket-pipelines/bucketeer-find-code-refs-bitbucket-pipeline ./build/package/bitbucket-pipelines
 
 # Get the lines added to the most recent changelog update (minus the first 2 lines)
 RELEASE_NOTES=<(GIT_EXTERNAL_DIFF='bash -c "diff --unchanged-line-format=\"\" $$2 $$5" || true' git log --ext-diff -1 --pretty= -p CHANGELOG.md)
@@ -68,9 +68,9 @@ publish-all: publish-release-circle-orb
 
 clean:
 	rm -rf out/
-	rm -f build/pacakge/cmd/ld-find-code-refs
-	rm -f build/package/github-actions/ld-find-code-refs-github-action
-	rm -f build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
+	rm -f build/pacakge/cmd/bucketeer-find-code-refs
+	rm -f build/package/github-actions/bucketeer-find-code-refs-github-action
+	rm -f build/package/bitbucket-pipelines/bucketeer-find-code-refs-bitbucket-pipeline
 
 RELEASE_CMD=curl -sL https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(GORELEASER_VERSION) GITHUB_TOKEN=$(GITHUB_TOKEN) bash -s -- --clean --release-notes $(RELEASE_NOTES)
 

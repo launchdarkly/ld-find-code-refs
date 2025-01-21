@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
-	"github.com/launchdarkly/ld-find-code-refs/v2/options"
-	"github.com/launchdarkly/ld-find-code-refs/v2/search"
+	"github.com/bucketeer-io/code-refs/internal/ld"
+	"github.com/bucketeer-io/code-refs/internal/log"
+	"github.com/bucketeer-io/code-refs/options"
+	"github.com/bucketeer-io/code-refs/search"
 )
 
 const (

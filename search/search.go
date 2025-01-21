@@ -7,9 +7,9 @@ import (
 	"sync"
 	"unicode/utf8"
 
+	"github.com/bucketeer-io/code-refs/internal/helpers"
+	"github.com/bucketeer-io/code-refs/internal/ld"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
-	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
 )
 
 const (
