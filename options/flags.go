@@ -10,10 +10,10 @@ type flag struct {
 // Options that are available as command line flags
 var flags = []flag{
 	{
-		name:         "accessToken",
-		short:        "t",
+		name:         "apiKey",
+		short:        "k",
 		defaultValue: "",
-		usage:        "LaunchDarkly personal access token with write-level access.",
+		usage:        "Bucketeer API key with write-level access.",
 	},
 	{
 		name:         "allowTags",
@@ -23,8 +23,8 @@ var flags = []flag{
 	{
 		name:         "baseUri",
 		short:        "U",
-		defaultValue: "https://app.launchdarkly.com",
-		usage:        "LaunchDarkly base URI.",
+		defaultValue: "https://bucketeer.jp",
+		usage:        "Bucketeer base URI.",
 	},
 	{
 		name:         "branch",
@@ -37,17 +37,17 @@ leave the repository in a detached HEAD state.`,
 	{
 		name:         "commitUrlTemplate",
 		defaultValue: "",
-		usage: `If provided, LaunchDarkly will attempt to generate links to
+		usage: `If provided, Bucketeer will attempt to generate links to
 your VCS service provider per commit.
-Example: https://github.com/launchdarkly/ld-find-code-refs/commit/${sha}.
-Allowed template variables: 'branchName', 'sha'. If "commitUrlTemplate" is not provided, but "repoUrl" is provided and "repoType" is not custom, LaunchDarkly will attempt to automatically generate source code links for the given "repoType".`,
+Example: https://github.com/bucketeer/bucketeer-find-code-refs/commit/${sha}.
+Allowed template variables: 'branchName', 'sha'. If "commitUrlTemplate" is not provided, but "repoUrl" is provided and "repoType" is not custom, Bucketeer will attempt to automatically generate source code links for the given "repoType".`,
 	},
 	{
 		name:         "contextLines",
 		short:        "C",
-		defaultValue: 2, //nolint:mnd
-		usage: `The number of context lines to send to LaunchDarkly. If < 0, no
-source code will be sent to LaunchDarkly. If 0, only the lines containing
+		defaultValue: 2,
+		usage: `The number of context lines to send to Bucketeer. If < 0, no
+source code will be sent to Bucketeer. If 0, only the lines containing
 flag references will be sent. If > 0, will send that number of context
 lines above and below the flag reference. A maximum of 5 context lines
 may be provided.`,
@@ -61,7 +61,7 @@ may be provided.`,
 		name:         "defaultBranch",
 		short:        "B",
 		defaultValue: "main",
-		usage: `The default branch. The LaunchDarkly UI will default to this branch.
+		usage: `The default branch. The Bucketeer UI will default to this branch.
 If not provided, will fallback to 'main'.`,
 	},
 	{
@@ -74,27 +74,33 @@ If not provided, will fallback to 'main'.`,
 		name:         "dryRun",
 		defaultValue: false,
 		usage: `If enabled, the scanner will run without sending code references to
-LaunchDarkly. Combine with the outDir option to output code references to a CSV.`,
+Bucketeer. Combine with the outDir option to output code references to a CSV.`,
+	},
+	{
+		name:         "environmentId",
+		short:        "e",
+		defaultValue: "",
+		usage:        `Bucketeer environment ID. The API key must have access to this environment.`,
 	},
 	{
 		name:         "hunkUrlTemplate",
 		defaultValue: "",
-		usage: `If provided, LaunchDarkly will attempt to generate links to 
+		usage: `If provided, Bucketeer will attempt to generate links to 
 your VCS service provider per code reference. 
-Example: https://github.com/launchdarkly/ld-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}.
-Allowed template variables: 'sha', 'filePath', 'lineNumber'. If "hunkUrlTemplate" is not provided, but "repoUrl" is provided and "repoType" is not custom, LaunchDarkly will attempt to automatically generate source code links for the given "repoType".`,
+Example: https://github.com/bucketeer/bucketeer-find-code-refs/blob/${sha}/${filePath}#L${lineNumber}.
+Allowed template variables: 'sha', 'filePath', 'lineNumber'. If "hunkUrlTemplate" is not provided, but "repoUrl" is provided and "repoType" is not custom, Bucketeer will attempt to automatically generate source code links for the given "repoType".`,
 	},
 	{
 		name:         "ignoreServiceErrors",
 		short:        "i",
 		defaultValue: false,
 		usage: `If enabled, the scanner will terminate with exit code 0 when the
-LaunchDarkly API is unreachable or returns an unexpected response.`,
+Bucketeer API is unreachable or returns an unexpected response.`,
 	},
 	{
 		name:         "lookback",
 		short:        "l",
-		defaultValue: 10, //nolint:mnd
+		defaultValue: 10,
 		usage: `Sets the number of git commits to search in history for
 whether a feature flag was removed from code. May be set to 0 to disabled this feature. Setting this option to a high value will increase search time.`,
 	},
@@ -106,21 +112,15 @@ whether a feature flag was removed from code. May be set to 0 to disabled this f
 the project to this directory.`,
 	},
 	{
-		name:         "projKey",
-		short:        "p",
-		defaultValue: "",
-		usage:        `LaunchDarkly project key. Found under Account Settings -> Projects in the LaunchDarkly dashboard. Cannot be combined with "projects" block in configuration file.`,
-	},
-	{
 		name:         "prune",
 		defaultValue: true,
-		usage:        `If enabled, branches that are not found in the remote repository will be deleted from LaunchDarkly.`,
+		usage:        `If enabled, branches that are not found in the remote repository will be deleted from Bucketeer.`,
 	},
 	{
 		name:         "repoName",
 		short:        "r",
 		defaultValue: "",
-		usage: `Repository name. Will be displayed in LaunchDarkly. Case insensitive.
+		usage: `Repository name. Will be displayed in Bucketeer. Case insensitive.
 Repository names must only contain letters, numbers, '.', '_' or '-'."`,
 	},
 	{
@@ -128,13 +128,13 @@ Repository names must only contain letters, numbers, '.', '_' or '-'."`,
 		short:        "T",
 		defaultValue: "custom",
 		usage: `The repo service provider. Used to correctly categorize repositories in the
-LaunchDarkly UI. Acceptable values: bitbucket|custom|github|gitlab.`,
+Bucketeer UI. Acceptable values: bitbucket|custom|github|gitlab.`,
 	},
 	{
 		name:         "repoUrl",
 		short:        "u",
 		defaultValue: "",
-		usage:        `The URL for the repository. If provided and "repoType" is not custom, LaunchDarkly will attempt to automatically generate source code links for the given "repoType".`,
+		usage:        `The URL for the repository. If provided and "repoType" is not custom, Bucketeer will attempt to automatically generate source code links for the given "repoType".`,
 	},
 	{
 		name:         "revision",
@@ -145,7 +145,7 @@ LaunchDarkly UI. Acceptable values: bitbucket|custom|github|gitlab.`,
 	{
 		name:         "subdirectory",
 		defaultValue: "",
-		usage: `If the .launchdarkly/coderefs.yaml file is not in the root of
+		usage: `If the .bucketeer/coderefs.yaml file is not in the root of
 the repository, provide the path to the subdirectory containing the configuration,
 relative to the root. Code references will only run on this provided subdirectory.
 This allows a monorepo to have multiple configuration files, one per subdirectory.`,

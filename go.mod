@@ -20,7 +20,10 @@ require (
 	golang.org/x/tools v0.28.0
 )
 
-require github.com/launchdarkly/api-client-go/v15 v15.1.0
+require (
+	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/launchdarkly/api-client-go/v15 v15.1.0
+)
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

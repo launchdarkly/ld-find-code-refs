@@ -7,7 +7,7 @@ import (
 )
 
 func GetUserAgent(u string) string {
-	userAgent := "LDFindCodeRefs/" + version.Version
+	userAgent := "BucketeerFindCodeRefs/" + version.Version
 	if u != "" {
 		userAgent = fmt.Sprintf("%s (CI %s)", userAgent, u)
 	}

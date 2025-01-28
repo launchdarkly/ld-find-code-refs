@@ -7,8 +7,8 @@ import (
 	"sync"
 	"unicode/utf8"
 
+	"github.com/bucketeer-io/code-refs/internal/bucketeer"
 	"github.com/bucketeer-io/code-refs/internal/helpers"
-	"github.com/bucketeer-io/code-refs/internal/ld"
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
@@ -41,7 +41,7 @@ type file struct {
 }
 
 // hunkForLine returns a matching code reference for a given flag key on a line
-func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher) *ld.HunkRep {
+func (f file) hunkForLine(flagKey string, lineNum int, matcher Matcher) *bucketeer.HunkRep {
 	line := f.lines[lineNum]
 	ctxLines := matcher.ctxLines
 
@@ -72,8 +72,7 @@ func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher)
 	lines := strings.Join(hunkLines, "\n")
 	contentHash := getContentHash(lines)
 
-	ret := ld.HunkRep{
-		ProjKey:            projKey,
+	ret := bucketeer.HunkRep{
 		FlagKey:            flagKey,
 		StartingLineNumber: startingLineNum + 1,
 		Lines:              lines,
@@ -84,10 +83,10 @@ func (f file) hunkForLine(projKey, flagKey string, lineNum int, matcher Matcher)
 }
 
 // aggregateHunksForFlag finds all references in a file, and combines matches if their context lines overlap
-func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, lineNumbers []int) []ld.HunkRep {
-	var hunksForFlag []ld.HunkRep
+func (f file) aggregateHunksForFlag(flagKey string, matcher Matcher, lineNumbers []int) []bucketeer.HunkRep {
+	var hunksForFlag []bucketeer.HunkRep
 	for _, lineNumber := range lineNumbers {
-		match := f.hunkForLine(projKey, flagKey, lineNumber, matcher)
+		match := f.hunkForLine(flagKey, lineNumber, matcher)
 		if match != nil {
 			lastHunkIdx := len(hunksForFlag) - 1
 			// If the previous hunk overlaps or is adjacent to the current hunk, merge them together
@@ -101,28 +100,23 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 	return hunksForFlag
 }
 
-func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
-	hunks := make([]ld.HunkRep, 0)
-	filteredMatchers := make([]ElementMatcher, 0)
-	for _, elementSearch := range matcher.Elements {
-		if elementSearch.Dir != "" {
-			matchDir := strings.HasPrefix(f.path, elementSearch.Dir)
-			if !matchDir {
-				continue
-			}
+func (f file) toHunks(matcher Matcher) *bucketeer.ReferenceHunksRep {
+	hunks := make([]bucketeer.HunkRep, 0)
+	elementSearch := matcher.Element
+	if elementSearch.Dir != "" {
+		matchDir := strings.HasPrefix(f.path, elementSearch.Dir)
+		if !matchDir {
+			return nil
 		}
-		filteredMatchers = append(filteredMatchers, elementSearch)
 	}
-	for _, elementSearch := range filteredMatchers {
-		lineNumbersByElement := f.findMatchingLineNumbersByElement(elementSearch)
-		for element, lineNumbers := range lineNumbersByElement {
-			hunks = append(hunks, f.aggregateHunksForFlag(elementSearch.ProjKey, element, matcher, lineNumbers)...)
-		}
+	lineNumbersByElement := f.findMatchingLineNumbersByElement(elementSearch)
+	for element, lineNumbers := range lineNumbersByElement {
+		hunks = append(hunks, f.aggregateHunksForFlag(element, matcher, lineNumbers)...)
 	}
 	if len(hunks) == 0 {
 		return nil
 	}
-	return &ld.ReferenceHunksRep{Path: f.path, Hunks: hunks}
+	return &bucketeer.ReferenceHunksRep{Path: f.path, Hunks: hunks}
 }
 
 func (f file) findMatchingLineNumbersByElement(matcher ElementMatcher) map[string][]int {
@@ -138,7 +132,7 @@ func (f file) findMatchingLineNumbersByElement(matcher ElementMatcher) map[strin
 // mergeHunks combines the lines and aliases of two hunks together for a given file
 // if the hunks do not overlap, returns each hunk separately
 // assumes the startingLineNumber of a is less than b and there is some overlap between the two
-func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
+func mergeHunks(a, b bucketeer.HunkRep) []bucketeer.HunkRep {
 	if a.StartingLineNumber > b.StartingLineNumber {
 		a, b = b, a
 	}
@@ -149,21 +143,20 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 	overlap := a.Overlap(b)
 	// no overlap
 	if overlap < 0 || len(a.Lines) == 0 && len(b.Lines) == 0 {
-		return []ld.HunkRep{a, b}
+		return []bucketeer.HunkRep{a, b}
 	} else if overlap >= len(bLines) {
 		// subset hunk
-		return []ld.HunkRep{a}
+		return []bucketeer.HunkRep{a}
 	}
 
 	combinedLines := append(aLines, bLines[overlap:]...)
 	lines := strings.Join(combinedLines, "\n")
 	contentHash := getContentHash(lines)
 
-	return []ld.HunkRep{
+	return []bucketeer.HunkRep{
 		{
 			StartingLineNumber: a.StartingLineNumber,
 			Lines:              lines,
-			ProjKey:            a.ProjKey,
 			FlagKey:            a.FlagKey,
 			Aliases:            helpers.Dedupe(append(a.Aliases, b.Aliases...)),
 			ContentHash:        contentHash,
@@ -172,7 +165,7 @@ func mergeHunks(a, b ld.HunkRep) []ld.HunkRep {
 }
 
 // processFiles starts goroutines to process files individually. When all files have completed processing, the references channel is closed to signal completion.
-func processFiles(ctx context.Context, files <-chan file, references chan<- ld.ReferenceHunksRep, matcher Matcher) {
+func processFiles(ctx context.Context, files <-chan file, references chan<- bucketeer.ReferenceHunksRep, matcher Matcher) {
 	defer close(references)
 	w := sync.WaitGroup{}
 	for f := range files {
@@ -192,11 +185,11 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w.Wait()
 }
 
-func SearchForRefs(directory string, matcher Matcher) ([]ld.ReferenceHunksRep, error) {
+func SearchForRefs(directory string, matcher Matcher) ([]bucketeer.ReferenceHunksRep, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	files := make(chan file)
-	references := make(chan ld.ReferenceHunksRep)
+	references := make(chan bucketeer.ReferenceHunksRep)
 	// Start workers to process files asynchronously as they are written to the files channel
 	go processFiles(ctx, files, references, matcher)
 
@@ -205,7 +198,7 @@ func SearchForRefs(directory string, matcher Matcher) ([]ld.ReferenceHunksRep, e
 		return nil, err
 	}
 
-	ret := make([]ld.ReferenceHunksRep, 0, len(references))
+	ret := make([]bucketeer.ReferenceHunksRep, 0, len(references))
 
 	defer sort.SliceStable(ret, func(i, j int) bool {
 		return ret[i].Path < ret[j].Path

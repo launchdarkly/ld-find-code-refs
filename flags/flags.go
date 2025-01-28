@@ -3,8 +3,8 @@ package flags
 import (
 	"fmt"
 
+	"github.com/bucketeer-io/code-refs/internal/bucketeer"
 	"github.com/bucketeer-io/code-refs/internal/helpers"
-	"github.com/bucketeer-io/code-refs/internal/ld"
 	"github.com/bucketeer-io/code-refs/internal/log"
 	"github.com/bucketeer-io/code-refs/options"
 )
@@ -13,27 +13,28 @@ const (
 	minFlagKeyLen = 3 // Minimum flag key length helps reduce the number of false positives
 )
 
-func GetFlagKeys(opts options.Options, repoParams ld.RepoParams) map[string][]string {
-	isDryRun := opts.DryRun
-	ldApi := ld.InitApiClient(ld.ApiOptions{ApiKey: opts.AccessToken, BaseUri: opts.BaseUri, UserAgent: helpers.GetUserAgent(opts.UserAgent)})
+func GetFlagKeys(opts options.Options) []string {
+	bucketeerApi := bucketeer.InitApiClient(bucketeer.ApiOptions{
+		ApiKey:    opts.ApiKey,
+		BaseUri:   opts.BaseUri,
+		UserAgent: helpers.GetUserAgent(opts.UserAgent),
+	})
 	ignoreServiceErrors := opts.IgnoreServiceErrors
 
-	if !isDryRun {
-		err := ldApi.MaybeUpsertCodeReferenceRepository(repoParams)
-		if err != nil {
-			helpers.FatalServiceError(err, ignoreServiceErrors)
-		}
+	flags, err := getFlags(bucketeerApi)
+	if err != nil {
+		helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from Bucketeer: %w", err), ignoreServiceErrors)
 	}
 
-	flagKeys := make(map[string][]string)
-	for _, proj := range opts.Projects {
-		flags, err := getFlags(ldApi, proj.Key)
-		if err != nil {
-			helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from LaunchDarkly for project `%s`: %w", proj.Key, err), ignoreServiceErrors)
-		}
-		addFlagKeys(flagKeys, flags, proj.Key)
+	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
+	if len(filteredFlags) == 0 {
+		log.Warning.Printf("no flag keys longer than the minimum flag key length (%v) were found. Skipping",
+			minFlagKeyLen)
+		return nil
+	} else if len(omittedFlags) > 0 {
+		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
-	return flagKeys
+	return filteredFlags
 }
 
 // Very short flag keys lead to many false positives when searching in code,
@@ -51,20 +52,8 @@ func filterShortFlagKeys(flags []string) (filtered []string, omitted []string) {
 	return filteredFlags, omittedFlags
 }
 
-func addFlagKeys(flagKeys map[string][]string, flags []string, projKey string) {
-	filteredFlags, omittedFlags := filterShortFlagKeys(flags)
-	if len(filteredFlags) == 0 {
-		log.Warning.Printf("no flag keys longer than the minimum flag key length (%v) were found for project: %s. Skipping project",
-			minFlagKeyLen, projKey)
-		return
-	} else if len(omittedFlags) > 0 {
-		log.Warning.Printf("omitting %d flags with keys less than minimum (%d) for project: %s", len(omittedFlags), minFlagKeyLen, projKey)
-	}
-	flagKeys[projKey] = filteredFlags
-}
-
-func getFlags(ldApi ld.ApiClient, projKey string) ([]string, error) {
-	flags, err := ldApi.GetFlagKeyList(projKey)
+func getFlags(bucketeerApi bucketeer.ApiClient) ([]string, error) {
+	flags, err := bucketeerApi.GetFlagKeyList()
 	if err != nil {
 		return nil, err
 	}

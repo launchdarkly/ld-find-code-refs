@@ -40,21 +40,21 @@ func TestMatcher_MatchElement(t *testing.T) {
 			name:     "match found",
 			expected: true,
 			line:     "var flagKey = 'testflag'",
-			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", ",'\"", []string{"testflag"}, map[string][]string{"testflag": {"testFlag"}})}},
+			matcher:  Matcher{Element: NewElementMatcher("projKey", "", ",'\"", []string{"testflag"}, map[string][]string{"testflag": {"testFlag"}})},
 			flagKey:  "testflag",
 		},
 		{
 			name:     "no match found",
 			expected: false,
 			line:     "var flagKey = 'testflag'",
-			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", ",'\"", []string{"anotherflag"}, map[string][]string{"anotherflag": {"anotherFlag"}})}},
+			matcher:  Matcher{Element: NewElementMatcher("projKey", "", ",'\"", []string{"anotherflag"}, map[string][]string{"anotherflag": {"anotherFlag"}})},
 			flagKey:  "testflag",
 		},
 		{
 			name:     "doesn't match when delimiters aren't present",
 			expected: false,
 			line:     "var TEST_FLAG",
-			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", "'", []string{"TEST_FLAG"}, map[string][]string{"testflag": {}})}},
+			matcher:  Matcher{Element: NewElementMatcher("projKey", "", "'", []string{"TEST_FLAG"}, map[string][]string{"testflag": {}})},
 			flagKey:  "TEST_FLAG",
 		},
 		{
@@ -62,7 +62,7 @@ func TestMatcher_MatchElement(t *testing.T) {
 			name:     "matches without delimiters",
 			expected: true,
 			line:     "var TEST_FLAG",
-			matcher:  Matcher{Elements: []ElementMatcher{NewElementMatcher("projKey", "", "", []string{"TEST_FLAG"}, map[string][]string{"testflag": {}})}},
+			matcher:  Matcher{Element: NewElementMatcher("projKey", "", "", []string{"TEST_FLAG"}, map[string][]string{"testflag": {}})},
 			flagKey:  "TEST_FLAG",
 		},
 	}

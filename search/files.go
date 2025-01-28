@@ -66,7 +66,7 @@ func readFileLines(path string) ([]string, error) {
 
 func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 	defer close(files)
-	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
+	ignoreFiles := []string{".gitignore", ".ignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
 	workspace = filepath.ToSlash(workspace)
 

@@ -1,22 +1,15 @@
 package git
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/format/diff"
 	object "github.com/go-git/go-git/v5/plumbing/object"
-
-	"github.com/bucketeer-io/code-refs/internal/ld"
-	"github.com/bucketeer-io/code-refs/options"
-	"github.com/bucketeer-io/code-refs/search"
 
 	"github.com/bucketeer-io/code-refs/internal/log"
 )
@@ -232,156 +225,156 @@ type CommitData struct {
 }
 
 // FindExtinctions searches commit history for flags that had references removed recently
-func (c *Client) FindExtinctions(project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
-	commits, err := getCommits(c.workspace, lookback)
-	if err != nil {
-		return nil, err
-	}
+// func (c *Client) FindExtinctions(project options.Project, flags []string, matcher search.Matcher, lookback int) ([]ld.ExtinctionRep, error) {
+// 	commits, err := getCommits(c.workspace, lookback)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	// get matcher for project
-	elementMatcher := matcher.GetProjectElementMatcher(project.Key)
-	if elementMatcher == nil {
-		// This is actually a huge issue if it happens
-		panic(fmt.Sprintf("Matcher for project (%s) not found", project.Key))
-	}
+// 	// get matcher for project
+// 	elementMatcher := matcher.GetProjectElementMatcher(project.Key)
+// 	if elementMatcher == nil {
+// 		// This is actually a huge issue if it happens
+// 		panic(fmt.Sprintf("Matcher for project (%s) not found", project.Key))
+// 	}
 
-	ret := []ld.ExtinctionRep{}
-	for i, c := range commits[:len(commits)-1] {
-		log.Debug.Printf("Examining commit: %s", c.commit.Hash)
-		changes, err := commits[i+1].tree.Diff(c.tree)
-		if err != nil {
-			return nil, err
-		}
-		patch, err := changes.PatchContext(context.Background())
-		if err != nil {
-			return nil, err
-		}
+// 	ret := []ld.ExtinctionRep{}
+// 	for i, c := range commits[:len(commits)-1] {
+// 		log.Debug.Printf("Examining commit: %s", c.commit.Hash)
+// 		changes, err := commits[i+1].tree.Diff(c.tree)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		patch, err := changes.PatchContext(context.Background())
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		nextFlags := make([]string, 0, len(flags))
-		flagMap := getFlagDeltaMap(flags)
+// 		nextFlags := make([]string, 0, len(flags))
+// 		flagMap := getFlagDeltaMap(flags)
 
-		for _, filePatch := range patch.FilePatches() {
-			if !shouldScanFilePatch(project.Dir, filePatch) {
-				continue
-			}
+// 		for _, filePatch := range patch.FilePatches() {
+// 			if !shouldScanFilePatch(project.Dir, filePatch) {
+// 				continue
+// 			}
 
-			for _, chunk := range filePatch.Chunks() {
-				delta := getDeltaFromChunkType(chunk.Type())
-				if delta == 0 {
-					continue
-				}
-				for _, line := range strings.Split(chunk.Content(), "\n") {
-					for _, el := range elementMatcher.FindMatches(line) {
-						if _, ok := flagMap[el]; ok {
-							flagMap[el] += delta
-						}
-					}
-				}
-			}
-		}
+// 			for _, chunk := range filePatch.Chunks() {
+// 				delta := getDeltaFromChunkType(chunk.Type())
+// 				if delta == 0 {
+// 					continue
+// 				}
+// 				for _, line := range strings.Split(chunk.Content(), "\n") {
+// 					for _, el := range elementMatcher.FindMatches(line) {
+// 						if _, ok := flagMap[el]; ok {
+// 							flagMap[el] += delta
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}
 
-		for flag, removalCount := range flagMap {
-			if removalCount > 0 {
-				ret = append(ret, makeExtinctionRepFromCommit(project.Key, flag, c.commit))
-				log.Debug.Printf("Found extinct flag: %s in project: %s", flag, project.Key)
-			} else {
-				// this flag was not removed in the current commit, so check for it again in the next commit
-				nextFlags = append(nextFlags, flag)
-			}
-		}
-		flags = nextFlags
-	}
+// 		for flag, removalCount := range flagMap {
+// 			if removalCount > 0 {
+// 				ret = append(ret, makeExtinctionRepFromCommit(project.Key, flag, c.commit))
+// 				log.Debug.Printf("Found extinct flag: %s in project: %s", flag, project.Key)
+// 			} else {
+// 				// this flag was not removed in the current commit, so check for it again in the next commit
+// 				nextFlags = append(nextFlags, flag)
+// 			}
+// 		}
+// 		flags = nextFlags
+// 	}
 
-	return ret, err
-}
+// 	return ret, err
+// }
 
-// Determine if changed file should be scanned
-func shouldScanFilePatch(projectDir string, filePatch diff.FilePatch) bool {
-	fromFile, toFile := filePatch.Files()
-	printDebugStatement(fromFile, toFile)
+// // Determine if changed file should be scanned
+// func shouldScanFilePatch(projectDir string, filePatch diff.FilePatch) bool {
+// 	fromFile, toFile := filePatch.Files()
+// 	printDebugStatement(fromFile, toFile)
 
-	if projectDir == "" {
-		return true
-	}
+// 	if projectDir == "" {
+// 		return true
+// 	}
 
-	// Ignore files outside of the project directory
+// 	// Ignore files outside of the project directory
 
-	if toFile != nil && strings.HasPrefix(toFile.Path(), projectDir) {
-		return true
-	}
+// 	if toFile != nil && strings.HasPrefix(toFile.Path(), projectDir) {
+// 		return true
+// 	}
 
-	if fromFile != nil && strings.HasPrefix(fromFile.Path(), projectDir) {
-		return true
-	}
+// 	if fromFile != nil && strings.HasPrefix(fromFile.Path(), projectDir) {
+// 		return true
+// 	}
 
-	return false
-}
+// 	return false
+// }
 
-func printDebugStatement(fromFile, toFile diff.File) {
-	fromPath, toPath := "FROM_PATH", "TO_PATH"
-	if fromFile != nil {
-		fromPath = fromFile.Path()
-	}
-	if toFile != nil {
-		toPath = toFile.Path()
-	}
-	log.Debug.Printf("Scanning from file: %s and to file: %s", fromPath, toPath)
-}
+// func printDebugStatement(fromFile, toFile diff.File) {
+// 	fromPath, toPath := "FROM_PATH", "TO_PATH"
+// 	if fromFile != nil {
+// 		fromPath = fromFile.Path()
+// 	}
+// 	if toFile != nil {
+// 		toPath = toFile.Path()
+// 	}
+// 	log.Debug.Printf("Scanning from file: %s and to file: %s", fromPath, toPath)
+// }
 
-func makeExtinctionRepFromCommit(projectKey, flagKey string, commit *object.Commit) ld.ExtinctionRep {
-	return ld.ExtinctionRep{
-		Revision: commit.Hash.String(),
-		Message:  commit.Message,
-		Time:     commit.Author.When.Unix() * millisecondsInSecond,
-		ProjKey:  projectKey,
-		FlagKey:  flagKey,
-	}
-}
+// func makeExtinctionRepFromCommit(projectKey, flagKey string, commit *object.Commit) ld.ExtinctionRep {
+// 	return ld.ExtinctionRep{
+// 		Revision: commit.Hash.String(),
+// 		Message:  commit.Message,
+// 		Time:     commit.Author.When.Unix() * millisecondsInSecond,
+// 		ProjKey:  projectKey,
+// 		FlagKey:  flagKey,
+// 	}
+// }
 
-func getCommits(workspace string, lookback int) ([]CommitData, error) {
-	repo, err := git.PlainOpen(workspace)
-	if err != nil {
-		return nil, err
-	}
-	logResult, err := repo.Log(&git.LogOptions{})
-	if err != nil {
-		return nil, err
-	}
-	commits := []CommitData{}
-	for range make([]struct{}, lookback) {
-		commit, err := logResult.Next()
-		if err != nil {
-			// reached end of commit tree
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		tree, err := commit.Tree()
-		if err != nil {
-			return nil, err
-		}
-		commits = append(commits, CommitData{commit, tree})
-	}
+// func getCommits(workspace string, lookback int) ([]CommitData, error) {
+// 	repo, err := git.PlainOpen(workspace)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	logResult, err := repo.Log(&git.LogOptions{})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	commits := []CommitData{}
+// 	for range make([]struct{}, lookback) {
+// 		commit, err := logResult.Next()
+// 		if err != nil {
+// 			// reached end of commit tree
+// 			if err == io.EOF {
+// 				break
+// 			}
+// 			return nil, err
+// 		}
+// 		tree, err := commit.Tree()
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		commits = append(commits, CommitData{commit, tree})
+// 	}
 
-	return commits, nil
-}
+// 	return commits, nil
+// }
 
-func getFlagDeltaMap(flags []string) map[string]int {
-	flagMap := make(map[string]int, len(flags))
-	for _, flag := range flags {
-		flagMap[flag] = 0
-	}
-	return flagMap
-}
+// func getFlagDeltaMap(flags []string) map[string]int {
+// 	flagMap := make(map[string]int, len(flags))
+// 	for _, flag := range flags {
+// 		flagMap[flag] = 0
+// 	}
+// 	return flagMap
+// }
 
-func getDeltaFromChunkType(chunkType diff.Operation) int {
-	delta := 0
-	switch chunkType {
-	case diff.Delete:
-		delta = 1
-	case diff.Add:
-		delta = -1
-	}
-	return delta
-}
+// func getDeltaFromChunkType(chunkType diff.Operation) int {
+// 	delta := 0
+// 	switch chunkType {
+// 	case diff.Delete:
+// 		delta = 1
+// 	case diff.Add:
+// 		delta = -1
+// 	}
+// 	return delta
+// }
