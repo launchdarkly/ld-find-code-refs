@@ -23,7 +23,7 @@ var flags = []flag{
 	{
 		name:         "baseUri",
 		short:        "U",
-		defaultValue: "https://bucketeer.jp",
+		defaultValue: "",
 		usage:        "Bucketeer base URI.",
 	},
 	{

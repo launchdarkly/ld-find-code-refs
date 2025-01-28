@@ -34,6 +34,9 @@ func GetFlagKeys(opts options.Options) []string {
 	} else if len(omittedFlags) > 0 {
 		log.Warning.Printf("omitting %d flags with keys less than minimum (%d)", len(omittedFlags), minFlagKeyLen)
 	}
+	if opts.Debug {
+		log.Debug.Printf("filtered flags: %v", filteredFlags)
+	}
 	return filteredFlags
 }
 

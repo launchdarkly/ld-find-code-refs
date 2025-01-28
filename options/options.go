@@ -183,6 +183,9 @@ func (o Options) ValidateRequired() error {
 	if o.ApiKey == "" {
 		missingRequiredOptions = append(missingRequiredOptions, "apiKey")
 	}
+	if o.BaseUri == "" {
+		missingRequiredOptions = append(missingRequiredOptions, "baseUri")
+	}
 	if o.Dir == "" {
 		missingRequiredOptions = append(missingRequiredOptions, "dir")
 	}
