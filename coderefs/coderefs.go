@@ -50,7 +50,7 @@ func Run(opts options.Options, output bool) {
 	matcher, refs := search.Scan(opts, absPath)
 
 	if output {
-		generateOutput(opts, matcher, refs, bucketeerApi)
+		generateOutput(opts, matcher, refs)
 	}
 
 	if !opts.DryRun {
@@ -79,7 +79,7 @@ func Run(opts options.Options, output bool) {
 	}
 }
 
-func generateOutput(opts options.Options, matcher search.Matcher, refs []bucketeer.ReferenceHunksRep, bucketeerApi bucketeer.ApiClient) {
+func generateOutput(opts options.Options, matcher search.Matcher, refs []bucketeer.ReferenceHunksRep) {
 	outDir := opts.OutDir
 	if outDir != "" {
 		outPath, err := writeToCSV(outDir, opts.EnvironmentID, opts.RepoName, opts.Revision, refs)
