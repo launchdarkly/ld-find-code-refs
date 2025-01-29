@@ -53,6 +53,7 @@ type Options struct {
 	HunkUrlTemplate     string `mapstructure:"hunkUrlTemplate"`
 	OutDir              string `mapstructure:"outDir"`
 	EnvironmentID       string `mapstructure:"environmentId"`
+	RepoOwner           string `mapstructure:"repoOwner"`
 	RepoName            string `mapstructure:"repoName"`
 	RepoType            string `mapstructure:"repoType"`
 	RepoUrl             string `mapstructure:"repoUrl"`

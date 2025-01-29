@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bucketeer-io/code-refs/internal/log"
+	"github.com/bucketeer-io/code-refs/options"
 	"github.com/cenkalti/backoff/v4"
 )
 
@@ -52,10 +54,10 @@ func (h HunkRep) Overlap(hr HunkRep) int {
 }
 
 type ApiClient interface {
-	GetFlagKeyList() ([]string, error)
-	CreateCodeReference(ref CodeReference) error
-	UpdateCodeReference(id string, ref CodeReference) error
-	DeleteCodeReference(id string) error
+	GetFlagKeyList(opts options.Options) ([]string, error)
+	CreateCodeReference(opts options.Options, ref CodeReference) error
+	UpdateCodeReference(opts options.Options, id string, ref CodeReference) error
+	DeleteCodeReference(opts options.Options, id string) error
 }
 
 type ApiOptions struct {
@@ -138,7 +140,7 @@ func (c *apiClient) do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (c *apiClient) GetFlagKeyList() ([]string, error) {
+func (c *apiClient) GetFlagKeyList(opts options.Options) ([]string, error) {
 	url := fmt.Sprintf("%s/v1/features?pageSize=1000", c.baseUri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -152,6 +154,13 @@ func (c *apiClient) GetFlagKeyList() ([]string, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if opts.Debug {
+		body, _ := io.ReadAll(resp.Body)
+		log.Debug.Printf("[GetFlagKeyList] Response Status: %d, Body: %s", resp.StatusCode, string(body))
+		// Create a new reader with the body content for the subsequent json.Decode
+		resp.Body = io.NopCloser(bytes.NewBuffer(body))
+	}
 
 	var response struct {
 		Features []struct {
@@ -169,7 +178,7 @@ func (c *apiClient) GetFlagKeyList() ([]string, error) {
 	return flags, nil
 }
 
-func (c *apiClient) CreateCodeReference(ref CodeReference) error {
+func (c *apiClient) CreateCodeReference(opts options.Options, ref CodeReference) error {
 	url := fmt.Sprintf("%s/v1/code_references", c.baseUri)
 	body, err := json.Marshal(ref)
 	if err != nil {
@@ -189,10 +198,15 @@ func (c *apiClient) CreateCodeReference(ref CodeReference) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if opts.Debug {
+		body, _ := io.ReadAll(resp.Body)
+		log.Debug.Printf("[CreateCodeReference] Response Status: %d, Body: %s", resp.StatusCode, string(body))
+	}
 	return nil
 }
 
-func (c *apiClient) UpdateCodeReference(id string, ref CodeReference) error {
+func (c *apiClient) UpdateCodeReference(opts options.Options, id string, ref CodeReference) error {
 	url := fmt.Sprintf("%s/v1/code_references/%s", c.baseUri, id)
 	body, err := json.Marshal(ref)
 	if err != nil {
@@ -212,10 +226,15 @@ func (c *apiClient) UpdateCodeReference(id string, ref CodeReference) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if opts.Debug {
+		body, _ := io.ReadAll(resp.Body)
+		log.Debug.Printf("[UpdateCodeReference] Response Status: %d, Body: %s", resp.StatusCode, string(body))
+	}
 	return nil
 }
 
-func (c *apiClient) DeleteCodeReference(id string) error {
+func (c *apiClient) DeleteCodeReference(opts options.Options, id string) error {
 	url := fmt.Sprintf("%s/v1/code_references/%s", c.baseUri, id)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -229,5 +248,10 @@ func (c *apiClient) DeleteCodeReference(id string) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if opts.Debug {
+		body, _ := io.ReadAll(resp.Body)
+		log.Debug.Printf("[DeleteCodeReference] Response Status: %d, Body: %s", resp.StatusCode, string(body))
+	}
 	return nil
 }

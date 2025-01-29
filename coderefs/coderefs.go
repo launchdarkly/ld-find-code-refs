@@ -64,13 +64,14 @@ func Run(opts options.Options, output bool) {
 					ContentHash:      hunk.ContentHash,
 					Aliases:          hunk.Aliases,
 					RepositoryName:   opts.RepoName,
+					RepositoryOwner:  opts.RepoOwner,
 					RepositoryType:   repoType,
 					RepositoryBranch: strings.TrimPrefix(branchName, "refs/heads/"),
 					CommitHash:       revision,
 					EnvironmentID:    opts.EnvironmentID,
 				}
 
-				err := bucketeerApi.CreateCodeReference(codeRef)
+				err := bucketeerApi.CreateCodeReference(opts, codeRef)
 				if err != nil {
 					helpers.FatalServiceError(fmt.Errorf("error sending code reference to Bucketeer: %w", err), opts.IgnoreServiceErrors)
 				}
@@ -139,7 +140,14 @@ func writeToCSV(outDir, environmentID, repoName, revision string, refs []buckete
 	defer writer.Flush()
 
 	// Write header
-	err = writer.Write([]string{"Flag Key", "File Path", "Line Number", "Code Snippet"})
+	err = writer.Write([]string{
+		"Flag Key",
+		"File Path",
+		"Line Number",
+		"Code Snippet",
+		"Content Hash",
+		"Aliases",
+	})
 	if err != nil {
 		return "", err
 	}
@@ -152,6 +160,8 @@ func writeToCSV(outDir, environmentID, repoName, revision string, refs []buckete
 				ref.Path,
 				fmt.Sprintf("%d", hunk.StartingLineNumber),
 				hunk.Lines,
+				hunk.ContentHash,
+				strings.Join(hunk.Aliases, "|"),
 			})
 			if err != nil {
 				return "", err

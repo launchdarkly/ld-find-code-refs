@@ -21,7 +21,7 @@ func GetFlagKeys(opts options.Options) []string {
 	})
 	ignoreServiceErrors := opts.IgnoreServiceErrors
 
-	flags, err := getFlags(bucketeerApi)
+	flags, err := getFlags(bucketeerApi, opts)
 	if err != nil {
 		helpers.FatalServiceError(fmt.Errorf("could not retrieve flag keys from Bucketeer: %w", err), ignoreServiceErrors)
 	}
@@ -55,8 +55,8 @@ func filterShortFlagKeys(flags []string) (filtered []string, omitted []string) {
 	return filteredFlags, omittedFlags
 }
 
-func getFlags(bucketeerApi bucketeer.ApiClient) ([]string, error) {
-	flags, err := bucketeerApi.GetFlagKeyList()
+func getFlags(bucketeerApi bucketeer.ApiClient, opts options.Options) ([]string, error) {
+	flags, err := bucketeerApi.GetFlagKeyList(opts)
 	if err != nil {
 		return nil, err
 	}
