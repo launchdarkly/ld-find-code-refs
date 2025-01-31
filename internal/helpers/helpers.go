@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/bucketeer-io/code-refs/internal/ld"
 	"github.com/bucketeer-io/code-refs/internal/log"
 )
 
@@ -29,12 +28,9 @@ func MakeTimestamp() int64 {
 }
 
 func FatalServiceError(err error, ignoreServiceErrors bool) {
-	if ld.IsTransient(err) {
-		if ignoreServiceErrors {
-			log.Error.Fatal(fmt.Errorf("%w\n Ignoring error and exiting", err))
-			os.Exit(0)
-		}
-		err = fmt.Errorf("%w\n Add the --ignoreServiceErrors flag to ignore this error", err)
+	if ignoreServiceErrors {
+		log.Error.Fatal(fmt.Errorf("%w\n Ignoring error and exiting", err))
+		os.Exit(0)
 	}
 	log.Error.Fatal(err)
 }

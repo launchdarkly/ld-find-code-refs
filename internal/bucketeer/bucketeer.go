@@ -25,6 +25,7 @@ type HunkRep struct {
 	Lines              string
 	ContentHash        string
 	Aliases            []string
+	FileExt            string
 }
 
 // NumLines returns the number of lines in the hunk
@@ -77,6 +78,7 @@ type CodeReference struct {
 	ID               string   `json:"id,omitempty"`
 	FeatureID        string   `json:"featureId"`
 	FilePath         string   `json:"filePath"`
+	FileExt          string   `json:"fileExt"`
 	LineNumber       int      `json:"lineNumber"`
 	CodeSnippet      string   `json:"codeSnippet"`
 	ContentHash      string   `json:"contentHash"`

@@ -59,6 +59,7 @@ func Run(opts options.Options, output bool) {
 				codeRef := bucketeer.CodeReference{
 					FeatureID:        hunk.FlagKey,
 					FilePath:         ref.Path,
+					FileExt:          hunk.FileExt,
 					LineNumber:       hunk.StartingLineNumber,
 					CodeSnippet:      hunk.Lines,
 					ContentHash:      hunk.ContentHash,
@@ -143,6 +144,7 @@ func writeToCSV(outDir, environmentID, repoName, revision string, refs []buckete
 	err = writer.Write([]string{
 		"Flag Key",
 		"File Path",
+		"File Extension",
 		"Line Number",
 		"Code Snippet",
 		"Content Hash",
@@ -158,6 +160,7 @@ func writeToCSV(outDir, environmentID, repoName, revision string, refs []buckete
 			err := writer.Write([]string{
 				hunk.FlagKey,
 				ref.Path,
+				hunk.FileExt,
 				fmt.Sprintf("%d", hunk.StartingLineNumber),
 				hunk.Lines,
 				hunk.ContentHash,

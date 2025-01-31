@@ -108,7 +108,12 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 			return nil
 		}
 
-		files <- file{path: strings.TrimPrefix(path, workspace+"/"), lines: lines}
+		relativePath := strings.TrimPrefix(path, workspace+"/")
+		files <- file{
+			path:    relativePath,
+			lines:   lines,
+			fileExt: strings.TrimPrefix(filepath.Ext(relativePath), "."),
+		}
 		return nil
 	}
 

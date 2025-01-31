@@ -36,8 +36,9 @@ func truncateLine(line string, maxCharCount int) string {
 }
 
 type file struct {
-	path  string
-	lines []string
+	path    string
+	lines   []string
+	fileExt string
 }
 
 // hunkForLine returns a matching code reference for a given flag key on a line
@@ -78,6 +79,7 @@ func (f file) hunkForLine(flagKey string, lineNum int, matcher Matcher) *buckete
 		Lines:              lines,
 		Aliases:            aliasMatches,
 		ContentHash:        contentHash,
+		FileExt:            f.fileExt,
 	}
 	return &ret
 }
@@ -115,6 +117,10 @@ func (f file) toHunks(matcher Matcher) *bucketeer.ReferenceHunksRep {
 	}
 	if len(hunks) == 0 {
 		return nil
+	}
+	// Set the file extension for all hunks
+	for i := range hunks {
+		hunks[i].FileExt = f.fileExt
 	}
 	return &bucketeer.ReferenceHunksRep{Path: f.path, Hunks: hunks}
 }
