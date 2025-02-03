@@ -78,7 +78,7 @@ type CodeReference struct {
 	ID               string   `json:"id,omitempty"`
 	FeatureID        string   `json:"featureId"`
 	FilePath         string   `json:"filePath"`
-	FileExt          string   `json:"fileExt"`
+	FileExtension    string   `json:"fileExtension"`
 	LineNumber       int      `json:"lineNumber"`
 	CodeSnippet      string   `json:"codeSnippet"`
 	ContentHash      string   `json:"contentHash"`

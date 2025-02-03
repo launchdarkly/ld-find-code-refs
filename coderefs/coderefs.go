@@ -59,7 +59,7 @@ func Run(opts options.Options, output bool) {
 				codeRef := bucketeer.CodeReference{
 					FeatureID:        hunk.FlagKey,
 					FilePath:         ref.Path,
-					FileExt:          hunk.FileExt,
+					FileExtension:    hunk.FileExt,
 					LineNumber:       hunk.StartingLineNumber,
 					CodeSnippet:      hunk.Lines,
 					ContentHash:      hunk.ContentHash,
