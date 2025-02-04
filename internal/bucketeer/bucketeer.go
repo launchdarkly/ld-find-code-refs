@@ -59,6 +59,7 @@ type ApiClient interface {
 	CreateCodeReference(opts options.Options, ref CodeReference) error
 	UpdateCodeReference(opts options.Options, id string, ref CodeReference) error
 	DeleteCodeReference(opts options.Options, id string) error
+	ListCodeReferences(opts options.Options, featureId string, pageSize int64) (codeRefs []CodeReference, cursor string, totalCount string, err error)
 }
 
 type ApiOptions struct {
@@ -89,8 +90,8 @@ type CodeReference struct {
 	RepositoryBranch string   `json:"repositoryBranch"`
 	CommitHash       string   `json:"commitHash"`
 	EnvironmentID    string   `json:"environmentId"`
-	CreatedAt        int64    `json:"createdAt,omitempty"`
-	UpdatedAt        int64    `json:"updatedAt,omitempty"`
+	CreatedAt        string   `json:"createdAt,omitempty"`
+	UpdatedAt        string   `json:"updatedAt,omitempty"`
 }
 
 type apiClient struct {
@@ -256,4 +257,45 @@ func (c *apiClient) DeleteCodeReference(opts options.Options, id string) error {
 		log.Debug.Printf("[DeleteCodeReference] Response Status: %d, Body: %s", resp.StatusCode, string(body))
 	}
 	return nil
+}
+
+type ListCodeReferencesResponse struct {
+	CodeReferences []CodeReference `json:"codeReferences"`
+	Cursor         string          `json:"cursor"`
+	TotalCount     string          `json:"totalCount"`
+}
+
+func (c *apiClient) ListCodeReferences(opts options.Options, featureId string, pageSize int64) (codeRefs []CodeReference, cursor string, totalCount string, err error) {
+	url := fmt.Sprintf("%s/v1/code_references?featureId=%s", c.baseUri, featureId)
+
+	if pageSize > 0 {
+		url += fmt.Sprintf("&pageSize=%d", pageSize)
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, "", "", err
+	}
+	req.Header.Add("Authorization", c.apiKey)
+	req.Header.Add("User-Agent", c.userAgent)
+
+	resp, err := c.do(req)
+	if err != nil {
+		return nil, "", "", err
+	}
+	defer resp.Body.Close()
+
+	if opts.Debug {
+		body, _ := io.ReadAll(resp.Body)
+		log.Debug.Printf("[ListCodeReferences] Response Status: %d, Body: %s", resp.StatusCode, string(body))
+		// Create a new reader with the body content for the subsequent json.Decode
+		resp.Body = io.NopCloser(bytes.NewBuffer(body))
+	}
+
+	var response ListCodeReferencesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, "", "", err
+	}
+
+	return response.CodeReferences, response.Cursor, response.TotalCount, nil
 }

@@ -54,6 +54,25 @@ func Run(opts options.Options, output bool) {
 	}
 
 	if !opts.DryRun {
+		// First, list all existing code references for each feature flag
+		existingRefs := make(map[string]bucketeer.CodeReference)
+
+		// Get unique feature flags from the references
+		flagCounts := aggregateFeatureFlags(refs)
+
+		// List code references for each feature flag
+		for flag := range flagCounts {
+			codeRefs, _, _, err := bucketeerApi.ListCodeReferences(opts, flag, 1000)
+			if err != nil {
+				helpers.FatalServiceError(fmt.Errorf("error getting existing code references from Bucketeer for flag %s: %w", flag, err), opts.IgnoreServiceErrors)
+			}
+
+			for _, ref := range codeRefs {
+				existingRefs[ref.ContentHash] = ref
+			}
+		}
+
+		// Now process new references
 		for _, ref := range refs {
 			for _, hunk := range ref.Hunks {
 				codeRef := bucketeer.CodeReference{
@@ -72,10 +91,33 @@ func Run(opts options.Options, output bool) {
 					EnvironmentID:    opts.EnvironmentID,
 				}
 
-				err := bucketeerApi.CreateCodeReference(opts, codeRef)
-				if err != nil {
-					helpers.FatalServiceError(fmt.Errorf("error sending code reference to Bucketeer: %w", err), opts.IgnoreServiceErrors)
+				if existing, exists := existingRefs[hunk.ContentHash]; exists {
+					// Update the reference to ensure metadata is current
+					log.Info.Printf("updating code reference in Bucketeer: id: %s, content hash: %s", existing.ID, codeRef.ContentHash)
+					err := bucketeerApi.UpdateCodeReference(opts, existing.ID, codeRef)
+					if err != nil {
+						helpers.FatalServiceError(fmt.Errorf("error updating code reference in Bucketeer: %w", err), opts.IgnoreServiceErrors)
+					}
+					delete(existingRefs, hunk.ContentHash)
+				} else {
+					// Create new reference if content hash doesn't exist
+					err := bucketeerApi.CreateCodeReference(opts, codeRef)
+					if err != nil {
+						helpers.FatalServiceError(fmt.Errorf("error sending code reference to Bucketeer: %w", err), opts.IgnoreServiceErrors)
+					}
 				}
+			}
+		}
+
+		// Delete references that no longer exist in the codebase
+		for _, ref := range existingRefs {
+			// Only delete references from the same repository
+			if ref.RepositoryOwner == opts.RepoOwner && ref.RepositoryName == opts.RepoName {
+				err := bucketeerApi.DeleteCodeReference(opts, ref.ID)
+				if err != nil {
+					helpers.FatalServiceError(fmt.Errorf("error deleting code reference from Bucketeer: %w", err), opts.IgnoreServiceErrors)
+				}
+				log.Info.Printf("deleted code reference from Bucketeer: %+v", ref)
 			}
 		}
 	}
@@ -175,14 +217,19 @@ func writeToCSV(outDir, environmentID, repoName, revision string, refs []buckete
 	return outPath, nil
 }
 
-func printReferenceCountTable(refs []bucketeer.ReferenceHunksRep) {
+// aggregateFeatureFlags returns a map of feature flags and their counts from the references
+func aggregateFeatureFlags(refs []bucketeer.ReferenceHunksRep) map[string]int {
 	flagCounts := make(map[string]int)
 	for _, ref := range refs {
 		for _, hunk := range ref.Hunks {
 			flagCounts[hunk.FlagKey]++
 		}
 	}
+	return flagCounts
+}
 
+func printReferenceCountTable(refs []bucketeer.ReferenceHunksRep) {
+	flagCounts := aggregateFeatureFlags(refs)
 	log.Info.Printf("Flag Reference Counts:")
 	for flag, count := range flagCounts {
 		log.Info.Printf("  %s: %d", flag, count)
