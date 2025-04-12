@@ -1,7 +1,8 @@
 module github.com/launchdarkly/ld-find-code-refs/v2
 
-go 1.22
-toolchain go1.23.7
+go 1.23.0
+
+toolchain go1.24.2
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.8.1
@@ -19,7 +20,10 @@ require (
 	golang.org/x/tools v0.31.0
 )
 
-require github.com/launchdarkly/api-client-go/v15 v15.1.0
+require (
+	github.com/launchdarkly/api-client-go/v15 v15.1.0
+	github.com/wasilibs/go-re2 v1.10.0
+)
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
@@ -53,6 +57,8 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/tetratelabs/wazero v1.9.0 // indirect
+	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
