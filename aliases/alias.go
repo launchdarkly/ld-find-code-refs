@@ -87,7 +87,7 @@ func GenerateNamingConventionAlias(a options.Alias, flag string) (alias string, 
 }
 
 func GenerateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileContents FileContentsMap) ([]string, error) {
-	ret := make([]string, 0)
+	ret := []string{}
 	// Concatenate the contents of all files into a single byte array to be matched by specified patterns
 	fileContents := []byte{}
 	for _, path := range a.Paths {
