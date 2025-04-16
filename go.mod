@@ -1,6 +1,7 @@
 module github.com/launchdarkly/ld-find-code-refs/v2
 
-go 1.22
+go 1.24
+
 toolchain go1.24.1
 
 require (
