@@ -50,6 +50,7 @@ type Options struct {
 	CommitUrlTemplate   string `mapstructure:"commitUrlTemplate"`
 	DefaultBranch       string `mapstructure:"defaultBranch"`
 	Dir                 string `mapstructure:"dir" yaml:"-"`
+	FlagState           string `mapstructure:"flagState"`
 	HunkUrlTemplate     string `mapstructure:"hunkUrlTemplate"`
 	OutDir              string `mapstructure:"outDir"`
 	ProjKey             string `mapstructure:"projkey"`

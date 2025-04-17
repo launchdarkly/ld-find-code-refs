@@ -77,6 +77,12 @@ If not provided, will fallback to 'main'.`,
 LaunchDarkly. Combine with the outDir option to output code references to a CSV.`,
 	},
 	{
+		name:         "flagState",
+		defaultValue: "all",
+		usage: `Filter flags by state. Possible values: 'all' (default) and 'live'. Using this option can improve performance
+for repositories with many archived flags.`,
+	},
+	{
 		name:         "hunkUrlTemplate",
 		defaultValue: "",
 		usage: `If provided, LaunchDarkly will attempt to generate links to 
