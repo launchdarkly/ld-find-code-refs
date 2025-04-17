@@ -77,12 +77,6 @@ If not provided, will fallback to 'main'.`,
 LaunchDarkly. Combine with the outDir option to output code references to a CSV.`,
 	},
 	{
-		name:         "flagState",
-		defaultValue: "all",
-		usage: `Filter flags by state. Possible values: 'all' (default) and 'live'. Using this option can improve performance
-for repositories with many archived flags.`,
-	},
-	{
 		name:         "hunkUrlTemplate",
 		defaultValue: "",
 		usage: `If provided, LaunchDarkly will attempt to generate links to 
@@ -147,6 +141,11 @@ LaunchDarkly UI. Acceptable values: bitbucket|custom|github|gitlab.`,
 		short:        "R",
 		defaultValue: "",
 		usage:        `Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.`,
+	},
+	{
+		name:         "skipArchivedFlags",
+		defaultValue: false,
+		usage:        `If enabled, archived feature flags will not be fetched from the LaunchDarkly API as input to the tool.`,
 	},
 	{
 		name:         "subdirectory",

@@ -50,7 +50,6 @@ type Options struct {
 	CommitUrlTemplate   string `mapstructure:"commitUrlTemplate"`
 	DefaultBranch       string `mapstructure:"defaultBranch"`
 	Dir                 string `mapstructure:"dir" yaml:"-"`
-	FlagState           string `mapstructure:"flagState"`
 	HunkUrlTemplate     string `mapstructure:"hunkUrlTemplate"`
 	OutDir              string `mapstructure:"outDir"`
 	ProjKey             string `mapstructure:"projkey"`
@@ -68,6 +67,7 @@ type Options struct {
 	DryRun              bool   `mapstructure:"dryRun"`
 	IgnoreServiceErrors bool   `mapstructure:"ignoreServiceErrors"`
 	Prune               bool   `mapstructure:"prune"`
+	SkipArchivedFlags   bool   `mapstructure:"skipArchivedFlags"`
 
 	// The following options can only be configured via YAML configuration
 

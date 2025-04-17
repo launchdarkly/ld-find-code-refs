@@ -122,7 +122,7 @@ func (c ApiClient) getPath(path string) string {
 	return fmt.Sprintf("%s%s%s", c.Options.BaseUri, v2ApiPath, path)
 }
 
-func (c ApiClient) GetFlagKeyList(projKey, flagState string) ([]string, error) {
+func (c ApiClient) GetFlagKeyList(projKey string, skipArchivedFlags bool) ([]string, error) {
 	env, err := c.getProjectEnvironment(projKey)
 	if err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ func (c ApiClient) GetFlagKeyList(projKey, flagState string) ([]string, error) {
 	}
 
 	// If we only want live flags, return them now
-	if flagState == "live" {
+	if skipArchivedFlags {
 		flagKeys := make([]string, 0, len(activeFlags))
 		for _, flag := range activeFlags {
 			flagKeys = append(flagKeys, flag.Key)
