@@ -17,7 +17,7 @@ require (
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/tools v0.31.0
+	golang.org/x/tools v0.32.0
 )
 
 require github.com/launchdarkly/api-client-go/v15 v15.1.0
