@@ -71,6 +71,8 @@ Flags:
 
   -R, --revision string            Use this option to scan non-git codebases. The current revision of the repository to be scanned. If set, the version string for the scanned repository will not be inferred, and branch garbage collection will be disabled. The "branch" option is required when "revision" is set.
 
+  --skipArchivedFlags              If enabled, archived feature flags will not be fetched from the LaunchDarkly API as input to the tool.
+
   --subdirectory string          If the .launchdarkly/coderefs.yaml file is not in the root of the repository, provide the path to the configuration file relative to the root.
   Code references will only run on this provided subdirectory.
 
