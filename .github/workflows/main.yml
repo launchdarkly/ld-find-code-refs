@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
-      
+
       - name: Set up Go
         uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed
         with:
@@ -39,8 +39,9 @@ jobs:
             --rerun-fails=2 \
             --rerun-fails-max-failures=10 \
             --rerun-fails-report ${{ github.workspace }}/artifacts/rerun_tests_go_tests.txt
-          
+
       - name: Publish JUnit Tests
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         uses: ./.github/actions/publish-junit
         env:
           DD_API_KEY: ${{ secrets.DATADOG_API_KEY }}
