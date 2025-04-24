@@ -7,19 +7,22 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/iancoleman/strcase"
+	regexp "github.com/wasilibs/go-re2"
 
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
 	"github.com/launchdarkly/ld-find-code-refs/v2/options"
 )
+
+var globCache = make(map[string][]string)
+var regexCache = make(map[string]*regexp.Regexp)
 
 // GenerateAliases returns a map of flag keys to aliases based on config.
 func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[string][]string, error) {
@@ -88,10 +91,9 @@ func GenerateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileCo
 	// Concatenate the contents of all files into a single byte array to be matched by specified patterns
 	fileContents := []byte{}
 	for _, path := range a.Paths {
-		absGlob := filepath.Join(dir, path)
-		matches, err := doublestar.FilepathGlob(absGlob)
+		matches, err := cacheFilepathGlob(dir, path)
 		if err != nil {
-			return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", a.Name, absGlob)
+			return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", a.Name, path)
 		}
 		for _, match := range matches {
 			if pathFileContents := allFileContents[match]; len(pathFileContents) > 0 {
@@ -101,7 +103,12 @@ func GenerateAliasesFromFilePattern(a options.Alias, flag, dir string, allFileCo
 	}
 
 	for _, p := range a.Patterns {
-		pattern := regexp.MustCompile(strings.ReplaceAll(p, "FLAG_KEY", flag))
+		patternStr := strings.ReplaceAll(p, "FLAG_KEY", flag)
+		pattern, ok := regexCache[patternStr]
+		if !ok {
+			pattern = regexp.MustCompile(patternStr)
+			regexCache[patternStr] = pattern
+		}
 		results := pattern.FindAllStringSubmatch(string(fileContents), -1)
 		for _, res := range results {
 			if len(res) > 1 {
@@ -157,13 +164,12 @@ func processFileContent(aliases []options.Alias, dir string) (FileContentsMap, e
 
 		paths := []string{}
 		for _, glob := range a.Paths {
-			absGlob := filepath.Join(dir, glob)
-			matches, err := doublestar.FilepathGlob(absGlob)
+			matches, err := cacheFilepathGlob(dir, glob)
 			if err != nil {
-				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, absGlob)
+				return nil, fmt.Errorf("filepattern '%s': could not process path glob '%s'", aliasId, glob)
 			}
 			if matches == nil {
-				log.Info.Printf("filepattern '%s': no matching files found for alias path glob '%s'", aliasId, absGlob)
+				log.Info.Printf("filepattern '%s': no matching files found for alias path glob '%s'", aliasId, glob)
 			}
 			paths = append(paths, matches...)
 		}
@@ -187,4 +193,16 @@ func processFileContent(aliases []options.Alias, dir string) (FileContentsMap, e
 		}
 	}
 	return allFileContents, nil
+}
+
+func cacheFilepathGlob(dir, glob string) ([]string, error) {
+	absGlob := filepath.Join(dir, glob)
+	if cachedMatches, ok := globCache[absGlob]; ok {
+		return cachedMatches, nil
+	}
+
+	matches, err := doublestar.FilepathGlob(absGlob)
+	globCache[absGlob] = matches
+
+	return matches, err
 }

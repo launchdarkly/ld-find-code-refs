@@ -93,7 +93,7 @@ func Test_GenerateAliases(t *testing.T) {
 			name:  "file exact pattern",
 			flags: slice(testFlagKey),
 			aliases: []o.Alias{
-				fileExactPattern(testFlagKey),
+				fileExactPattern(),
 			},
 			want: map[string][]string{testFlagKey: slice("SOME_FLAG")},
 		},
@@ -101,9 +101,9 @@ func Test_GenerateAliases(t *testing.T) {
 			name:  "file wildcard pattern",
 			flags: slice(testFlagKey, testWildFlagKey),
 			aliases: []o.Alias{
-				fileWildPattern(testFlagKey),
+				fileWildPattern(),
 			},
-			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG", "WILD_FLAG_SECOND_ALIAS"), testFlagKey: slice("SOME_FLAG")},
+			want: map[string][]string{testWildFlagKey: slice("WILD_FLAG", "WILD_FLAG_SECOND_ALIAS", "ABSOLUTELY_WILD"), testFlagKey: slice("SOME_FLAG")},
 		},
 		{
 			name:  "command",
@@ -198,6 +198,24 @@ func Test_processFileContent(t *testing.T) {
 	}
 }
 
+func Test_GenerateAliasesFromFilePattern(t *testing.T) {
+	expectedAliases := []string{"WILD_FLAG", "WILD_FLAG_SECOND_ALIAS", "ABSOLUTELY_WILD"}
+
+	fileContents := map[string][]byte{
+		"testdata/alias_test.txt":                                  []byte("SOME_FLAG = 'someFlag'"),
+		"testdata/wild/alias_test.txt":                             []byte("WILD_FLAG = 'wildFlag'"),
+		"testdata/wild/nested-wild/alias_test.txt":                 []byte("WILD_FLAG_SECOND_ALIAS = 'wildFlag'"),
+		"testdata/wild/nested-wild/another/another/alias_test.txt": []byte("ABSOLUTELY_WILD = 'wildFlag'"),
+	}
+
+	alias := fileWildPattern()
+
+	aliases, err := GenerateAliasesFromFilePattern(alias, testWildFlagKey, "", fileContents)
+	require.NoError(t, err)
+
+	assert.ElementsMatch(t, expectedAliases, aliases)
+}
+
 func slice(args ...string) []string {
 	return args
 }
@@ -222,7 +240,7 @@ func literal(flags []string) o.Alias {
 	return a
 }
 
-func fileExactPattern(flag string) o.Alias {
+func fileExactPattern() o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
 	a.Paths = []string{"testdata/alias_test.txt"}
@@ -230,7 +248,7 @@ func fileExactPattern(flag string) o.Alias {
 	return a
 }
 
-func fileWildPattern(flag string) o.Alias {
+func fileWildPattern() o.Alias {
 	a := alias(o.FilePattern)
 	pattern := "(\\w+)\\s= 'FLAG_KEY'"
 	a.Paths = []string{"testdata/**/*.txt"}
