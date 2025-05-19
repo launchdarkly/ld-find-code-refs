@@ -21,7 +21,7 @@ require (
 )
 
 require (
-	github.com/launchdarkly/api-client-go/v15 v15.1.0
+	github.com/launchdarkly/api-client-go/v17 v17.2.0
 	github.com/wasilibs/go-re2 v1.10.0
 )
 
