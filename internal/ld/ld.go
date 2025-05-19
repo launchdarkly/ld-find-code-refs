@@ -202,32 +202,54 @@ func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, er
 }
 
 func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
-	url := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
-	req, err := h.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.URL.RawQuery = params.Encode()
-
-	res, err := c.do(req)
-	if err != nil {
-		return nil, err
+	// If no limit is set, use the maximum allowed
+	if params.Get("limit") == "" {
+		params.Set("limit", "100")
 	}
 
-	resBytes, err := io.ReadAll(res.Body)
-	if res != nil {
-		defer res.Body.Close()
-	}
-	if err != nil {
-		return nil, err
+	var allFlags []ldapi.FeatureFlag
+	nextUrl := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
+
+	for nextUrl != "" {
+		req, err := h.NewRequest(http.MethodGet, nextUrl, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// Only set query params on first request, subsequent requests use full URL from _links
+		if nextUrl == c.getPath(fmt.Sprintf("/flags/%s", projKey)) {
+			req.URL.RawQuery = params.Encode()
+		}
+
+		res, err := c.do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		resBytes, err := io.ReadAll(res.Body)
+		if res != nil {
+			defer res.Body.Close()
+		}
+		if err != nil {
+			return nil, err
+		}
+		var flagsPage ldapi.FeatureFlags
+		if err := json.Unmarshal(resBytes, &flagsPage); err != nil {
+			return nil, err
+		}
+
+		allFlags = append(allFlags, flagsPage.Items...)
+		if flagsPage.TotalCount != nil && int(*flagsPage.TotalCount) >= len(allFlags) {
+			break
+		}
+		// Check if there's a next page
+		nextLink, ok := flagsPage.Links["next"]
+		if ok {
+			nextUrl = *nextLink.Href
+		}
 	}
 
-	var flags ldapi.FeatureFlags
-	if err := json.Unmarshal(resBytes, &flags); err != nil {
-		return nil, err
-	}
-
-	return flags.Items, nil
+	return allFlags, nil
 }
 
 func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) error {
