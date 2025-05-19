@@ -157,9 +157,9 @@ github.com/jbenet/go-context/io
 # github.com/kevinburke/ssh_config v1.2.0
 ## explicit
 github.com/kevinburke/ssh_config
-# github.com/launchdarkly/api-client-go/v15 v15.1.0
+# github.com/launchdarkly/api-client-go/v17 v17.2.0
 ## explicit; go 1.13
-github.com/launchdarkly/api-client-go/v15
+github.com/launchdarkly/api-client-go/v17
 # github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
 ## explicit
 github.com/launchdarkly/json-patch
