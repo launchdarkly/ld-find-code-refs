@@ -232,18 +232,6 @@ func (l *Logger) Debug(args ...any) {
 	l.log(lx.LevelDebug, lx.ClassText, concatSpaced(args...), nil, false)
 }
 
-func (l *Logger) Debug2(args ...any) {
-	// Skip logging if Debug level is not enabled
-	if !l.enabled {
-		return
-	}
-	l.log(lx.LevelDebug, lx.ClassText, concatSpaced(args...), nil, false)
-}
-
-func (l *Logger) Debug3(args ...any) {
-	l.log(lx.LevelDebug, lx.ClassText, concatSpaced(args...), nil, false)
-}
-
 // Debugf logs a formatted message at Debug level, delegating to Debug. It is thread-safe.
 // Example:
 //
@@ -736,6 +724,44 @@ func (l *Logger) Line(lines ...int) *Logger {
 	return l
 }
 
+// Mark logs the current file and line number where it's called, without any additional debug information.
+// It's useful for tracing execution flow without the verbosity of Dbg.
+// Example:
+//
+//	logger.Mark() // *MARK*: [file.go:123]
+func (l *Logger) Mark(name ...string) {
+	l.mark(2, name...)
+}
+
+func (l *Logger) mark(skip int, names ...string) {
+	// Skip logging if Info level is not enabled
+	if !l.shouldLog(lx.LevelInfo) {
+		return
+	}
+
+	// Get caller information (file, line)
+	_, file, line, ok := runtime.Caller(skip)
+	if !ok {
+		l.log(lx.LevelError, lx.ClassText, "Mark: Unable to parse runtime caller", nil, false)
+		return
+	}
+
+	// Extract just the filename (without full path)
+	shortFile := file
+	if idx := strings.LastIndex(file, "/"); idx >= 0 {
+		shortFile = file[idx+1:]
+	}
+
+	name := strings.Join(names, l.separator)
+	if name == "" {
+		name = "MARK"
+	}
+
+	// Format as [filename:line]
+	out := fmt.Sprintf("[*%s*]: [%s:%d]\n", name, shortFile, line)
+	l.log(lx.LevelInfo, lx.ClassRaw, out, nil, false)
+}
+
 // Measure benchmarks function execution, logging the duration at Info level with a
 // "duration" field. It is thread-safe via Fields and log methods.
 // Example:
@@ -916,6 +942,24 @@ func (l *Logger) Prefix(prefix string) *Logger {
 //	logger := New("app").Enable()
 //	logger.Print("message", "value") // Output: [app] INFO: message value
 func (l *Logger) Print(args ...any) {
+	if l.suspend {
+		return
+	}
+
+	// Skip logging if Info level is not enabled
+	if !l.shouldLog(lx.LevelInfo) {
+		return
+	}
+	l.log(lx.LevelNone, lx.ClassRaw, concatSpaced(args...), nil, false)
+}
+
+// Println logs a message at Info level without format specifiers, minimizing allocations
+// by concatenating arguments with spaces. It is thread-safe via the log method.
+// Example:
+//
+//	logger := New("app").Enable()
+//	logger.Println("message", "value") // Output: [app] INFO: message value
+func (l *Logger) Println(args ...any) {
 	if l.suspend {
 		return
 	}
