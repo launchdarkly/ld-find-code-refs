@@ -212,14 +212,14 @@ func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureF
 	}
 
 	var allFlags []ldapi.FeatureFlag
-	nextUrl := c.getPath(fmt.Sprintf("/flags/%s", projKey))
+	nextUrl := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
 	for nextUrl != "" {
 		req, err := h.NewRequest(http.MethodGet, nextUrl, nil)
 		if err != nil {
 			return nil, err
 		}
 
-		if nextUrl == c.getPath(fmt.Sprintf("/flags/%s", projKey)) {
+		if nextUrl == c.getPath(fmt.Sprintf("/flags/%s", projKey)) { //nolint:perfsprint
 			req.URL.RawQuery = params.Encode()
 		}
 
