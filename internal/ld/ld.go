@@ -20,7 +20,7 @@ import (
 	h "github.com/hashicorp/go-retryablehttp"
 	"github.com/olekukonko/tablewriter"
 
-	ldapi "github.com/launchdarkly/api-client-go/v15"
+	ldapi "github.com/launchdarkly/api-client-go/v17"
 	jsonpatch "github.com/launchdarkly/json-patch"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/log"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/validation"
@@ -40,7 +40,7 @@ type ApiOptions struct {
 }
 
 const (
-	apiVersion       = "20220603"
+	apiVersion       = "20240415"
 	apiVersionHeader = "LD-API-Version"
 	v2ApiPath        = "/api/v2"
 	reposPath        = "/code-refs/repositories"
@@ -120,6 +120,10 @@ func InitApiClient(options ApiOptions) ApiClient {
 // path should have leading slash
 func (c ApiClient) getPath(path string) string {
 	return fmt.Sprintf("%s%s%s", c.Options.BaseUri, v2ApiPath, path)
+}
+
+func (c ApiClient) getPathFromLink(path string) string {
+	return fmt.Sprintf("%s%s", c.Options.BaseUri, path)
 }
 
 func (c ApiClient) GetFlagKeyList(projKey string, skipArchivedFlags bool) ([]string, error) {
@@ -202,32 +206,53 @@ func (c ApiClient) getProjectEnvironment(projKey string) (*ldapi.Environment, er
 }
 
 func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureFlag, error) {
-	url := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
-	req, err := h.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.URL.RawQuery = params.Encode()
-
-	res, err := c.do(req)
-	if err != nil {
-		return nil, err
+	// If no limit is set, use the maximum allowed
+	if params.Get("limit") == "" {
+		params.Set("limit", "100")
 	}
 
-	resBytes, err := io.ReadAll(res.Body)
-	if res != nil {
-		defer res.Body.Close()
-	}
-	if err != nil {
-		return nil, err
+	var allFlags []ldapi.FeatureFlag
+	nextUrl := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
+	for nextUrl != "" {
+		req, err := h.NewRequest(http.MethodGet, nextUrl, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if nextUrl == c.getPath(fmt.Sprintf("/flags/%s", projKey)) { //nolint:perfsprint
+			req.URL.RawQuery = params.Encode()
+		}
+
+		log.Info.Printf("Requesting flags from %s", nextUrl)
+		res, err := c.do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		resBytes, err := io.ReadAll(res.Body)
+		if res != nil {
+			defer res.Body.Close()
+		}
+		if err != nil {
+			return nil, err
+		}
+		var flagsPage ldapi.FeatureFlags
+		if err := json.Unmarshal(resBytes, &flagsPage); err != nil {
+			return nil, err
+		}
+
+		allFlags = append(allFlags, flagsPage.Items...)
+		if flagsPage.TotalCount != nil && len(allFlags) >= int(*flagsPage.TotalCount) {
+			break
+		}
+
+		nextLink, ok := flagsPage.Links["next"]
+		if ok {
+			nextUrl = c.getPathFromLink(*nextLink.Href)
+		}
 	}
 
-	var flags ldapi.FeatureFlags
-	if err := json.Unmarshal(resBytes, &flags); err != nil {
-		return nil, err
-	}
-
-	return flags.Items, nil
+	return allFlags, nil
 }
 
 func (c ApiClient) patchCodeReferenceRepository(currentRepo, repo RepoParams) error {
