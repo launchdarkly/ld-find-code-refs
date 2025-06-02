@@ -122,6 +122,10 @@ func (c ApiClient) getPath(path string) string {
 	return fmt.Sprintf("%s%s%s", c.Options.BaseUri, v2ApiPath, path)
 }
 
+func (c ApiClient) getPathFromLink(path string) string {
+	return fmt.Sprintf("%s%s", c.Options.BaseUri, path)
+}
+
 func (c ApiClient) GetFlagKeyList(projKey string, skipArchivedFlags bool) ([]string, error) {
 	env, err := c.getProjectEnvironment(projKey)
 	if err != nil {
@@ -209,18 +213,17 @@ func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureF
 
 	var allFlags []ldapi.FeatureFlag
 	nextUrl := c.getPath(fmt.Sprintf("/flags/%s", projKey)) //nolint:perfsprint
-
 	for nextUrl != "" {
 		req, err := h.NewRequest(http.MethodGet, nextUrl, nil)
 		if err != nil {
 			return nil, err
 		}
 
-		// Only set query params on first request, subsequent requests use full URL from _links
 		if nextUrl == c.getPath(fmt.Sprintf("/flags/%s", projKey)) {
 			req.URL.RawQuery = params.Encode()
 		}
 
+		log.Info.Printf("Requesting flags from %s", nextUrl)
 		res, err := c.do(req)
 		if err != nil {
 			return nil, err
@@ -239,13 +242,13 @@ func (c ApiClient) getFlags(projKey string, params url.Values) ([]ldapi.FeatureF
 		}
 
 		allFlags = append(allFlags, flagsPage.Items...)
-		if flagsPage.TotalCount != nil && int(*flagsPage.TotalCount) >= len(allFlags) {
+		if flagsPage.TotalCount != nil && len(allFlags) >= int(*flagsPage.TotalCount) {
 			break
 		}
-		// Check if there's a next page
+
 		nextLink, ok := flagsPage.Links["next"]
 		if ok {
-			nextUrl = *nextLink.Href
+			nextUrl = c.getPathFromLink(*nextLink.Href)
 		}
 	}
 
