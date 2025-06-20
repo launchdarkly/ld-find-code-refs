@@ -72,7 +72,7 @@ clean:
 	rm -f build/package/github-actions/ld-find-code-refs-github-action
 	rm -f build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 
-RELEASE_CMD=curl -sSLi https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(GORELEASER_VERSION) GITHUB_TOKEN=$(GITHUB_TOKEN) bash -s -- --clean
+RELEASE_CMD=curl -sL https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(GORELEASER_VERSION) GITHUB_TOKEN=$(GITHUB_TOKEN) bash -s -- --clean --debug --release-notes $(RELEASE_NOTES)
 
 publish:
 	$(RELEASE_CMD)
