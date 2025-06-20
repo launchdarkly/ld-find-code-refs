@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_TOKEN}
+echo ${DOCKER_TOKEN} | sudo docker login --username ${DOCKER_USERNAME} --password-stdin
 
 sudo PATH=${PATH} GITHUB_TOKEN=${GITHUB_TOKEN} make products-for-release
 
