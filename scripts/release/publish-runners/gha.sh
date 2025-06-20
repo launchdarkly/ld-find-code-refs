@@ -29,6 +29,7 @@ setup() (
   git branch -vv
   git add -u
   git commit -m "Release auto update version $LD_RELEASE_VERSION"
+  pwd
 )
 
 clean_up() (
@@ -53,7 +54,7 @@ dry_run_gha() (
   setup
 
   echo "Dry run: will not publish action to github action marketplace."
-  pwd
+  cd githubActionsMetadataUpdates
   git show-ref
   git push origin main --tags --dry-run
 
