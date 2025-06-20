@@ -25,7 +25,7 @@ jobs:
       # actions can only run on main for some reason
       LD_RELEASE_VERSION: 2.14.0
       # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
-      GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
       CIRCLECI_CLI_TOKEN: ${{ secrets.CIRCLECI_CLI_TOKEN }}
