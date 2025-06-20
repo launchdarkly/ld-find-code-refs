@@ -17,9 +17,6 @@ setup() (
   sudo apt update
   sudo apt install gh
 
-  # use gh cli to login to github and set up git credentials
-  # gh auth login
-  gh auth status
   gh auth setup-git
 
   # clone checkout commit and push all metadata changes to gha repo
@@ -55,6 +52,7 @@ dry_run_gha() (
   setup
 
   echo "Dry run: will not publish action to github action marketplace."
+  git show-ref
   git push origin main --tags --dry-run
 
   clean_up
