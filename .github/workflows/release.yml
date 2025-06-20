@@ -1,33 +1,38 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      dryRun:
-        description: Perform a dry-run only
-        required: false
-        type: boolean
-      releaseVersion:
-        description: Next release version
-        required: true
-        type: string
-      changeLog:
-        description: Pending changelog
-        required: true
-        type: string
+  pull_request
+  # workflow_dispatch:
+  #   inputs:
+  #     dryRun:
+  #       description: Perform a dry-run only
+  #       required: false
+  #       type: boolean
+  #     releaseVersion:
+  #       description: Next release version
+  #       required: true
+  #       type: string
+  #     changeLog:
+  #       description: Pending changelog
+  #       required: true
+  #       type: string
 
 jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
+      # temporary ENV VARs for input; this is only because workflow_dispatch
+      # actions can only run on main for some reason
+      LD_RELEASE_VERSION: 2.14.0
+      # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
       GH_TOKEN: ${{ secrets.BOT_TOKEN }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
       CIRCLECI_CLI_TOKEN: ${{ secrets.CIRCLECI_CLI_TOKEN }}
       BITBUCKET_USERNAME: ${{ secrets.BITBUCKET_USERNAME }}
       BITBUCKET_TOKEN: ${{ secrets.BITBUCKET_TOKEN }}
-      DRY_RUN: ${{ inputs.dryRun }}
+      DRY_RUN: true
+      # DRY_RUN: ${{ inputs.dryRun }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
