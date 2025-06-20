@@ -36,11 +36,11 @@ jobs:
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
-        name: Get secrets
-        with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          s3_path_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
+      # - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+      #   name: Get secrets
+      #   with:
+      #     aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+      #     s3_path_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
       - name: update-version
         run: |
           ./scripts/release/update-version.sh
