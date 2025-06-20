@@ -18,7 +18,7 @@ setup() (
   sudo apt install gh
 
   # use gh cli to login to github and set up git credentials
-  echo ${GITHUB_TOKEN} | gh auth login --with-token
+  gh auth login
   gh auth setup-git
 
   # clone checkout commit and push all metadata changes to gha repo
