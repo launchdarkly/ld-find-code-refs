@@ -18,11 +18,10 @@ setup() (
   sudo apt install gh
 
   # use gh cli to login to github and set up git credentials
-  gh auth login --with-token < $GITHUB_TOKEN
+  gh auth login --with-token < ${GITHUB_TOKEN}
   gh auth setup-git
 
   # clone checkout commit and push all metadata changes to gha repo
-  rm -rf githubActionsMetadataUpdates
   mkdir -p githubActionsMetadataUpdates
   gh repo clone launchdarkly/find-code-references githubActionsMetadataUpdates
   cp build/metadata/github-actions/* githubActionsMetadataUpdates
