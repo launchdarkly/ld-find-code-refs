@@ -4,6 +4,8 @@ sudo docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_TOKEN}
 
 sudo PATH=${PATH} GITHUB_TOKEN=${GITHUB_TOKEN} make products-for-release
 
+mkdir -p ${ARTIFACT_DIRECTORY}
+
 # Copy the Docker image that goreleaser just built into the artifacts - we only do
 # this in a dry run, because in a real release the image will be available from
 # DockerHub anyway so there's no point in attaching it to the release.
