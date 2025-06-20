@@ -19,7 +19,9 @@ setup() (
 
   # use gh cli to login to github and set up git credentials
   gh auth login
+  echo "okay here"
   gh auth setup-git
+  echo "not here prolly"
 
   # clone checkout commit and push all metadata changes to gha repo
   mkdir -p githubActionsMetadataUpdates
