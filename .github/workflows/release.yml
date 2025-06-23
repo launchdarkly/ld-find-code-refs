@@ -38,6 +38,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: launchdarkly/common-action/ssh-key-by-repo@main
+        with:
+          repo_keys_map: |
+            {
+              "launchdarkly/find-code-references" = ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERECES_DEPLOY_KEY) }}
+            }
       # - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       #   name: Get secrets
       #   with:
@@ -72,4 +78,3 @@ jobs:
   #         token: ${{ secrets.BOT_TOKEN }}
   #         tag: v${{ inputs.releaseVersion }}
   #         body: ${{ inputs.changeLog }}
-
