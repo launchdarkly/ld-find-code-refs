@@ -42,6 +42,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: launchdarkly/find-code-references
+          path: find-code-references
       # - name: setup access for find-code-references
       #   uses: launchdarkly/common-actions/ssh-key-by-repo@main
       #   with:
