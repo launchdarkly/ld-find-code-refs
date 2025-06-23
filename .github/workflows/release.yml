@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: launchdarkly/common-action/ssh-key-by-repo@main
+      - uses: launchdarkly/common-actions/ssh-key-by-repo@main
         with:
           repo_keys_map: |
             {
