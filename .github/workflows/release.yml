@@ -39,12 +39,13 @@ jobs:
         with:
           fetch-depth: 0
       - name: setup access for find-code-references
-        uses: launchdarkly/common-actions/ssh-key-by-repo@a96f43594a08620a981f2e85aecd60c4a469885d
+        uses: launchdarkly/common-actions/ssh-key-by-repo@main
         with:
           repo_keys_map: |
             {
               "launchdarkly/find-code-references" = ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERECES_DEPLOY_KEY) }}
             }
+      - run: git submodule update --init --recursive
       # - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       #   name: Get secrets
       #   with:
