@@ -38,18 +38,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          repository: launchdarkly/find-code-references
-          path: find-code-references
-      # - name: setup access for find-code-references
-      #   uses: launchdarkly/common-actions/ssh-key-by-repo@main
-      #   with:
-      #     repo_keys_map: |
-      #       {
-      #         "launchdarkly/find-code-references" = ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERECES_DEPLOY_KEY) }}
-      #       }
+      - name: setup access for find-code-references
+        uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
       # - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       #   name: Get secrets
       #   with:
