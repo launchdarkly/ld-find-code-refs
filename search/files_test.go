@@ -80,3 +80,25 @@ func Test_readFiles(t *testing.T) {
 		})
 	})
 }
+
+func Test_resolvePath(t *testing.T) {
+	testCases := []struct{ name, path, workspace, subdirectory, expectedPath string }{{
+		name:         "with subdirectory",
+		path:         "/path/to/workspace/subdirectory/subsubdir/file.txt",
+		workspace:    "/path/to/workspace",
+		subdirectory: "subdirectory",
+		expectedPath: "subdirectory/subsubdir/file.txt",
+	}, {
+		name:         "without subdirectory",
+		path:         "/path/to/workspace/file.txt",
+		workspace:    "/path/to/workspace",
+		subdirectory: "",
+		expectedPath: "file.txt",
+	}}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expectedPath, resolvePath(tc.path, tc.workspace, tc.subdirectory))
+		})
+	}
+}
