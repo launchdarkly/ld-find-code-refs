@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.24.1
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.8.1
+	github.com/bmatcuk/doublestar/v4 v4.9.0
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/iancoleman/strcase v0.3.0
