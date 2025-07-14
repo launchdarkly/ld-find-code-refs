@@ -394,7 +394,7 @@ func Test_SearchForRefs(t *testing.T) {
 		NewElementMatcher("default", "", "", []string{testFlagKey, testFlagKey2}, nil),
 	)
 	t.Cleanup(func() { os.Remove("testdata/exclude-github-files/symlink") })
-	got, err := SearchForRefs("testdata/exclude-github-files", matcher)
+	got, err := SearchForRefs("testdata/exclude-github-files", "", matcher)
 	require.NoError(t, err)
 	require.Len(t, got, 1)
 	require.Equal(t, want[0].Path, got[0].Path)

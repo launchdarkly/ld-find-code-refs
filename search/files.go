@@ -64,7 +64,7 @@ func readFileLines(path string) ([]string, error) {
 	return lines, nil
 }
 
-func readFiles(ctx context.Context, files chan<- file, workspace string) error {
+func readFiles(ctx context.Context, files chan<- file, workspace, subdirectory string) error {
 	defer close(files)
 	ignoreFiles := []string{".gitignore", ".ignore", ".ldignore"}
 	allIgnores := newIgnore(workspace, ignoreFiles)
@@ -108,9 +108,20 @@ func readFiles(ctx context.Context, files chan<- file, workspace string) error {
 			return nil
 		}
 
-		files <- file{path: strings.TrimPrefix(path, workspace+"/"), lines: lines}
+		resolvedPath := resolvePath(path, workspace, subdirectory)
+
+		files <- file{path: resolvedPath, lines: lines}
 		return nil
 	}
 
 	return filepath.Walk(workspace, readFile)
+}
+
+func resolvePath(path, workspace, subdirectory string) string {
+	dir := workspace
+	if subdirectory != "" {
+		dir = strings.TrimSuffix(workspace, "/"+subdirectory)
+	}
+
+	return strings.TrimPrefix(path, dir+"/")
 }
