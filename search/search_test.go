@@ -48,6 +48,11 @@ var (
 		*withFlagKey(withAliases(makeHunkPtr(5, testFlag2Alias), testFlag2Alias), testFlagKey2),
 	}
 
+	testFileWithSubdir = file{
+		path:  "subdir/fileWithRefs",
+		lines: []string{testFlagKey, testFlagKey2},
+	}
+
 	delimitedTestFlagKey = delimit(testFlagKey, `"`)
 )
 
@@ -386,18 +391,40 @@ func Test_processFiles(t *testing.T) {
 
 func Test_SearchForRefs(t *testing.T) {
 	os.Symlink("testdata/exclude-github-files/fileWithRefs", "testdata/exclude-github-files/symlink")
-	want := []ld.ReferenceHunksRep{{Path: testFile.path}}
-	matcher := Matcher{
-		ctxLines: 0,
-	}
+
+	matcher := Matcher{ctxLines: 0}
 	matcher.Elements = append(matcher.Elements,
 		NewElementMatcher("default", "", "", []string{testFlagKey, testFlagKey2}, nil),
 	)
+
+	t.Run("without subdirectory option finds both files", func(t *testing.T) {
+		actual, err := SearchForRefs("testdata/exclude-github-files", "", matcher)
+		require.NoError(t, err)
+		require.Len(t, actual, 2)
+
+		var foundFirst, foundSecond bool
+		for _, r := range actual {
+			switch r.Path {
+			case testFile.path:
+				foundFirst = true
+			case testFileWithSubdir.path:
+				foundSecond = true
+			default:
+				t.Fatal("found unexpected file " + r.Path)
+			}
+		}
+		require.True(t, foundFirst)
+		require.True(t, foundSecond)
+	})
+
+	t.Run("with subdirectory option finds only the file in the subdirectory", func(t *testing.T) {
+		actual, err := SearchForRefs("testdata/exclude-github-files/subdir", "subdir", matcher)
+		require.NoError(t, err)
+		require.Len(t, actual, 1)
+		require.Equal(t, testFileWithSubdir.path, actual[0].Path)
+	})
+
 	t.Cleanup(func() { os.Remove("testdata/exclude-github-files/symlink") })
-	got, err := SearchForRefs("testdata/exclude-github-files", "", matcher)
-	require.NoError(t, err)
-	require.Len(t, got, 1)
-	require.Equal(t, want[0].Path, got[0].Path)
 }
 
 func Test_truncateLine(t *testing.T) {
