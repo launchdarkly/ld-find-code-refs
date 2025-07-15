@@ -56,6 +56,7 @@ dry_run_gha() (
   echo "Dry run: will not publish action to github action marketplace."
   cd githubActionsMetadataUpdates
   git show-ref
+  git remote -v
   git push origin main --tags --dry-run
 
   clean_up
