@@ -84,10 +84,10 @@ func Test_readFiles(t *testing.T) {
 func Test_resolvePath(t *testing.T) {
 	testCases := []struct{ name, path, workspace, subdirectory, expectedPath string }{{
 		name:         "with subdirectory",
-		path:         "/path/to/workspace/subdirectory/subsubdir/file.txt",
+		path:         "/path/to/workspace/subdirectory/internal/file.txt",
 		workspace:    "/path/to/workspace",
 		subdirectory: "subdirectory",
-		expectedPath: "subdirectory/subsubdir/file.txt",
+		expectedPath: "subdirectory/internal/file.txt",
 	}, {
 		name:         "without subdirectory",
 		path:         "/path/to/workspace/file.txt",
