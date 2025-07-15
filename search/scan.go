@@ -19,7 +19,7 @@ func Scan(opts options.Options, repoParams ld.RepoParams, dir string) (Matcher, 
 		searchDir = filepath.Join(dir, opts.Subdirectory)
 	}
 
-	refs, err := SearchForRefs(searchDir, matcher)
+	refs, err := SearchForRefs(searchDir, opts.Subdirectory, matcher)
 	if err != nil {
 		log.Error.Fatalf("error searching for flag key references: %s", err)
 	}
