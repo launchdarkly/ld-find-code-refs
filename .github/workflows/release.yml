@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  # pull_request
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: Perform a dry-run only
+        required: false
+        type: boolean
+      releaseVersion:
+        description: Next release version
+        required: true
+        type: string
+      # changeLog:
+      #   description: Pending changelog
+      #   required: true
+      #   type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # temporary ENV VARs for input; this is only because workflow_dispatch
+      # actions can only run on main for some reason
+      # LD_RELEASE_VERSION: 2.14.0
+      # DRY_RUN: true
+      LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
+      DRY_RUN: ${{ inputs.dryRun }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      # DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+      # CIRCLECI_CLI_TOKEN: ${{ secrets.CIRCLECI_CLI_TOKEN }}
+      BITBUCKET_USERNAME: ${{ secrets.BITBUCKET_USERNAME }}
+      BITBUCKET_TOKEN: ${{ secrets.BITBUCKET_TOKEN }}
+      ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: setup access for find-code-references
+        uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
+        with:
+          repo_keys_map: |
+            {
+              "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
+            }
+      - name: "Print role arn"
+        run: echo "role arn -> ${{ vars.AWS_ROLE_ARN }}"
+      # - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+      #   name: Get secrets
+      #   with:
+      #     aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+      #     s3_path_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
+      - name: update-version
+        run: |
+          ./scripts/release/update-version.sh
+      - name: build
+        run: |
+          if [[ $LD_RELEASE_VERSION == v* ]]; then
+            echo "Remove v prefix from version: $LD_RELEASE_VERSION"
+            exit 1
+          fi
+
+          make build
+      - name: publish
+        run: |
+          if [[ "$DRY_RUN" = true ]]; then
+            ./scripts/release/publish-dry-run.sh
+          else
+            ./scripts/release/publish.sh
+          fi
+  # create-release:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   needs: release
+  #   steps:
+  #     - uses: ncipollo/release-action@v1.14.0
+  #       with:
+  #         token: ${{ secrets.BOT_TOKEN }}
+  #         tag: v${{ inputs.releaseVersion }}
+  #         body: ${{ inputs.changeLog }}
