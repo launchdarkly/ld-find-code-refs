@@ -45,6 +45,7 @@ jobs:
             {
               "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
             }
+      - run: echo ${{ vars.AWS_ROLE_ARN }}
       # - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       #   name: Get secrets
       #   with:
