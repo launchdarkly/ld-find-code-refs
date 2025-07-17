@@ -1,21 +1,21 @@
 name: Release
 
 on:
-  pull_request
-  # workflow_dispatch:
-  #   inputs:
-  #     dryRun:
-  #       description: Perform a dry-run only
-  #       required: false
-  #       type: boolean
-  #     releaseVersion:
-  #       description: Next release version
-  #       required: true
-  #       type: string
-  #     changeLog:
-  #       description: Pending changelog
-  #       required: true
-  #       type: string
+  # pull_request
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: Perform a dry-run only
+        required: false
+        type: boolean
+      releaseVersion:
+        description: Next release version
+        required: true
+        type: string
+      # changeLog:
+      #   description: Pending changelog
+      #   required: true
+      #   type: string
 
 jobs:
   release:
@@ -23,10 +23,10 @@ jobs:
     env:
       # temporary ENV VARs for input; this is only because workflow_dispatch
       # actions can only run on main for some reason
-      LD_RELEASE_VERSION: 2.14.0
-      DRY_RUN: true
-      # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
-      # DRY_RUN: ${{ inputs.dryRun }}
+      # LD_RELEASE_VERSION: 2.14.0
+      # DRY_RUN: true
+      LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
+      DRY_RUN: ${{ inputs.dryRun }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       # DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
@@ -45,7 +45,8 @@ jobs:
             {
               "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
             }
-      - run: echo ${{ vars.AWS_ROLE_ARN }}
+      - name: "Print role arn"
+        run: echo "role arn -> ${{ vars.AWS_ROLE_ARN }}"
       # - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       #   name: Get secrets
       #   with:
