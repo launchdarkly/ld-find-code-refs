@@ -21,5 +21,5 @@ for script in $(dirname $0)/publish-runners/*.sh; do
 done
 
 dry_run_gha
-dry_run_circleci
+# dry_run_circleci
 dry_run_bitbucket
