@@ -35,7 +35,8 @@ dry_run_bitbucket() (
   setup
 
   echo "Dry run: will not publish pipe to bitbucket."
-  git push bb-origin master --tags --dry-run
+  git show-ref
+  git push bb-origin main --tags --dry-run
 
   clean_up
 )
