@@ -3,7 +3,7 @@
 # Run this in publish step after all version information have been updated.
 set -ev
 
-setup() (
+setup_bitbucket() (
   rm -rf bitbucketMetadataUpdates
   mkdir -p bitbucketMetadataUpdates
   git clone "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git" bitbucketMetadataUpdates
@@ -17,25 +17,27 @@ setup() (
   git remote add bb-origin "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git"
 )
 
-clean_up() (
+clean_up_bitbucket() (
   cd .. && rm -rf bitbucketMetadataUpdates
 )
 
 publish_bitbucket() (
-  setup
+  setup_bitbucket
 
   echo "Live run: will publish pipe to bitbucket."
   git tag $LD_RELEASE_VERSION
   git push bb-origin master --tags
 
-  clean_up
+  clean_up_bitbucket
 )
 
 dry_run_bitbucket() (
-  setup
+  setup_bitbucket
 
   echo "Dry run: will not publish pipe to bitbucket."
-  git push origin main --tags --dry-run
+  git show-ref
+  git remote -v
+  git push bb-origin master --tags --dry-run
 
-  clean_up
+  clean_up_bitbucket
 )

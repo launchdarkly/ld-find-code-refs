@@ -10,7 +10,7 @@ RELEASE_NOTES="$(make echo-release-notes)"
 VERSION_MAJOR="${LD_RELEASE_VERSION%%\.*}"
 RELEASE_TAG_MAJOR="v${VERSION_MAJOR}"
 
-setup() (
+setup_gha() (
   # install gh cli so we can create a release later https://github.com/cli/cli/blob/trunk/docs/install_linux.md
   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
@@ -32,12 +32,12 @@ setup() (
   pwd
 )
 
-clean_up() (
+clean_up_gha() (
   cd .. && rm -rf githubActionsMetadataUpdates
 )
 
 publish_gha() (
-  setup
+  setup_gha
 
   echo "Live run: will publish action to github action marketplace."
   # tag the commit with the release version and create release
@@ -58,5 +58,5 @@ dry_run_gha() (
   git show-ref
   git push origin main --tags --dry-run
 
-  clean_up
+  clean_up_gha
 )
