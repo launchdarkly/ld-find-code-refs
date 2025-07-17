@@ -35,7 +35,7 @@ dry_run_bitbucket() (
   setup_bitbucket
 
   echo "Dry run: will not publish pipe to bitbucket."
-  pwd
+  cd bitbucketMetadataUpdates
   git show-ref
   git remote -v
   git push bb-origin master --tags --dry-run
