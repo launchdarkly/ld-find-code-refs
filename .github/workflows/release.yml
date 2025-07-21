@@ -19,6 +19,8 @@ on:
 
 jobs:
   release:
+    permissions:
+      id-token:
     runs-on: ubuntu-latest
     env:
       # temporary ENV VARs for input; this is only because workflow_dispatch
@@ -28,11 +30,6 @@ jobs:
       # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
       # DRY_RUN: ${{ inputs.dryRun }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      # DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-      # CIRCLECI_CLI_TOKEN: ${{ secrets.CIRCLECI_CLI_TOKEN }}
-      # BITBUCKET_USERNAME: ${{ secrets.BITBUCKET_USERNAME }}
-      # BITBUCKET_TOKEN: ${{ secrets.BITBUCKET_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
