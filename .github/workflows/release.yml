@@ -38,6 +38,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+        name: Get secrets
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
       - name: setup access for find-code-references
         uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
         with:
@@ -45,11 +50,6 @@ jobs:
             {
               "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
             }
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
-        name: Get secrets
-        with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
       - name: update-version
         run: |
           ./scripts/release/update-version.sh
