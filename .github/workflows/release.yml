@@ -31,8 +31,8 @@ jobs:
       # DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       # DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
       # CIRCLECI_CLI_TOKEN: ${{ secrets.CIRCLECI_CLI_TOKEN }}
-      BITBUCKET_USERNAME: ${{ secrets.BITBUCKET_USERNAME }}
-      BITBUCKET_TOKEN: ${{ secrets.BITBUCKET_TOKEN }}
+      # BITBUCKET_USERNAME: ${{ secrets.BITBUCKET_USERNAME }}
+      # BITBUCKET_TOKEN: ${{ secrets.BITBUCKET_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
