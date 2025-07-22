@@ -20,6 +20,6 @@ for script in $(dirname $0)/targets/*.sh; do
   source $script
 done
 
+dry_run_bitbucket
 dry_run_gha
 dry_run_circleci
-dry_run_bitbucket
