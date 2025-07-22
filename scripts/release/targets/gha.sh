@@ -55,7 +55,7 @@ publish_gha() (
 )
 
 dry_run_gha() (
-  setup
+  setup_gha
 
   echo "Dry run: will not publish action to github action marketplace."
   cd githubActionsMetadataUpdates
