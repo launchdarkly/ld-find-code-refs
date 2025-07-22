@@ -60,8 +60,12 @@ publish_circleci() (
   install_circleci
   validate_circleci_orb_config
 
-  echo "Live run: will publish orb to production circleci repo."
-  circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@$LD_RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
+  if circleci orb list | grep launchdarkly/ld-find-code-refs@$LD_RELEASE_VERSION; then
+    echo "Version exists; skipping publishing CircleCI Orb"
+  else
+    echo "Live run: will publish orb to production circleci repo."
+    circleci orb publish build/package/circleci/orb.yml launchdarkly/ld-find-code-refs@$LD_RELEASE_VERSION --token $CIRCLECI_CLI_TOKEN --host $CIRCLECI_CLI_HOST
+  fi
 )
 
 dry_run_circleci() (

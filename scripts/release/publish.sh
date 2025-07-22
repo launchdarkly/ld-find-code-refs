@@ -11,7 +11,7 @@ chmod 644 ~/.ssh/known_hosts
 ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts
 ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
-for script in $(dirname $0)/publish-runners/*.sh; do
+for script in $(dirname $0)/targets/*.sh; do
   source $script
 done
 

@@ -65,7 +65,7 @@ jobs:
           else
             ./scripts/release/publish.sh
           fi
-  # create-release:
+  # create-gh-release:
   #   runs-on: ubuntu-latest
   #   permissions:
   #     contents: write
@@ -73,6 +73,6 @@ jobs:
   #   steps:
   #     - uses: ncipollo/release-action@v1.14.0
   #       with:
-  #         token: ${{ secrets.BOT_TOKEN }}
+  #         token: ${{ secrets.GITHUB_TOKEN }}
   #         tag: v${{ inputs.releaseVersion }}
   #         body: ${{ inputs.changeLog }}

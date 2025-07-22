@@ -23,10 +23,15 @@ clean_up_bitbucket() (
 
 publish_bitbucket() (
   setup_bitbucket
+  cd bitbucketMetadataUpdates
 
-  echo "Live run: will publish pipe to bitbucket."
-  git tag $LD_RELEASE_VERSION
-  git push bb-origin master --tags
+  if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q "v$VERSION"; then
+    echo "Version exists; skipping publishing BitBucket Pipe"
+  else
+    echo "Live run: will publish pipe to bitbucket."
+    git tag $LD_RELEASE_VERSION
+    git push bb-origin master --tags
+  fi
 
   clean_up_bitbucket
 )
@@ -36,8 +41,6 @@ dry_run_bitbucket() (
 
   echo "Dry run: will not publish pipe to bitbucket."
   cd bitbucketMetadataUpdates
-  git show-ref
-  git remote -v
   git push bb-origin master --tags --dry-run
 
   clean_up_bitbucket

@@ -16,10 +16,10 @@ sudo docker save launchdarkly/${BASE_CODEREFS}:latest | gzip >${ARTIFACT_DIRECTO
 sudo docker save launchdarkly/${GH_CODEREFS}:latest | gzip >${ARTIFACT_DIRECTORY}/${GH_CODEREFS}.tar.gz
 sudo docker save launchdarkly/${BB_CODEREFS}:latest | gzip >${ARTIFACT_DIRECTORY}/${BB_CODEREFS}.tar.gz
 
-for script in $(dirname $0)/publish-runners/*.sh; do
+for script in $(dirname $0)/targets/*.sh; do
   source $script
 done
 
-# dry_run_gha
+dry_run_gha
 dry_run_circleci
 dry_run_bitbucket
