@@ -28,7 +28,7 @@ jobs:
       LD_RELEASE_VERSION: 2.14.0
       DRY_RUN: true
       # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
-      # DRY_RUN: ${{ inputs.dryRun }}
+      # DRY_RUN: ${{ inputs.dryRun || 'false' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
@@ -47,9 +47,6 @@ jobs:
             {
               "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
             }
-      - name: update-version
-        run: |
-          ./scripts/release/update-version.sh
       - name: build
         run: |
           if [[ $LD_RELEASE_VERSION == v* ]]; then
@@ -65,14 +62,25 @@ jobs:
           else
             ./scripts/release/publish.sh
           fi
-  # create-gh-release:
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #   needs: release
-  #   steps:
-  #     - uses: ncipollo/release-action@v1.14.0
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         tag: v${{ inputs.releaseVersion }}
-  #         body: ${{ inputs.changeLog }}
+
+  create-gh-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: release
+    steps:
+      - name: prepare files for release
+        env:
+          # temporary ENV VARs for input; this is only because workflow_dispatch
+          # actions can only run on main for some reason
+          LD_RELEASE_VERSION: 2.14.0
+          DRY_RUN: true
+        run: |
+          ./scripts/release/prepare-release.sh
+      # - name: Create Github release
+      #   uses: ncipollo/release-action@v1.14.0
+      #   if: ${{ inputs.dryRun != 'true' }}
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: v${{ inputs.releaseVersion }}
+      #     body: ${{ inputs.changeLog }}
