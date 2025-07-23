@@ -9,16 +9,34 @@ tag_exists() (
   git rev-parse "${RELEASE_TAG}" >/dev/null 2>&1
 )
 
+update_changelog() (
+  local ts=$(date +"%Y-%m-%d"))
+  local changelog_entry=$(cat << EOF
+## [$LD_RELEASE_VERSION] - $ts
+$CHANGELOG_ENTRY
+EOF
+  )
+
+  # insert the new changelog entry (followed by empty line) after line 4
+  # of CHANGELOG.md
+  sed -i "4r /dev/stdin" CHANGELOG.md <<< "$changelog_entry"$'\n'
+
+  cat CHANGELOG.md
+)
+
 echo "Changes staged for release $RELEASE_TAG:"
 git diff
 
 if [[ "$DRY_RUN" == "true" ]]; then
   echo "Dry run mode: skipping commit, tag, and push"
+  update_changelog
 else
   if tag_exists; then
     echo "Tag $RELEASE_TAG already exists. Aborting."
     exit 1
   fi
+
+  update_changelog
 
   git config user.name "LaunchDarklyReleaseBot"
   git config user.email "releasebot@launchdarkly.com"
