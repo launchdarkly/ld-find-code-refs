@@ -1,21 +1,20 @@
 name: Release
 
 on:
-  pull_request
-  # workflow_dispatch:
-  #   inputs:
-  #     dryRun:
-  #       description: Perform a dry-run only
-  #       required: false
-  #       type: boolean
-  #     releaseVersion:
-  #       description: Next release version
-  #       required: true
-  #       type: string
-  #     changeLog:
-  #       description: Pending changelog
-  #       required: true
-  #       type: string
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: Perform a dry-run only
+        required: false
+        type: boolean
+      releaseVersion:
+        description: Next release version
+        required: true
+        type: string
+      changeLog:
+        description: Pending changelog
+        required: true
+        type: string
 
 jobs:
   release:
@@ -23,12 +22,8 @@ jobs:
       id-token: 'write'
     runs-on: ubuntu-latest
     env:
-      # temporary ENV VARs for input; this is only because workflow_dispatch
-      # actions can only run on main for some reason
-      LD_RELEASE_VERSION: 2.14.0
-      DRY_RUN: true
-      # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
-      # DRY_RUN: ${{ inputs.dryRun || 'false' }}
+      LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
+      DRY_RUN: ${{ inputs.dryRun || 'false' }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
@@ -72,10 +67,10 @@ jobs:
           DRY_RUN: true
         run: |
           ./scripts/release/commit-and-tag.sh
-      # - name: Create Github release
-      #   uses: ncipollo/release-action@v1.14.0
-      #   if: ${{ inputs.dryRun != 'true' }}
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     tag: v${{ inputs.releaseVersion }}
-      #     body: ${{ inputs.changeLog }}
+      - name: Create Github release
+        uses: ncipollo/release-action@v1.14.0
+        if: ${{ inputs.dryRun != 'true' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ inputs.releaseVersion }}
+          body: ${{ inputs.changeLog }}
