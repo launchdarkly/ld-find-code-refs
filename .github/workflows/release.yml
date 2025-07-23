@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: Perform a dry-run only
+        required: false
+        type: boolean
+      releaseVersion:
+        description: Next release version
+        required: true
+        type: string
+      changeLog:
+        description: Pending changelog
+        required: true
+        type: string
+
+jobs:
+  release:
+    permissions:
+      id-token: 'write'
+    runs-on: ubuntu-latest
+    env:
+      LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
+      DRY_RUN: ${{ inputs.dryRun || 'false' }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+        name: Get secrets
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
+      - name: setup access for find-code-references
+        uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
+        with:
+          repo_keys_map: |
+            {
+              "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
+            }
+      - name: build
+        run: |
+          if [[ $LD_RELEASE_VERSION == v* ]]; then
+            echo "Remove v prefix from version: $LD_RELEASE_VERSION"
+            exit 1
+          fi
+
+          make build
+      - name: prepare release
+        run: ./scripts/release/prepare-release.sh
+      - name: publish
+        run: |
+          if [[ "$DRY_RUN" = true ]]; then
+            ./scripts/release/publish-dry-run.sh
+          else
+            ./scripts/release/publish.sh
+          fi
+      - name: Commit changes and tag
+        run: |
+          ./scripts/release/commit-and-tag.sh
+      - name: Create Github release
+        uses: ncipollo/release-action@v1.14.0
+        if: ${{ inputs.dryRun != 'true' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ inputs.releaseVersion }}
+          body: ${{ inputs.changeLog }}
