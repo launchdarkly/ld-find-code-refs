@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run this in publish step after all version information have been updated.
-set -ev
+set -euo pipefail
 
 setup_bitbucket() (
   rm -rf bitbucketMetadataUpdates
@@ -12,10 +12,6 @@ setup_bitbucket() (
   cd bitbucketMetadataUpdates
   git config user.email "launchdarklyreleasebot@launchdarkly.com"
   git config user.name "LaunchDarklyReleaseBot"
-  git show -p
-  cat ../build/metadata/bitbucket/README.md
-  echo "\n"
-  cat ../build/metadata/bitbucket/pipe.yml
   git add -u
   git commit -m "Release auto update version $LD_RELEASE_VERSION"
   git remote add bb-origin "https://${BITBUCKET_USERNAME}:${BITBUCKET_TOKEN}@bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git"

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 sudo docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_TOKEN}
 
 sudo PATH=${PATH} GITHUB_TOKEN=${GITHUB_TOKEN} make publish

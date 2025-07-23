@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run this in publish step after all version information have been updated.
-set -ev
+set -euo pipefail
 
 CIRCLECI_CLI_HOST="https://circleci.com"
 

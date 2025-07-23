@@ -55,6 +55,8 @@ jobs:
           fi
 
           make build
+      - name: prepare release
+        run: ./scripts/release/prepare-release.sh
       - name: publish
         run: |
           if [[ "$DRY_RUN" = true ]]; then
@@ -69,14 +71,14 @@ jobs:
       contents: write
     needs: release
     steps:
-      - name: prepare files for release
+      - name: Commit changes and tag
         env:
           # temporary ENV VARs for input; this is only because workflow_dispatch
           # actions can only run on main for some reason
           LD_RELEASE_VERSION: 2.14.0
           DRY_RUN: true
         run: |
-          ./scripts/release/prepare-release.sh
+          ./scripts/release/commit-and-tag.sh
       # - name: Create Github release
       #   uses: ncipollo/release-action@v1.14.0
       #   if: ${{ inputs.dryRun != 'true' }}

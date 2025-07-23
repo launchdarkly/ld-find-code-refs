@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run this in publish step after all version information have been updated.
-set -ev
+set -euo pipefail
 
 RELEASE_TAG="v${LD_RELEASE_VERSION}"
 RELEASE_NOTES="$(make echo-release-notes)"
