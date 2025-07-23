@@ -2,12 +2,12 @@
 
 set -euo pipefail
 
-sudo docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_TOKEN}
+echo ${DOCKER_TOKEN} | sudo docker login --username ${DOCKER_USERNAME} --password-stdin
 
 sudo PATH=${PATH} GITHUB_TOKEN=${GITHUB_TOKEN} make publish
 
 # make bitbucket and github known hosts to push successfully
-mkdir –m700 ~/.ssh
+mkdir -m700 ~/.ssh
 touch ~/.ssh/known_hosts
 chmod 644 ~/.ssh/known_hosts
 ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts

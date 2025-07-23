@@ -23,11 +23,6 @@ update_bitbucket() (
   sed -i "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:${LD_RELEASE_VERSION}#g" build/metadata/bitbucket/pipe.yml
 )
 
-tag_exists() (
-  git fetch --tags
-  git rev-parse "${RELEASE_TAG}" >/dev/null 2>&1
-)
-
 update_go
 update_orb
 update_gha
