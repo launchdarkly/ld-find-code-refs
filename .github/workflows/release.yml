@@ -24,6 +24,7 @@ jobs:
     env:
       LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
       DRY_RUN: ${{ inputs.dryRun || 'false' }}
+      CHANGELOG_ENTRY: ${{ inputs.changeLog }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
