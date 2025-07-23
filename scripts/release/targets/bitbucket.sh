@@ -25,7 +25,7 @@ publish_bitbucket() (
   setup_bitbucket
   cd bitbucketMetadataUpdates
 
-  if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q "v$VERSION"; then
+  if git ls-remote --tags origin "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"; then
     echo "Version exists; skipping publishing BitBucket Pipe"
   else
     echo "Live run: will publish pipe to bitbucket."

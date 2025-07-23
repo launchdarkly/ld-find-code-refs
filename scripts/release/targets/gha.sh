@@ -39,7 +39,7 @@ clean_up_gha() (
 publish_gha() (
   setup_gha
 
-  if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q "v$VERSION"; then
+  if git ls-remote --tags origin "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"; then
     echo "Version exists; skipping publishing GHA"
   else
     echo "Live run: will publish action to github action marketplace."
@@ -51,7 +51,7 @@ publish_gha() (
     gh release create $RELEASE_TAG --notes "$RELEASE_NOTES"
   fi
 
-  clean_up
+  clean_up_gha
 )
 
 dry_run_gha() (

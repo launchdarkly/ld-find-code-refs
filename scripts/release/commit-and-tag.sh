@@ -4,6 +4,11 @@ set -euo pipefail
 
 RELEASE_TAG="v${LD_RELEASE_VERSION}"
 
+tag_exists() (
+  git fetch --tags
+  git rev-parse "${RELEASE_TAG}" >/dev/null 2>&1
+)
+
 echo "Changes staged for release $RELEASE_TAG:"
 git diff
 
