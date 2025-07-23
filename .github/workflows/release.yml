@@ -60,11 +60,6 @@ jobs:
             ./scripts/release/publish.sh
           fi
       - name: Commit changes and tag
-        env:
-          # temporary ENV VARs for input; this is only because workflow_dispatch
-          # actions can only run on main for some reason
-          LD_RELEASE_VERSION: 2.14.0
-          DRY_RUN: true
         run: |
           ./scripts/release/commit-and-tag.sh
       - name: Create Github release
