@@ -104,6 +104,7 @@ func (f file) aggregateHunksForFlag(projKey, flagKey string, matcher Matcher, li
 func (f file) toHunks(matcher Matcher) *ld.ReferenceHunksRep {
 	hunks := make([]ld.HunkRep, 0)
 	filteredMatchers := make([]ElementMatcher, 0)
+
 	for _, elementSearch := range matcher.Elements {
 		if elementSearch.Dir != "" {
 			matchDir := strings.HasPrefix(f.path, elementSearch.Dir)
@@ -192,7 +193,7 @@ func processFiles(ctx context.Context, files <-chan file, references chan<- ld.R
 	w.Wait()
 }
 
-func SearchForRefs(directory string, matcher Matcher) ([]ld.ReferenceHunksRep, error) {
+func SearchForRefs(directory, subdirectory string, matcher Matcher) ([]ld.ReferenceHunksRep, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	files := make(chan file)
@@ -200,7 +201,7 @@ func SearchForRefs(directory string, matcher Matcher) ([]ld.ReferenceHunksRep, e
 	// Start workers to process files asynchronously as they are written to the files channel
 	go processFiles(ctx, files, references, matcher)
 
-	err := readFiles(ctx, files, directory)
+	err := readFiles(ctx, files, directory, subdirectory)
 	if err != nil {
 		return nil, err
 	}
