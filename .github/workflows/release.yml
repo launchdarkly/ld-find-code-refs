@@ -64,13 +64,6 @@ jobs:
           else
             ./scripts/release/publish.sh
           fi
-
-  create-gh-release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    needs: release
-    steps:
       - name: Commit changes and tag
         env:
           # temporary ENV VARs for input; this is only because workflow_dispatch
