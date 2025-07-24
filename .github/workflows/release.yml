@@ -1,21 +1,20 @@
 name: Release
 
 on:
-  pull_request
-  # workflow_dispatch:
-  #   inputs:
-  #     dryRun:
-  #       description: Perform a dry-run only
-  #       required: false
-  #       type: boolean
-  #     releaseVersion:
-  #       description: Next release version
-  #       required: true
-  #       type: string
-  #     changeLog:
-  #       description: Pending changelog
-  #       required: true
-  #       type: string
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: Perform a dry-run only
+        required: false
+        type: boolean
+      releaseVersion:
+        description: Next release version
+        required: true
+        type: string
+      changeLog:
+        description: Pending changelog
+        required: true
+        type: string
 
 jobs:
   release:
@@ -24,21 +23,17 @@ jobs:
       contents: 'write'
     runs-on: ubuntu-latest
     env:
-      # temporary for debugging on pull_request
-      LD_RELEASE_VERSION: 2.14.0
-      DRY_RUN: true
-      CHANGELOG_ENTRY: "changelog stuff or something"
-      # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
-      # DRY_RUN: ${{ inputs.dryRun || 'false' }}
-      # CHANGELOG_ENTRY: ${{ inputs.changeLog }}
+      LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
+      DRY_RUN: ${{ inputs.dryRun || 'false' }}
+      CHANGELOG_ENTRY: ${{ inputs.changeLog }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
-        name: Get secrets
+      - name: get secrets
+        uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
@@ -67,14 +62,13 @@ jobs:
             ./scripts/release/publish.sh
           fi
           ls -1a "$ARTIFACT_DIRECTORY"
-      - name: Commit changes and tag
-        run: |
-          ./scripts/release/commit-and-tag.sh
-      # - name: Create Github release
-      #   uses: ncipollo/release-action@v1.14.0
-      #   if: ${{ !inputs.dryRun }}
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     tag: v${{ inputs.releaseVersion }}
-      #     body: ${{ inputs.changeLog }}
-      #     artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*
+      - name: commit changes and tag
+        run: ./scripts/release/commit-and-tag.sh
+      - name: create Github release
+        uses: ncipollo/release-action@v1.14.0
+        if: ${{ !inputs.dryRun }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ inputs.releaseVersion }}
+          body: ${{ inputs.changeLog }}
+          artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*
