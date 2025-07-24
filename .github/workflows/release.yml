@@ -20,6 +20,7 @@ jobs:
   release:
     permissions:
       id-token: 'write'
+      contents: 'write'
     runs-on: ubuntu-latest
     env:
       LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
@@ -65,7 +66,7 @@ jobs:
           ./scripts/release/commit-and-tag.sh
       - name: Create Github release
         uses: ncipollo/release-action@v1.14.0
-        if: ${{ inputs.dryRun != 'true' }}
+        if: ${{ !inputs.dryRun }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ inputs.releaseVersion }}
