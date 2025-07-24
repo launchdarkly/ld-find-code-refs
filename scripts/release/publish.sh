@@ -2,9 +2,8 @@
 
 set -euo pipefail
 
-echo ${DOCKER_TOKEN} | sudo docker login --username ${DOCKER_USERNAME} --password-stdin
-
-sudo PATH=${PATH} GITHUB_TOKEN=${GITHUB_TOKEN} make publish
+source $(dirname $0)/stage-artifacts.sh
+stage_artifacts publish
 
 # make bitbucket and github known hosts to push successfully
 mkdir -m700 ~/.ssh
