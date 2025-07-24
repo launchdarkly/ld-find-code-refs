@@ -10,33 +10,36 @@ tag_exists() (
 )
 
 update_changelog() (
-  local ts=$(date +"%Y-%m-%d"))
+  local ts=$(date +"%Y-%m-%d")
   local changelog_entry=$(cat << EOF
 ## [$LD_RELEASE_VERSION] - $ts
 $CHANGELOG_ENTRY
 EOF
-  )
 
   # insert the new changelog entry (followed by empty line) after line 4
   # of CHANGELOG.md
   sed -i "4r /dev/stdin" CHANGELOG.md <<< "$changelog_entry"$'\n'
-
-  cat CHANGELOG.md
 )
 
-echo "Changes staged for release $RELEASE_TAG:"
-git diff
+release_summary() (
+  echo
+  echo "Changes staged for release $RELEASE_TAG:"
+  git diff
 
-if [[ "$DRY_RUN" == "true" ]]; then
-  echo "Dry run mode: skipping commit, tag, and push"
-  update_changelog
-else
+  echo
+  echo "Updated CHANGELOG:"
+  cat CHANGELOG.md
+  echo
+)
+
+commit_and_tag() (
   if tag_exists; then
     echo "Tag $RELEASE_TAG already exists. Aborting."
     exit 1
   fi
 
   update_changelog
+  release_summary
 
   git config user.name "LaunchDarklyReleaseBot"
   git config user.email "releasebot@launchdarkly.com"
@@ -45,5 +48,13 @@ else
   git tag "${RELEASE_TAG}"
   git push origin HEAD
   git push origin "${RELEASE_TAG}"
+)
+
+if [[ "$DRY_RUN" == "true" ]]; then
+  update_changelog
+  release_summary
+  echo "Dry run mode: skipping commit, tag, and push"
+else
+  commit_and_tag
 fi
 
