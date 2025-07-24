@@ -70,10 +70,11 @@ jobs:
       - name: Commit changes and tag
         run: |
           ./scripts/release/commit-and-tag.sh
-      - name: Create Github release
-        uses: ncipollo/release-action@v1.14.0
-        if: ${{ !inputs.dryRun }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ inputs.releaseVersion }}
-          body: ${{ inputs.changeLog }}
+      # - name: Create Github release
+      #   uses: ncipollo/release-action@v1.14.0
+      #   if: ${{ !inputs.dryRun }}
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: v${{ inputs.releaseVersion }}
+      #     body: ${{ inputs.changeLog }}
+      #     artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*
