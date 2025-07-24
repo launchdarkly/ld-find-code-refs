@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-sudo ./create-release-with-artifacts publish
+sudo $(dirname $0)/create-release-with-artifacts publish
 
 # make bitbucket and github known hosts to push successfully
 mkdir -m700 ~/.ssh
