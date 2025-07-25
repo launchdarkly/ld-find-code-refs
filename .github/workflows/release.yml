@@ -1,20 +1,21 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      dryRun:
-        description: Perform a dry-run only
-        required: false
-        type: boolean
-      releaseVersion:
-        description: Next release version
-        required: true
-        type: string
-      changeLog:
-        description: Pending changelog
-        required: true
-        type: string
+  pull_request
+  # workflow_dispatch:
+  #   inputs:
+  #     dryRun:
+  #       description: Perform a dry-run only
+  #       required: false
+  #       type: boolean
+  #     releaseVersion:
+  #       description: Next release version
+  #       required: true
+  #       type: string
+  #     changeLog:
+  #       description: Pending changelog
+  #       required: true
+  #       type: string
 
 jobs:
   release:
@@ -23,58 +24,55 @@ jobs:
       contents: 'write'
     runs-on: ubuntu-latest
     env:
-      LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
-      DRY_RUN: ${{ inputs.dryRun || 'false' }}
-      CHANGELOG_ENTRY: ${{ inputs.changeLog }}
+      LD_RELEASE_VERSION: 2.14.0
+      DRY_RUN: true
+      CHANGELOG_ENTRY: '### Added:\n- `--skipArchivedFlags` option to instruct the tool to ignore any flag keys it finds from archived flags\n\n### Changed:\n- replaced the stdlib `regexp` with `go-re2` for improved regexp compilation and pattern matching\n- now using caching to optimize file globbing and regex compilation\n- move off of legacy `olekukonko/tablewriter` and onto `v1.x`\n- updated to the latest version of the LaunchDarkly API\n\n### Fixed:\n- `subdirectory` option now works with `projects[*].dir` configuration, and produces correct "View in source" links in the LD UI'
+      # LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
+      # DRY_RUN: ${{ inputs.dryRun || 'false' }}
+      # CHANGELOG_ENTRY: ${{ inputs.changeLog }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install jq
-        run: |
-          if ! command -v jq >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y jq
-          fi
-      - name: get secrets
-        uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
-        with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
-      - name: setup access for find-code-references
-        uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
-        with:
-          repo_keys_map: |
-            {
-              "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
-            }
-      - name: build
-        run: |
-          if [[ $LD_RELEASE_VERSION == v* ]]; then
-            echo "Remove v prefix from version: $LD_RELEASE_VERSION"
-            exit 1
-          fi
+      # - name: get secrets
+      #   uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+      #   with:
+      #     aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+      #     ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN, /production/common/releasing/circleci/orb-token= CIRCLECI_CLI_TOKEN, /production/common/releasing/bitbucket/username = BITBUCKET_USERNAME, /production/common/releasing/bitbucket/token = BITBUCKET_TOKEN'
+      # - name: setup access for find-code-references
+      #   uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
+      #   with:
+      #     repo_keys_map: |
+      #       {
+      #         "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
+      #       }
+      # - name: build
+      #   run: |
+      #     if [[ $LD_RELEASE_VERSION == v* ]]; then
+      #       echo "Remove v prefix from version: $LD_RELEASE_VERSION"
+      #       exit 1
+      #     fi
 
-          make build
+      #     make build
       - name: prepare release
         run: ./scripts/release/prepare-release.sh
-      - name: publish
-        run: |
-          if [[ "$DRY_RUN" = true ]]; then
-            ./scripts/release/publish-dry-run.sh
-          else
-            ./scripts/release/publish.sh
-          fi
-          ls -1a "$ARTIFACT_DIRECTORY"
+      # - name: publish
+      #   run: |
+      #     if [[ "$DRY_RUN" = true ]]; then
+      #       ./scripts/release/publish-dry-run.sh
+      #     else
+      #       ./scripts/release/publish.sh
+      #     fi
+      #     ls -1a "$ARTIFACT_DIRECTORY"
       - name: commit changes and tag
         run: ./scripts/release/commit-and-tag.sh
-      - name: create Github release
-        uses: ncipollo/release-action@v1.14.0
-        if: ${{ !inputs.dryRun }}
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ inputs.releaseVersion }}
-          body: ${{ inputs.changeLog }}
-          artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*
+      # - name: create Github release
+      #   uses: ncipollo/release-action@v1.14.0
+      #   if: ${{ !inputs.dryRun }}
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: v${{ inputs.releaseVersion }}
+      #     body: ${{ inputs.changeLog }}
+      #     artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*

@@ -11,7 +11,8 @@ tag_exists() (
 
 update_changelog() (
   local ts=$(date +"%Y-%m-%d")
-  local changelog_entry=$(printf "## [%s] - %s\n%s\n" "$LD_RELEASE_VERSION" "$ts" "$CHANGELOG_ENTRY")
+  local expanded=$(printf "%b", "$CHANGELOG_ENTRY")
+  local changelog_entry=$(printf "## [%s] - %s\n%s\n" "$LD_RELEASE_VERSION" "$ts" "$expanded")
 
   # insert the new changelog entry (followed by empty line) after line 4
   # of CHANGELOG.md
