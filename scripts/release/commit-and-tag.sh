@@ -11,7 +11,7 @@ tag_exists() (
 
 update_changelog() (
   local ts=$(date +"%Y-%m-%d")
-  local changelog_json=$(echo "$CHANGELOG_ENTRY" | jq =r .)
+  local changelog_json=$(echo "$CHANGELOG_ENTRY" | jq -r .)
   local changelog_entry=$(printf "## [%s] - %s\n%s\n" "$LD_RELEASE_VERSION" "$ts" "$changelog_json")
 
   # insert the new changelog entry (followed by empty line) after line 4
