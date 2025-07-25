@@ -3,7 +3,7 @@
 set -euo pipefail
 
 source $(dirname $0)/stage-artifacts.sh
-stage-artifacts products-for-release
+stage_artifacts products-for-release
 
 # Copy the Docker image that goreleaser just built into the artifacts - we only do
 # this in a dry run, because in a real release the image will be available from

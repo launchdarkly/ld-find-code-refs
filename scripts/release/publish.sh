@@ -3,7 +3,7 @@
 set -euo pipefail
 
 source $(dirname $0)/stage-artifacts.sh
-stage-artifacts publish
+stage_artifacts publish
 
 # make bitbucket and github known hosts to push successfully
 mkdir -m700 ~/.ssh
