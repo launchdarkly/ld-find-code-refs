@@ -123,6 +123,34 @@ func InitYAML() error {
 	return nil
 }
 
+// InitYAMLForAlias initializes YAML configuration without requiring accessToken and dir preconditions
+func InitYAMLForAlias() error {
+	dir := viper.GetString("dir")
+	if dir == "" {
+		// Default to current working directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("could not get current working directory: %w", err)
+		}
+		dir = cwd
+	}
+	
+	absPath, err := validation.NormalizeAndValidatePath(dir)
+	if err != nil {
+		return err
+	}
+	subdirectoryPath := viper.GetString("subdirectory")
+	viper.SetConfigName("coderefs")
+	viper.SetConfigType("yaml")
+	configPath := filepath.Join(absPath, subdirectoryPath, ".launchdarkly")
+	viper.AddConfigPath(configPath)
+	err = viper.ReadInConfig()
+	if err != nil && !errors.As(err, &viper.ConfigFileNotFoundError{}) {
+		return err
+	}
+	return nil
+}
+
 // validatePreconditions ensures required flags have been set
 func validateYAMLPreconditions() error {
 	token := viper.GetString("accessToken")
