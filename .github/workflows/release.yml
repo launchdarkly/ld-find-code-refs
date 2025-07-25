@@ -25,13 +25,19 @@ jobs:
     env:
       LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
       DRY_RUN: ${{ inputs.dryRun || 'false' }}
-      CHANGELOG_ENTRY: ${{ inputs.changeLog }}
+      CHANGELOG_ENTRY: ${{ toJSON(inputs.changeLog) }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Install jq
+        run: |
+          if ! command -v jq >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
       - name: get secrets
         uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
         with:
@@ -70,5 +76,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ inputs.releaseVersion }}
-          body: ${{ inputs.changeLog }}
+          body: ${{ fromJSON(toJSON(inputs.changeLog)) }}
           artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*

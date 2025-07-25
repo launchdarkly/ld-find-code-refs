@@ -2,16 +2,17 @@
 
 set -euo pipefail
 
-RELEASE_TAG="v${LD_RELEASE_VERSION}"
+release_tag="v${LD_RELEASE_VERSION}"
 
 tag_exists() (
   git fetch --tags
-  git rev-parse "${RELEASE_TAG}" >/dev/null 2>&1
+  git rev-parse "${release_tag}" >/dev/null 2>&1
 )
 
 update_changelog() (
   local ts=$(date +"%Y-%m-%d")
-  local changelog_entry=$(printf "## [%s] - %s\n%s\n" "$LD_RELEASE_VERSION" "$ts" "$CHANGELOG_ENTRY")
+  local changelog_json=$(echo "$CHANGELOG_ENTRY" | jq =r .)
+  local changelog_entry=$(printf "## [%s] - %s\n%s\n" "$LD_RELEASE_VERSION" "$ts" "$changelog_json")
 
   # insert the new changelog entry (followed by empty line) after line 4
   # of CHANGELOG.md
@@ -19,19 +20,16 @@ update_changelog() (
 )
 
 release_summary() (
-  echo
-  echo "Changes staged for release $RELEASE_TAG:"
+  echo "Changes staged for release $release_tag:"
   git diff
 
-  echo
   echo "Updated CHANGELOG:"
   cat CHANGELOG.md
-  echo
 )
 
 commit_and_tag() (
   if tag_exists; then
-    echo "Tag $RELEASE_TAG already exists. Aborting."
+    echo "Tag $release_tag already exists. Aborting."
     exit 1
   fi
 
@@ -41,10 +39,10 @@ commit_and_tag() (
   git config user.name "LaunchDarklyReleaseBot"
   git config user.email "releasebot@launchdarkly.com"
   git add .
-  git commit -m "Prepare release ${RELEASE_TAG}"
-  git tag "${RELEASE_TAG}"
+  git commit -m "Prepare release ${release_tag}"
+  git tag "${release_tag}"
   git push origin HEAD
-  git push origin "${RELEASE_TAG}"
+  git push origin "${release_tag}"
 )
 
 if [[ "$DRY_RUN" == "true" ]]; then
