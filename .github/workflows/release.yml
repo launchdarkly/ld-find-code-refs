@@ -32,12 +32,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install jq
-        run: |
-          if ! command -v jq >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y jq
-          fi
       - name: get secrets
         uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
         with:
@@ -58,8 +52,6 @@ jobs:
           fi
 
           make build
-      - name: prepare release
-        run: ./scripts/release/prepare-release.sh
       - name: publish
         run: |
           if [[ "$DRY_RUN" = true ]]; then
