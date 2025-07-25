@@ -26,7 +26,6 @@ jobs:
       LD_RELEASE_VERSION: ${{ inputs.releaseVersion }}
       DRY_RUN: ${{ inputs.dryRun || 'false' }}
       CHANGELOG_ENTRY: ${{ inputs.changeLog }}
-      CHANGELOG_JSON: ${{ toJSON(inputs.changeLog) }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
@@ -77,5 +76,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ inputs.releaseVersion }}
-          body: ${{ fromJSON(toJSON(inputs.changeLog)) }}
+          body: ${{ inputs.changeLog }}
           artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*
