@@ -37,13 +37,16 @@ update_changelog() (
   sed -i "4r /dev/stdin" CHANGELOG.md <<< "$changelog_entry"$'\n'
 )
 
+# update metadata files and CHANGELOG
 update_go
 update_orb
 update_gha
 update_bitbucket
 update_changelog
 
+# commit changes and create tag
 git config user.name "LaunchDarklyReleaseBot"
 git config user.email "releasebot@launchdarkly.com"
 git add .
 git commit -m "Prepare release ${release_tag}"
+git tag "${release_tag}"
