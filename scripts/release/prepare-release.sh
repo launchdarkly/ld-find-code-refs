@@ -2,7 +2,18 @@
 
 set -euo pipefail
 
-RELEASE_TAG="v${LD_RELEASE_VERSION}"
+release_tag="v${LD_RELEASE_VERSION}"
+
+stage_artifacts() (
+  local target=$1
+
+  echo "$DOCKER_TOKEN" | sudo docker login --username "$DOCKER_USERNAME" --password-stdin
+
+  sudo PATH="$PATH" GITHUB_TOKEN="$GITHUB_TOKEN" make "$target"
+
+  mkdir -p "$ARTIFACT_DIRECTORY"
+  cp ./dist/*.deb ./dist/*.rpm ./dist/*.tar.gz ./dist/*.txt "$ARTIFACT_DIRECTORY"
+)
 
 update_go() (
   sed -i "s/const Version =.*/const Version = \"${LD_RELEASE_VERSION}\"/g" internal/version/version.go
@@ -14,7 +25,7 @@ update_orb() (
 )
 
 update_gha() (
-  sed -i "s#launchdarkly/find-code-references@v.*#launchdarkly/find-code-references@${RELEASE_TAG}#g" build/metadata/github-actions/README.md
+  sed -i "s#launchdarkly/find-code-references@v.*#launchdarkly/find-code-references@${release_tag}#g" build/metadata/github-actions/README.md
   sed -i "s#launchdarkly/ld-find-code-refs-github-action:.*#launchdarkly/ld-find-code-refs-github-action:${LD_RELEASE_VERSION}#g" build/metadata/github-actions/Dockerfile
 )
 
@@ -23,7 +34,13 @@ update_bitbucket() (
   sed -i "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:${LD_RELEASE_VERSION}#g" build/metadata/bitbucket/pipe.yml
 )
 
-update_go
-update_orb
-update_gha
-update_bitbucket
+prepare_release() (
+  # create artifacts with goreleaser
+  stage_artifacts $1
+
+  # update metadata files
+  update_go
+  update_orb
+  update_gha
+  update_bitbucket
+)
