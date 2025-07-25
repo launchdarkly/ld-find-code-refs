@@ -11,7 +11,12 @@ tag_exists() (
 
 update_changelog() (
   local ts=$(date +"%Y-%m-%d")
-  local changelog_entry=$(printf "## [%s] - %s\n%s\n" "$LD_RELEASE_VERSION" "$ts" "$CHANGELOG_ENTRY")
+  # multiline strings don't seem to be supported for GHA inputs, so for now we
+  # require that the changelog include \n characters for new lines and then we
+  # just expand them here
+  # TODO improve this
+  local changelog_content=$(printf "%b" "$CHANGELOG_ENTRY")
+  local changelog_entry=$(printf "## [%s] - %s\n%s\n" "$LD_RELEASE_VERSION" "$ts" "$changelog_content")
 
   # insert the new changelog entry (followed by empty line) after line 4
   # of CHANGELOG.md
