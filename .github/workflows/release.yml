@@ -65,8 +65,8 @@ jobs:
         run: |
           git show -p
           ls -1a "$ARTIFACT_DIRECTORY"
-      - name: create tag
-        run: ./scripts/release/create-tag.sh
+      - name: push to origin
+        run: ./scripts/release/push-to-origin.sh
       - name: create Github release
         uses: ncipollo/release-action@v1.14.0
         if: ${{ !inputs.dryRun }}
