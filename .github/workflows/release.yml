@@ -32,12 +32,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install jq
-        run: |
-          if ! command -v jq >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y jq
-          fi
       - name: get secrets
         uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
         with:
@@ -67,9 +61,12 @@ jobs:
           else
             ./scripts/release/publish.sh
           fi
+      - name: release details
+        run: |
+          git show -p
           ls -1a "$ARTIFACT_DIRECTORY"
-      - name: commit changes and tag
-        run: ./scripts/release/commit-and-tag.sh
+      - name: create tag
+        run: ./scripts/release/create-tag.sh
       - name: create Github release
         uses: ncipollo/release-action@v1.14.0
         if: ${{ !inputs.dryRun }}
