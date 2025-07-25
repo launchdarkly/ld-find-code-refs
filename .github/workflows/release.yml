@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       changeLog:
-        description: Pending changelog
+        description: Pending changelog (for now please escape new lines; will fix)
         required: true
         type: string
 
