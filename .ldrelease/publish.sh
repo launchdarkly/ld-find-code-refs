@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo "brew deploy key is set: " && echo $LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY != ""
 # the "publish" makefile target pushes the image to Docker
 $(dirname $0)/run-publish-target.sh publish
 
