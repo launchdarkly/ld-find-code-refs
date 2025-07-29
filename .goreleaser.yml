@@ -72,10 +72,10 @@ brews:
     repository:
       owner: launchdarkly
       name: homebrew-tap
-      # token: "{{ .Env.GITHUB_TOKEN }}"
-      git:
-        url: git@github.com:launchdarkly/homebrew-tap.git
-        private_key: "{{ .Env.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY }}"
+      token: "{{ .Env.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY }}"
+      # git:
+      #   url: git@github.com:launchdarkly/homebrew-tap.git
+      #   private_key: "{{ .Env.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY }}"
     directory: Formula
     url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     install: |

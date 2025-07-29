@@ -54,13 +54,13 @@ jobs:
 
           make build
       - name: prepare release
-        run: ./scripts/release/prepare-release.sh
+        run: echo $LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY != "" && ./scripts/release/prepare-release.sh
       - name: publish
         run: |
           if [[ "$DRY_RUN" = true ]]; then
             ./scripts/release/publish-dry-run.sh
           else
-            ./scripts/release/publish.sh
+            echo $LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY != "" && ./scripts/release/publish.sh
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
