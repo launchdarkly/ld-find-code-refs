@@ -42,7 +42,7 @@ archives:
   -
     id: ld-find-code-refs
     builds:
-    - ld-find-code-refs
+      - ld-find-code-refs
 
 nfpms:
   -
@@ -60,12 +60,12 @@ nfpms:
     vendor: LaunchDarkly
 
     formats:
-    - deb
-    - rpm
+      - deb
+      - rpm
 
 brews:
   - ids:
-    - ld-find-code-refs
+      - ld-find-code-refs
     name: ld-find-code-refs
     description: Job for finding and sending feature flag code references to LaunchDarkly
     homepage: "https://launchdarkly.com"
@@ -91,35 +91,26 @@ release:
 dockers:
   -
     image_templates:
-    - "launchdarkly/ld-find-code-refs:latest"
-    - "launchdarkly/ld-find-code-refs:{{ .Version }}"
-
+      - "launchdarkly/ld-find-code-refs:latest"
+      - "launchdarkly/ld-find-code-refs:{{ .Version }}"
     dockerfile: Dockerfile
-
   -
     goos: linux
-
     # GOARCH of the built binaries/packages that should be used.
     goarch: amd64
     ids:
-    - ld-find-code-refs-github-action
-
+      - ld-find-code-refs-github-action
     image_templates:
-    - "launchdarkly/ld-find-code-refs-github-action:latest"
-    - "launchdarkly/ld-find-code-refs-github-action:{{ .Version }}"
-
+      - "launchdarkly/ld-find-code-refs-github-action:latest"
+      - "launchdarkly/ld-find-code-refs-github-action:{{ .Version }}"
     dockerfile: Dockerfile.github
   -
     goos: linux
-
     # GOARCH of the built binaries/packages that should be used.
     goarch: amd64
-
-    image_templates:
-    - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
-    - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Version }}"
-
     ids:
-    - ld-find-code-refs-bitbucket-pipeline
-
+      - ld-find-code-refs-bitbucket-pipeline
+    image_templates:
+      - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:latest"
+      - "launchdarkly/ld-find-code-refs-bitbucket-pipeline:{{ .Version }}"
     dockerfile: Dockerfile.bitbucket
