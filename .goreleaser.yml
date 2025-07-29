@@ -76,7 +76,7 @@ brews:
       # git:
       #   url: git@github.com:launchdarkly/homebrew-tap.git
       #   private_key: "{{ .Env.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY }}"
-    directory: Formula
+    folder: Formula
     url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     install: |
       bin.install "ld-find-code-refs"
