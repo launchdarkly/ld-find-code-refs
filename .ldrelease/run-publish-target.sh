@@ -20,7 +20,7 @@ cat "${LD_RELEASE_SECRETS_DIR}/docker_token" | sudo docker login --username "${d
 # Set github token to be used in releaser
 GITHUB_TOKEN=$(cat ${LD_RELEASE_SECRETS_DIR}/github_token)
 
-sudo PATH=${PATH} GITHUB_TOKEN=${GITHUB_TOKEN} make $TARGET
+sudo PATH=${PATH} GITHUB_TOKEN=${GITHUB_TOKEN} LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY=${LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY} make $TARGET
 
 # Goreleaser puts all the artifacts in ./dist - copying them to $LD_RELEASE_ARTIFACTS_DIR
 # causes Releaser to pick them up and attach them to the release in GitHub. However, don't
