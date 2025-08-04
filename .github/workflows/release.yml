@@ -43,7 +43,7 @@ jobs:
         with:
           repo_keys_map: |
             {
-              "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }},
+              "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
             }
       - name: build
         run: |
