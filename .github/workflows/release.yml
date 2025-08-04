@@ -27,6 +27,7 @@ jobs:
       DRY_RUN: ${{ inputs.dryRun || 'false' }}
       CHANGELOG_ENTRY: ${{ inputs.changeLog }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      HOMEBREW_GH_TOKEN: ${{ toJSON(secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY) }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +44,6 @@ jobs:
           repo_keys_map: |
             {
               "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }},
-              "launchdarkly/homebrew-tap": ${{ toJSON(secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY) }}
             }
       - name: build
         run: |
