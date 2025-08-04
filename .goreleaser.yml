@@ -57,6 +57,8 @@ nfpms:
 
 brews:
   - name: ld-find-code-refs
+    ids:
+      - ld-find-code-refs
     description: Job for finding and sending feature flag code references to LaunchDarkly
     homepage: "https://launchdarkly.com"
     repository:
@@ -66,7 +68,7 @@ brews:
       git:
         url: git@github.com:launchdarkly/homebrew-tap.git
         private_key: "{{ .Env.HOMEBREW_GH_TOKEN }}"
-    directory: Formula
+    folder: Formula
     url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     install: |
       bin.install "ld-find-code-refs"
