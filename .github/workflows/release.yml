@@ -27,7 +27,7 @@ jobs:
       DRY_RUN: ${{ inputs.dryRun || 'false' }}
       CHANGELOG_ENTRY: ${{ inputs.changeLog }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      HOMEBREW_GH_TOKEN: ${{ toJSON(secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY) }}
+      HOMEBREW_GH_TOKEN: ${{ secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY }}
       ARTIFACT_DIRECTORY: "/tmp/release-artifacts"
     steps:
       - uses: actions/checkout@v4
