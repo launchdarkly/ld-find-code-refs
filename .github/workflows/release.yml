@@ -60,7 +60,7 @@ jobs:
           if [[ "$DRY_RUN" = true ]]; then
             ./scripts/release/publish-dry-run.sh
           else
-            echo ./scripts/release/publish.sh
+            ./scripts/release/publish.sh
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
