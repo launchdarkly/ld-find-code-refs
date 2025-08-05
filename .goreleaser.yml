@@ -67,7 +67,7 @@ brews:
       branch: main
       git:
         url: git@github.com:launchdarkly/homebrew-tap.git
-        private_key: "{{ .Env.HOMEBREW_GH_TOKEN }}"
+        private_key: "{{ .Env.HOMEBREW_KEY_PATH }}"
     folder: Formula
     url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     install: |

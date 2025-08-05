@@ -62,9 +62,6 @@ jobs:
           else
             ./scripts/release/publish.sh
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY }}
       - name: release details
         run: |
           git show -p
