@@ -10,7 +10,7 @@ stage_artifacts() (
   # write homebrew key to temporary file for Goreleaser
   if [[ -n "${HOMEBREW_GH_TOKEN:-}" ]]; then
     HOMEBREW_KEY_PATH="/tmp/homebrew-tap-deploy-key"
-    echo "$HOMEBREW_GH_TOKEN" > "$HOMEBREW_KEY_PATH"
+    printf '%s\n' "$HOMEBREW_GH_TOKEN" > "$HOMEBREW_KEY_PATH"
     chmod 600 "$HOMEBREW_KEY_PATH"
     export HOMEBREW_KEY_PATH
   fi
