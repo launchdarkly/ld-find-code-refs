@@ -43,12 +43,14 @@ publish_gha() (
     echo "Version exists; skipping publishing GHA"
   else
     echo "Live run: will publish action to github action marketplace."
+
+    cd githubActionsMetadataUpdates
     # tag the commit with the release version and create release
-    git tag $RELEASE_TAG
+    git tag "$RELEASE_TAG"
     git push origin main --tags
-    git tag -f $RELEASE_TAG_MAJOR
-    git push -f origin $RELEASE_TAG_MAJOR
-    gh release create $RELEASE_TAG --notes "$RELEASE_NOTES"
+    git tag -f "$RELEASE_TAG_MAJOR"
+    git push -f origin "$RELEASE_TAG_MAJOR"
+    gh release create "$RELEASE_TAG" --notes "$RELEASE_NOTES"
   fi
 
   clean_up_gha
