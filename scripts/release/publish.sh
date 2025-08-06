@@ -6,7 +6,8 @@ source $(dirname $0)/stage-artifacts.sh
 stage_artifacts publish
 
 # make bitbucket and github known hosts to push successfully
-mkdir -m700 ~/.ssh
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
 touch ~/.ssh/known_hosts
 chmod 644 ~/.ssh/known_hosts
 ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts
