@@ -23,13 +23,13 @@ clean_up_bitbucket() (
 
 publish_bitbucket() (
   setup_bitbucket
-  cd bitbucketMetadataUpdates
 
   if git ls-remote --tags origin "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"; then
     echo "Version exists; skipping publishing BitBucket Pipe"
   else
+    cd bitbucketMetadataUpdates
     echo "Live run: will publish pipe to bitbucket."
-    git tag $LD_RELEASE_VERSION
+    git tag "$LD_RELEASE_VERSION"
     git push bb-origin master --tags
   fi
 
