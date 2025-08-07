@@ -21,23 +21,33 @@ clean_up_bitbucket() (
   cd .. && rm -rf bitbucketMetadataUpdates
 )
 
+tag_exists() (
+  git ls-remote --tags https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"
+)
+
 publish_bitbucket() (
-  if git ls-remote --tags https://bitbucket.org/launchdarkly/ld-find-code-refs-pipe.git "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"; then
+  if tag_exists; then
     echo "Version exists; skipping publishing BitBucket Pipe"
-  else
-    setup_bitbucket
-
-    echo "Live run: will publish pipe to bitbucket."
-
-    cd bitbucketMetadataUpdates
-    git tag "$LD_RELEASE_VERSION"
-    git push bb-origin master --tags
-
-    clean_up_bitbucket
+    return 0
   fi
+
+  setup_bitbucket
+
+  echo "Live run: will publish pipe to bitbucket."
+
+  cd bitbucketMetadataUpdates
+  git tag "$LD_RELEASE_VERSION"
+  git push bb-origin master --tags
+
+  clean_up_bitbucket
 )
 
 dry_run_bitbucket() (
+  if tag_exists; then
+    echo "Version exists; skipping push dry-run BitBucket Pipe"
+    return 0
+  fi
+
   setup_bitbucket
 
   echo "Dry run: will not publish pipe to bitbucket."

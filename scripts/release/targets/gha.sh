@@ -36,27 +36,37 @@ clean_up_gha() (
   cd .. && rm -rf githubActionsMetadataUpdates
 )
 
+tag_exists() (
+  git ls-remote --tags git@github.com:launchdarkly/find-code-references.git "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"
+)
+
 publish_gha() (
-  if git ls-remote --tags git@github.com:launchdarkly/find-code-references.git "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"; then
+  if tag_exists; then
     echo "Version exists; skipping publishing GHA"
-  else
-    setup_gha
-
-    echo "Live run: will publish action to github action marketplace."
-
-    cd githubActionsMetadataUpdates
-    # tag the commit with the release version and create release
-    git tag "$RELEASE_TAG"
-    git push origin main --tags
-    git tag -f "$RELEASE_TAG_MAJOR"
-    git push -f origin "$RELEASE_TAG_MAJOR"
-    gh release create "$RELEASE_TAG" --notes "$RELEASE_NOTES"
-
-    clean_up_gha
+    return 0
   fi
+
+  setup_gha
+
+  echo "Live run: will publish action to github action marketplace."
+
+  cd githubActionsMetadataUpdates
+  # tag the commit with the release version and create release
+  git tag "$RELEASE_TAG"
+  git push origin main --tags
+  git tag -f "$RELEASE_TAG_MAJOR"
+  git push -f origin "$RELEASE_TAG_MAJOR"
+  gh release create "$RELEASE_TAG" --notes "$RELEASE_NOTES"
+
+  clean_up_gha
 )
 
 dry_run_gha() (
+  if tag_exists; then
+    echo "Version exists; skipping push dry-run GHA"
+    return 0
+  fi
+
   setup_gha
 
   echo "Dry run: will not publish action to github action marketplace."
