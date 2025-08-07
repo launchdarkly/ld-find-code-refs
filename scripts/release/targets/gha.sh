@@ -37,11 +37,11 @@ clean_up_gha() (
 )
 
 publish_gha() (
-  setup_gha
-
-  if git ls-remote --tags origin "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"; then
+  if git ls-remote --tags git@github.com:launchdarkly/find-code-references.git "refs/tags/v$LD_RELEASE_VERSION" | grep -q "v$LD_RELEASE_VERSION"; then
     echo "Version exists; skipping publishing GHA"
   else
+    setup_gha
+
     echo "Live run: will publish action to github action marketplace."
 
     cd githubActionsMetadataUpdates
@@ -51,9 +51,9 @@ publish_gha() (
     git tag -f "$RELEASE_TAG_MAJOR"
     git push -f origin "$RELEASE_TAG_MAJOR"
     gh release create "$RELEASE_TAG" --notes "$RELEASE_NOTES"
-  fi
 
-  clean_up_gha
+    clean_up_gha
+  fi
 )
 
 dry_run_gha() (
