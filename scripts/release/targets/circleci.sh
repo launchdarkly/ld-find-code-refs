@@ -60,7 +60,7 @@ publish_circleci() (
   install_circleci
   validate_circleci_orb_config
 
-  if circleci orb list | grep launchdarkly/ld-find-code-refs@$LD_RELEASE_VERSION; then
+  if circleci orb info "launchdarkly/ld-find-code-refs@$LD_RELEASE_VERSION" >/dev/null 2>&1; then
     echo "Version exists; skipping publishing CircleCI Orb"
   else
     echo "Live run: will publish orb to production circleci repo."
