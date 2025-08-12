@@ -2,6 +2,19 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.14.0] - 2025-08-12
+### Added:
+- `--skipArchivedFlags` option to instruct the tool to ignore any flag keys it finds from archived flags
+
+### Changed:
+- replaced the stdlib `regexp` with `go-re2` for improved regexp compilation and pattern matching
+- now using caching to optimize file globbing and regex compilation
+- move off of legacy `olekukonko/tablewriter` and onto `v1.x`
+- updated to the latest version of the LaunchDarkly API
+
+### Fixed:
+- `subdirectory` option now works with `projects[*].dir` configuration, and produces correct "View in source" links in the LD UI
+
 ## [2.13.0] - 2024-12-18
 ### Added:
 - `subdirectory` option to set path to `.launchdarkly/coderefs.yaml` config file if not located in the root, in order to support monorepo subdirectories.
