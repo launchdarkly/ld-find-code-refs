@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -12,6 +13,8 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/format/diff"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	object "github.com/go-git/go-git/v5/plumbing/object"
 
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
@@ -199,13 +202,25 @@ func (c *Client) RemoteBranches() (branches map[string]bool, err error) {
 		return branches, err
 	}
 
+	// Configure authentication for GitHub Actions
+	var auth transport.AuthMethod
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+			log.Debug.Printf("using GitHub token authentication for remote operations")
+			auth = &http.BasicAuth{
+				Username: "x-access-token", // GitHub requires this specific username
+				Password: token,
+			}
+		}
+	}
+
 	remotes, err := repo.Remotes()
 	if err != nil {
 		return branches, err
 	}
 
 	for _, r := range remotes {
-		refList, err := r.List(&git.ListOptions{})
+		refList, err := r.List(&git.ListOptions{Auth: auth})
 		if err != nil {
 			return branches, err
 		}
