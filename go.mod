@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.9.1
-	github.com/go-git/go-git/v5 v5.16.3
+	github.com/go-git/go-git/v5 v5.16.4
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/iancoleman/strcase v0.3.0
 	github.com/launchdarkly/json-patch v0.0.0-20180720210516-dd68d883319f
