@@ -2,14 +2,16 @@ package twwidth
 
 import (
 	"bytes"
-	"github.com/mattn/go-runewidth"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/clipperhouse/displaywidth"
+	"github.com/mattn/go-runewidth"
 )
 
-// condition holds the global runewidth configuration, including East Asian width settings.
-var condition *runewidth.Condition
+// globalOptions holds the global displaywidth configuration, including East Asian width settings.
+var globalOptions displaywidth.Options
 
 // mu protects access to condition and widthCache for thread safety.
 var mu sync.Mutex
@@ -18,8 +20,19 @@ var mu sync.Mutex
 var ansi = Filter()
 
 func init() {
-	condition = runewidth.NewCondition()
+	globalOptions = newOptions()
 	widthCache = make(map[cacheKey]int)
+}
+
+func newOptions() displaywidth.Options {
+	// go-runewidth has default logic based on env variables and locale,
+	// we want to keep that compatibility
+	cond := runewidth.NewCondition()
+	options := displaywidth.Options{
+		EastAsianWidth:     cond.EastAsianWidth,
+		StrictEmojiNeutral: cond.StrictEmojiNeutral,
+	}
+	return options
 }
 
 // cacheKey is used as a key for memoizing string width results in widthCache.
@@ -35,15 +48,15 @@ var widthCache map[cacheKey]int
 // including CSI (Control Sequence Introducer) and OSC (Operating System Command) sequences.
 // The returned regex can be used to strip ANSI codes from strings.
 func Filter() *regexp.Regexp {
-	var regESC = "\x1b" // ASCII escape character
-	var regBEL = "\x07" // ASCII bell character
+	regESC := "\x1b" // ASCII escape character
+	regBEL := "\x07" // ASCII bell character
 
 	// ANSI string terminator: either ESC+\ or BEL
-	var regST = "(" + regexp.QuoteMeta(regESC+"\\") + "|" + regexp.QuoteMeta(regBEL) + ")"
+	regST := "(" + regexp.QuoteMeta(regESC+"\\") + "|" + regexp.QuoteMeta(regBEL) + ")"
 	// Control Sequence Introducer (CSI): ESC[ followed by parameters and a final byte
-	var regCSI = regexp.QuoteMeta(regESC+"[") + "[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]"
+	regCSI := regexp.QuoteMeta(regESC+"[") + "[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]"
 	// Operating System Command (OSC): ESC] followed by arbitrary content until a terminator
-	var regOSC = regexp.QuoteMeta(regESC+"]") + ".*?" + regST
+	regOSC := regexp.QuoteMeta(regESC+"]") + ".*?" + regST
 
 	// Combine CSI and OSC patterns into a single regex
 	return regexp.MustCompile("(" + regCSI + "|" + regOSC + ")")
@@ -59,26 +72,42 @@ func Filter() *regexp.Regexp {
 func SetEastAsian(enable bool) {
 	mu.Lock()
 	defer mu.Unlock()
-	if condition.EastAsianWidth != enable {
-		condition.EastAsianWidth = enable
+	if globalOptions.EastAsianWidth != enable {
+		globalOptions.EastAsianWidth = enable
 		widthCache = make(map[cacheKey]int) // Clear cache on setting change
 	}
 }
 
-// SetCondition updates the global runewidth.Condition used for width calculations.
-// When the condition is changed, the width cache is cleared.
+// IsEastAsian returns the current East Asian width setting.
 // This function is thread-safe.
 //
 // Example:
 //
-//	newCond := runewidth.NewCondition()
-//	newCond.EastAsianWidth = true
-//	twdw.SetCondition(newCond)
-func SetCondition(newCond *runewidth.Condition) {
+//	if twdw.IsEastAsian() {
+//		// Handle East Asian width characters
+//	}
+func IsEastAsian() bool {
 	mu.Lock()
 	defer mu.Unlock()
-	condition = newCond
+	return globalOptions.EastAsianWidth
+}
+
+// SetCondition updates the global runewidth.Condition used for width calculations.
+// This method is kept for backward compatibility. The condition is converted to
+// displaywidth.Options internally for better performance.
+func SetCondition(cond *runewidth.Condition) {
+	mu.Lock()
+	defer mu.Unlock()
 	widthCache = make(map[cacheKey]int) // Clear cache on setting change
+	globalOptions = conditionToOptions(cond)
+}
+
+// Convert runewidth.Condition to displaywidth.Options
+func conditionToOptions(cond *runewidth.Condition) displaywidth.Options {
+	return displaywidth.Options{
+		EastAsianWidth:     cond.EastAsianWidth,
+		StrictEmojiNeutral: cond.StrictEmojiNeutral,
+	}
 }
 
 // Width calculates the visual width of a string, excluding ANSI escape sequences,
@@ -91,19 +120,18 @@ func SetCondition(newCond *runewidth.Condition) {
 //	width := twdw.Width("Hello\x1b[31mWorld") // Returns 10
 func Width(str string) int {
 	mu.Lock()
-	key := cacheKey{str: str, eastAsianWidth: condition.EastAsianWidth}
+	key := cacheKey{str: str, eastAsianWidth: globalOptions.EastAsianWidth}
 	if w, found := widthCache[key]; found {
 		mu.Unlock()
 		return w
 	}
 	mu.Unlock()
 
-	// Use a temporary condition to avoid holding the lock during calculation
-	tempCond := runewidth.NewCondition()
-	tempCond.EastAsianWidth = key.eastAsianWidth
+	options := newOptions()
+	options.EastAsianWidth = key.eastAsianWidth
 
 	stripped := ansi.ReplaceAllLiteralString(str, "")
-	calculatedWidth := tempCond.StringWidth(stripped)
+	calculatedWidth := options.String(stripped)
 
 	mu.Lock()
 	widthCache[key] = calculatedWidth
@@ -121,14 +149,14 @@ func Width(str string) int {
 //	width := twdw.WidthNoCache("Hello\x1b[31mWorld") // Returns 10
 func WidthNoCache(str string) int {
 	mu.Lock()
-	currentEA := condition.EastAsianWidth
+	currentEA := globalOptions.EastAsianWidth
 	mu.Unlock()
 
-	tempCond := runewidth.NewCondition()
-	tempCond.EastAsianWidth = currentEA
+	options := newOptions()
+	options.EastAsianWidth = currentEA
 
 	stripped := ansi.ReplaceAllLiteralString(str, "")
-	return tempCond.StringWidth(stripped)
+	return options.String(stripped)
 }
 
 // Display calculates the visual width of a string, excluding ANSI escape sequences,
@@ -141,7 +169,8 @@ func WidthNoCache(str string) int {
 //	cond := runewidth.NewCondition()
 //	width := twdw.Display(cond, "Hello\x1b[31mWorld") // Returns 10
 func Display(cond *runewidth.Condition, str string) int {
-	return cond.StringWidth(ansi.ReplaceAllLiteralString(str, ""))
+	options := conditionToOptions(cond)
+	return options.String(ansi.ReplaceAllLiteralString(str, ""))
 }
 
 // Truncate shortens a string to fit within a specified visual width, optionally
@@ -204,7 +233,7 @@ func Truncate(s string, maxWidth int, suffix ...string) string {
 
 	// Capture the global EastAsianWidth setting once for consistent use
 	mu.Lock()
-	currentGlobalEastAsianWidth := condition.EastAsianWidth
+	currentGlobalEastAsianWidth := globalOptions.EastAsianWidth
 	mu.Unlock()
 
 	// Special case for EastAsian true: if only suffix fits, return suffix.
@@ -242,8 +271,8 @@ func Truncate(s string, maxWidth int, suffix ...string) string {
 	inAnsiSequence := false
 	ansiWrittenToContent := false
 
-	localRunewidthCond := runewidth.NewCondition()
-	localRunewidthCond.EastAsianWidth = currentGlobalEastAsianWidth
+	options := newOptions()
+	options.EastAsianWidth = currentGlobalEastAsianWidth
 
 	for _, r := range s {
 		if r == '\x1b' {
@@ -257,11 +286,12 @@ func Truncate(s string, maxWidth int, suffix ...string) string {
 			terminated := false
 			if seqLen >= 2 {
 				introducer := seqBytes[1]
-				if introducer == '[' {
+				switch introducer {
+				case '[':
 					if seqLen >= 3 && r >= 0x40 && r <= 0x7E {
 						terminated = true
 					}
-				} else if introducer == ']' {
+				case ']':
 					if r == '\x07' {
 						terminated = true
 					} else if seqLen > 1 && seqBytes[seqLen-2] == '\x1b' && r == '\\' { // Check for ST: \x1b\
@@ -276,7 +306,7 @@ func Truncate(s string, maxWidth int, suffix ...string) string {
 				ansiSeqBuf.Reset()
 			}
 		} else { // Normal character
-			runeDisplayWidth := localRunewidthCond.RuneWidth(r)
+			runeDisplayWidth := options.Rune(r)
 			if targetContentForIteration == 0 { // No budget for content at all
 				break
 			}

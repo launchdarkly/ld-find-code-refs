@@ -1,11 +1,12 @@
 package tablewriter
 
 import (
+	"reflect"
+
 	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/ll"
 	"github.com/olekukonko/tablewriter/pkg/twwidth"
 	"github.com/olekukonko/tablewriter/tw"
-	"reflect"
 )
 
 // Option defines a function type for configuring a Table instance.
@@ -121,13 +122,14 @@ func WithFooterAlignmentConfig(alignment tw.CellAlignment) Option {
 	}
 }
 
-// WithFooterMergeMode sets the merge mode for footer cells.
-// Invalid merge modes are ignored, and the change is logged if debugging is enabled.
+// Deprecated: Use a ConfigBuilder with .Footer().CellMerging().WithMode(...) instead.
+// This option will be removed in a future version.
 func WithFooterMergeMode(mergeMode int) Option {
 	return func(target *Table) {
 		if mergeMode < tw.MergeNone || mergeMode > tw.MergeHierarchical {
 			return
 		}
+		target.config.Footer.Merging.Mode = mergeMode
 		target.config.Footer.Formatting.MergeMode = mergeMode
 		if target.logger != nil {
 			target.logger.Debugf("Option: WithFooterMergeMode applied to Table: %v", mergeMode)
@@ -231,13 +233,14 @@ func WithHeaderAutoWrap(wrap int) Option {
 	}
 }
 
-// WithHeaderMergeMode sets the merge mode for header cells.
-// Invalid merge modes are ignored, and the change is logged if debugging is enabled.
+// Deprecated: Use a ConfigBuilder with .Header().CellMerging().WithMode(...) instead.
+// This option will be removed in a future version.
 func WithHeaderMergeMode(mergeMode int) Option {
 	return func(target *Table) {
 		if mergeMode < tw.MergeNone || mergeMode > tw.MergeHierarchical {
 			return
 		}
+		target.config.Header.Merging.Mode = mergeMode
 		target.config.Header.Formatting.MergeMode = mergeMode
 		if target.logger != nil {
 			target.logger.Debugf("Option: WithHeaderMergeMode applied to Table: %v", mergeMode)
@@ -320,13 +323,14 @@ func WithRowAutoWrap(wrap int) Option {
 	}
 }
 
-// WithRowMergeMode sets the merge mode for row cells.
-// Invalid merge modes are ignored, and the change is logged if debugging is enabled.
+// Deprecated: Use a ConfigBuilder with .Row().CellMerging().WithMode(...) instead.
+// This option will be removed in a future version.
 func WithRowMergeMode(mergeMode int) Option {
 	return func(target *Table) {
 		if mergeMode < tw.MergeNone || mergeMode > tw.MergeHierarchical {
 			return
 		}
+		target.config.Row.Merging.Mode = mergeMode
 		target.config.Row.Formatting.MergeMode = mergeMode
 		if target.logger != nil {
 			target.logger.Debugf("Option: WithRowMergeMode applied to Table: %v", mergeMode)
@@ -498,6 +502,17 @@ func WithTrimSpace(state tw.State) Option {
 	}
 }
 
+// WithTrimLine sets whether empty visual lines within a cell are trimmed.
+// Logs the change if debugging is enabled.
+func WithTrimLine(state tw.State) Option {
+	return func(target *Table) {
+		target.config.Behavior.TrimLine = state
+		if target.logger != nil {
+			target.logger.Debugf("Option: WithTrimLine applied to Table: %v", state)
+		}
+	}
+}
+
 // WithHeaderAutoFormat enables or disables automatic formatting for header cells.
 // Logs the change if debugging is enabled.
 func WithHeaderAutoFormat(state tw.State) Option {
@@ -607,10 +622,8 @@ func WithRendition(rendition tw.Rendition) Option {
 			if target.logger != nil {
 				target.logger.Debugf("Option: WithRendition: Applied to renderer via Renditioning.SetRendition(): %+v", rendition)
 			}
-		} else {
-			if target.logger != nil {
-				target.logger.Warnf("Option: WithRendition: Current renderer type %T does not implement tw.Renditioning. Rendition may not be applied as expected.", target.renderer)
-			}
+		} else if target.logger != nil {
+			target.logger.Warnf("Option: WithRendition: Current renderer type %T does not implement tw.Renditioning. Rendition may not be applied as expected.", target.renderer)
 		}
 	}
 }
@@ -634,9 +647,9 @@ func WithEastAsian(enable bool) Option {
 // The runewidth.Condition object allows for more fine-grained control over how rune widths
 // are determined, beyond just toggling EastAsianWidth. This could include settings for
 // ambiguous width characters or other future properties of runewidth.Condition.
-func WithCondition(condition *runewidth.Condition) Option {
+func WithCondition(cond *runewidth.Condition) Option {
 	return func(target *Table) {
-		twwidth.SetCondition(condition)
+		twwidth.SetCondition(cond)
 	}
 }
 
@@ -654,12 +667,35 @@ func WithSymbols(symbols tw.Symbols) Option {
 				if target.logger != nil {
 					target.logger.Debugf("Option: WithRendition: Applied to renderer via Renditioning.SetRendition(): %+v", cfg)
 				}
-			} else {
-				if target.logger != nil {
-					target.logger.Warnf("Option: WithRendition: Current renderer type %T does not implement tw.Renditioning. Rendition may not be applied as expected.", target.renderer)
-				}
+			} else if target.logger != nil {
+				target.logger.Warnf("Option: WithRendition: Current renderer type %T does not implement tw.Renditioning. Rendition may not be applied as expected.", target.renderer)
 			}
 		}
+	}
+}
+
+// WithCounters enables line counting by wrapping the table's writer.
+// If a custom counter (that implements tw.Counter) is provided, it will be used.
+// If the provided counter is nil, a default tw.LineCounter will be used.
+// The final count can be retrieved via the table.Lines() method after Render() is called.
+func WithCounters(counters ...tw.Counter) Option {
+	return func(target *Table) {
+		// Iterate through the provided counters and add any non-nil ones.
+		for _, c := range counters {
+			if c != nil {
+				target.counters = append(target.counters, c)
+			}
+		}
+	}
+}
+
+// WithLineCounter enables the default line counter.
+// A new instance of tw.LineCounter is added to the table's list of counters.
+// The total count can be retrieved via the table.Lines() method after Render() is called.
+func WithLineCounter() Option {
+	return func(target *Table) {
+		// Important: Create a new instance so tables don't share counters.
+		target.counters = append(target.counters, &tw.LineCounter{})
 	}
 }
 
@@ -672,6 +708,9 @@ func defaultConfig() Config {
 				AutoWrap:   tw.WrapTruncate,
 				AutoFormat: tw.On,
 				MergeMode:  tw.MergeNone,
+			},
+			Merging: tw.CellMerging{
+				Mode: tw.MergeNone,
 			},
 			Padding: tw.CellPadding{
 				Global: tw.PaddingDefault,
@@ -687,6 +726,9 @@ func defaultConfig() Config {
 				AutoFormat: tw.Off,
 				MergeMode:  tw.MergeNone,
 			},
+			Merging: tw.CellMerging{
+				Mode: tw.MergeNone,
+			},
 			Padding: tw.CellPadding{
 				Global: tw.PaddingDefault,
 			},
@@ -700,6 +742,9 @@ func defaultConfig() Config {
 				AutoWrap:   tw.WrapNormal,
 				AutoFormat: tw.Off,
 				MergeMode:  tw.MergeNone,
+			},
+			Merging: tw.CellMerging{
+				Mode: tw.MergeNone,
 			},
 			Padding: tw.CellPadding{
 				Global: tw.PaddingDefault,
@@ -717,6 +762,11 @@ func defaultConfig() Config {
 		Behavior: tw.Behavior{
 			AutoHide:  tw.Off,
 			TrimSpace: tw.On,
+			TrimLine:  tw.On,
+			Structs: tw.Struct{
+				AutoHeader: tw.Off,
+				Tags:       []string{"json", "db"},
+			},
 		},
 	}
 }
@@ -734,8 +784,18 @@ func mergeCellConfig(dst, src tw.CellConfig) tw.CellConfig {
 	if src.ColMaxWidths.Global != 0 {
 		dst.ColMaxWidths.Global = src.ColMaxWidths.Global
 	}
-	if src.Formatting.MergeMode != 0 {
+
+	// Handle merging of the new CellMerging struct and the deprecated MergeMode
+	if src.Merging.Mode != 0 {
+		dst.Merging.Mode = src.Merging.Mode
+		dst.Formatting.MergeMode = src.Merging.Mode
+	} else if src.Formatting.MergeMode != 0 {
+		dst.Merging.Mode = src.Formatting.MergeMode
 		dst.Formatting.MergeMode = src.Formatting.MergeMode
+	}
+
+	if src.Merging.ByColumnIndex != nil {
+		dst.Merging.ByColumnIndex = src.Merging.ByColumnIndex.Clone()
 	}
 
 	dst.Formatting.AutoFormat = src.Formatting.AutoFormat
@@ -844,6 +904,14 @@ func mergeConfig(dst, src Config) Config {
 	dst.Behavior.Compact = src.Behavior.Compact
 	dst.Behavior.Header = src.Behavior.Header
 	dst.Behavior.Footer = src.Behavior.Footer
+	dst.Behavior.Footer = src.Behavior.Footer
+
+	dst.Behavior.Structs.AutoHeader = src.Behavior.Structs.AutoHeader
+
+	// check lent of tags
+	if len(src.Behavior.Structs.Tags) > 0 {
+		dst.Behavior.Structs.Tags = src.Behavior.Structs.Tags
+	}
 
 	if src.Widths.Global != 0 {
 		dst.Widths.Global = src.Widths.Global
