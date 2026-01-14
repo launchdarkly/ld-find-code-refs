@@ -485,6 +485,8 @@ func (c ApiClient) do(req *h.Request) (*http.Response, error) {
 		return nil, err
 	}
 
+	log.Debug.Printf("response status %d %s for %s %s", res.StatusCode, http.StatusText(res.StatusCode), req.Method, req.URL)
+
 	// Check for all general status codes returned by the code references API, attempting to deconstruct LD error messages, if possible.
 	switch res.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
