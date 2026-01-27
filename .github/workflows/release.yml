@@ -36,7 +36,7 @@ jobs:
         uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN
+          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN'
       - name: set release token
         run: echo "GITHUB_TOKEN=$GITHUB_RELEASE_TOKEN" >> $GITHUB_ENV
       - name: setup access for find-code-references
