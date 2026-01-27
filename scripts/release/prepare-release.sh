@@ -8,10 +8,10 @@ update_go() (
   sed -i "s/const Version =.*/const Version = \"${LD_RELEASE_VERSION}\"/g" internal/version/version.go
 )
 
-update_orb() (
-  sed -i "s#launchdarkly/ld-find-code-refs@.*#launchdarkly/ld-find-code-refs@${LD_RELEASE_VERSION}#g" build/package/circleci/orb.yml
-  sed -i "s#- image: launchdarkly/ld-find-code-refs:.*#- image: launchdarkly/ld-find-code-refs:${LD_RELEASE_VERSION}#g" build/package/circleci/orb.yml
-)
+# update_orb() (
+#   sed -i "s#launchdarkly/ld-find-code-refs@.*#launchdarkly/ld-find-code-refs@${LD_RELEASE_VERSION}#g" build/package/circleci/orb.yml
+#   sed -i "s#- image: launchdarkly/ld-find-code-refs:.*#- image: launchdarkly/ld-find-code-refs:${LD_RELEASE_VERSION}#g" build/package/circleci/orb.yml
+# )
 
 update_gha() (
   sed -i "s#launchdarkly/find-code-references@v.*#launchdarkly/find-code-references@${release_tag}#g" build/metadata/github-actions/README.md
@@ -39,7 +39,7 @@ update_changelog() (
 
 # update metadata files and CHANGELOG
 update_go
-update_orb
+# update_orb
 update_gha
 update_bitbucket
 update_changelog
