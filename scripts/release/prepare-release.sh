@@ -13,15 +13,15 @@ update_go() (
 #   sed -i "s#- image: launchdarkly/ld-find-code-refs:.*#- image: launchdarkly/ld-find-code-refs:${LD_RELEASE_VERSION}#g" build/package/circleci/orb.yml
 # )
 
-update_gha() (
-  sed -i "s#launchdarkly/find-code-references@v.*#launchdarkly/find-code-references@${release_tag}#g" build/metadata/github-actions/README.md
-  sed -i "s#launchdarkly/ld-find-code-refs-github-action:.*#launchdarkly/ld-find-code-refs-github-action:${LD_RELEASE_VERSION}#g" build/metadata/github-actions/Dockerfile
-)
+# update_gha() (
+#   sed -i "s#launchdarkly/find-code-references@v.*#launchdarkly/find-code-references@${release_tag}#g" build/metadata/github-actions/README.md
+#   sed -i "s#launchdarkly/ld-find-code-refs-github-action:.*#launchdarkly/ld-find-code-refs-github-action:${LD_RELEASE_VERSION}#g" build/metadata/github-actions/Dockerfile
+# )
 
-update_bitbucket() (
-  sed -i "s#- pipe: launchdarkly/ld-find-code-refs-pipe.*#- pipe: launchdarkly/ld-find-code-refs-pipe:${LD_RELEASE_VERSION}#g" build/metadata/bitbucket/README.md
-  sed -i "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:${LD_RELEASE_VERSION}#g" build/metadata/bitbucket/pipe.yml
-)
+# update_bitbucket() (
+#   sed -i "s#- pipe: launchdarkly/ld-find-code-refs-pipe.*#- pipe: launchdarkly/ld-find-code-refs-pipe:${LD_RELEASE_VERSION}#g" build/metadata/bitbucket/README.md
+#   sed -i "s#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:.*#image: launchdarkly/ld-find-code-refs-bitbucket-pipeline:${LD_RELEASE_VERSION}#g" build/metadata/bitbucket/pipe.yml
+# )
 
 update_changelog() (
   local ts=$(date +"%Y-%m-%d")
@@ -40,8 +40,8 @@ update_changelog() (
 # update metadata files and CHANGELOG
 update_go
 # update_orb
-update_gha
-update_bitbucket
+# update_gha
+# update_bitbucket
 update_changelog
 
 # commit changes and create tag

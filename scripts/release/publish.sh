@@ -17,6 +17,6 @@ for script in $(dirname $0)/targets/*.sh; do
   source $script
 done
 
-publish_gha
+# publish_gha
 # publish_circleci
-publish_bitbucket
+# publish_bitbucket
