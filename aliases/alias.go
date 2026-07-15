@@ -50,7 +50,7 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 					patternContents[i] = contents
 				}
 			}
-			flagAliases, err := generateAlias(a, flag, dir, allFileContents, patternContents[i])
+			flagAliases, err := generateAlias(a, flag, dir, patternContents[i])
 			if err != nil {
 				return nil, err
 			}
@@ -61,7 +61,7 @@ func GenerateAliases(flags []string, aliases []options.Alias, dir string) (map[s
 	return ret, nil
 }
 
-func generateAlias(a options.Alias, flag, dir string, allFileContents FileContentsMap, patternContents string) (ret []string, err error) {
+func generateAlias(a options.Alias, flag, dir string, patternContents string) (ret []string, err error) {
 	switch a.Type.Canonical() {
 	case options.Literal:
 		ret = a.Flags[flag]
