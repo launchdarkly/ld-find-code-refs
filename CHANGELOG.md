@@ -2,6 +2,19 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.16.0] - 2026-07-28
+Version 2.15.0 was never released. Its Docker images exist on Docker Hub from an incomplete release run, but there is no 2.15.0 tag, release, or changelog entry. Use 2.16.0 instead.
+
+### Added:
+- debug logging for HTTP response status codes
+- auth header for GitHub Action runs
+
+### Fixed:
+- filepattern alias contents are now concatenated once per alias rather than once per flag key, fixing out-of-memory failures on large repositories
+
+### Changed:
+- updated dependencies
+
 ## [2.14.0] - 2025-08-12
 ### Added:
 - `--skipArchivedFlags` option to instruct the tool to ignore any flag keys it finds from archived flags
