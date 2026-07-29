@@ -253,7 +253,7 @@ func (o Options) Validate() error {
 
 	if o.OutDir != "" {
 		if _, err := validation.NormalizeAndValidatePath(o.OutDir); err != nil {
-			return fmt.Errorf(`invalid valid for "outDir": %+v`, err)
+			return fmt.Errorf(`invalid value for "outDir": %+v`, err)
 		}
 	}
 
