@@ -28,7 +28,8 @@ setup_gha() (
   git config user.email "launchdarklyreleasebot@launchdarkly.com"
   git config user.name "LaunchDarklyReleaseBot"
   git branch -vv
-  git add -u
+  # -A stages new files (e.g. docker/action.yml) as well as updates to tracked files
+  git add -A
   git commit -m "Release auto update version $LD_RELEASE_VERSION"
   pwd
 )

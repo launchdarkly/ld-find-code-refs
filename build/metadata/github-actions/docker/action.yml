@@ -97,6 +97,13 @@ runs:
           exit 1
         fi
 
+        proxy_env=()
+        for v in HTTP_PROXY HTTPS_PROXY NO_PROXY http_proxy https_proxy no_proxy; do
+          if [[ -n "${!v:-}" ]]; then
+            proxy_env+=(-e "$v")
+          fi
+        done
+
         docker run --rm \
           -v "${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}" \
           -w "${GITHUB_WORKSPACE}" \
@@ -118,4 +125,5 @@ runs:
           -e LD_LOOKBACK \
           -e LD_PRUNE \
           -e LD_SUBDIRECTORY \
+          "${proxy_env[@]}" \
           "${DOCKER_IMAGE}"
