@@ -1,7 +1,7 @@
 name: LaunchDarkly Code References (custom image)
 description: >-
   Find references to feature flags in your code. Same scanner as the root
-  Action, but runs via docker run so you can override the image registry
+  Action, but runs using docker run so you can override the image registry
   (for example an internal Docker Hub proxy).
 author: LaunchDarkly
 branding:
