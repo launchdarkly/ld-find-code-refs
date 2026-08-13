@@ -2,6 +2,11 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [Unreleased]
+
+### Added:
+- optional GitHub Action entry point `launchdarkly/find-code-references/docker` with a `dockerImage` input so workflows can pull the scanner image from a private registry or Docker Hub proxy. The root Action is unchanged.
+
 ## [2.16.0] - 2026-07-28
 Version 2.15.0 was never released. Its Docker images exist on Docker Hub from an incomplete release run, but there is no 2.15.0 tag, release, or changelog entry. Use 2.16.0 instead.
 
