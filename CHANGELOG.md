@@ -4,6 +4,8 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## [Unreleased]
 
+## [2.17.0] - 2026-08-13
+
 ### Added:
 - optional GitHub Action entry point `launchdarkly/find-code-references/docker` with a `dockerImage` input so workflows can pull the scanner image from a private registry or Docker Hub proxy. The root Action is unchanged.
 

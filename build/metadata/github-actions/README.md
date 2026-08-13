@@ -28,7 +28,7 @@ jobs:
       with:
         fetch-depth: 11 # This value must be set if the lookback configuration option is not disabled for find-code-references. Read more: https://github.com/launchdarkly/ld-find-code-refs#searching-for-unused-flags-extinctions
     - name: LaunchDarkly Code References
-      uses: launchdarkly/find-code-references@v2.16.0
+      uses: launchdarkly/find-code-references@v2.17.0
       with:
         accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
         projKey: LD_PROJECT_KEY
@@ -68,7 +68,7 @@ jobs:
       with:
         accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
         projKey: LD_PROJECT_KEY
-        dockerImage: your.registry.example/launchdarkly/ld-find-code-refs-github-action:2.16.0
+        dockerImage: your.registry.example/launchdarkly/ld-find-code-refs-github-action:2.17.0
 ```
 
 Mirror the public image `launchdarkly/ld-find-code-refs-github-action` into your registry (pin `dockerImage` to the scanner image tag you mirrored; it can lag the Action tag). This entry point requires a Docker CLI on the runner (included on GitHub-hosted `ubuntu-*` runners). Existing workflows that use the root Action do not need to change.
@@ -104,7 +104,7 @@ jobs:
       with:
         fetch-depth: 11 # This value must be set if the lookback configuration option is not disabled for find-code-references. Read more: https://github.com/launchdarkly/ld-find-code-refs#searching-for-unused-flags-extinctions
     - name: LaunchDarkly Code References
-      uses: launchdarkly/find-code-references@v2.16.0
+      uses: launchdarkly/find-code-references@v2.17.0
       with:
         accessToken: ${{ secrets.LD_ACCESS_TOKEN }}
         projKey: LD_PROJECT_KEY
