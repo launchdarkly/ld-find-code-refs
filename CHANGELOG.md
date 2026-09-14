@@ -4,6 +4,11 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## [Unreleased]
 
+## [2.17.1] - 2026-09-14
+
+### Fixed:
+- GitHub release archives (Linux/macOS/Windows tarballs, deb, rpm) were missing from the immutable v2.17.0 release. This patch publishes those assets.
+
 ## [2.17.0] - 2026-08-13
 
 ### Added:
