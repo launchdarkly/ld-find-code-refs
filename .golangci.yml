@@ -11,6 +11,7 @@ linters:
     - errname
     - exhaustive
     - exhaustruct
+    - exhaustruct_v5
     - funcorder
     - gochecknoglobals
     - gocognit
@@ -20,12 +21,14 @@ linters:
     - gosec
     - lll
     - mnd
+    - modernize
     - nestif
     - nilerr
     - nilnil
     - nlreturn
     - noinlineerr
     - nonamedreturns
+    - prealloc
     - revive
     - tagalign
     - tagliatelle
