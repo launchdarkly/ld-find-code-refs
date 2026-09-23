@@ -32,6 +32,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Pin the build toolchain to the `toolchain` directive in go.mod. Without
+      # this, the runner's ambient Go resolves to exactly the version named by
+      # the `go` directive, which ships an unpatched standard library.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - name: get secrets
         uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
         with:

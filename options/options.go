@@ -225,7 +225,7 @@ func (o Options) Validate() error {
 
 	maxContextLines := 5
 	if o.ContextLines > maxContextLines {
-		return fmt.Errorf(`invalid value %q for "contextLines": must be <= %d`, o.ContextLines, maxContextLines)
+		return fmt.Errorf(`invalid value %d for "contextLines": must be <= %d`, o.ContextLines, maxContextLines)
 	}
 
 	repoType := RepoType(strings.ToLower(o.RepoType))
