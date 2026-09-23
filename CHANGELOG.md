@@ -4,6 +4,11 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## [Unreleased]
 
+## [2.18.1] - 2026-09-23
+
+### Fixed:
+- GitHub release archives (Linux/macOS/Windows tarballs, deb, rpm) were missing from v2.18.0, and that tag name can no longer be used by a release, so the Homebrew formula pointed at download URLs that did not resolve. This patch republishes those assets under a usable tag. There are no code changes from 2.18.0 -- the Go toolchain pin and dependency bumps released there are unchanged.
+
 ## [2.18.0] - 2026-09-23
 
 ### Changed:
@@ -13,6 +18,11 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 ### Fixed:
 - resolved all 69 vulnerabilities reported by `govulncheck` against the v2.17.1 binary, including CVE-2025-68121 (`crypto/tls`), CVE-2026-39821 (Punycode validation in the standard library and `x/net/idna`), CVE-2026-45570 (`go-git` SSH transport) and CVE-2026-1229 (`circl` secp384r1). Dependencies bumped: `go-git/v5` to v5.19.2, `go-billy/v5` to v5.9.1, `x/net` to v0.59.0, `x/crypto` to v0.57.0, `x/text` to v0.42.0 and `circl` to v1.6.5
 - the error message for an out-of-range `contextLines` value no longer renders the supplied number with a string format verb
+
+## [2.17.1] - 2026-09-14
+
+### Fixed:
+- GitHub release archives (Linux/macOS/Windows tarballs, deb, rpm) were missing from the immutable v2.17.0 release. This patch publishes those assets.
 
 ## [2.17.0] - 2026-08-13
 
