@@ -29,6 +29,9 @@ jobs:
         with:
           version: v2.13.2
 
+      - name: Test release tag push script
+        run: ./scripts/release/push-to-origin_test.sh
+
       - name: Run tests with gotestsum
         run: |
           mkdir -p ${{ github.workspace }}/artifacts

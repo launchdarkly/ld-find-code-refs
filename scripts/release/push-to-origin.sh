@@ -5,16 +5,15 @@ set -euo pipefail
 release_tag="v$LD_RELEASE_VERSION"
 
 tag_exists() (
-  git ls-remote --tags git@github.com:launchdarkly/ld-find-code-refs.git "refs/tags/$release_tag" | grep -q "$release_tag"
+  git ls-remote --tags origin "refs/tags/${release_tag}" | grep -q "refs/tags/${release_tag}$"
 )
 
-push_to_origin() (
+push_tag() (
   if tag_exists; then
-    echo "Tag $release_tag already exists. Aborting."
+    echo "Tag $release_tag already exists on origin. Skipping tag push."
     return 0
   fi
 
-  git push origin HEAD
   git push origin "$release_tag"
 )
 
@@ -23,6 +22,5 @@ if [[ "$DRY_RUN" == "true" ]]; then
   git reset --hard HEAD^    # defensive
   echo "Dry run mode: skipping push"
 else
-  push_to_origin
+  push_tag
 fi
-

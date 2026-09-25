@@ -45,7 +45,10 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN'
       - name: set release token
-        run: echo "GITHUB_TOKEN=$GITHUB_RELEASE_TOKEN" >> $GITHUB_ENV
+        run: |
+          if [[ -n "${GITHUB_RELEASE_TOKEN:-}" ]]; then
+            echo "GITHUB_TOKEN=$GITHUB_RELEASE_TOKEN" >> "$GITHUB_ENV"
+          fi
       - name: setup access for find-code-references
         uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
         with:
@@ -62,7 +65,9 @@ jobs:
 
           make build
       - name: prepare release
-        run: ./scripts/release/prepare-release.sh
+        run: |
+          ./scripts/release/prepare-release.sh
+          echo "RELEASE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - name: publish
         run: |
           if [[ "$DRY_RUN" = true ]]; then
@@ -74,12 +79,24 @@ jobs:
         run: |
           git show -p
           ls -1a "$ARTIFACT_DIRECTORY"
-      - name: push to origin
+      - name: push tag to origin
+        continue-on-error: true
         run: ./scripts/release/push-to-origin.sh
       - name: create Github release
         uses: ncipollo/release-action@v1.14.0
         if: ${{ !inputs.dryRun }}
         with:
+          token: ${{ github.token }}
           tag: v${{ inputs.releaseVersion }}
+          commit: ${{ env.RELEASE_COMMIT }}
           body: ${{ inputs.changeLog }}
           artifacts: ${{ env.ARTIFACT_DIRECTORY }}/*
+          draft: true
+          allowUpdates: true
+          updateOnlyUnreleased: true
+          artifactErrorsFailBuild: true
+      - name: publish Github release
+        if: ${{ !inputs.dryRun }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "v${LD_RELEASE_VERSION}" --draft=false
