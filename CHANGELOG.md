@@ -4,6 +4,12 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## [Unreleased]
 
+## [2.18.2] - 2026-09-25
+
+### Fixed:
+- bumped `github.com/pelletier/go-toml/v2` from v2.2.4 to v2.4.3, clearing a reported denial-of-service finding (XRAY-1033007). The module arrives indirectly through `spf13/viper`, which requires v2.2.4, so the 2.18.0 dependency work did not move it. The TOML decoder is not reachable from this program -- `options.go` pins `viper.SetConfigType("yaml")`, so viper never selects the TOML codec -- but the upstream release bounds array and inline-table nesting depth to prevent a stack-overflow crash, so the bump is worth taking regardless
+- the GitHub Action README examples referenced `launchdarkly/find-code-references@v2.18.1`, a tag that was never created. The Action tag and the scanner version are realigned at 2.18.2 so the copy-pasteable examples resolve
+
 ## [2.18.1] - 2026-09-23
 
 ### Fixed:
