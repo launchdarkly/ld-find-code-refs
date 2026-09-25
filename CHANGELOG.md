@@ -4,6 +4,11 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## [Unreleased]
 
+## [2.18.3] - 2026-09-25
+
+### Fixed:
+- the v2.18.2 release archives were published with `2.18.1` filenames, because `make products-for-release` passes `--skip-validate` and goreleaser fell back to the newest visible tag when naming artifacts. The binaries themselves were correct, but the Homebrew formula pointed at `2.18.2` filenames that did not exist, and the misnamed archives collided with the genuine v2.18.1 assets. This release republishes the same code under correctly named artifacts. There are no code changes from 2.18.2 -- the go-toml v2.4.3 bump released there is unchanged
+
 ## [2.18.2] - 2026-09-25
 
 ### Fixed:
