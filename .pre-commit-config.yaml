@@ -1,11 +1,11 @@
 repos:
 - repo: https://github.com/golangci/golangci-lint
-  rev: v1.53.3
+  rev: v2.13.2
   hooks:
   - id: golangci-lint
     name: golangci-lint
     description: Fast linters runner for Go.
-    entry: golangci-lint run -D funlen -D bodyclose -D typecheck
+    entry: golangci-lint run -D funlen -D bodyclose
     types: [go]
     language: golang
     pass_filenames: false
