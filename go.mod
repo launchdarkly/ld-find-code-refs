@@ -2,7 +2,7 @@ module github.com/launchdarkly/ld-find-code-refs/v2
 
 go 1.26.0
 
-toolchain go1.26.8
+toolchain go1.26.10
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.9.1
