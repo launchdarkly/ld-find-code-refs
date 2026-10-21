@@ -4,6 +4,11 @@ All notable changes to the ld-find-code-refs program will be documented in this 
 
 ## [Unreleased]
 
+## [2.18.4] - 2026-10-21
+
+### Fixed:
+- builds with Go 1.26.10 so `crypto/x509` rejects certificate chains through the distrusted eMudhra intermediates (INC-289, golang/go#82345). The `toolchain` directive in `go.mod` moves from 1.26.8 to 1.26.10 and the release image from `cimg/go:1.22` to `cimg/go:1.26.10`. There are no application code changes
+
 ## [2.18.3] - 2026-09-25
 
 ### Fixed:
