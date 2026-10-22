@@ -9,6 +9,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     permissions:
+      actions: write # dispatch main.yml on the release PR branch
       contents: write
       pull-requests: write
     outputs:
@@ -45,9 +46,20 @@ jobs:
 
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         if: ${{ steps.release.outputs.release_created != 'true' }}
+        id: release-prs
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           skip-github-release: true
+
+      # PR events from GITHUB_TOKEN start no workflows, so the required go-tests
+      # and github-actions-docs checks would never report on the release PR.
+      # workflow_dispatch is exempt; its checks land on the PR's head commit.
+      - name: Run required checks on the release PR
+        if: ${{ steps.release-prs.outputs.prs_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ fromJSON(steps.release-prs.outputs.pr).headBranchName }}
+        run: gh workflow run main.yml --repo "${{ github.repository }}" --ref "$BRANCH"
 
   publish:
     needs: release-please
