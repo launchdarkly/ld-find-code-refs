@@ -62,6 +62,47 @@ var extinctions = &cobra.Command{
 	},
 }
 
+var aliasCmd = &cobra.Command{
+	Use:     "alias",
+	Example: "ld-find-code-refs alias --flag-key my-flag",
+	Short:   "Generate aliases for feature flags",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		err := o.InitYAMLForAlias()
+		if err != nil {
+			return err
+		}
+
+		opts, err := o.GetOptions()
+		if err != nil {
+			return err
+		}
+
+		// Get the flag-key value from the command
+		flagKey, _ := cmd.Flags().GetString("flag-key")
+
+		// Create AliasOptions from the global options
+		aliasOpts := &o.AliasOptions{
+			Dir:         opts.Dir,
+			ProjKey:     opts.ProjKey,
+			Projects:    opts.Projects,
+			AccessToken: opts.AccessToken,
+			BaseUri:     opts.BaseUri,
+			FlagKey:     flagKey,
+			Debug:       opts.Debug,
+			UserAgent:   opts.UserAgent,
+		}
+
+		// Validate the alias options (not the global options)
+		err = aliasOpts.ValidateAliasOptions()
+		if err != nil {
+			return err
+		}
+
+		log.Init(opts.Debug)
+		return coderefs.GenerateAliases(*aliasOpts)
+	},
+}
+
 var cmd = &cobra.Command{
 	Use: "ld-find-code-refs",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -90,8 +131,13 @@ func main() {
 	if err := o.Init(cmd.PersistentFlags()); err != nil {
 		panic(err)
 	}
+	
+	// Add the flag-key flag to the alias command
+	aliasCmd.Flags().String("flag-key", "", "Generate aliases for a specific flag key (local mode)")
+	
 	cmd.AddCommand(prune)
 	cmd.AddCommand(extinctions)
+	cmd.AddCommand(aliasCmd)
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)

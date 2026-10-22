@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/launchdarkly/ld-find-code-refs/v2/aliases"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/git"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/helpers"
 	"github.com/launchdarkly/ld-find-code-refs/v2/internal/ld"
@@ -205,4 +206,101 @@ func runExtinctions(opts options.Options, matcher search.Matcher, branch ld.Bran
 			}
 		}
 	}
+}
+
+// GenerateAliases generates aliases for flags based on the provided options
+func GenerateAliases(opts options.AliasOptions) error {
+	absPath, err := validation.NormalizeAndValidatePath(opts.Dir)
+	if err != nil {
+		return fmt.Errorf("could not validate directory option: %s", err)
+	}
+
+	log.Info.Printf("absolute directory path: %s", absPath)
+
+	var flagKeys []string
+
+	if opts.FlagKey != "" {
+		// Local Mode: Generate aliases for a single flag key
+		log.Info.Printf("generating aliases for flag key: %s", opts.FlagKey)
+		flagKeys = []string{opts.FlagKey}
+	} else {
+		// API-Connected Mode: Fetch all flags from the API
+		log.Info.Printf("fetching all flags from LaunchDarkly API")
+		
+		ldApi := ld.InitApiClient(ld.ApiOptions{
+			ApiKey:    opts.AccessToken,
+			BaseUri:   opts.BaseUri,
+			UserAgent: helpers.GetUserAgent(opts.UserAgent),
+		})
+
+		// Determine project key
+		projKey := opts.ProjKey
+		if projKey == "" && len(opts.Projects) > 0 {
+			projKey = opts.Projects[0].Key
+		}
+
+		flags, err := ldApi.GetFlagKeyList(projKey, false) // Include archived flags
+		if err != nil {
+			return fmt.Errorf("could not retrieve flag keys from LaunchDarkly for project `%s`: %w", projKey, err)
+		}
+		flagKeys = flags
+		log.Info.Printf("retrieved %d flags from LaunchDarkly", len(flagKeys))
+	}
+
+	// Load alias configuration from .launchdarkly/coderefs.yaml
+	// We need to get the full options to access the aliases
+	fullOpts, err := options.GetOptions()
+	if err != nil {
+		return fmt.Errorf("error loading configuration: %w", err)
+	}
+
+	var aliasConfigs []options.Alias
+	
+	// Check if we have project-specific aliases
+	if len(fullOpts.Projects) > 0 {
+		for _, project := range fullOpts.Projects {
+			aliasConfigs = append(aliasConfigs, project.Aliases...)
+		}
+	} else {
+		// Use global aliases
+		aliasConfigs = fullOpts.Aliases
+	}
+
+	if len(aliasConfigs) == 0 {
+		log.Warning.Printf("no alias configurations found in .launchdarkly/coderefs.yaml")
+		return nil
+	}
+
+	// Generate aliases
+	aliasMap, err := aliases.GenerateAliases(flagKeys, aliasConfigs, absPath)
+	if err != nil {
+		return fmt.Errorf("error generating aliases: %w", err)
+	}
+
+	// Print the results
+	if opts.FlagKey != "" {
+		// Local mode: print aliases for the single flag
+		if aliases, exists := aliasMap[opts.FlagKey]; exists && len(aliases) > 0 {
+			fmt.Printf("Aliases for flag '%s':\n", opts.FlagKey)
+			for _, alias := range aliases {
+				fmt.Printf("  - %s\n", alias)
+			}
+		} else {
+			fmt.Printf("No aliases found for flag '%s'\n", opts.FlagKey)
+		}
+	} else {
+		// API-connected mode: print aliases for all flags
+		fmt.Printf("Generated aliases for %d flags:\n\n", len(flagKeys))
+		for _, flagKey := range flagKeys {
+			if aliases, exists := aliasMap[flagKey]; exists && len(aliases) > 0 {
+				fmt.Printf("Flag '%s':\n", flagKey)
+				for _, alias := range aliases {
+					fmt.Printf("  - %s\n", alias)
+				}
+				fmt.Println()
+			}
+		}
+	}
+
+	return nil
 }
