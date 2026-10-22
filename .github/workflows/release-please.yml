@@ -5,6 +5,14 @@ on:
     branches:
       - main
 
+# Serialize runs so two quick pushes cannot both create the tag or publish.
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -15,7 +23,6 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
-      version: ${{ steps.release.outputs.version }}
     steps:
       # Create the draft release for a merged release PR first. Draft releases do
       # not create their tag, so push it below before opening any new release PR.
@@ -25,23 +32,21 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           skip-github-pull-request: true
 
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
-        if: ${{ steps.release.outputs.release_created == 'true' }}
-
+      # Tag the release commit release-please reports, not github.sha: a later
+      # push to main can be the run that creates the release.
       - name: Create release tag
         if: ${{ steps.release.outputs.release_created == 'true' }}
         env:
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          SHA: ${{ steps.release.outputs.sha }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           if gh api "repos/${{ github.repository }}/git/ref/tags/${TAG_NAME}" >/dev/null 2>&1; then
             echo "Tag ${TAG_NAME} already exists, skipping creation."
           else
-            echo "Creating tag ${TAG_NAME}."
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag "${TAG_NAME}"
-            git push origin "${TAG_NAME}"
+            echo "Creating tag ${TAG_NAME} at ${SHA}."
+            gh api "repos/${{ github.repository }}/git/refs" -f ref="refs/tags/${TAG_NAME}" -f sha="${SHA}" >/dev/null
           fi
 
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
@@ -64,83 +69,13 @@ jobs:
   publish:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: ubuntu-latest
     permissions:
       id-token: write # assume vars.AWS_ROLE_ARN for the Docker Hub credentials
-      contents: write # upload release assets
-    steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
-        with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
-          fetch-depth: 0
-
-      # Build with the toolchain directive in go.mod, not the runner's ambient Go.
-      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed
-        with:
-          go-version-file: go.mod
-
-      - name: Get Docker Hub credentials
-        uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
-        with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN'
-
-      - uses: ./.github/actions/publish
-        with:
-          tag: ${{ needs.release-please.outputs.tag_name }}
-          dry-run: 'false'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          homebrew-deploy-key: ${{ secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY }}
-
-  publish-release:
-    needs: [release-please, publish]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: gh release edit "$TAG_NAME" --repo "${{ github.repository }}" --draft=false --latest
-
-  sync-github-action:
-    needs: [release-please, publish-release]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
-        with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
-
-      - name: Set up access to find-code-references
-        uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@main
-        with:
-          repo_keys_map: |
-            {
-              "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
-            }
-
-      # Push the synced Action metadata to a branch; find-code-references tags
-      # vX.Y.Z and moves v2 once that PR merges.
-      - name: Push find-code-references release branch
-        env:
-          VERSION: ${{ needs.release-please.outputs.version }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh && ssh-keyscan -t rsa,ed25519 github.com >> ~/.ssh/known_hosts
-          branch="release-${VERSION}"
-          git clone git@github.com:launchdarkly/find-code-references.git "$RUNNER_TEMP/find-code-references"
-          cp -a build/metadata/github-actions/. "$RUNNER_TEMP/find-code-references/"
-          cd "$RUNNER_TEMP/find-code-references"
-          git checkout -b "$branch"
-          git config user.name "LaunchDarklyReleaseBot"
-          git config user.email "launchdarklyreleasebot@launchdarkly.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "find-code-references already matches ${VERSION}; nothing to sync."
-            exit 0
-          fi
-          git commit -m "chore: update to ld-find-code-refs ${VERSION}"
-          git push origin "$branch"
-          url="https://github.com/launchdarkly/find-code-references/compare/main...${branch}?expand=1&title=chore%3A+update+to+ld-find-code-refs+${VERSION}"
-          echo "Open the find-code-references PR: $url" | tee -a "$GITHUB_STEP_SUMMARY"
+      contents: write # upload release assets and publish the release
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+      dry_run: false
+      publish_release: true
+      sync_github_action: true
+    secrets: inherit

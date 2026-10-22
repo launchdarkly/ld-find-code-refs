@@ -1,9 +1,9 @@
 {
+  "bootstrap-sha": "97a0cb0d8ef1ed8244a62ae0b3b8681ad7c0bc1e",
   "packages": {
     ".": {
       "release-type": "go",
       "versioning": "default",
-      "bootstrap-sha": "97a0cb0d8ef1ed8244a62ae0b3b8681ad7c0bc1e",
       "draft": true,
       "include-component-in-tag": false,
       "exclude-paths": [
