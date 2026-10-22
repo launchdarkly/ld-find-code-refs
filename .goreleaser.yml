@@ -1,3 +1,9 @@
+version: 2
+
+# Without this, goreleaser v2 names artifacts after the module path's last
+# element ("v2") instead of the project.
+project_name: ld-find-code-refs
+
 builds:
   - binary: ld-find-code-refs
     id: ld-find-code-refs
@@ -36,7 +42,7 @@ builds:
 
 archives:
   - id: ld-find-code-refs
-    builds:
+    ids:
       - ld-find-code-refs
 
 nfpms:
@@ -68,7 +74,10 @@ brews:
       git:
         url: git@github.com:launchdarkly/homebrew-tap.git
         private_key: "{{ .Env.HOMEBREW_KEY_PATH }}"
-    folder: Formula
+    directory: Formula
+    # The publish action pushes dist/homebrew/Formula/ once the release is
+    # public, so the formula never points at draft or missing assets.
+    skip_upload: true
     url_template: "https://github.com/launchdarkly/ld-find-code-refs/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     install: |
       bin.install "ld-find-code-refs"
@@ -77,7 +86,12 @@ brews:
       email: launchdarklyreleasebot@launchdarkly.com
 
 release:
-  disable: true # the release GHA takes care of releasing to Github
+  # release-please creates the GitHub release; the publish action uploads these
+  # same artifacts to it, so the Homebrew checksums always match the assets.
+  disable: true
+
+changelog:
+  disable: true # release-please owns CHANGELOG.md and the release notes
 
 dockers:
   - image_templates:

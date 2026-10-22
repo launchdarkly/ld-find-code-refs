@@ -1,0 +1,108 @@
+name: Publish
+
+# Shared by release-please.yml and manual-publish.yml so releases and
+# recovery runs build with the same steps.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Existing release tag to build (vX.Y.Z)
+        required: true
+        type: string
+      dry_run:
+        description: Build a snapshot only; push nothing
+        required: false
+        type: boolean
+        default: true
+      publish_release:
+        description: Un-draft the release after uploading artifacts
+        required: false
+        type: boolean
+        default: false
+      sync_github_action:
+        description: Push a release branch to launchdarkly/find-code-references (needs publish_release)
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # assume vars.AWS_ROLE_ARN for the Docker Hub credentials
+      contents: write # upload release assets and publish the release
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      # Build with the toolchain directive in go.mod, not the runner's ambient Go.
+      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed
+        with:
+          go-version-file: go.mod
+
+      - name: Get Docker Hub credentials
+        if: ${{ !inputs.dry_run }}
+        uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN'
+
+      - uses: ./.github/actions/publish
+        with:
+          tag: ${{ inputs.tag }}
+          dry-run: ${{ inputs.dry_run }}
+          publish-release: ${{ inputs.publish_release }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          homebrew-deploy-key: ${{ !inputs.dry_run && secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY || '' }}
+
+  sync-github-action:
+    needs: publish
+    if: ${{ !inputs.dry_run && inputs.publish_release && inputs.sync_github_action }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Set up access to find-code-references
+        uses: launchdarkly/gh-actions/actions/ssh-key-by-repo@1beb3f37dc2df4e2aaa1218f0f746ea6edad4fb5 # main
+        with:
+          repo_keys_map: |
+            {
+              "launchdarkly/find-code-references": ${{ toJSON(secrets.LAUNCHDARKLY_FIND_CODE_REFERENCES_DEPLOY_KEY) }}
+            }
+
+      # Push the synced Action metadata to a branch; find-code-references tags
+      # vX.Y.Z and moves v2 once that PR merges.
+      - name: Push find-code-references release branch
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          mkdir -p ~/.ssh && ssh-keyscan -t rsa,ed25519 github.com >> ~/.ssh/known_hosts
+          branch="release-${version}"
+          git clone git@github.com:launchdarkly/find-code-references.git "$RUNNER_TEMP/find-code-references"
+          cp -a build/metadata/github-actions/. "$RUNNER_TEMP/find-code-references/"
+          cd "$RUNNER_TEMP/find-code-references"
+          git checkout -b "$branch"
+          git config user.name "LaunchDarklyReleaseBot"
+          git config user.email "launchdarklyreleasebot@launchdarkly.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "find-code-references already matches ${version}; nothing to sync."
+            exit 0
+          fi
+          git commit -m "chore: update to ld-find-code-refs ${version}"
+          # The branch is regenerated from the tag, so overwrite one left by an
+          # earlier attempt rather than failing on a non-fast-forward.
+          git push --force origin "$branch"
+          url="https://github.com/launchdarkly/find-code-references/compare/main...${branch}?expand=1&title=chore%3A+update+to+ld-find-code-refs+${version}"
+          echo "Open the find-code-references PR: $url" | tee -a "$GITHUB_STEP_SUMMARY"
