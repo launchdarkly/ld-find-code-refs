@@ -1,0 +1,57 @@
+name: Manual Publish
+
+# Dry-run the release build, or re-publish a release whose publish job failed.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build (vX.Y.Z)
+        required: true
+        type: string
+      dry_run:
+        description: Build a snapshot only; push nothing
+        required: false
+        type: boolean
+        default: true
+      publish_release:
+        description: Un-draft the release after uploading artifacts
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed
+        with:
+          go-version-file: go.mod
+
+      - name: Get Docker Hub credentials
+        if: ${{ !inputs.dry_run }}
+        uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/global/services/docker/public/username = DOCKER_USERNAME, /global/services/docker/public/token = DOCKER_TOKEN'
+
+      - uses: ./.github/actions/publish
+        with:
+          tag: ${{ inputs.tag }}
+          dry-run: ${{ inputs.dry_run }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          homebrew-deploy-key: ${{ !inputs.dry_run && secrets.LAUNCHDARKLY_HOMEBREW_TAP_DEPLOY_KEY || '' }}
+
+      - name: Publish release
+        if: ${{ !inputs.dry_run && inputs.publish_release }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ inputs.tag }}
+        run: gh release edit "$TAG_NAME" --repo "${{ github.repository }}" --draft=false --latest
