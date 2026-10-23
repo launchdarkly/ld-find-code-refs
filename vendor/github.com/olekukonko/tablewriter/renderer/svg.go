@@ -8,6 +8,7 @@ import (
 
 	"github.com/olekukonko/ll"
 
+	"github.com/olekukonko/tablewriter/pkg/twwidth"
 	"github.com/olekukonko/tablewriter/tw"
 )
 
@@ -139,7 +140,7 @@ func NewSVG(configs ...SVGConfig) *SVG {
 		allVisualLineData: make([][][]string, 3),
 		allVisualLineCtx:  make([][]tw.Formatting, 3),
 		vMergeTrack:       make(map[int]int),
-		logger:            ll.New("svg"),
+		logger:            ll.New("svg").Disable(),
 	}
 	for i := 0; i < 3; i++ {
 		r.allVisualLineData[i] = make([][]string, 0)
@@ -384,10 +385,13 @@ func (s *SVG) Debug() []string {
 
 // estimateTextWidth estimates text width in SVG units.
 // Parameter text is the input string to measure.
-// Returns the estimated width based on font size and char factor.
+// Returns the estimated width based on the text's display width, font size,
+// and char factor. Display width is used (instead of the rune count) so that
+// wide runes such as CJK characters, which occupy two cells, are sized as two
+// columns rather than one.
 func (s *SVG) estimateTextWidth(text string) float64 {
-	runeCount := float64(len([]rune(text)))
-	return runeCount * s.config.FontSize * s.config.ApproxCharWidthFactor
+	displayWidth := float64(twwidth.Width(text))
+	return displayWidth * s.config.FontSize * s.config.ApproxCharWidthFactor
 }
 
 // Footer buffers footer lines for SVG rendering.

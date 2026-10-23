@@ -795,14 +795,20 @@ func (t *Table) calculateAndNormalizeWidths(ctx *renderContext) error {
 						// Sort columns for deterministic reduction
 						sortedCols := workingWidths.SortedKeys()
 						for i := 0; i < overDistributed; i++ {
+							reduced := false
 							// Reduce from highest-indexed column
 							for j := len(sortedCols) - 1; j >= 0; j-- {
 								col := sortedCols[j]
 								if workingWidths.Get(col) > 1 && naturalColumnWidths.Get(col) < workingWidths.Get(col) {
 									workingWidths.Set(col, workingWidths.Get(col)-1)
 									ctx.logger.Debugf("Reduced col %d by 1 to %d", col, workingWidths.Get(col))
+									reduced = true
 									break
 								}
+							}
+							if !reduced {
+								// No eligible column found, no further reduction possible
+								break
 							}
 						}
 					}
@@ -970,7 +976,7 @@ func (t *Table) calculateAndNormalizeWidths(ctx *renderContext) error {
 
 // calculateContentMaxWidth computes the maximum content width for a column, accounting for padding and mode-specific constraints.
 // Returns the effective content width (after subtracting padding) for the given column index.
-func (t *Table) calculateContentMaxWidth(colIdx int, config tw.CellConfig, padLeftWidth, padRightWidth int, isStreaming bool) int {
+func (t *Table) calculateContentMaxWidth(colIdx int, config tw.CellConfig, padLeftWidth, padRightWidth int, isStreaming bool, numCols int) int {
 	var effectiveContentMaxWidth int
 
 	if isStreaming {
@@ -991,7 +997,7 @@ func (t *Table) calculateContentMaxWidth(colIdx int, config tw.CellConfig, padLe
 		constraintTotalCellWidth := 0
 		hasConstraint := false
 
-		// 1. Check new Widths.PerColumn (highest priority)
+		// Check new Widths.PerColumn (highest priority)
 		if t.config.Widths.Constrained() {
 
 			if colWidth, ok := t.config.Widths.PerColumn.OK(colIdx); ok && colWidth > 0 {
@@ -1001,15 +1007,30 @@ func (t *Table) calculateContentMaxWidth(colIdx int, config tw.CellConfig, padLe
 					colIdx, constraintTotalCellWidth)
 			}
 
-			// 2. Check new Widths.Global
+			// Check new Widths.Global. It is a table-wide limit, so split it
+			// across columns (same idea as MaxWidth). Applying the full Global
+			// value per column wraps too wide, then later shrink+truncate
+			// drops characters (see #328).
 			if !hasConstraint && t.config.Widths.Global > 0 {
-				constraintTotalCellWidth = t.config.Widths.Global
+				n := numCols
+				if n < 1 {
+					n = 1
+				}
+				sepW := 0
+				if n > 1 && t.renderer != nil && t.renderer.Config().Settings.Separators.BetweenColumns.Enabled() {
+					sepW = twwidth.Width(t.renderer.Config().Symbols.Column()) * (n - 1)
+				}
+				available := t.config.Widths.Global - sepW
+				if available < n {
+					available = n
+				}
+				constraintTotalCellWidth = available / n
 				hasConstraint = true
-				t.logger.Debugf("calculateContentMaxWidth: Using Widths.Global = %d", constraintTotalCellWidth)
+				t.logger.Debugf("calculateContentMaxWidth: Using Widths.Global = %d as per-column %d (%d cols)", t.config.Widths.Global, constraintTotalCellWidth, n)
 			}
 		}
 
-		// 3. Fall back to legacy ColMaxWidths.PerColumn (backward compatibility)
+		// Fall back to legacy ColMaxWidths.PerColumn (backward compatibility)
 		if !hasConstraint && config.ColMaxWidths.PerColumn != nil {
 			if colMax, ok := config.ColMaxWidths.PerColumn.OK(colIdx); ok && colMax > 0 {
 				constraintTotalCellWidth = colMax
@@ -1019,7 +1040,7 @@ func (t *Table) calculateContentMaxWidth(colIdx int, config tw.CellConfig, padLe
 			}
 		}
 
-		// 4. Fall back to legacy ColMaxWidths.Global
+		// Fall back to legacy ColMaxWidths.Global
 		if !hasConstraint && config.ColMaxWidths.Global > 0 {
 			constraintTotalCellWidth = config.ColMaxWidths.Global
 			hasConstraint = true
@@ -1027,7 +1048,7 @@ func (t *Table) calculateContentMaxWidth(colIdx int, config tw.CellConfig, padLe
 				constraintTotalCellWidth)
 		}
 
-		// 5. Fall back to table MaxWidth if auto-wrapping
+		// Fall back to table MaxWidth if auto-wrapping
 		if !hasConstraint && t.config.MaxWidth > 0 && config.Formatting.AutoWrap != tw.WrapNone {
 			constraintTotalCellWidth = t.config.MaxWidth
 			hasConstraint = true
@@ -1064,23 +1085,22 @@ func (t *Table) convertToStringer(input interface{}) ([]string, error) {
 	t.logger.Debugf("convertToString attempt %v using %v", input, t.stringer)
 
 	inputType := reflect.TypeOf(input)
-	stringerFuncVal := reflect.ValueOf(t.stringer)
-	stringerFuncType := stringerFuncVal.Type()
 
-	// Cache lookup (simplified, actual cache logic can be more complex)
-	if t.stringerCacheEnabled {
-		t.stringerCacheMu.RLock()
-		cachedFunc, ok := t.stringerCache[inputType]
-		t.stringerCacheMu.RUnlock()
-		if ok {
-			// Add proper type checking for cachedFunc against input here if necessary
+	// Cache lookup using twcache.LRU
+	// This assumes t.stringerCache is *twcache.LRU[reflect.Type, reflect.Value]
+	if t.stringerCache != nil {
+		if cachedFunc, ok := t.stringerCache.Get(inputType); ok {
 			t.logger.Debugf("convertToStringer: Cache hit for type %v", inputType)
+			// We can proceed to call it immediately because it's already been validated/cached
 			results := cachedFunc.Call([]reflect.Value{reflect.ValueOf(input)})
 			if len(results) == 1 && results[0].Type() == reflect.TypeOf([]string{}) {
 				return results[0].Interface().([]string), nil
 			}
 		}
 	}
+
+	stringerFuncVal := reflect.ValueOf(t.stringer)
+	stringerFuncType := stringerFuncVal.Type()
 
 	// Robust type checking for the stringer function
 	validSignature := stringerFuncVal.Kind() == reflect.Func &&
@@ -1105,10 +1125,6 @@ func (t *Table) convertToStringer(input interface{}) ([]string, error) {
 		}
 	} else if paramType.Kind() == reflect.Interface || (paramType.Kind() == reflect.Ptr && paramType.Elem().Kind() != reflect.Interface) {
 		// If input is nil, it can be assigned if stringer expects an interface or a pointer type
-		// (but not a pointer to an interface, which is rare for stringers).
-		// A nil value for a concrete type parameter would cause a panic on Call.
-		// So, if paramType is not an interface/pointer, and input is nil, it's an issue.
-		// This needs careful handling. For now, assume assignable if interface/pointer.
 		assignable = true
 	}
 
@@ -1120,7 +1136,6 @@ func (t *Table) convertToStringer(input interface{}) ([]string, error) {
 	if input == nil {
 		// If input is nil, we must pass a zero value of the stringer's parameter type
 		// if that type is a pointer or interface.
-		// Passing reflect.ValueOf(nil) directly will cause issues if paramType is concrete.
 		callArgs = []reflect.Value{reflect.Zero(paramType)}
 	} else {
 		callArgs = []reflect.Value{reflect.ValueOf(input)}
@@ -1128,10 +1143,9 @@ func (t *Table) convertToStringer(input interface{}) ([]string, error) {
 
 	resultValues := stringerFuncVal.Call(callArgs)
 
-	if t.stringerCacheEnabled && inputType != nil { // Only cache if inputType is valid
-		t.stringerCacheMu.Lock()
-		t.stringerCache[inputType] = stringerFuncVal
-		t.stringerCacheMu.Unlock()
+	// Add to cache if enabled (not nil) and input type is valid
+	if t.stringerCache != nil && inputType != nil {
+		t.stringerCache.Add(inputType, stringerFuncVal)
 	}
 
 	return resultValues[0].Interface().([]string), nil
@@ -1224,14 +1238,10 @@ func (t *Table) convertToString(value interface{}) string {
 // convertItemToCells is responsible for converting a single input item (which could be
 // a struct, a basic type, or an item implementing Stringer/Formatter) into a slice
 // of strings, where each string represents a cell for the table row.
-// zoo.go
-
-// convertItemToCells is responsible for converting a single input item into a slice of strings.
-// It now uses the unified struct parser for structs.
 func (t *Table) convertItemToCells(item interface{}) ([]string, error) {
 	t.logger.Debugf("convertItemToCells: Converting item of type %T", item)
 
-	// 1. User-defined table-wide stringer (t.stringer) takes highest precedence.
+	// User-defined table-wide stringer (t.stringer) takes highest precedence.
 	if t.stringer != nil {
 		res, err := t.convertToStringer(item)
 		if err == nil {
@@ -1241,13 +1251,13 @@ func (t *Table) convertItemToCells(item interface{}) ([]string, error) {
 		t.logger.Warnf("convertItemToCells: Custom table stringer was set but incompatible for type %T: %v. Will attempt other methods.", item, err)
 	}
 
-	// 2. Handle untyped nil directly.
+	// Handle untyped nil directly.
 	if item == nil {
 		t.logger.Debugf("convertItemToCells: Item is untyped nil. Returning single empty cell.")
 		return []string{""}, nil
 	}
 
-	// 3. Use the new unified struct parser. It handles pointers and embedding.
+	// Use the new unified struct parser. It handles pointers and embedding.
 	// We only care about the values it returns.
 	_, values := t.extractFieldsAndValuesFromStruct(item)
 	if values != nil {
@@ -1255,7 +1265,7 @@ func (t *Table) convertItemToCells(item interface{}) ([]string, error) {
 		return values, nil
 	}
 
-	// 4. Fallback for any other single item (e.g., basic types, or types that implement Stringer/Formatter).
+	// Fallback for any other single item (e.g., basic types, or types that implement Stringer/Formatter).
 	// This code path is now for non-struct types.
 	if formatter, ok := item.(tw.Formatter); ok {
 		t.logger.Debugf("convertItemToCells: Item (non-struct, type %T) is tw.Formatter. Using Format().", item)
@@ -1655,93 +1665,4 @@ func (t *Table) updateWidths(row []string, widths tw.Mapper[int, int], padding t
 			t.logger.Debugf("  Col %d: Width %d not greater than current max %d for cell '%s'", i, totalWidth, currentMax, cell)
 		}
 	}
-}
-
-// extractHeadersFromStruct is now a thin wrapper around the new unified function.
-// It only cares about the header names.
-func (t *Table) extractHeadersFromStruct(sample interface{}) []string {
-	headers, _ := t.extractFieldsAndValuesFromStruct(sample)
-	return headers
-}
-
-// extractFieldsAndValuesFromStruct is the new single source of truth for struct reflection.
-// It recursively processes a struct, handling pointers and embedded structs,
-// and returns two slices: one for header names and one for string-converted values.
-func (t *Table) extractFieldsAndValuesFromStruct(sample interface{}) ([]string, []string) {
-	v := reflect.ValueOf(sample)
-	if v.Kind() == reflect.Ptr {
-		if v.IsNil() {
-			return nil, nil
-		}
-		v = v.Elem()
-	}
-
-	if v.Kind() != reflect.Struct {
-		return nil, nil
-	}
-
-	typ := v.Type()
-	headers := make([]string, 0, typ.NumField())
-	values := make([]string, 0, typ.NumField())
-
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		fieldValue := v.Field(i)
-
-		// Skip unexported fields
-		if field.PkgPath != "" {
-			continue
-		}
-
-		// Handle embedded structs recursively
-		if field.Anonymous {
-			h, val := t.extractFieldsAndValuesFromStruct(fieldValue.Interface())
-			if h != nil {
-				headers = append(headers, h...)
-				values = append(values, val...)
-			}
-			continue
-		}
-
-		var tagName string
-		skipField := false
-
-		// Loop through the priority list of configured tags (e.g., ["json", "db"])
-		for _, tagKey := range t.config.Behavior.Structs.Tags {
-			tagValue := field.Tag.Get(tagKey)
-
-			// If a tag is found...
-			if tagValue != "" {
-				// If the tag is "-", this field should be skipped entirely.
-				if tagValue == "-" {
-					skipField = true
-					break // Stop processing tags for this field.
-				}
-				// Otherwise, we've found our highest-priority tag. Store it and stop.
-				tagName = tagValue
-				break // Stop processing tags for this field.
-			}
-		}
-
-		// If the field was marked for skipping, continue to the next field.
-		if skipField {
-			continue
-		}
-
-		// Determine header name from the tag or fallback to the field name
-		headerName := field.Name
-		if tagName != "" {
-			headerName = strings.Split(tagName, ",")[0]
-		}
-		headers = append(headers, tw.Title(headerName))
-
-		// Determine value, respecting omitempty from the found tag
-		value := ""
-		if !strings.Contains(tagName, ",omitempty") || !fieldValue.IsZero() {
-			value = t.convertToString(fieldValue.Interface())
-		}
-		values = append(values, value)
-	}
-
-	return headers, values
 }

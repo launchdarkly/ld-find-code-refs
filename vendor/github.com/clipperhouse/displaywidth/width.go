@@ -1,159 +1,367 @@
 package displaywidth
 
 import (
+	"strings"
 	"unicode/utf8"
 
-	"github.com/clipperhouse/stringish"
 	"github.com/clipperhouse/uax29/v2/graphemes"
 )
 
-// String calculates the display width of a string
-// using the [DefaultOptions]
+// Options allows you to specify the treatment of ambiguous East Asian
+// characters and ANSI escape sequences.
+type Options struct {
+	// EastAsianWidth specifies whether to treat ambiguous East Asian characters
+	// as width 1 or 2. When false (default), ambiguous East Asian characters
+	// are treated as width 1. When true, they are width 2.
+	EastAsianWidth bool
+
+	// ControlSequences specifies whether to ignore ECMA-48 escape sequences
+	// when calculating the display width. When false (default), ANSI escape
+	// sequences are treated as just a series of characters. When true, they are
+	// treated as a single zero-width unit.
+	//
+	// Note that this option is about *sequences*. Individual control characters
+	// are already treated as zero-width. With this option, ANSI sequences such as
+	// "\x1b[31m" and "\x1b[0m" do not count towards the width of a string.
+	ControlSequences bool
+}
+
+// DefaultOptions is the default options for the display width
+// calculation, which is EastAsianWidth false and ControlSequences false.
+var DefaultOptions = Options{EastAsianWidth: false, ControlSequences: false}
+
+// String calculates the display width of a string,
+// by iterating over grapheme clusters in the string
+// and summing their widths.
 func String(s string) int {
 	return DefaultOptions.String(s)
 }
 
-// Bytes calculates the display width of a []byte
-// using the [DefaultOptions]
+// String calculates the display width of a string, for the given options, by
+// iterating over grapheme clusters in the string and summing their widths.
+func (options Options) String(s string) int {
+	width := 0
+	pos := 0
+
+	for pos < len(s) {
+		// Try ASCII optimization
+		asciiLen := printableASCIILength(s[pos:])
+		if asciiLen > 0 {
+			width += asciiLen
+			pos += asciiLen
+			continue
+		}
+
+		// Not ASCII, use grapheme parsing
+		g := graphemes.FromString(s[pos:])
+		g.AnsiEscapeSequences = options.ControlSequences
+
+		start := pos
+
+		for g.Next() {
+			v := g.Value()
+			width += graphemeWidth(v, options)
+			pos += len(v)
+
+			// Quick check: if remaining might have printable ASCII, break to outer loop
+			if pos < len(s) && s[pos] >= 0x20 && s[pos] <= 0x7E {
+				break
+			}
+		}
+
+		// Defensive, should not happen: if no progress was made,
+		// skip a byte to prevent infinite loop. Only applies if
+		// the grapheme parser misbehaves.
+		if pos == start {
+			pos++
+		}
+	}
+
+	return width
+}
+
+// Bytes calculates the display width of a []byte,
+// by iterating over grapheme clusters in the byte slice
+// and summing their widths.
 func Bytes(s []byte) int {
 	return DefaultOptions.Bytes(s)
 }
 
+// Bytes calculates the display width of a []byte, for the given options, by
+// iterating over grapheme clusters in the slice and summing their widths.
+func (options Options) Bytes(s []byte) int {
+	width := 0
+	pos := 0
+
+	for pos < len(s) {
+		// Try ASCII optimization
+		asciiLen := printableASCIILength(s[pos:])
+		if asciiLen > 0 {
+			width += asciiLen
+			pos += asciiLen
+			continue
+		}
+
+		// Not ASCII, use grapheme parsing
+		g := graphemes.FromBytes(s[pos:])
+		g.AnsiEscapeSequences = options.ControlSequences
+
+		start := pos
+
+		for g.Next() {
+			v := g.Value()
+			width += graphemeWidth(v, options)
+			pos += len(v)
+
+			// Quick check: if remaining might have printable ASCII, break to outer loop
+			if pos < len(s) && s[pos] >= 0x20 && s[pos] <= 0x7E {
+				break
+			}
+		}
+
+		// Defensive, should not happen: if no progress was made,
+		// skip a byte to prevent infinite loop. Only applies if
+		// the grapheme parser misbehaves.
+		if pos == start {
+			pos++
+		}
+	}
+
+	return width
+}
+
+// Rune calculates the display width of a rune. You
+// should almost certainly use [String] or [Bytes] for
+// most purposes.
+//
+// The smallest unit of display width is a grapheme
+// cluster, not a rune. Iterating over runes to measure
+// width is incorrect in many cases.
 func Rune(r rune) int {
 	return DefaultOptions.Rune(r)
 }
 
-type Options struct {
-	EastAsianWidth     bool
-	StrictEmojiNeutral bool
-}
-
-var DefaultOptions = Options{
-	EastAsianWidth:     false,
-	StrictEmojiNeutral: true,
-}
-
-// String calculates the display width of a string
-// for the given options
-func (options Options) String(s string) int {
-	if len(s) == 0 {
-		return 0
-	}
-
-	total := 0
-	g := graphemes.FromString(s)
-	for g.Next() {
-		// The first character in the grapheme cluster determines the width;
-		// modifiers and joiners do not contribute to the width.
-		props, _ := lookupProperties(g.Value())
-		total += props.width(options)
-	}
-	return total
-}
-
-// BytesOptions calculates the display width of a []byte
-// for the given options
-func (options Options) Bytes(s []byte) int {
-	if len(s) == 0 {
-		return 0
-	}
-
-	total := 0
-	g := graphemes.FromBytes(s)
-	for g.Next() {
-		// The first character in the grapheme cluster determines the width;
-		// modifiers and joiners do not contribute to the width.
-		props, _ := lookupProperties(g.Value())
-		total += props.width(options)
-	}
-	return total
-}
-
+// Rune calculates the display width of a rune, for the given options.
+//
+// You should almost certainly use [String] or [Bytes] for most purposes.
+//
+// The smallest unit of display width is a grapheme cluster, not a rune.
+// Iterating over runes to measure width is incorrect in many cases.
 func (options Options) Rune(r rune) int {
-	// Fast path for ASCII
 	if r < utf8.RuneSelf {
-		if isASCIIControl(byte(r)) {
-			// Control (0x00-0x1F) and DEL (0x7F)
-			return 0
-		}
-		// ASCII printable (0x20-0x7E)
-		return 1
+		return asciiWidth(byte(r))
 	}
 
-	// Surrogates (U+D800-U+DFFF) are invalid UTF-8 and have zero width
-	// Other packages might turn them into the replacement character (U+FFFD)
-	// in which case, we won't see it.
+	// Surrogates (U+D800-U+DFFF) are invalid UTF-8.
 	if r >= 0xD800 && r <= 0xDFFF {
 		return 0
 	}
 
-	// Stack-allocated to avoid heap allocation
-	var buf [4]byte // UTF-8 is at most 4 bytes
+	var buf [4]byte
 	n := utf8.EncodeRune(buf[:], r)
-	// Skip the grapheme iterator and directly lookup properties
-	props, _ := lookupProperties(buf[:n])
-	return props.width(options)
+
+	// Skip the grapheme iterator
+	return graphemeWidth(buf[:n], options)
 }
 
-func isASCIIControl(b byte) bool {
-	return b < 0x20 || b == 0x7F
-}
+const _Default property = 0
 
-const defaultWidth = 1
+// TruncateString truncates a string to the given maxWidth, and appends the
+// given tail if the string is truncated.
+//
+// It ensures the visible width, including the width of the tail, is less than or
+// equal to maxWidth.
+//
+// When [Options.ControlSequences] is true, ANSI escape sequences that appear
+// after the truncation point are preserved in the output. This ensures that
+// escape sequences such as SGR resets are not lost, preventing color bleed
+// in terminal output.
+func (options Options) TruncateString(s string, maxWidth int, tail string) string {
+	maxWidthWithoutTail := maxWidth - options.String(tail)
 
-// is returns true if the property flag is set
-func (p property) is(flag property) bool {
-	return p&flag != 0
-}
+	var pos, total int
+	g := graphemes.FromString(s)
+	g.AnsiEscapeSequences = options.ControlSequences
 
-// lookupProperties returns the properties for the first character in a string
-func lookupProperties[T stringish.Interface](s T) (property, int) {
-	if len(s) == 0 {
-		return 0, 0
-	}
-
-	// Fast path for ASCII characters (single byte)
-	b := s[0]
-	if b < utf8.RuneSelf { // Single-byte ASCII
-		if isASCIIControl(b) {
-			// Control characters (0x00-0x1F) and DEL (0x7F) - width 0
-			return _ZeroWidth, 1
+	for g.Next() {
+		gw := graphemeWidth(g.Value(), options)
+		if total+gw <= maxWidthWithoutTail {
+			pos = g.End()
 		}
-		// ASCII printable characters (0x20-0x7E) - width 1
-		// Return 0 properties, width calculation will default to 1
-		return 0, 1
+		total += gw
+		if total > maxWidth {
+			if options.ControlSequences {
+				// Build result with trailing ANSI escape sequences preserved
+				var b strings.Builder
+				b.Grow(len(s) + len(tail)) // at most original + tail
+				b.WriteString(s[:pos])
+				b.WriteString(tail)
+				rem := graphemes.FromString(s[pos:])
+				rem.AnsiEscapeSequences = true
+				for rem.Next() {
+					v := rem.Value()
+					if len(v) > 0 && v[0] == 0x1B {
+						b.WriteString(v)
+					}
+				}
+				return b.String()
+			}
+			return s[:pos] + tail
+		}
 	}
-
-	// Use the generated trie for lookup
-	props, size := lookup(s)
-	return property(props), size
+	// No truncation
+	return s
 }
 
-// width determines the display width of a character based on its properties
-// and configuration options
-func (p property) width(options Options) int {
-	if p == 0 {
-		// Character not in trie, use default behavior
-		return defaultWidth
+// TruncateString truncates a string to the given maxWidth, and appends the
+// given tail if the string is truncated.
+//
+// It ensures the total width, including the width of the tail, is less than or
+// equal to maxWidth.
+func TruncateString(s string, maxWidth int, tail string) string {
+	return DefaultOptions.TruncateString(s, maxWidth, tail)
+}
+
+// TruncateBytes truncates a []byte to the given maxWidth, and appends the
+// given tail if the []byte is truncated.
+//
+// It ensures the visible width, including the width of the tail, is less than or
+// equal to maxWidth.
+//
+// When [Options.ControlSequences] is true, ANSI escape sequences that appear
+// after the truncation point are preserved in the output. This ensures that
+// escape sequences such as SGR resets are not lost, preventing color bleed
+// in terminal output.
+func (options Options) TruncateBytes(s []byte, maxWidth int, tail []byte) []byte {
+	maxWidthWithoutTail := maxWidth - options.Bytes(tail)
+
+	var pos, total int
+	g := graphemes.FromBytes(s)
+	g.AnsiEscapeSequences = options.ControlSequences
+
+	for g.Next() {
+		gw := graphemeWidth(g.Value(), options)
+		if total+gw <= maxWidthWithoutTail {
+			pos = g.End()
+		}
+		total += gw
+		if total > maxWidth {
+			if options.ControlSequences {
+				// Build result with trailing ANSI escape sequences preserved
+				result := make([]byte, 0, len(s)+len(tail)) // at most original + tail
+				result = append(result, s[:pos]...)
+				result = append(result, tail...)
+				rem := graphemes.FromBytes(s[pos:])
+				rem.AnsiEscapeSequences = true
+				for rem.Next() {
+					v := rem.Value()
+					if len(v) > 0 && v[0] == 0x1B {
+						result = append(result, v...)
+					}
+				}
+				return result
+			}
+			result := make([]byte, 0, pos+len(tail))
+			result = append(result, s[:pos]...)
+			result = append(result, tail...)
+			return result
+		}
+	}
+	// No truncation
+	return s
+}
+
+// TruncateBytes truncates a []byte to the given maxWidth, and appends the
+// given tail if the []byte is truncated.
+//
+// It ensures the total width, including the width of the tail, is less than or
+// equal to maxWidth.
+func TruncateBytes(s []byte, maxWidth int, tail []byte) []byte {
+	return DefaultOptions.TruncateBytes(s, maxWidth, tail)
+}
+
+// graphemeWidth returns the display width of a grapheme cluster.
+// The passed string must be a single grapheme cluster.
+func graphemeWidth[T ~string | []byte](s T, options Options) int {
+	// Optimization: no need to look up properties
+	switch len(s) {
+	case 0:
+		return 0
+	case 1:
+		return asciiWidth(s[0])
 	}
 
-	if p.is(_ZeroWidth) {
+	// Multi-byte grapheme clusters led by a C0 control (0x00-0x1F)
+	if s[0] <= 0x1F {
 		return 0
 	}
 
-	if options.EastAsianWidth {
-		if p.is(_East_Asian_Ambiguous) {
-			return 2
+	p, sz := lookup(s)
+	prop := property(p)
+
+	// Variation Selector 16 (VS16) requests emoji presentation
+	if prop != _Wide && sz > 0 && len(s) >= sz+3 {
+		vs := s[sz : sz+3]
+		if isVS16(vs) {
+			prop = _Wide
 		}
-		if p.is(_East_Asian_Ambiguous|_Emoji) && !options.StrictEmojiNeutral {
-			return 2
-		}
+		// VS15 (0x8E) requests text presentation but does not affect width,
+		// in my reading of Unicode TR51. Falls through to return the base
+		// character's property.
 	}
 
-	if p.is(_East_Asian_Full_Wide) {
-		return 2
+	if options.EastAsianWidth && prop == _East_Asian_Ambiguous {
+		prop = _Wide
 	}
 
-	// Default width for all other characters
-	return defaultWidth
+	if prop > upperBound {
+		prop = _Default
+	}
+
+	return propertyWidths[prop]
 }
+
+func asciiWidth(b byte) int {
+	if b <= 0x1F || b == 0x7F {
+		return 0
+	}
+	return 1
+}
+
+// printableASCIILength returns the length of consecutive printable ASCII bytes
+// starting at the beginning of s.
+func printableASCIILength[T string | []byte](s T) int {
+	i := 0
+	for ; i < len(s); i++ {
+		b := s[i]
+		// Printable ASCII is 0x20-0x7E (space through tilde)
+		if b < 0x20 || b > 0x7E {
+			break
+		}
+	}
+
+	// If the next byte is non-ASCII (>= 0x80), back off by 1. The grapheme
+	// parser may group the last ASCII byte with subsequent non-ASCII bytes,
+	// such as combining marks.
+	if i > 0 && i < len(s) && s[i] >= 0x80 {
+		i--
+	}
+
+	return i
+}
+
+// isVS16 checks if the slice matches VS16 (U+FE0F) UTF-8 encoding
+// (EF B8 8F). It assumes len(s) >= 3.
+func isVS16[T ~string | []byte](s T) bool {
+	return s[0] == 0xEF && s[1] == 0xB8 && s[2] == 0x8F
+}
+
+// propertyWidths is a jump table of sorts, instead of a switch
+var propertyWidths = [4]int{
+	_Default:              1,
+	_Zero_Width:           0,
+	_Wide:                 2,
+	_East_Asian_Ambiguous: 1,
+}
+
+const upperBound = property(len(propertyWidths) - 1)
