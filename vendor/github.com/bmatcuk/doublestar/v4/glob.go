@@ -158,7 +158,7 @@ func (g *glob) globAlts(fsys fs.FS, pattern string, openingIdx, closingIdx int, 
 				nextIdx += patIdx
 			}
 
-			alt := buildAlt(d, pattern, startIdx, openingIdx, patIdx, nextIdx, afterIdx)
+			alt := buildAlt(escapeMeta(d), pattern, startIdx, openingIdx, patIdx, nextIdx, afterIdx)
 			matches, err = g.doGlob(fsys, alt, matches, firstSegment, beforeMeta)
 			if err != nil {
 				return
@@ -223,8 +223,21 @@ func (g *glob) globDir(fsys fs.FS, dir, pattern string, matches []string, canMat
 	}
 
 	var matched bool
+	checkForHidden := g.noHidden && couldUnintentionallyMatchHidden(pattern)
 	for _, info := range dirs {
 		name := info.Name()
+
+		// Skip hidden files when noHidden is set
+		if checkForHidden {
+			isHidden, err := isHiddenPath(name, info)
+			if e = g.forwardErrIfFailOnIOErrors(err); e != nil {
+				return
+			}
+			if isHidden {
+				continue
+			}
+		}
+
 		matched, e = matchWithSeparator(pattern, name, '/', false, g.caseInsensitive)
 		if e != nil {
 			return
@@ -268,6 +281,18 @@ func (g *glob) globDoubleStar(fsys fs.FS, dir string, matches []string, canMatch
 
 	for _, info := range dirs {
 		name := info.Name()
+
+		// Skip hidden files/directories when noHidden is set
+		if g.noHidden {
+			isHidden, err := isHiddenPath(name, info)
+			if err = g.forwardErrIfFailOnIOErrors(err); err != nil {
+				return nil, err
+			}
+			if isHidden {
+				continue
+			}
+		}
+
 		isDir, err := g.isDir(fsys, dir, name, info)
 		if err != nil {
 			return nil, err
@@ -385,10 +410,11 @@ func (g *glob) isPathDir(fsys fs.FS, name string, beforeMeta bool) (fs.FileInfo,
 }
 
 // Returns whether or not the given DirEntry is a directory. If the DirEntry
-// represents a symbolic link, the link is followed by running fs.Stat() on
+// represents a symbolic link or an irregular file (such as a Windows junction),
+// the target is checked by running fs.Stat() on
 // `path.Join(dir, name)` (if dir is "", name will be used without joining)
 func (g *glob) isDir(fsys fs.FS, dir, name string, info fs.DirEntry) (bool, error) {
-	if !g.noFollow && (info.Type()&fs.ModeSymlink) > 0 {
+	if !g.noFollow && (info.Type()&(fs.ModeSymlink|fs.ModeIrregular)) > 0 {
 		p := name
 		if dir != "" {
 			p = path.Join(dir, name)
