@@ -14,7 +14,7 @@ Versions come from [release-please](https://github.com/googleapis/release-please
    - runs goreleaser once at the tag (via the shared `.github/workflows/publish.yml`): pushes the `ld-find-code-refs`, `ld-find-code-refs-github-action` and `ld-find-code-refs-bitbucket-pipeline` Docker images and uploads the archives, packages and `checksums.txt` to the release
    - publishes the release, then pushes the Homebrew formula built from those same artifacts
    - pushes a `release-X.Y.Z` branch to [launchdarkly/find-code-references](https://github.com/launchdarkly/find-code-references) with the synced `build/metadata/github-actions/` files; the job summary links to open its PR
-4. Merge the find-code-references PR, then tag it `vX.Y.Z`, move `v2` to the same commit, and create its release.
+4. Merge the find-code-references PR. Its `release.yml` workflow then tags `vX.Y.Z`, creates the release with these release notes, and moves `v2` to it.
 
 Every file that carries the version is annotated with `x-release-please-version` and listed under `extra-files` in `release-please-config.json`. Add any new one there.
 
