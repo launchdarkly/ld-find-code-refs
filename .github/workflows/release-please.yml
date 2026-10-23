@@ -1,0 +1,86 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+# Serialize runs so two quick pushes cannot both create the tag or publish.
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # dispatch main.yml on the release PR branch
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # Create the draft release for a merged release PR first. Draft releases do
+      # not create their tag, so push it below before opening any new release PR.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          skip-github-pull-request: true
+
+      # Tag the release commit release-please reports, not github.sha: a later
+      # push to main can be the run that creates the release.
+      - name: Create release tag
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          SHA: ${{ steps.release.outputs.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh api "repos/${{ github.repository }}/git/ref/tags/${TAG_NAME}" >/dev/null 2>&1; then
+            echo "Tag ${TAG_NAME} already exists, skipping creation."
+          else
+            echo "Creating tag ${TAG_NAME} at ${SHA}."
+            gh api "repos/${{ github.repository }}/git/refs" -f ref="refs/tags/${TAG_NAME}" -f sha="${SHA}" >/dev/null
+          fi
+
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        if: ${{ steps.release.outputs.release_created != 'true' }}
+        id: release-prs
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          skip-github-release: true
+
+      # PR events from GITHUB_TOKEN start no workflows, so the required go-tests
+      # and github-actions-docs checks would never report on the release PR.
+      # workflow_dispatch is exempt; its checks land on the PR's head commit.
+      # Parse the PR in the script: step env is evaluated even when the step is
+      # skipped, and fromJSON fails on the empty output when no PR was opened.
+      - name: Run required checks on the release PR
+        if: ${{ steps.release-prs.outputs.prs_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.release-prs.outputs.pr }}
+        run: |
+          set -euo pipefail
+          branch=$(jq -r .headBranchName <<<"$PR")
+          gh workflow run main.yml --repo "${{ github.repository }}" --ref "$branch"
+
+  publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    permissions:
+      id-token: write # assume vars.AWS_ROLE_ARN for the Docker Hub credentials
+      contents: write # upload release assets and publish the release
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+      dry_run: false
+      publish_release: true
+      sync_github_action: true
+    secrets: inherit

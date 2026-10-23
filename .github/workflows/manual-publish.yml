@@ -1,0 +1,41 @@
+name: Manual Publish
+
+# Dry-run the release build, or re-publish a release whose publish job failed.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build (vX.Y.Z)
+        required: true
+        type: string
+      dry_run:
+        description: Build a snapshot only; push nothing
+        required: false
+        type: boolean
+        default: true
+      publish_release:
+        description: Un-draft the release after uploading artifacts
+        required: false
+        type: boolean
+        default: false
+      sync_github_action:
+        description: Push a release branch to launchdarkly/find-code-references (needs publish_release)
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    permissions:
+      id-token: write
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ inputs.tag }}
+      dry_run: ${{ inputs.dry_run }}
+      publish_release: ${{ inputs.publish_release }}
+      sync_github_action: ${{ inputs.sync_github_action }}
+    secrets: inherit

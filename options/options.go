@@ -225,7 +225,7 @@ func (o Options) Validate() error {
 
 	maxContextLines := 5
 	if o.ContextLines > maxContextLines {
-		return fmt.Errorf(`invalid value %q for "contextLines": must be <= %d`, o.ContextLines, maxContextLines)
+		return fmt.Errorf(`invalid value %d for "contextLines": must be <= %d`, o.ContextLines, maxContextLines)
 	}
 
 	repoType := RepoType(strings.ToLower(o.RepoType))
@@ -253,7 +253,7 @@ func (o Options) Validate() error {
 
 	if o.OutDir != "" {
 		if _, err := validation.NormalizeAndValidatePath(o.OutDir); err != nil {
-			return fmt.Errorf(`invalid valid for "outDir": %+v`, err)
+			return fmt.Errorf(`invalid value for "outDir": %+v`, err)
 		}
 	}
 

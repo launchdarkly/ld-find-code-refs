@@ -1,0 +1,20 @@
+{
+  "bootstrap-sha": "97a0cb0d8ef1ed8244a62ae0b3b8681ad7c0bc1e",
+  "packages": {
+    ".": {
+      "release-type": "go",
+      "versioning": "default",
+      "draft": true,
+      "include-component-in-tag": false,
+      "exclude-paths": [
+        ".github"
+      ],
+      "extra-files": [
+        "internal/version/version.go",
+        "build/metadata/github-actions/Dockerfile",
+        "build/metadata/github-actions/docker/action.yml",
+        "build/metadata/github-actions/README.md"
+      ]
+    }
+  }
+}

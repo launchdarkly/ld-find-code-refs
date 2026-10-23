@@ -1,4 +1,6 @@
-FROM launchdarkly/ld-find-code-refs-github-action:2.14.0
+# x-release-please-start-version
+FROM launchdarkly/ld-find-code-refs-github-action:2.18.4
+# x-release-please-end
 
 LABEL com.github.actions.name="LaunchDarkly Code References"
 LABEL com.github.actions.description="Find references to feature flags in your code."

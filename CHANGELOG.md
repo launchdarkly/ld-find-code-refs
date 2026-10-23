@@ -2,6 +2,60 @@
 
 All notable changes to the ld-find-code-refs program will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.18.4] - 2026-10-21
+
+### Fixed:
+- builds with Go 1.26.10 so `crypto/x509` rejects certificate chains through the distrusted eMudhra intermediates (INC-289, golang/go#82345). The `toolchain` directive in `go.mod` moves from 1.26.8 to 1.26.10 and the release image from `cimg/go:1.22` to `cimg/go:1.26.10`. There are no application code changes
+
+## [2.18.3] - 2026-09-25
+
+### Fixed:
+- the v2.18.2 release archives were published with `2.18.1` filenames, because `make products-for-release` passes `--skip-validate` and goreleaser fell back to the newest visible tag when naming artifacts. The binaries themselves were correct, but the Homebrew formula pointed at `2.18.2` filenames that did not exist, and the misnamed archives collided with the genuine v2.18.1 assets. This release republishes the same code under correctly named artifacts. There are no code changes from 2.18.2 -- the go-toml v2.4.3 bump released there is unchanged
+
+## [2.18.2] - 2026-09-25
+
+### Fixed:
+- bumped `github.com/pelletier/go-toml/v2` from v2.2.4 to v2.4.3, clearing a reported denial-of-service finding (XRAY-1033007). The module arrives indirectly through `spf13/viper`, which requires v2.2.4, so the 2.18.0 dependency work did not move it. The TOML decoder is not reachable from this program -- `options.go` pins `viper.SetConfigType("yaml")`, so viper never selects the TOML codec -- but the upstream release bounds array and inline-table nesting depth to prevent a stack-overflow crash, so the bump is worth taking regardless
+- the GitHub Action README examples referenced `launchdarkly/find-code-references@v2.18.1`, a tag that was never created. The Action tag and the scanner version are realigned at 2.18.2 so the copy-pasteable examples resolve
+
+## [2.18.1] - 2026-09-23
+
+### Fixed:
+- GitHub release archives (Linux/macOS/Windows tarballs, deb, rpm) were missing from v2.18.0, and that tag name can no longer be used by a release, so the Homebrew formula pointed at download URLs that did not resolve. This patch republishes those assets under a usable tag. There are no code changes from 2.18.0 -- the Go toolchain pin and dependency bumps released there are unchanged.
+
+## [2.18.0] - 2026-09-23
+
+### Changed:
+- the release toolchain is now pinned via a `toolchain` directive in `go.mod` (Go 1.26.8) rather than inferred from the runner's ambient Go, so published binaries ship a patched standard library
+- Alpine base images for the CLI, GitHub Action and Bitbucket Pipe images updated from 3.22.2 to 3.24.2
+
+### Fixed:
+- resolved all 69 vulnerabilities reported by `govulncheck` against the v2.17.1 binary, including CVE-2025-68121 (`crypto/tls`), CVE-2026-39821 (Punycode validation in the standard library and `x/net/idna`), CVE-2026-45570 (`go-git` SSH transport) and CVE-2026-1229 (`circl` secp384r1). Dependencies bumped: `go-git/v5` to v5.19.2, `go-billy/v5` to v5.9.1, `x/net` to v0.59.0, `x/crypto` to v0.57.0, `x/text` to v0.42.0 and `circl` to v1.6.5
+- the error message for an out-of-range `contextLines` value no longer renders the supplied number with a string format verb
+
+## [2.17.1] - 2026-09-14
+
+### Fixed:
+- GitHub release archives (Linux/macOS/Windows tarballs, deb, rpm) were missing from the immutable v2.17.0 release. This patch publishes those assets.
+
+## [2.17.0] - 2026-08-13
+
+### Added:
+- optional GitHub Action entry point `launchdarkly/find-code-references/docker` with a `dockerImage` input so workflows can pull the scanner image from a private registry or Docker Hub proxy. The root Action is unchanged.
+
+## [2.16.0] - 2026-07-28
+Version 2.15.0 was never released. Its Docker images exist on Docker Hub from an incomplete release run, but there is no 2.15.0 tag, release, or changelog entry. Use 2.16.0 instead.
+
+### Added:
+- debug logging for HTTP response status codes
+- auth header for GitHub Action runs
+
+### Fixed:
+- filepattern alias contents are now concatenated once per alias rather than once per flag key, fixing out-of-memory failures on large repositories
+
+### Changed:
+- updated dependencies
+
 ## [2.14.0] - 2025-08-12
 ### Added:
 - `--skipArchivedFlags` option to instruct the tool to ignore any flag keys it finds from archived flags

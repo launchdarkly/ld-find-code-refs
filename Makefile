@@ -1,7 +1,6 @@
 # Note: These commands pertain to the development of ld-find-code-refs.
 #       They are not intended for use by the end-users of this program.
 SHELL=/bin/bash
-GORELEASER_VERSION=v1.20.0
 
 build:
 	go build ./cmd/...
@@ -37,12 +36,6 @@ compile-github-actions-binary:
 compile-bitbucket-pipelines-binary:
 	GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline ./build/package/bitbucket-pipelines
 
-# Get the lines added to the most recent changelog update (minus the first 2 lines)
-RELEASE_NOTES=<(GIT_EXTERNAL_DIFF='bash -c "diff --unchanged-line-format=\"\" $$2 $$5" || true' git log --ext-diff -1 --pretty= -p CHANGELOG.md)
-
-echo-release-notes:
-	@cat $(RELEASE_NOTES)
-
 define publish_docker
 	test $(1) || (echo "Please provide tag"; exit 1)
 	docker build -t launchdarkly/$(3):$(1) build/package/$(4)
@@ -72,15 +65,8 @@ clean:
 	rm -f build/package/github-actions/ld-find-code-refs-github-action
 	rm -f build/package/bitbucket-pipelines/ld-find-code-refs-bitbucket-pipeline
 
-RELEASE_CMD=curl -sL https://git.io/goreleaser | GOPATH=$(mktemp -d) VERSION=$(GORELEASER_VERSION) GITHUB_TOKEN=$(GITHUB_TOKEN) HOMEBREW_KEY_PATH=$(HOMEBREW_KEY_PATH) bash -s -- --clean --debug --release-notes $(RELEASE_NOTES)
+# Build every release artifact locally without publishing (needs goreleaser v2 and Docker)
+release-snapshot:
+	HOMEBREW_KEY_PATH=/dev/null goreleaser release --snapshot --clean --skip=publish
 
-publish:
-	$(RELEASE_CMD)
-
-test-publish:
-	curl -sL https://git.io/goreleaser | VERSION=$(GORELEASER_VERSION) bash -s -- --clean --skip-publish --skip-validate
-
-products-for-release:
-	$(RELEASE_CMD) --skip-publish --skip-validate
-
-.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary echo-release-notes publish-dev-circle-orb publish-release-circle-orb publish-all clean build
+.PHONY: init test lint compile-github-actions-binary compile-macos-binary compile-linux-binary compile-windows-binary compile-bitbucket-pipelines-binary release-snapshot publish-dev-circle-orb publish-release-circle-orb publish-all clean build
