@@ -2,7 +2,7 @@
 
 go-re2 is a drop-in replacement for the standard library [regexp][1] package which uses the C++
 [re2][2] library for improved performance with large inputs or complex expressions. By default,
-re2 is packaged as a WebAssembly module and accessed with the pure Go runtime, [wazero][3].
+re2 is packaged as a WebAssembly module, then compiled to Go using [wasm2go][3].
 This means that it is compatible with any Go application, regardless of availability of cgo.
 
 Note that if your regular expressions or input are small, this library is slower than the
@@ -16,13 +16,12 @@ The library is almost fully compatible with the standard library regexp package,
 behavior differences. These are likely corner cases that don't affect typical applications. It is
 best to confirm them before proceeding.
 
-- Invalid utf-8 strings are treated differently. The standard library silently replaces invalid utf-8
-  with the unicode replacement character. This library will stop consuming strings when encountering
-  invalid utf-8.
+*   Invalid utf-8 strings are treated differently. The standard library silently replaces invalid utf-8
+    with the unicode replacement character. This library will stop consuming strings when encountering
+    invalid utf-8.
+    *   `experimental.CompileLatin1` can be used to match against non-utf8 strings
 
-  - `experimental.CompileLatin1` can be used to match against non-utf8 strings
-
-- `reflect.DeepEqual` cannot compare `Regexp` objects.
+*   `reflect.DeepEqual` cannot compare `Regexp` objects.
 
 Continue to use the standard library if your usage would match any of these.
 
@@ -33,7 +32,7 @@ behavior differences.
 
 All APIs found in `regexp` are available except
 
-- `*Reader`: re2 does not support streaming input
+*   `*Reader`: re2 does not support streaming input
 
 Note that unlike many packages that wrap C++ libraries, there is no added `Close` type of method.
 See the [rationale](./RATIONALE.md) for more details.
@@ -47,9 +46,9 @@ provide any guarantee of API stability even across minor version updates.
 ## Usage
 
 go-re2 is a standard Go library package and can be added to a go.mod file. It will work fine in
-any Go project. See [below](#tinygo) for notes about TinyGo support.
+any Go project.
 
-```
+```text
 go get github.com/wasilibs/go-re2
 ```
 
@@ -91,7 +90,8 @@ apk add build-base pkgconfig re2-dev
 
 #### Windows
 
-On Windows start by installing [MSYS2][8]. Then open the MINGW64 terminal and install the gcc toolchain and re2 via pacman:
+On Windows start by installing [MSYS2][8]. Then open the MINGW64 terminal and install the gcc toolchain
+and re2 via pacman:
 
 ```bash
 pacman -S mingw-w64-x86_64-gcc
@@ -99,7 +99,8 @@ pacman -S mingw-w64-x86_64-re2
 pacman -S mingw-w64-x86_64-pkg-config
 ```
 
-If you want to run the resulting exe program outside the MINGW64 terminal you need to add a path to the MinGW-w64 libraries to the PATH environmental variable (adjust as needed for your system):
+If you want to run the resulting exe program outside the MINGW64 terminal you need to add a path to
+the MinGW-w64 libraries to the PATH environmental variable (adjust as needed for your system):
 
 ```cmd
 SET PATH=C:\msys64\mingw64\bin;%PATH%
@@ -107,19 +108,12 @@ SET PATH=C:\msys64\mingw64\bin;%PATH%
 
 #### MacOS
 
-On Mac start by installing [homebrew][9] including installation of the command line tools. Then install re2 via brew:
+On Mac start by installing [homebrew][9] including installation of the command line tools. Then install
+re2 via brew:
 
 ```bash
 brew install re2
 ```
-
-### TinyGo
-
-This project began as a way to use re2 with TinyGo WASI projects. However, recent versions of re2 have reworked
-their build, notably depending on absl which requires threads support and breaks compatibility with TinyGo programs.
-To stay up-to-date with re2, after much time this project has removed building of TinyGo-specific Wasm artifacts.
-Build tags to enable cgo codepaths for TinyGo are kept to provide best-effort support with projects bringing their
-own Wasm, with the only known usage currently in [coraza-wasilibs][10].
 
 ## Performance
 
@@ -136,7 +130,7 @@ often have highly complex expressions.
 
 One run looks like this
 
-```
+```text
 name \ time/op     build/wafbench_stdlib.txt  build/wafbench.txt  build/wafbench_cgo.txt
 WAF/FTW-4                         21.72 ± ∞ ¹    21.17 ± ∞ ¹   -2.55% (p=0.008 n=5)    19.51 ± ∞ ¹  -10.19% (p=0.008 n=5)
 WAF/POST/1-4                     2.308m ± ∞ ¹   2.727m ± ∞ ¹  +18.18% (p=0.008 n=5)   2.479m ± ∞ ¹   +7.44% (p=0.008 n=5)
@@ -164,7 +158,7 @@ WebAssembly but either option will work with no changes to the codebase.
 Microbenchmarks are the same as included in the Go standard library. Full results can be
 viewed in the workflow, a sample of results for one run looks like this
 
-```
+```text
 name \ time/op                  build/bench_stdlib.txt  build/bench.txt   build/bench_cgo.txt
 Find-4                                     162.3n ± ∞ ¹       1057.0n ± ∞ ¹    +551.26% (p=0.008 n=5)     397.5n ± ∞ ¹   +144.92% (p=0.008 n=5)
 Compile/Onepass-4                          4.017µ ± ∞ ¹       23.585µ ± ∞ ¹    +487.13% (p=0.008 n=5)     7.803µ ± ∞ ¹    +94.25% (p=0.008 n=5)
@@ -244,9 +238,9 @@ MatchParallel/Hard1/1M-4                121966.5µ ± ∞ ¹       3122.6µ ± �
 MatchParallel/Hard1/32M-4                6725.29m ± ∞ ¹       100.80m ± ∞ ¹     -98.50% (p=0.008 n=5)     16.86m ± ∞ ¹    -99.75% (p=0.008 n=5)
 ```
 
-Most benchmarks from the standard library are similar to `Find`, testing simple expressions with small input.
-In all of these, the standard library performs much better. To reiterate the guidance at the top of this README,
-if you only use simple expressions with small input, you should not use this library.
+Most benchmarks from the standard library are similar to `Find`, testing simple expressions with small
+input. In all of these, the standard library performs much better. To reiterate the guidance at the
+top of this README, if you only use simple expressions with small input, you should not use this library.
 
 The compilation benchmarks show that re2 is much slower to compile expressions than the standard
 library - this is more than just the overhead of foreign function invocation. This likely results
@@ -260,15 +254,14 @@ library perform the best with low complexity and size, but for high complexity o
 go-re2 with WebAssembly outperforms, often significantly. Notable is `Hard1`, where even on the smallest
 size this library outperforms. The expression is `ABCD|CDEF|EFGH|GHIJ|IJKL|KLMN|MNOP|OPQR|QRST|STUV|UVWX|WXYZ`,
 a simple OR of literals - re2 has the concept of regex sets and likely is able to optimize this in a
-special way. The CoreRuleSet contains many expressions of a form like this - this possibly indicates good
-performance in real world use cases.
+special way. The CoreRuleSet contains many expressions of a form like this - this possibly indicates
+good performance in real world use cases.
 
 [1]: https://pkg.go.dev/regexp
 [2]: https://github.com/google/re2
-[3]: https://wazero.io
+[3]: https://github.com/ncruces/wasm2go
 [4]: https://github.com/wasilibs/go-re2/actions/workflows/bench.yaml
 [5]: https://github.com/coreruleset/coreruleset
 [6]: https://github.com/corazawaf/coraza
 [8]: https://www.msys2.org/
 [9]: https://brew.sh/
-[10]: https://github.com/corazawaf/coraza-wasilibs

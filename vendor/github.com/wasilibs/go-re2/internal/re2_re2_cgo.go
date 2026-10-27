@@ -1,9 +1,8 @@
-//go:build tinygo.wasm || re2_cgo
+//go:build re2_cgo
 
 package internal
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/wasilibs/go-re2/internal/cre2"
@@ -19,17 +18,17 @@ func newABI() *libre2ABI {
 	return &libre2ABI{}
 }
 
-func (abi *libre2ABI) startOperation(memorySize int) allocation {
+func (*libre2ABI) startOperation(int) allocation {
 	return allocation{}
 }
 
-func (abi *libre2ABI) endOperation(allocation) {
+func (*libre2ABI) endOperation(allocation) {
 }
 
-func newRE(abi *libre2ABI, pattern cString, opts CompileOptions) wasmPtr {
+func newRE(_ *libre2ABI, pattern cString, opts CompileOptions) wasmPtr {
 	opt := cre2.NewOpt()
 	defer cre2.DeleteOpt(opt)
-	cre2.OptSetMaxMem(opt, maxSize)
+	cre2.OptSetMaxMem(opt, opts.maxMem())
 	cre2.OptSetLogErrors(opt, false)
 	if opts.Longest {
 		cre2.OptSetLongestMatch(opt, true)
@@ -46,7 +45,7 @@ func newRE(abi *libre2ABI, pattern cString, opts CompileOptions) wasmPtr {
 	return wasmPtr(cre2.New(pattern.ptr, pattern.length, opt))
 }
 
-func reError(abi *libre2ABI, rePtr wasmPtr) (int, string) {
+func reError(_ *libre2ABI, rePtr wasmPtr) (int, string) {
 	code := cre2.ErrorCode(unsafe.Pointer(rePtr))
 	if code == 0 {
 		return 0, ""
@@ -56,7 +55,7 @@ func reError(abi *libre2ABI, rePtr wasmPtr) (int, string) {
 	return code, arg
 }
 
-func numCapturingGroups(abi *libre2ABI, rePtr wasmPtr) int {
+func numCapturingGroups(_ *libre2ABI, rePtr wasmPtr) int {
 	return cre2.NumCapturingGroups(unsafe.Pointer(rePtr))
 }
 
@@ -82,10 +81,9 @@ type allocation struct{}
 
 func (*allocation) newCString(s string) cString {
 	if len(s) == 0 {
-		// TinyGo uses a null pointer to represent an empty string, but this
-		// prevents us from distinguishing a match on the empty string vs no
-		// match for subexpressions. So we replace with an empty-length slice
-		// to a string that isn't null.
+		// unsafe.StringData may return nil for an empty string, but CRE2 uses
+		// nil StringPiece data to report unmatched subexpressions. Use an
+		// empty string with non-nil data so empty matches remain distinguishable.
 		s = "a"[0:0]
 	}
 	res := cString{
@@ -96,6 +94,12 @@ func (*allocation) newCString(s string) cString {
 }
 
 func (*allocation) newCStringFromBytes(s []byte) cString {
+	if s == nil {
+		// unsafe.SliceData returns nil for a nil slice, but CRE2 uses nil
+		// StringPiece data to report unmatched subexpressions. Use an empty
+		// slice with non-nil data so empty matches remain distinguishable.
+		s = []byte{}
+	}
 	res := cString{
 		ptr:    unsafe.Pointer(unsafe.SliceData(s)),
 		length: len(s),
@@ -106,7 +110,7 @@ func (*allocation) newCStringFromBytes(s []byte) cString {
 func (a *allocation) newCStringArray(n int) cStringArray {
 	sz := int(unsafe.Sizeof(cString{})) * n
 	ptr := cre2.Malloc(sz)
-	for i := 0; i < sz; i++ {
+	for i := range sz {
 		*(*byte)(unsafe.Add(ptr, i)) = 0
 	}
 
@@ -162,7 +166,7 @@ func readMatch(_ *allocation, cs cString, matchPtr wasmPtr, dstCap []int) []int 
 func readMatches(alloc *allocation, cs cString, matchesPtr wasmPtr, n int, deliver func([]int) bool) {
 	var dstCap [2]int
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		dst := readMatch(alloc, cs, wasmPtr(unsafe.Add(unsafe.Pointer(matchesPtr), unsafe.Sizeof(cString{})*uintptr(i))), dstCap[:0])
 		if !deliver(dst) {
 			break
@@ -173,7 +177,7 @@ func readMatches(alloc *allocation, cs cString, matchesPtr wasmPtr, n int, deliv
 func newSet(_ *libre2ABI, opts CompileOptions) wasmPtr {
 	opt := cre2.NewOpt()
 	defer cre2.DeleteOpt(opt)
-	cre2.OptSetMaxMem(opt, maxSize)
+	cre2.OptSetMaxMem(opt, opts.maxMem())
 	cre2.OptSetLogErrors(opt, false)
 	if opts.Longest {
 		cre2.OptSetLongestMatch(opt, true)
@@ -198,7 +202,7 @@ func setAdd(set *Set, s cString) string {
 	msg := cre2.CopyCString(msgPtr)
 	if msg != "ok" {
 		cre2.Free(msgPtr)
-		return fmt.Sprintf("error parsing regexp: %s", msg)
+		return "error parsing regexp: " + msg
 	}
 	return ""
 }
@@ -208,7 +212,7 @@ func setCompile(set *Set) int32 {
 }
 
 func setMatch(set *Set, cs cString, matchedPtr wasmPtr, nMatch int) int {
-	return cre2.SetMatch(unsafe.Pointer(set.ptr), cs.ptr, cs.length, unsafe.Pointer(matchedPtr), nMatch)
+	return cre2.SetMatchWithError(unsafe.Pointer(set.ptr), cs.ptr, cs.length, unsafe.Pointer(matchedPtr), nMatch)
 }
 
 func deleteSet(_ *libre2ABI, setPtr wasmPtr) {

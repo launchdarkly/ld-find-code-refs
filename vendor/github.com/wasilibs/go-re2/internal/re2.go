@@ -2,7 +2,9 @@ package internal
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"regexp/syntax"
 	"runtime"
 	"strconv"
 	"strings"
@@ -55,16 +57,54 @@ type CompileOptions struct {
 	Longest         bool
 	CaseInsensitive bool
 	Latin1          bool
+
+	// ClassNL allows negated character classes like [^a] to match newline
+	// when Posix is set, as syntax.ClassNL does. regexp.CompilePOSIX does not
+	// set it, but the POSIX conformance tests expect it.
+	ClassNL bool
+
+	// MaxMem is the approximate maximum memory in bytes RE2 may use for a
+	// compiled pattern and its DFA cache. It is an upper bound rather than
+	// an allocation.
+	//
+	// If zero, 128MiB is used.
+	MaxMem int
+}
+
+func (o CompileOptions) maxMem() int {
+	if o.MaxMem > 0 {
+		return o.MaxMem
+	}
+	return maxSize
 }
 
 func Compile(expr string, opts CompileOptions) (*Regexp, error) {
+	re2Expr, re2Opts := expr, opts
+	if opts.Posix {
+		// RE2's POSIX syntax always allows negated classes to match newline,
+		// unlike regexp. Parse with regexp/syntax and pass RE2 the rendered
+		// pattern, which spells out the classes and flags explicitly. If
+		// parsing fails, let RE2 report the error for the original pattern.
+		flags := syntax.POSIX
+		if opts.CaseInsensitive {
+			flags |= syntax.FoldCase
+		}
+		if opts.ClassNL {
+			flags |= syntax.ClassNL
+		}
+		if tree, err := syntax.Parse(expr, flags); err == nil {
+			re2Expr = tree.String()
+			re2Opts.Posix = false
+		}
+	}
+
 	abi := newABI()
-	alloc := abi.startOperation(len(expr) + 2)
+	alloc := abi.startOperation(len(re2Expr) + 2)
 	defer abi.endOperation(alloc)
 
-	cs := alloc.newCString(expr)
+	cs := alloc.newCString(re2Expr)
 
-	rePtr := newRE(abi, cs, opts)
+	rePtr := newRE(abi, cs, re2Opts)
 	errCode, errArg := reError(abi, rePtr)
 	switch errCode {
 	case 0:
@@ -100,7 +140,7 @@ func Compile(expr string, opts CompileOptions) (*Regexp, error) {
 	case 15:
 		// TODO(anuraaga): While the unit test passes, it is likely that the actual limit is currently
 		// different than regexp.
-		return nil, fmt.Errorf("error parsing regexp: expression too large")
+		return nil, errors.New("error parsing regexp: expression too large")
 	}
 
 	// Does not include whole expression match, e.g. $0
@@ -116,7 +156,9 @@ func Compile(expr string, opts CompileOptions) (*Regexp, error) {
 
 	// Use func(interface{}) form for nottinygc compatibility.
 	runtime.SetFinalizer(re, func(obj interface{}) {
-		obj.(*Regexp).release()
+		if r, ok := obj.(*Regexp); ok {
+			r.release()
+		}
 	})
 
 	return re, nil
@@ -357,6 +399,9 @@ func (re *Regexp) FindAllStringIndex(s string, n int) [][]int {
 func (re *Regexp) findAll(alloc *allocation, bsrc []byte, src string, cs cString, n int, deliver func(match []int)) {
 	var dstCap [2]int
 
+	if n == 0 {
+		return
+	}
 	if n < 0 {
 		n = cs.length + 1
 	}
@@ -375,7 +420,7 @@ func (re *Regexp) findAll(alloc *allocation, bsrc []byte, src string, cs cString
 		match := readMatch(alloc, cs, matchArr.ptr, dstCap[:0])
 		accept := true
 		// Check if it's an empty match following a match, which we ignore.
-		if match[0] == match[1] && match[0] == prevMatchEnd {
+		if match[0] == match[1] && match[0] == prevMatchEnd { //nolint:gocritic
 			// We don't allow an empty match right
 			// after a previous match, so ignore it.
 			accept = false
@@ -489,6 +534,9 @@ func (re *Regexp) FindAllStringSubmatchIndex(s string, n int) [][]int {
 }
 
 func (re *Regexp) findAllSubmatch(alloc *allocation, bsrc []byte, src string, cs cString, nmatch, n int, deliver func(match []int)) {
+	if n == 0 {
+		return
+	}
 	if n < 0 {
 		n = cs.length + 1
 	}
@@ -509,7 +557,7 @@ func (re *Regexp) findAllSubmatch(alloc *allocation, bsrc []byte, src string, cs
 		readMatches(alloc, cs, matchArr.ptr, nmatch, func(match []int) bool {
 			if len(matches) == 0 {
 				// First match, check if it's an empty match following a match, which we ignore.
-				if match[0] == match[1] && match[0] == prevMatchEnd {
+				if match[0] == match[1] && match[0] == prevMatchEnd { //nolint:gocritic
 					accept = false
 				}
 
@@ -519,14 +567,13 @@ func (re *Regexp) findAllSubmatch(alloc *allocation, bsrc []byte, src string, cs
 			if accept {
 				matches = append(matches, match...)
 				return true
-			} else {
-				return false
 			}
+			return false
 		})
 		if accept {
 			deliver(matches)
+			count++
 		}
-		count++
 
 		if count == n {
 			break
@@ -839,7 +886,7 @@ func (re *Regexp) ReplaceAllLiteral(src, repl []byte) []byte {
 
 	cs := alloc.newCStringFromBytes(src)
 
-	return re.replaceAll(&alloc, src, "", cs, 2, func(dst []byte, m []int) []byte {
+	return re.replaceAll(&alloc, src, "", cs, 2, func(dst []byte, _ []int) []byte {
 		return append(dst, repl...)
 	})
 }
@@ -853,7 +900,7 @@ func (re *Regexp) ReplaceAllLiteralString(src, repl string) string {
 
 	cs := alloc.newCString(src)
 
-	b := re.replaceAll(&alloc, nil, src, cs, 2, func(dst []byte, m []int) []byte {
+	b := re.replaceAll(&alloc, nil, src, cs, 2, func(dst []byte, _ []int) []byte {
 		return append(dst, repl...)
 	})
 
@@ -954,7 +1001,7 @@ func subexpNames(abi *libre2ABI, rePtr wasmPtr, numMatches int) []string {
 // https://github.com/golang/go/blob/0fd7be7ee5f36215b5d6b8f23f35d60bf749805a/src/regexp/regexp.go#L981
 func extract(str string) (name string, num int, rest string, ok bool) {
 	if str == "" {
-		return
+		return name, num, rest, ok
 	}
 	brace := false
 	if str[0] == '{' {
@@ -963,28 +1010,28 @@ func extract(str string) (name string, num int, rest string, ok bool) {
 	}
 	i := 0
 	for i < len(str) {
-		rune, size := utf8.DecodeRuneInString(str[i:])
-		if !unicode.IsLetter(rune) && !unicode.IsDigit(rune) && rune != '_' {
+		r, size := utf8.DecodeRuneInString(str[i:])
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '_' {
 			break
 		}
 		i += size
 	}
 	if i == 0 {
 		// empty name is not okay
-		return
+		return name, num, rest, ok
 	}
 	name = str[:i]
 	if brace {
 		if i >= len(str) || str[i] != '}' {
 			// missing closing brace
-			return
+			return name, num, rest, ok
 		}
 		i++
 	}
 
 	// Parse number.
 	num = 0
-	for i := 0; i < len(name); i++ {
+	for i := range len(name) {
 		if name[i] < '0' || '9' < name[i] || num >= 1e8 {
 			num = -1
 			break
@@ -998,7 +1045,7 @@ func extract(str string) (name string, num int, rest string, ok bool) {
 
 	rest = str[i:]
 	ok = true
-	return
+	return name, num, rest, ok
 }
 
 func matchedBytes(s []byte, match []int) []byte {
@@ -1024,13 +1071,14 @@ func nextPos(bsrc []byte, src string, pos int, matchEnd int) int {
 		_, width = utf8.DecodeRuneInString(src[pos:])
 	}
 
-	if pos+width > matchEnd {
+	switch {
+	case pos+width > matchEnd:
 		return pos + width
-	} else if pos+1 > matchEnd {
+	case pos+1 > matchEnd:
 		// This clause is only needed at the end of the input
 		// string. In that case, DecodeRuneInString returns width=0.
 		return pos + 1
-	} else {
+	default:
 		return matchEnd
 	}
 }
