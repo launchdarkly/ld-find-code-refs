@@ -1,8 +1,6 @@
-go 1.22.5
+go 1.27.1
 
 use (
 	.
 	./build
-	./internal/e2e
-	./wafbench
 )

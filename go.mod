@@ -21,7 +21,7 @@ require (
 
 require (
 	github.com/launchdarkly/api-client-go/v17 v17.2.0
-	github.com/wasilibs/go-re2 v1.10.0
+	github.com/wasilibs/go-re2 v1.13.0
 	golang.org/x/tools/godoc v0.1.0-deprecated
 )
 
@@ -61,8 +61,6 @@ require (
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/tetratelabs/wazero v1.9.0 // indirect
-	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
